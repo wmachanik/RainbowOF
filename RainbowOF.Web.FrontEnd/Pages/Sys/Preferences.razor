@@ -1,0 +1,150 @@
+﻿@page "/systempreferences"
+
+
+<h3>SystemPreferences</h3>
+
+@if (SysPrefsModel == null)
+{
+    <BlazorPro.Spinkit.Bounce />
+}
+else
+{
+    @if (Saved)
+    {
+        <Blazorise.Badge Class="alert-info">Preferences Saved...</Blazorise.Badge>
+    }
+
+    <EditForm Model="@SysPrefsModel" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
+        <DataAnnotationsValidator />
+        <Blazorise.ValidationSummary />
+
+        <Blazorise.Accordion>
+            <Blazorise.Collapse Visible="@collapseSysVisible">
+                <Blazorise.CollapseHeader>
+                    <Blazorise.Heading Size="Blazorise.HeadingSize.Is1" Margin="Blazorise.Margin.Is1">
+                        <Blazorise.Button Clicked="@(()=>collapseSysVisible = !collapseSysVisible)">
+                            General Settings &nbsp;&nbsp;
+                            @if (collapseSysVisible)
+                            {<i class="oi oi-caret-top"></i>}
+                            else
+                            {<i class="oi oi-caret-bottom"></i>}
+                        </Blazorise.Button>
+                    </Blazorise.Heading>
+                </Blazorise.CollapseHeader>
+                <Blazorise.CollapseBody>
+                    <div class="form-group row">
+                        <div class="col-md-6 input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text left-form-min">Last Reccuring Date</span>
+                            </div>
+                            <Blazorise.DateEdit Class="form-control" id="LastRecurringDateInput" Placeholder="Last Recurring Date"
+                                                @bind-Date="SysPrefsModel.SysPrefs.LastReccurringDate" />
+                        </div>
+                        <div class="col-md-6 align-bottom">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                    <Tooltip Text="Must recurring orders be processed" Fade="true">
+                                        <Blazorise.Check id="DoReccuringOrdersInput" TValue="bool" 
+                                                       @bind-Value="SysPrefsModel.SysPrefs.DoReccuringOrders" />
+                                    </Tooltip>
+                                </div>
+                                <span class="input-group-text">Do Reccuring Orders</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-md-6 input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text left-form-min">Date Last Date Calculated</span>
+                            </div>
+                            <Tooltip Text="Date the system willuse to calculate the last pre dates" Fade="true">
+                                <Blazorise.DateEdit Class="form-control" id="DateLastPrepDateCalcdInput" Placeholder="Date Last Date Calculated"
+                                           @bind-Date="SysPrefsModel.SysPrefs.DateLastPrepDateCalcd" ReadOnly="true" />
+                            </Tooltip>
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-primary">
+                                    <i class="oi oi-calendar"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6 input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text right-form-min">Number of Reminder Days</span>
+                            </div>
+                            <Tooltip Text="Number of days to use as a buffer to calc notification" Fade="true">
+                                <Blazorise.NumericEdit Class="form-control" id="ReminderDaysNumberInput" Placeholder='Number of Reminder Days'
+                                             @bind-Value="SysPrefsModel.SysPrefs.ReminderDaysNumber"  Min="1" Max="21" TValue="int" Decimals="0" />
+                            </Tooltip>
+                            <ValidationMessage For="() => SysPrefsModel.SysPrefs.ReminderDaysNumber" />
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col-md-6 input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text left-form-min">Group Item Type</span>
+                            </div>
+                            <InputSelect class="form-control" id="GroupItemTypeIDInput" placeholder='Group Item Type ID'
+                                         @bind-Value="SysPrefsModel.SysPrefs.GroupItemTypeID">
+                                <option value="0" selected>Select an Item...</option>
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-6 input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text right-form-min">Default Delivery Person</span>
+                            </div>
+                            <InputSelect class="form-control align-bottom" id="DefaultDeliveryPersonIDInput" placeholder='Default Delivery Person'
+                                         @bind-Value="SysPrefsModel.SysPrefs.DefaultDeliveryPersonID">
+                                <option value="0" selected>Select an Party...</option>
+                            </InputSelect>
+                            <Tooltip Text="Which person is the normal delivery person">
+                            </Tooltip>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <div class="col input-group">
+                            <div class="custom-file">
+                                <Blazorise.FileEdit Class="custom-file-input" id="ImageFolderPathInput" Placeholder="Image Folder Path"
+                                       @bind-Value="SysPrefsModel.SysPrefs.ImageFolderPath" />
+                                <label class="custom-file-label" for="ImageFolderPathInput">Image Folder Path</label>
+                            </div>
+                        </div>
+                    </div>
+                </Blazorise.CollapseBody>
+            </Blazorise.Collapse>
+        </Blazorise.Accordion>
+        <Blazorise.Accordion>
+            <Blazorise.Collapse Visible="@collapseWooVisible">
+                <Blazorise.CollapseHeader>
+                    <Blazorise.Heading Size="Blazorise.HeadingSize.Is1">
+                        <Blazorise.Button Clicked="@(()=>collapseWooVisible = !collapseWooVisible)">
+                            Woo Settings &nbsp;&nbsp;
+                            @if (collapseWooVisible)
+                            {<i class="oi oi-caret-top"></i>}
+                            else
+                            {<i class="oi oi-caret-bottom"></i>}
+                        </Blazorise.Button>
+                    </Blazorise.Heading>
+                </Blazorise.CollapseHeader>
+                <Blazorise.CollapseBody>
+                    <WooPreferencesComponent WooSettings="SysPrefsModel.WooSettings" Logger="_logger" />
+                </Blazorise.CollapseBody>
+            </Blazorise.Collapse>
+        </Blazorise.Accordion>
+        <hr />
+        <div class="form-group row justify-content-center">
+            <div class=" col-md-6justify-content-center">
+                <Blazorise.Bootstrap.Button Loading="Saving" Type="ButtonType.Submit" Class="btn btn-primary">Save</Blazorise.Bootstrap.Button>
+                <button class="btn btn-outline-secondary" type="button">Return</button>
+            </div>
+        </div>
+        <div class="small text-right">@SysPrefsModel.SysPrefs.SysPrefsId</div>
+
+    </EditForm>
+
+
+}
+
+<RainbowOF.Components.Modals.ShowModal @ref="ShowSavedStatus" CloseModel="StatusClosed_Click"
+                                       ModalMessage="System Preferences Saved" ModalTitle="Saving Status" />
+
+

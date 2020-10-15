@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WooCommerceNET" Version="0.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RainbowOF.Models\RainbowOF.Models.csproj" />
+    <ProjectReference Include="..\RainbowOF.Tools\RainbowOF.Tools.csproj" />
+  </ItemGroup>
+
+</Project>

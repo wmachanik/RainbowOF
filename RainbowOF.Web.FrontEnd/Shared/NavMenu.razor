@@ -1,0 +1,243 @@
+﻿<div class="top-row pl-4 navbar navbar-dark">
+    <a class="navbar-brand" href="">Rainbow O.F.</a>
+    <button class="navbar-toggler" @onclick="ToggleNavMenu">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+</div>
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <ul class="nav flex-column">
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="/Index">
+                <span class="oi oi-dashboard" aria-hidden="true"></span> Dashboard
+            </NavLink>
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="" @onclick="()=>showContactsMenu= !showContactsMenu">
+                <span class="oi oi-people" aria-hidden="true"></span> Contacts
+            </NavLink>
+            @if (showContactsMenu)
+            {
+                <ul class="nav flex-column">
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="/Contacts">
+                            <span class="oi oi-people" aria-hidden="true"></span> All
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="/Contacts/Preferences">
+                            <span class="oi oi-cog" aria-hidden="true"></span> Preferences
+                        </NavLink>
+                    </li>
+                </ul>
+            }
+
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="" @onclick="()=>showItemsMenu= !showItemsMenu">
+                <span class="oi oi-list" aria-hidden="true"></span> Items
+            </NavLink>
+            @if (showItemsMenu)
+            {
+        <ul class="nav flex-column">
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="/Items">
+                    <span class="oi oi-list-rich" aria-hidden="true"></span> Items
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="/ItemGroups">
+                    <span class="oi oi-grid-three-up" aria-hidden="true"></span> Item Groups
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="/ItemPreferences">
+                    <span class="oi oi-cog" aria-hidden="true"></span> Preferences
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="/ItemCategories">
+                    <span class="oi oi-cog" aria-hidden="true"></span> Categories
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="/ItemPrices">
+                    <span class="oi oi-paperclip" aria-hidden="true"></span> Price List
+                </NavLink>
+            </li>
+        </ul>
+            }
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="" @onclick="()=>showOrdersMenu= !showOrdersMenu">
+                <span class="oi oi-cart" aria-hidden="true"></span> Orders
+            </NavLink>
+            @if (showOrdersMenu)
+            {
+                <ul class="nav flex-column">
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="/Orders">
+                            <span class="oi oi-tags" aria-hidden="true"></span> View
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="/RecurringOrders">
+                            <span class="oi oi-loop-square" aria-hidden="true"></span> Recurring
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="/OrderReturn">
+                            <span class="oi oi-action-undo" aria-hidden="true"></span> Returns
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="/OrderPreferences">
+                            <span class="oi oi-cog" aria-hidden="true"></span> Preferences
+                        </NavLink>
+                    </li>
+                </ul>
+            }
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="" @onclick="()=>showNotificaitonsMenu= !showNotificaitonsMenu">
+                <span class="oi oi-bullhorn" aria-hidden="true"></span> Notifications
+            </NavLink>
+            @if (showNotificaitonsMenu)
+            {
+                <ul class="nav flex-column">
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="/Norifications">
+                            <span class="oi oi-envelope-open" aria-hidden="true"></span> View
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="/NotifcationPreferences">
+                            <span class="oi oi-cog" aria-hidden="true"></span> Preferences
+                        </NavLink>
+                    </li>
+                </ul>
+            }
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="" @onclick="()=>showRepairsSubMenu= !showRepairsSubMenu">
+                <span class="oi oi-wrench" aria-hidden="true"></span> Repairs
+            </NavLink>
+            @if (showRepairsSubMenu)
+            {
+                <ul class="nav flex-column">
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="/Repairs">
+                            <span class="oi oi-wrench" aria-hidden="true"></span> Repairs
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="/RepairPreferences">
+                            <span class="oi oi-cog" aria-hidden="true"></span> Preferences
+                        </NavLink>
+                    </li>
+                </ul>
+            }
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="" @onclick="()=>showIntegrationMenu= !showIntegrationMenu">
+                <span class="oi oi-cloud" aria-hidden="true"></span> Integration
+            </NavLink>
+            @if (showIntegrationMenu)
+            {
+                <ul class="nav flex-column">
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="/Import">
+                            <span class="oi oi-cloud-upload" aria-hidden="true"></span> Import
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="/Export">
+                            <span class="oi oi-cloud-download" aria-hidden="true"></span> Export
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="/WooIntegration">
+                            <span class="oi oi-cloudy" aria-hidden="true"></span> Woo
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="/IntegrationPreferences">
+                            <span class="oi oi-cog" aria-hidden="true"></span> Preferences
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="/ExtrenalForms">
+                            <span class="oi oi-external-link" aria-hidden="true"></span> <small>External Forms</small>
+                        </NavLink>
+                    </li>
+                </ul>
+            }
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="reports">
+                <span class="oi oi-print" aria-hidden="true"></span> Reports
+            </NavLink>
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="" @onclick="()=>showSystemSubMenu= !showSystemSubMenu">
+                <span class="oi oi-puzzle-piece" aria-hidden="true"></span> System
+            </NavLink>
+            @if (showSystemSubMenu)
+            {
+                <ul class="nav flex-column">
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="/Users">
+                            <span class="oi oi-pulse" aria-hidden="true"></span> Users
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="/SystemTools">
+                            <span class="oi oi-flash" aria-hidden="true"></span> Tools
+                        </NavLink>
+                    </li>
+                </ul>
+            }
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="" @onclick="()=>showSettingsSubMenu= !showSettingsSubMenu">
+                <span class="oi oi-cog" aria-hidden="true"></span> Settings
+            </NavLink>
+            @if (showSettingsSubMenu)
+            {
+                <ul class="nav flex-column">
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="/SystemPreferences">
+                            <span class="oi oi-globe" aria-hidden="true"></span> <small>Company Prefs</small>
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="/SupportTables">
+                            <span class="oi oi-book" aria-hidden="true"></span> Support Tables
+                        </NavLink>
+                    </li>
+                </ul>
+            }
+        </li>
+    </ul>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+    private bool showContactsMenu = false;
+    private bool showItemsMenu = false;
+    private bool showOrdersMenu = false;
+    private bool showNotificaitonsMenu = false;
+    private bool showIntegrationMenu = false;
+    private bool showRepairsSubMenu = false;
+    //    private bool showReportsSubMenu = false;
+    private bool showSystemSubMenu = false;
+    private bool showSettingsSubMenu = false;
+
+
+    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

@@ -1,0 +1,33 @@
+﻿@page  "/Import"
+@inherits ImportBase
+
+<h3>Woo Import</h3>
+
+<EditForm Model="@WooAPIModel" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
+    <DataAnnotationsValidator />
+    <Blazorise.ValidationSummary />
+
+    <Blazorise.Accordion>
+        <Blazorise.Collapse Visible="@collapseWooVisible">
+            <Blazorise.CollapseHeader>
+                <Blazorise.Heading Size="Blazorise.HeadingSize.Is1">
+                    <Blazorise.Button Clicked="@(()=>collapseWooVisible = !collapseWooVisible)">
+                        Woo Settings &nbsp;&nbsp;
+                        @if (collapseWooVisible)
+                        {<i class="oi oi-caret-top"></i>}
+                        else
+                        {<i class="oi oi-caret-bottom"></i>}
+                    </Blazorise.Button>
+                </Blazorise.Heading>
+            </Blazorise.CollapseHeader>
+            <Blazorise.CollapseBody>
+                <RainbowOF.Web.FrontEnd.Pages.Sys.WooPreferences SysPrefsModel="WooAPIModel" Logger="_logger" />
+            </Blazorise.CollapseBody>
+        </Blazorise.Collapse>
+    </Blazorise.Accordion>
+
+
+</EditForm>
+
+<RainbowOF.Components.Modals.ShowModal @ref="ShowSavedStatus" CloseModel="StatusClosed_Click"
+                                       ModalMessage="Woo Preferences Saved" ModalTitle="Saving Status" />

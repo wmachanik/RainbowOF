@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RainbowOF.Data.SQL\RainbowOF.Data.SQL.csproj" />
+    <ProjectReference Include="..\RainbowOF.FrontEnd.Models\RainbowOF.FrontEnd.Models.csproj" />
+    <ProjectReference Include="..\RainbowOF.Models\RainbowOF.Models.csproj" />
+    <ProjectReference Include="..\RainbowOF.Tools\RainbowOF.Tools.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Integrations\" />
+  </ItemGroup>
+
+</Project>
