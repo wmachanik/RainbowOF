@@ -1,4 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using RainbowOF.Data.SQL.EntityConfigs.Items;
+using RainbowOF.Datsa.SQL.EntityConfigs.Items;
+using RainbowOF.Models.Items;
 using RainbowOF.Models.System;
 using System;
 using System.Collections.Generic;
@@ -23,8 +26,14 @@ namespace RainbowOF.Data.SQL
         #endregion
 
         #region item stuff
-        //public DbSet<Item> Items { get; set; }
-        //public DbSet<ItemType> ItemTypes { get; set; }
+        public DbSet<Item> Items { get; set; }
+        public DbSet<ItemCategory> ItemCategories { get; set; }
+        public DbSet<ItemAttribute> ItemAttributes { get; set; }
+        public DbSet<ItemAttributeVariety> ItemAttributeVarieties { get; set; }
+        public DbSet<ActiveItemAttribute> ActiveItemAttributes { get; set; }
+        public DbSet<ActiveItemAttributeVariety> ActiveItemAttributeVarieties { get; set; }
+        public DbSet<ItemUoM> ItemUoMs { get; set; }
+
         //public DbSet<ItemUnit> ItemUnits { get; set; }
         //public DbSet<Packaging> Packagings { get; set; }
         //public DbSet<Variety> Varieties { get; set; }
@@ -48,16 +57,22 @@ namespace RainbowOF.Data.SQL
             #endregion
 
             #region item stuff
-            //modelBuilder.Entity<Item>().ToTable(nameof(Items));
-            //modelBuilder.ApplyConfiguration<Item>(new ItemModelConfig());
-            //modelBuilder.Entity<ItemType>().ToTable(nameof(ItemTypes));
-            //modelBuilder.ApplyConfiguration<ItemType>(new ItemTypeModelConfig());
-            //modelBuilder.Entity<ItemUnit>().ToTable(nameof(ItemUnits));
-            //modelBuilder.ApplyConfiguration<ItemUnit>(new ItemUnitModelConfig());
-            //modelBuilder.Entity<Packaging>().ToTable(nameof(Packagings));
-            //modelBuilder.ApplyConfiguration<Packaging>(new PackagingModelConfig());
-            //modelBuilder.Entity<Variety>().ToTable(nameof(Varieties));
-            //modelBuilder.ApplyConfiguration<Variety>(new VarietyModelConfig());
+            modelBuilder.Entity<Item>().ToTable(nameof(Items));
+            modelBuilder.ApplyConfiguration<Item>(new ItemModelConfig());
+            modelBuilder.Entity<ItemCategory>().ToTable(nameof(ItemCategories));
+            modelBuilder.ApplyConfiguration<ItemCategory>(new ItemCategoryModelConfig());
+            modelBuilder.Entity<ItemAttribute>().ToTable(nameof(ItemAttributes));
+            modelBuilder.ApplyConfiguration<ItemAttribute>(new ItemAttributeModelConfig());
+            modelBuilder.Entity<ItemAttributeVariety>().ToTable(nameof(ItemAttributeVarieties));
+            modelBuilder.ApplyConfiguration<ItemAttributeVariety>(new ItemAttributeVarietyModelConfig());
+            modelBuilder.Entity<ActiveItemAttribute>().ToTable(nameof(ActiveItemAttributes));
+            modelBuilder.ApplyConfiguration<ActiveItemAttribute>(new ActiveItemAttributeModelConfig());
+            modelBuilder.Entity<ActiveItemAttributeVariety>().ToTable(nameof(ActiveItemAttributeVarieties));
+            modelBuilder.ApplyConfiguration<ActiveItemAttributeVariety>(new ActiveItemAttributeVarietyModelConfig());
+            modelBuilder.Entity<ItemUoM>().ToTable(nameof(ItemUoMs));
+            modelBuilder.ApplyConfiguration<ItemUoM>(new ItemUoMModelConfig());
+
+
             //modelBuilder.Entity<ItemGroup>().ToTable(nameof(ItemGroups));
             //modelBuilder.ApplyConfiguration<ItemGroup>(new ItemGroupModelConfig());
             ////modelBuilder.Entity<UsedItemGroup>().ToTable(nameof(UsedItemGroups));

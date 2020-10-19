@@ -8,11 +8,11 @@ namespace RainbowOF.Models.Items
 {
     public class ItemCategory
     {
-        public int ItemCategoryID { get; set; }
+        public int ItemCategoryId { get; set; }
         [Required]
         [StringLength(255)]
         [DisplayName("Item Category")]
-        public string ItemTypeName { get; set; }
+        public string ItemCategoryName { get; set; }
         public string Notes { get; set; }
         [Timestamp]
         public byte[] RowVersion { get; set; }

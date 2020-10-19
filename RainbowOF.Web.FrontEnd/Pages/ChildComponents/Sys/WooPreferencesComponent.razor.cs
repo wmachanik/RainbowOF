@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Sys
 {
-    public class WooPreferencesBase : ComponentBase
+    public partial class WooPreferencesComponent : ComponentBase
     {
         [Parameter]
         public WooSettings WooSettingsModel { get; set; }

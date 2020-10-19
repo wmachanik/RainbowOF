@@ -8,8 +8,8 @@ namespace RainbowOF.Models.Items
 {
     public class ItemAttributeVariety
     {
-        public int ItemAttributeVarietyID { get; set; }
-        public int? ItemAttributeID { get; set; }  // can this be null?
+        public int ItemAttributeVarietyId { get; set; }
+        public int ItemAttributeId { get; set; }  
         [Required]
         [StringLength(100)]
         [DisplayName("Variety Type")]

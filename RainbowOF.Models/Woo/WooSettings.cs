@@ -6,7 +6,7 @@ namespace RainbowOF.Models.System
 {
     public class WooSettings
     {
-        public int WooSettingsID { get; set; }
+        public int WooSettingsId { get; set; }
         [DisplayName("Woo Query URL")]
         [DefaultValue("www.mysite.com")]
         [StringLength(500)]

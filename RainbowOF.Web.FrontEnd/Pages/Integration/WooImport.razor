@@ -1,9 +1,8 @@
-﻿@page  "/Import"
-@inherits ImportBase
+﻿@page  "/WooImport"
 
 <h3>Woo Import</h3>
 
-<EditForm Model="@WooAPIModel" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
+<EditForm Model="@WooSettingsModel" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
     <DataAnnotationsValidator />
     <Blazorise.ValidationSummary />
 
@@ -21,7 +20,7 @@
                 </Blazorise.Heading>
             </Blazorise.CollapseHeader>
             <Blazorise.CollapseBody>
-                <RainbowOF.Web.FrontEnd.Pages.Sys.WooPreferences SysPrefsModel="WooAPIModel" Logger="_logger" />
+                <WooPreferencesComponent WooSettings="WooSettingsModel" Logger="_logger" />
             </Blazorise.CollapseBody>
         </Blazorise.Collapse>
     </Blazorise.Accordion>
@@ -31,3 +30,6 @@
 
 <RainbowOF.Components.Modals.ShowModal @ref="ShowSavedStatus" CloseModel="StatusClosed_Click"
                                        ModalMessage="Woo Preferences Saved" ModalTitle="Saving Status" />
+
+<RainbowOF.Components.Modals.ShowModal @ref="ShowChangedStatus" CloseModel="StatusClosed_Click"
+                                       ModalMessage="Woo Preferences not Saved please save first." ModalTitle="Woo Settngs must be saved" />

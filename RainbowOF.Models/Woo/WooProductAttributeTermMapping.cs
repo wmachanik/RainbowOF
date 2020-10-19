@@ -6,12 +6,12 @@ namespace RainbowOF.Models.Woo
 {
     //Desc                       Type    Comments
     // ------------------------+-------+-----------------------------------------
-    //ItemAttributeVarietyID     Int     Pk with WooProductAttribTermID
-    //WooProductAttributeTermID  Int     Links to woo attribute
+    //ItemAttributeVarietyId     Int     Pk with WooProductAttribTermId
+    //WooProductAttributeTermId  Int     Links to woo attribute
 
     public class WooProductAttributeTermMapping
     {
-        public int ItemAttributeVarietyID { get; set; }
-        public int WooProductAttributeTermID { get; set; }
+        public int ItemAttributeVarietyId { get; set; }
+        public int WooProductAttributeTermId { get; set; }
     }
 }

@@ -8,13 +8,13 @@ using System.Text;
 namespace RainbowOF.Models.Items
 {
     //  Desc Type    Comments
-    //  ItemAttributeID Int Pk
+    //  ItemAttributeId Int Pk
     //  AttributeName String(100) Required, indexed
     //  OrderBy Enum? (custom, name, num and id)	Should this be an enum?
     //  Notes String
     public class ItemAttribute
     {
-        public int ItemAttributeID { get; set; }
+        public int ItemAttributeId { get; set; }
         [DisplayName("Attribute Name")]
         [Required]
         [StringLength(100)]

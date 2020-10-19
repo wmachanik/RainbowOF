@@ -68,7 +68,7 @@ namespace RanbowOF.Repositories.System
                 updated = recIsUpdated;
             }
             // run this update regardless 
-            if (updateSysPrefsModel.WooSettings.WooSettingsID > 0)
+            if (updateSysPrefsModel.WooSettings.WooSettingsId > 0)
                 {
                     // it means that there was a record in the database.
                     var recsUpdated = _WooSettingsRepo.Update(updateSysPrefsModel.WooSettings);
@@ -100,7 +100,7 @@ namespace RanbowOF.Repositories.System
                 updated = recIsUpdated;
             }
             // run this update regardless 
-            if (updateSysPrefsModel.WooSettings.WooSettingsID > 0)
+            if (updateSysPrefsModel.WooSettings.WooSettingsId > 0)
             {
                 // it means that there was a record in the database.
                 var recsUpdated = await _WooSettingsRepo.UpdateAsync(updateSysPrefsModel.WooSettings);

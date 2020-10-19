@@ -6,10 +6,10 @@ namespace RainbowOF.Models.Woo
 {
     public class WooProductAttributeMapping
     {
-        /// ItemAttributeID	Int	Pk with WooProductAttribID
-        /// WooProductAttributeID Int Links to woo attribute
-        public int ItemAttributeID { get; set; }
-        public int WooProductAttributeID { get; set; }
+        /// ItemAttributeId	Int	Pk with WooProductAttribId
+        /// WooProductAttributeId Int Links to woo attribute
+        public int ItemAttributeId { get; set; }
+        public int WooProductAttributeId { get; set; }
 
     }
 }

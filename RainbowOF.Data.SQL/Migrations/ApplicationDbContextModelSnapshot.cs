@@ -74,13 +74,13 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Property<DateTime?>("DateLastPrepDateCalcd")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("DefaultDeliveryPersonID")
+                    b.Property<int?>("DefaultDeliveryPersonId")
                         .HasColumnType("int");
 
                     b.Property<bool>("DoReccuringOrders")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("GroupItemTypeID")
+                    b.Property<int?>("GroupItemTypeId")
                         .HasColumnType("int");
 
                     b.Property<string>("ImageFolderPath")

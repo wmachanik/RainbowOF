@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace RainbowOF.Components.Modals
 {
-    public class ShowModalBase : ComponentBase
+    public partial class ShowModal : ComponentBase
     {
-        protected bool ShowModal { get; set; }
+        protected bool IsShowModal { get; set; }
 
         [Parameter]
         public string ModalTitle { get; set; } = "Status Message";
@@ -19,7 +19,7 @@ namespace RainbowOF.Components.Modals
 
         public void Show()
         {
-            ShowModal = true;
+            IsShowModal = true;
             StateHasChanged();
         }
 
@@ -30,7 +30,7 @@ namespace RainbowOF.Components.Modals
 
         protected async Task OnCloseModal()
         {
-            ShowModal = false;
+            IsShowModal = false;
             await CloseModel.InvokeAsync(null);
         }
     }

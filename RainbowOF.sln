@@ -16,11 +16,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RainbowOF.Data.SQL", "Rainb
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RainbowOF.Tools", "RainbowOF.Tools\RainbowOF.Tools.csproj", "{81BD588E-D918-47CD-BA22-435D8A5C0E74}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RainbowOF.Woo.REST", "RainbowOF.Woo.REST\RainbowOF.Woo.REST.csproj", "{276F9D70-0BFF-47ED-B189-FEDE9D73DCA1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RainbowOF.Woo.REST", "RainbowOF.Woo.REST\RainbowOF.Woo.REST.csproj", "{276F9D70-0BFF-47ED-B189-FEDE9D73DCA1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RainbowOF.Components", "RainbowOF.Components\RainbowOF.Components.csproj", "{C66C6A85-2065-4DCB-9FC4-B54771243345}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RainbowOF.Components", "RainbowOF.Components\RainbowOF.Components.csproj", "{C66C6A85-2065-4DCB-9FC4-B54771243345}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RainbowOF.FrontEnd.Models", "RainbowOF.FrontEnd.Models\RainbowOF.FrontEnd.Models.csproj", "{B6EC04D3-58D6-468E-B1D0-B8B6BD059DEA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RainbowOF.FrontEnd.Models", "RainbowOF.FrontEnd.Models\RainbowOF.FrontEnd.Models.csproj", "{B6EC04D3-58D6-468E-B1D0-B8B6BD059DEA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

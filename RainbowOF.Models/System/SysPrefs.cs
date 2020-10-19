@@ -19,10 +19,10 @@ namespace RainbowOF.Models.System
         [DisplayName("Number of days to use in caclulating a reminder is required")]
         [Range(1, 14, ErrorMessage = "Must be a number from 1-14")]
         public int ReminderDaysNumber { get; set; }
-        [DisplayName("ID of the Group Item")]
-        public int? GroupItemTypeID { get; set; }
-        [DisplayName("ID of the Primary Delivery Person")]
-        public int? DefaultDeliveryPersonID { get; set; }
+        [DisplayName("Id of the Group Item")]
+        public int? GroupItemTypeId { get; set; }
+        [DisplayName("Id of the Primary Delivery Person")]
+        public int? DefaultDeliveryPersonId { get; set; }
         [DisplayName("Image folder path")]
         [StringLength(250)]
         public string ImageFolderPath { get; set; }

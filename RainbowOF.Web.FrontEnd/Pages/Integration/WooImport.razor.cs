@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using RainbowOF.Components.Modals;
+using RainbowOF.Models.System;
 using RainbowOF.Tools;
 using RainbowOF.Woo.REST.Models;
 using RanbowOF.Repositories.Common;
@@ -10,13 +11,14 @@ using System.Threading.Tasks;
 
 namespace RainbowOF.Web.FrontEnd.Pages.Integration
 {
-    public class ImportBase : ComponentBase
+    public partial class WooImport : ComponentBase
     {
         public bool collapseWooVisible = true;
-        public bool Saved = false;
-        public WooAPISettings WooAPIModel;
+        public bool IsSaved = false;
+        public bool IsChanged = false;
+        public WooSettings WooSettingsModel;
         protected ShowModal ShowSavedStatus { get; set; }
-
+        protected ShowModal ShowChangedStatus { get; set; }
         [Inject]
         public IAppUnitOfWork _AppUnitOfWork { get; set; }
         [Inject]
@@ -33,20 +35,21 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         {
             IAppRepository<WooAPISettings> _WooPrefs = _AppUnitOfWork.Repository<WooAPISettings>();
             StateHasChanged();
-            await Task.Run(() => WooAPIModel = _WooPrefs.GetAll().FirstOrDefault());
-            Saved = false;
+            await Task.Run(() => WooSettingsModel = _WooPrefs.GetAll().FirstOrDefault());
+            IsSaved = false;
             StateHasChanged();
         }
         public async void HandleValidSubmit()
         {
-            if (WooAPIModel != null)
+            if (WooSettingsModel != null)
             {
                 /// ShowSaving();
-                IAppRepository<WooAPISettings> _WooPrefs = _AppUnitOfWork.Repository<WooAPISettings>();
+                IAppRepository<WooSettings> _WooSettings = _AppUnitOfWork.Repository<WooSettings>();
                 // save
-                await _WooPrefs.UpdateAsync(WooAPIModel);
+                await _WooSettings.UpdateAsync(WooSettingsModel);
                 //                HideSaving();
-                Saved = true;
+                IsSaved = true;
+                IsChanged = false;
                 ShowSavedStatus.Show();
                 // StateHasChanged();
             }
@@ -55,7 +58,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
 
         public void HandleInvalidSubmit()
         {
-            Saved = false;
+            IsSaved = false;
         }
 
         protected void StatusClosed_Click()
@@ -63,5 +66,19 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             StateHasChanged();
         }
 
+
+        public void StartWooImport()
+        {
+            // start the process of the WooImport
+            // check if saved.
+            if (IsChanged)
+            {
+                ShowChangedStatus.Show();
+            }
+            else
+            {
+
+            }
+        }
     }
 }
