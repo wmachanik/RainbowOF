@@ -2,34 +2,77 @@
 
 <h3>Woo Import</h3>
 
-<EditForm Model="@WooSettingsModel" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
-    <DataAnnotationsValidator />
-    <Blazorise.ValidationSummary />
+@if (WooSettingsModel == null)
+{
+    <BlazorPro.Spinkit.Bounce />
+}
+else
+{
+    @if (IsSaved)
+    {
+        <Blazorise.Badge Class="alert-info">Preferences Saved...</Blazorise.Badge>
+    }
 
-    <Blazorise.Accordion>
-        <Blazorise.Collapse Visible="@collapseWooVisible">
-            <Blazorise.CollapseHeader>
-                <Blazorise.Heading Size="Blazorise.HeadingSize.Is1">
-                    <Blazorise.Button Clicked="@(()=>collapseWooVisible = !collapseWooVisible)">
-                        Woo Settings &nbsp;&nbsp;
-                        @if (collapseWooVisible)
-                        {<i class="oi oi-caret-top"></i>}
-                        else
-                        {<i class="oi oi-caret-bottom"></i>}
-                    </Blazorise.Button>
-                </Blazorise.Heading>
-            </Blazorise.CollapseHeader>
-            <Blazorise.CollapseBody>
-                <WooPreferencesComponent WooSettings="WooSettingsModel" Logger="_logger" />
-            </Blazorise.CollapseBody>
-        </Blazorise.Collapse>
-    </Blazorise.Accordion>
+    <EditForm Model="@WooSettingsModel" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
+        <DataAnnotationsValidator />
+        <Blazorise.ValidationSummary />
+
+        <Blazorise.Accordion>
+            <Blazorise.Collapse Visible="@collapseWooVisible">
+                <Blazorise.CollapseHeader>
+                    <Blazorise.Heading Size="Blazorise.HeadingSize.Is1">
+                        <Blazorise.Button Clicked="@(() => collapseWooVisible = !collapseWooVisible)">
+                            Woo Settings &nbsp;&nbsp;
+                            @if (collapseWooVisible)
+                            {<i class="oi oi-caret-top"></i>}
+                            else
+                            {<i class="oi oi-caret-bottom"></i>}
+                        </Blazorise.Button>
+                    </Blazorise.Heading>
+                </Blazorise.CollapseHeader>
+                <Blazorise.CollapseBody>
+                    <WooPreferencesComponent WooSettingsModel="WooSettingsModel" Logger="_logger" />
+                    <hr />
+                    <div class="form-group row justify-content-center">
+                        <div class=" col-md-6justify-content-center">
+                            <Blazorise.Bootstrap.Button Loading="IsSaving" Type="ButtonType.Submit" Class="btn btn-primary">Save</Blazorise.Bootstrap.Button>
+                            <button class="btn btn-outline-secondary" type="button">Return</button>
+                        </div>
+                    </div>
+                    <div class="small text-right">@WooSettingsModel.WooSettingsId</div>
+                </Blazorise.CollapseBody>
+            </Blazorise.Collapse>
+            <Blazorise.Collapse Visible="collapseWooCategoriesImport">
+                <Blazorise.CollapseHeader>
+                    <Blazorise.Heading Size="Blazorise.HeadingSize.Is1">
+                        <Blazorise.Button Clicked="@(() => collapseWooCategoriesImport = !collapseWooCategoriesImport)">
+                            Woo Categories Import &nbsp;&nbsp;
+                            @if (collapseWooCategoriesImport)
+                            {<i class="oi oi-caret-top"></i>}
+                            else
+                            {<i class="oi oi-caret-bottom"></i>}
+                        </Blazorise.Button>
+                    </Blazorise.Heading>
+                </Blazorise.CollapseHeader>
+                <Blazorise.CollapseBody>
+                    <WooImportCategoriesComponent WooSettingsModel="WooSettingsModel" Logger="_logger" />
+                </Blazorise.CollapseBody>
+            </Blazorise.Collapse>
+        </Blazorise.Accordion>
 
 
-</EditForm>
 
-<RainbowOF.Components.Modals.ShowModal @ref="ShowSavedStatus" CloseModel="StatusClosed_Click"
-                                       ModalMessage="Woo Preferences Saved" ModalTitle="Saving Status" />
 
-<RainbowOF.Components.Modals.ShowModal @ref="ShowChangedStatus" CloseModel="StatusClosed_Click"
-                                       ModalMessage="Woo Preferences not Saved please save first." ModalTitle="Woo Settngs must be saved" />
+    </EditForm>
+}
+<!--------
+
+
+    Need to add the logic of the import here, the Items view is "done" as is the log, so perhap do an items imprt as per the design - need to look at the packaging settings.
+
+
+
+
+    -->
+    <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals.ShowModalMessage @ref="ShowSavedStatus" ModalMessage="Woo Preferences Saved" ModalTitle="Saving Status" />
+    <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals.ShowModalMessage @ref="ShowChangedStatus" ModalMessage="Woo Preferences not Saved please save first." ModalTitle="Woo Settngs must be saved" />

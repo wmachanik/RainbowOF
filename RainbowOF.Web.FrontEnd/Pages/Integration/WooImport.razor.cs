@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
-using RainbowOF.Components.Modals;
 using RainbowOF.Models.System;
 using RainbowOF.Tools;
+using RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals;
 using RainbowOF.Woo.REST.Models;
 using RanbowOF.Repositories.Common;
 using System;
@@ -14,11 +14,15 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
     public partial class WooImport : ComponentBase
     {
         public bool collapseWooVisible = true;
+        public bool collapseWooCategoriesImport = true;
         public bool IsSaved = false;
+        public bool IsSaving = false;
         public bool IsChanged = false;
-        public WooSettings WooSettingsModel;
-        protected ShowModal ShowSavedStatus { get; set; }
-        protected ShowModal ShowChangedStatus { get; set; }
+        public WooSettings WooSettingsModel { get; set; } = null;
+        //for saving
+        protected ShowModalMessage ShowSavedStatus { get; set; }
+        //for changing
+        protected ShowModalMessage ShowChangedStatus { get; set; }
         [Inject]
         public IAppUnitOfWork _AppUnitOfWork { get; set; }
         [Inject]
@@ -33,9 +37,16 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
 
         private async Task LoadWooPrefs()
         {
-            IAppRepository<WooAPISettings> _WooPrefs = _AppUnitOfWork.Repository<WooAPISettings>();
+            IAppRepository<WooSettings> _WooPrefs = _AppUnitOfWork.Repository<WooSettings>();
+
             StateHasChanged();
-            await Task.Run(() => WooSettingsModel = _WooPrefs.GetAll().FirstOrDefault());
+
+             WooSettingsModel = await _WooPrefs.FindFirstAsync();
+            if (WooSettingsModel == null)
+            {
+                WooSettingsModel = new WooSettings();   // if nothing send back a empty record
+            }
+
             IsSaved = false;
             StateHasChanged();
         }
@@ -43,37 +54,42 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         {
             if (WooSettingsModel != null)
             {
-                /// ShowSaving();
+                ShowSaving();
                 IAppRepository<WooSettings> _WooSettings = _AppUnitOfWork.Repository<WooSettings>();
                 // save
-                await _WooSettings.UpdateAsync(WooSettingsModel);
-                //                HideSaving();
-                IsSaved = true;
+                
+                IsSaved = (int)(await _WooSettings.UpdateAsync(WooSettingsModel)) > 0; 
                 IsChanged = false;
-                ShowSavedStatus.Show();
-                // StateHasChanged();
+                HideSaving();
+                ShowChangedStatus.ShowModal();
+                StateHasChanged();
             }
         }
-
-
+        public void ShowSaving()
+        {
+            IsSaving = true;
+            StateHasChanged();
+        }
+        public void HideSaving()
+        {
+            IsSaving = false;
+            StateHasChanged();
+        }
         public void HandleInvalidSubmit()
         {
             IsSaved = false;
         }
-
         protected void StatusClosed_Click()
         {
             StateHasChanged();
         }
-
-
         public void StartWooImport()
         {
             // start the process of the WooImport
             // check if saved.
             if (IsChanged)
             {
-                ShowChangedStatus.Show();
+                //ShowChangedStatus.ShowModal();
             }
             else
             {

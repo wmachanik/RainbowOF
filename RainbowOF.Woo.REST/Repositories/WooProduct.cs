@@ -10,12 +10,12 @@ using WooCommerceNET.WooCommerce.v3;
 
 namespace RainbowOF.Woo.REST.Repositories
 {
-    public class WooProducts : IWooProducts
+    public class WooProduct : IWooProduct
     {
         private readonly WooAPISettings _WooAPISettings;
         private readonly ILoggerManager _Logger;
 
-        public WooProducts(WooAPISettings wooAPISettings, ILoggerManager logger)
+        public WooProduct(WooAPISettings wooAPISettings, ILoggerManager logger)
         {
             //while (wooAPISettings.QueryURL.EndsWith("/"))
             //    wooAPISettings.QueryURL.Remove(wooAPISettings.QueryURL.Length - 1);
@@ -33,8 +33,8 @@ namespace RainbowOF.Woo.REST.Repositories
             get
             {
                 return new RestAPI(_WooAPISettings.FullSourceURL + _WooAPISettings.JSONAPIPostFix,
-               _WooAPISettings.CustomerKey,
-               _WooAPISettings.CustomerSecret,
+               _WooAPISettings.ConsumerKey,
+               _WooAPISettings.ConsumerSecret,
                !_WooAPISettings.IsSecureURL);
             }
         }
@@ -45,8 +45,8 @@ namespace RainbowOF.Woo.REST.Repositories
             get
             {
                 return new RestAPI(_WooAPISettings.FullSourceURL + _WooAPISettings.RootAPIPostFix,
-               _WooAPISettings.CustomerKey,
-               _WooAPISettings.CustomerSecret,
+               _WooAPISettings.ConsumerKey,
+               _WooAPISettings.ConsumerSecret,
                !_WooAPISettings.IsSecureURL);
             }
         }

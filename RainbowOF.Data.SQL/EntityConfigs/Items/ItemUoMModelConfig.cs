@@ -4,7 +4,7 @@ using RainbowOF.Models.Items;
 
 namespace RainbowOF.Datsa.SQL.EntityConfigs.Items
 {
-    internal class ItemUoMModelConfig : IEntityTypeConfiguration<ItemUoM>
+    internal class ItemUoMMappingConfig : IEntityTypeConfiguration<ItemUoM>
     {
         public void Configure(EntityTypeBuilder<ItemUoM> itemUoMModelBuilder)
         {
@@ -16,7 +16,7 @@ namespace RainbowOF.Datsa.SQL.EntityConfigs.Items
             //    .HasDefaultValue(true);
             itemUoMModelBuilder.HasOne(iu => iu.BaseUoM)
                 .WithOne()
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }

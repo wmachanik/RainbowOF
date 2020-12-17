@@ -16,7 +16,9 @@ namespace RanbowOF.Repositories.Common
         Task<IEnumerable<TEntity>> GetAllAsync();
         IEnumerable<TEntity> GetBy(Expression<Func<TEntity, bool>> predicate);
         Task<IEnumerable<TEntity>> GetByAsync(Expression<Func<TEntity, bool>> predicate);
+        TEntity FindFirst();
         TEntity FindFirst(Expression<Func<TEntity, bool>> predicate);
+        Task<TEntity> FindFirstAsync();
         Task<TEntity> FindFirstAsync(Expression<Func<TEntity, bool>> predicate);
         int Add(TEntity newEntity);
         Task<int> AddAsync(TEntity newEntity);

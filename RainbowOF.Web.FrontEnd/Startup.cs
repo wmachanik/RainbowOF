@@ -29,8 +29,7 @@ namespace RainbowOF.Web.FrontEnd
             services.AddRazorPages();
             services.AddServerSideBlazor();
 
-            services
-                  .AddBlazorise(options =>
+            services.AddBlazorise(options =>
                   {
                       options.ChangeTextOnKeyPress = true; // optional
                   })
@@ -42,6 +41,7 @@ namespace RainbowOF.Web.FrontEnd
             {
                 options.UseSqlServer(Configuration.GetConnectionString("SQLConnection"));
                 options.EnableDetailedErrors(true);
+
                 //---- Only use if needed                options.EnableSensitiveDataLogging(true);
                 //                options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             });

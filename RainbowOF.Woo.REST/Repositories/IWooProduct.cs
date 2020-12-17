@@ -7,7 +7,7 @@ using WooCommerceNET.WooCommerce.v3;
 
 namespace RainbowOF.Woo.REST
 {
-    public interface IWooProducts
+    public interface IWooProduct
     {
         Task<List<Product>> GetProductsOfType(string pProductType);
         Task<List<Product>> GetAllProducts();

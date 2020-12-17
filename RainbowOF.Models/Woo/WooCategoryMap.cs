@@ -7,7 +7,7 @@ using System.Text;
 namespace RainbowOF.Models.Woo
 {
     // Maps the ItemCategory to wooItemcategory
-    class WooCategoryMap
+    public class WooCategoryMap
     {
         public int WooCategoryMapId { get; set; }
         [Required]

@@ -16,7 +16,7 @@ namespace RainbowOF.Models.Items
     // UoMQtyPerItem                    double(12,6)  The quantity this is for UoM
     public class ActiveItemAttributeVariety
     {
-        public int ItemAttributeVarietiesActiveId { get; set; }
+        public int ActiveItemAttributeVarietyId { get; set; }
         public int ItemId { get; set; }
         public int ItemAttributeId { get; set; }
         [DefaultValue(false)]

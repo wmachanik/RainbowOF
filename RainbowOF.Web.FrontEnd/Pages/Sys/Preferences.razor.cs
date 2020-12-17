@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Components;
-using RainbowOF.Components.Modals;
+﻿using Blazorise;
+using Microsoft.AspNetCore.Components;
 using RainbowOF.FrontEnd.Models;
 using RainbowOF.Tools;
+using RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals;
 using RanbowOF.Repositories.Common;
 using RanbowOF.Repositories.System;
 using System.Threading.Tasks;
@@ -11,13 +12,12 @@ namespace RainbowOF.Web.FrontEnd.Pages.Sys
     public partial class Preferences : ComponentBase
     {
         public SysPrefsModel SysPrefsModel { get; set; } = null;
-        public bool Saved = false;
-        public bool Saving = false;
+        public bool IsSaved = false;
+        public bool IsSaving = false;
         public bool collapseSysVisible = true;
         public bool collapseWooVisible = true;
         //bool collapse3Visible = false;
-        protected ShowModal ShowSavedStatus { get; set; }
-
+        protected ShowModalMessage ShowSavedStatus { get; set; }
         [Inject]
         public IAppUnitOfWork _AppUnitOfWork { get; set; }
         [Inject]
@@ -30,12 +30,29 @@ namespace RainbowOF.Web.FrontEnd.Pages.Sys
             //return base.OnInitializedAsync();
         }
 
+/*
+ *      public string ModalTitle = "Saving Status";
+        public string ModalMessage = "System Preferences Saved";
+
+        private Modal modalRef;
+
+        private void ShowModal()
+        {
+            modalRef.Show();
+        }
+
+        private void HideModal()
+        {
+            modalRef.Hide();
+        }
+*/
+
         private async Task LoadSysPrefs()
         {
             ISysPrefsRepository _SysPref = _AppUnitOfWork.sysPrefsRepository();
             StateHasChanged();
             await Task.Run(() => SysPrefsModel = _SysPref.GetSysPrefs());
-            Saved = false;
+            IsSaved = false;
             StateHasChanged();
         }
         public async void HandleValidSubmit()
@@ -45,28 +62,29 @@ namespace RainbowOF.Web.FrontEnd.Pages.Sys
                 ShowSaving();
                 ISysPrefsRepository _SysPref = _AppUnitOfWork.sysPrefsRepository();
                 // save
-                await _SysPref.UpdateSysPreferencesAsync(SysPrefsModel);
+                bool _Saved = await _SysPref.UpdateSysPreferencesAsync(SysPrefsModel);
 
+                if (!_Saved)
+                    ShowSavedStatus.UpdateModalMessage("Error saving preferences");
                 HideSaving();
-                ShowSavedStatus.Show();
-                // StateHasChanged();
+                //ShowModal();
+                ShowSavedStatus.ShowModal();
+                StateHasChanged();
             }
         }
-
-
         public void HandleInvalidSubmit()
         {
-            Saved = false;
+            IsSaved = false;
         }
 
         public void ShowSaving()
         {
-            Saving = true;
+            IsSaving = true;
             StateHasChanged();
         }
-        public void HideSaving()
+        public void HideSaving()    
         {
-            Saving = false;
+            IsSaving = false;
             StateHasChanged();
         }
 
@@ -87,5 +105,32 @@ namespace RainbowOF.Web.FrontEnd.Pages.Sys
         //        this.TxtType = "password";
         //    }
         //}
+        //protected bool IsShowModal { get; set; }
+
+        ////[Parameter]
+        //public string ModalTitle { get; set; } = "Status Message";
+        ////[Parameter]
+        //public string ModalMessage { get; set; } = "Something Happened";
+        ////[Parameter]
+        //public EventCallback CloseModel { get; set; }
+
+        //public void Show()
+        //{
+        //    IsShowModal = true;
+        //    StateHasChanged();
+        //}
+
+        //public void UpdateModalMessage(string pMessage)
+        //{
+        //    ModalMessage = pMessage;
+        //}
+
+        //protected async Task OnCloseModal()
+        //{
+        //    IsShowModal = false;
+        //    StateHasChanged();
+        //    await CloseModel.InvokeAsync(null);
+        //}
+
     }
 }

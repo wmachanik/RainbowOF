@@ -65,11 +65,11 @@ namespace RainbowOF.Data.SQL.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("CustomerKey")
+                    b.Property<string>("ConsumerKey")
                         .HasColumnType("nvarchar(250)")
                         .HasMaxLength(250);
 
-                    b.Property<string>("CustomerSecret")
+                    b.Property<string>("ConsumerSecret")
                         .HasColumnType("nvarchar(250)")
                         .HasMaxLength(250);
 

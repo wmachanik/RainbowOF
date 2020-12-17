@@ -12,7 +12,7 @@ namespace RainbowOF.Models.Items
 
     public class ActiveItemAttribute
     {
-        public int ItemAttributeId { get; set; }
+        public int ActiveItemAttributeId { get; set; }
         public int ItemId { get; set; }
         public bool IsUsedForVariableType { get; set; }
     }

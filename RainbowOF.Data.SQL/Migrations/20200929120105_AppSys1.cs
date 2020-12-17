@@ -38,8 +38,8 @@ namespace RainbowOF.Data.SQL.Migrations
                     GroupItemTypeId = table.Column<int>(nullable: true),
                     DefaultDeliveryPersonId = table.Column<int>(nullable: true),
                     ImageFolderPath = table.Column<string>(maxLength: 250, nullable: true),
-                    QueryParamCustomerKey = table.Column<string>(maxLength: 250, nullable: true),
-                    QueryParamCustomerSecret = table.Column<string>(maxLength: 250, nullable: true),
+                    QueryParamConsumerKey = table.Column<string>(maxLength: 250, nullable: true),
+                    QueryParamConsumerSecret = table.Column<string>(maxLength: 250, nullable: true),
                     RowVersion = table.Column<byte[]>(rowVersion: true, nullable: true)
                 },
                 constraints: table =>

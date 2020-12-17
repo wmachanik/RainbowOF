@@ -11,7 +11,7 @@ namespace RainbowOF.Data.SQL.EntityConfigs.Items
     {
         public void Configure(EntityTypeBuilder<ActiveItemAttribute> activeItemAttributeModelBuilder)
         {
-            activeItemAttributeModelBuilder.HasIndex(aia => new { aia.ItemAttributeId, aia.ItemId })
+            activeItemAttributeModelBuilder.HasIndex(aia => new { aia.ActiveItemAttributeId, aia.ItemId })
                 .IsUnique();
             //itemAttributeModelBuilder.HasIndex(i => i.SKU)
             //    

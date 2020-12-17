@@ -1,6 +1,6 @@
 ﻿namespace RainbowOF.Models
 {
-    enum WooSections
+    public enum WooSections
     {
         none,
         Coupons, 

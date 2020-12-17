@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
-using RainbowOF.Components.Modals;
 using RainbowOF.Models.System;
 using RainbowOF.Tools;
+using RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals;
 using RainbowOF.Woo.REST.Models;
 using RainbowOF.Woo.REST.Repositories;
 using System;
@@ -22,29 +22,29 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Sys
         public bool ShowSecret = false;
         public string WooStatus = "none";
         public bool Waiting = false;
-        protected ShowModal ShowModalStatus { get; set; }
+        //protected ShowModalMessage ShowModalStatus { get; set; }
         public async void CheckWooStatus()
         {
             Waiting = true;
             StateHasChanged();
             WooAPISettings _WooAPISettings = new WooAPISettings
             {
-                CustomerKey = WooSettingsModel.CustomerKey,
-                CustomerSecret = WooSettingsModel.CustomerSecret,
+                ConsumerKey = WooSettingsModel.ConsumerKey,
+                ConsumerSecret = WooSettingsModel.ConsumerSecret,
                 QueryURL = WooSettingsModel.QueryURL,
                 IsSecureURL = WooSettingsModel.IsSecureURL,
                 JSONAPIPostFix = WooSettingsModel.JSONAPIPostFix,
                 RootAPIPostFix = WooSettingsModel.RootAPIPostFix
             };
 
-            WooProducts _WooProducts = new WooProducts(_WooAPISettings, Logger);
+            WooProduct _WooProducts = new WooProduct(_WooAPISettings, Logger);
             int _count = await Task.Run(() => _WooProducts.GetProductCount());    //.CheckProductLink());
 
             WooStatus = ((_count > 0) ? $"Success - product count: {_count}" : "Failed");
             Waiting = false;
             StateHasChanged();
-            ShowModalStatus.UpdateModalMessage($"Woo API call status: {Environment.NewLine}{Environment.NewLine}  {WooStatus}");
-            ShowModalStatus.Show();
+            //ShowModalStatus.UpdateModalMessage($"Woo API call status: {Environment.NewLine}{Environment.NewLine}  {WooStatus}");
+            //ShowModalStatus.ShowModal();
         }
 
         protected void StatusClosed_Click()

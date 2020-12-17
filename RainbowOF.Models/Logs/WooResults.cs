@@ -1,6 +1,6 @@
 ﻿namespace RainbowOF.Models
 {
-    enum WooResults
+    public enum WooResults
     {
         none, Success, Error, Timeout
     }

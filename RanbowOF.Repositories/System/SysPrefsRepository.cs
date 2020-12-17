@@ -87,30 +87,32 @@ namespace RanbowOF.Repositories.System
         public async Task<bool> UpdateSysPreferencesAsync(SysPrefsModel updateSysPrefsModel)
         {
             bool updated = false;
+            int recsUpdated = 0;
+
             if (updateSysPrefsModel.SysPrefs.SysPrefsId > 0)
             {
                 // it means that there was a record in the database.
-                var recsUpdated = await _SysPrefsRepo.UpdateAsync(updateSysPrefsModel.SysPrefs);
-                updated = (recsUpdated == 1);
+                recsUpdated = await _SysPrefsRepo.UpdateAsync(updateSysPrefsModel.SysPrefs);
+                updated = (recsUpdated > 0);
             }
             else
             {
                 // it means that there was a record in the database.
-                var recIsUpdated = await _SysPrefsRepo.AddAsync(updateSysPrefsModel.SysPrefs) > 0;
-                updated = recIsUpdated;
+                recsUpdated = await _SysPrefsRepo.AddAsync(updateSysPrefsModel.SysPrefs);
+                updated = recsUpdated > 0;
             }
             // run this update regardless 
             if (updateSysPrefsModel.WooSettings.WooSettingsId > 0)
             {
                 // it means that there was a record in the database.
-                var recsUpdated = await _WooSettingsRepo.UpdateAsync(updateSysPrefsModel.WooSettings);
-                updated = updated && (recsUpdated == 1);
+                recsUpdated = await _WooSettingsRepo.UpdateAsync(updateSysPrefsModel.WooSettings);
+                updated = updated && (recsUpdated > 0);
             }
             else
             {
                 // it means that there was a record in the database.
-                var recIsUpdated = await _WooSettingsRepo.AddAsync(updateSysPrefsModel.WooSettings) > 0;
-                updated = updated && recIsUpdated;
+                recsUpdated = await _WooSettingsRepo.AddAsync(updateSysPrefsModel.WooSettings);
+                updated = updated && (recsUpdated > 0);
             }
             return updated;
         }

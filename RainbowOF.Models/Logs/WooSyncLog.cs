@@ -17,7 +17,7 @@ namespace RainbowOF.Models.Logs
     /// Notes               String      Any notes
 
     /// </summary>
-    class WooSyncLog
+    public class WooSyncLog
     {
         public int WooSyncLogId { get; set; }
         [DisplayName("Date and time the sync was done")]

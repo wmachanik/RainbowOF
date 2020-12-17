@@ -13,10 +13,10 @@ namespace RanbowOF.Repositories.Common
 {
     public class AppRepository<TEntity> : IAppRepository<TEntity> where TEntity : class
     {
-        private ApplicationDbContext _context { get; set; } = null;
+        private ApplicationDbContext _context { get; set; }  // = null;
         private DbSet<TEntity> _table = null;
         private ILoggerManager _logger { get; }
-        private IAppUnitOfWork _unitOfWork {get ;set;}
+        private IAppUnitOfWork _unitOfWork { get; set; }
 
         /// should nto need this had it her to stop the error: "There is no argument given that corresponds to the required formal parameter"
         /// if it is asking for that you need to ass  : base (dbContext, logger, unitofwork) to the def 
@@ -24,7 +24,7 @@ namespace RanbowOF.Repositories.Common
         public AppRepository(ApplicationDbContext dbContext, ILoggerManager logger, IAppUnitOfWork unitOfWork)
         {
             _context = dbContext;
-            _table = _context.Set<TEntity>();
+            _table = dbContext.Set<TEntity>();
             _logger = logger;
             _unitOfWork = unitOfWork;
         }
@@ -41,7 +41,7 @@ namespace RanbowOF.Repositories.Common
             try
             {
                 _context.Entry(newEntity).State = EntityState.Added;
-                 _table.Add(newEntity);
+                _table.Add(newEntity);
                 _added = _unitOfWork.Complete();  // Save();
                 //_context.Database.CommitTransaction();
             }
@@ -63,6 +63,18 @@ namespace RanbowOF.Repositories.Common
                 _context.Entry(newEntity).State = EntityState.Added;
                 await _table.AddAsync(newEntity);
                 _added = await _unitOfWork.CompleteAsync();  // Save();
+                if ((_added > 0) && (_context.Entry(newEntity).IsKeySet))
+                {
+                    //////// may not need this since newEntry.<id> may be set and returned, need to check that.
+                    // once saved it if the table has an id field it should be set
+                    var idProperty = newEntity.GetType().GetProperty("Id").GetValue(newEntity, null);
+                    if (idProperty != null)
+                    {
+                        // if there was an idfield then it should not be null so set added to the id
+                        _added = (int)idProperty;
+                    }
+                    return (int)idProperty;
+                }
                 //_context.Database.CommitTransaction();
             }
             catch (Exception ex)
@@ -74,7 +86,7 @@ namespace RanbowOF.Repositories.Common
             return _added;
         }
 
-        public  int Delete(object Id)
+        public int Delete(object Id)
         {
             int _deleted = 0;
             _logger.LogDebug($"Deleting item: {Id.ToString()}");
@@ -86,7 +98,7 @@ namespace RanbowOF.Repositories.Common
                 {
                     _context.Entry(_entity).State = EntityState.Deleted;
                     _table.Remove(_entity);
-                    _deleted =  _unitOfWork.Complete();  // Save();
+                    _deleted = _unitOfWork.Complete();  // Save();
                 }
 
             }
@@ -157,7 +169,7 @@ namespace RanbowOF.Repositories.Common
             _unitOfWork.BeginTransaction();
             try
             {
-                var _entity =  await _table.FindAsync(predicate);
+                var _entity = await _table.FindAsync(predicate);
                 if (_entity != null)
                 {
                     _context.Entry(_entity).State = EntityState.Deleted;
@@ -176,13 +188,79 @@ namespace RanbowOF.Repositories.Common
             return _deleted;
         }
 
+        public TEntity FindFirst()
+        {
+            TEntity _entity = null;
+            _logger.LogDebug($"Finding First item of type: {typeof(TEntity)}");
+            try
+            {
+                _entity = _table.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"!!!Error Fiding first item: {ex.Message}");
+                _unitOfWork.RollbackTransaction();
+#if DebugMode
+                throw;     // #Debug?
+#endif
+            }
+            return _entity;
+        }
         public TEntity FindFirst(Expression<Func<TEntity, bool>> predicate)
         {
-            return _table.FirstOrDefault(predicate);
+            TEntity _entity = null;
+            _logger.LogDebug($"Finding First {predicate.ToString()} item of type: {typeof(TEntity)}");
+            try
+            {
+                _entity = _table.FirstOrDefault(predicate);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"!!!Error Fiding first predicate item: {ex.Message}");
+                _unitOfWork.RollbackTransaction();
+
+#if DebugMode
+                throw;     // #Debug?
+#endif
+            }
+            return _entity;
+        }
+        public async Task<TEntity> FindFirstAsync()
+        {
+            TEntity _entity = null;
+            _logger.LogDebug($"Finding First item of type: {typeof(TEntity)}");
+            try
+            {
+                _entity = await _table.FirstOrDefaultAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"!!!Error Fiding first item: {ex.Message}");
+                _unitOfWork.RollbackTransaction();
+#if DebugMode
+                throw;     // #Debug?
+#endif
+            }
+            return _entity;
         }
         public async Task<TEntity> FindFirstAsync(Expression<Func<TEntity, bool>> predicate)
         {
-            return await _table.FirstOrDefaultAsync(predicate);
+            TEntity _entity = null;
+            _logger.LogDebug($"Finding First {predicate.ToString()} item of type: {typeof(TEntity)}");
+            try
+            {
+                _entity = await _table.FirstOrDefaultAsync(predicate);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"!!!Error Fiding first predicate item: {ex.Message}");
+                _unitOfWork.RollbackTransaction();
+
+#if DebugMode
+                throw;     // #Debug?
+#endif
+            }
+            return _entity;
         }
 
         public IEnumerable<TEntity> GetAll()
@@ -258,8 +336,8 @@ namespace RanbowOF.Repositories.Common
             try
             {
                 _context.Entry(updatedEntity).State = EntityState.Modified;
-                _table.Update ( updatedEntity);
-                _updated =  await _unitOfWork.CompleteAsync();  // Save();
+                _table.Update(updatedEntity);
+                _updated = await _unitOfWork.CompleteAsync();  // Save();
             }
             catch (Exception ex)
             {

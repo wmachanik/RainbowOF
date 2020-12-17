@@ -1,15 +1,14 @@
 ﻿@page "/systempreferences"
 
-
 <h3>SystemPreferences</h3>
 
 @if (SysPrefsModel == null)
 {
-    <BlazorPro.Spinkit.Bounce />
+    <BlazorPro.Spinkit.Wave />
 }
 else
 {
-    @if (Saved)
+    @if (IsSaved)
     {
         <Blazorise.Badge Class="alert-info">Preferences Saved...</Blazorise.Badge>
     }
@@ -44,8 +43,8 @@ else
                             <div class="input-group-prepend">
                                 <div class="input-group-text">
                                     <Tooltip Text="Must recurring orders be processed" Fade="true">
-                                        <Blazorise.Check id="DoReccuringOrdersInput" TValue="bool" 
-                                                       @bind-Value="SysPrefsModel.SysPrefs.DoReccuringOrders" />
+                                        <Blazorise.Check id="DoReccuringOrdersInput" TValue="bool"
+                                                         @bind-Value="SysPrefsModel.SysPrefs.DoReccuringOrders" />
                                     </Tooltip>
                                 </div>
                                 <span class="input-group-text">Do Reccuring Orders</span>
@@ -59,7 +58,7 @@ else
                             </div>
                             <Tooltip Text="Date the system willuse to calculate the last pre dates" Fade="true">
                                 <Blazorise.DateEdit Class="form-control" id="DateLastPrepDateCalcdInput" Placeholder="Date Last Date Calculated"
-                                           @bind-Date="SysPrefsModel.SysPrefs.DateLastPrepDateCalcd" ReadOnly="true" />
+                                                    @bind-Date="SysPrefsModel.SysPrefs.DateLastPrepDateCalcd" ReadOnly="true" />
                             </Tooltip>
                             <div class="input-group-append">
                                 <button type="button" class="btn btn-primary">
@@ -73,7 +72,7 @@ else
                             </div>
                             <Tooltip Text="Number of days to use as a buffer to calc notification" Fade="true">
                                 <Blazorise.NumericEdit Class="form-control" id="ReminderDaysNumberInput" Placeholder='Number of Reminder Days'
-                                             @bind-Value="SysPrefsModel.SysPrefs.ReminderDaysNumber"  Min="1" Max="21" TValue="int" Decimals="0" />
+                                                       @bind-Value="SysPrefsModel.SysPrefs.ReminderDaysNumber" Min="1" Max="21" TValue="int" Decimals="0" />
                             </Tooltip>
                             <ValidationMessage For="() => SysPrefsModel.SysPrefs.ReminderDaysNumber" />
                         </div>
@@ -104,7 +103,7 @@ else
                         <div class="col input-group">
                             <div class="custom-file">
                                 <Blazorise.FileEdit Class="custom-file-input" id="ImageFolderPathInput" Placeholder="Image Folder Path"
-                                       @bind-Value="SysPrefsModel.SysPrefs.ImageFolderPath" />
+                                                    @bind-Value="SysPrefsModel.SysPrefs.ImageFolderPath" />
                                 <label class="custom-file-label" for="ImageFolderPathInput">Image Folder Path</label>
                             </div>
                         </div>
@@ -126,25 +125,27 @@ else
                     </Blazorise.Heading>
                 </Blazorise.CollapseHeader>
                 <Blazorise.CollapseBody>
-                    <WooPreferencesComponent WooSettings="SysPrefsModel.WooSettings" Logger="_logger" />
+                    <WooPreferencesComponent WooSettingsModel="SysPrefsModel.WooSettings" Logger="_logger" />
                 </Blazorise.CollapseBody>
             </Blazorise.Collapse>
         </Blazorise.Accordion>
         <hr />
         <div class="form-group row justify-content-center">
             <div class=" col-md-6justify-content-center">
-                <Blazorise.Bootstrap.Button Loading="Saving" Type="ButtonType.Submit" Class="btn btn-primary">Save</Blazorise.Bootstrap.Button>
+                <Blazorise.Bootstrap.Button Loading="IsSaving" Type="ButtonType.Submit" Class="btn btn-primary">Save</Blazorise.Bootstrap.Button>
                 <button class="btn btn-outline-secondary" type="button">Return</button>
             </div>
         </div>
         <div class="small text-right">@SysPrefsModel.SysPrefs.SysPrefsId</div>
-
     </EditForm>
 
 
+    <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals.ShowModalMessage @ref="ShowSavedStatus" ModalMessage="System Preferences Saved" ModalTitle="Saving Status" />
+    <span>
+        1.show modal not closing - no response to close even
+        2.not saving
+
+    </span>
 }
 
-<RainbowOF.Components.Modals.ShowModal @ref="ShowSavedStatus" CloseModel="StatusClosed_Click"
-                                       ModalMessage="System Preferences Saved" ModalTitle="Saving Status" />
-
-
+    

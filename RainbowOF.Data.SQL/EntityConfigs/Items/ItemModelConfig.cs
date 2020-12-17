@@ -19,10 +19,10 @@ namespace RainbowOF.Datsa.SQL.EntityConfigs.Items
                 .OnDelete(DeleteBehavior.SetNull);
             itemModelBuilder.HasOne(i => i.ParentItem)
                 .WithMany()
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.NoAction);
             itemModelBuilder.HasOne(i=>i.ReplacementItem)
                 .WithMany()
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }

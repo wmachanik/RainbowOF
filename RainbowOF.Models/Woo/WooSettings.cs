@@ -11,15 +11,15 @@ namespace RainbowOF.Models.System
         [DefaultValue("www.mysite.com")]
         [StringLength(500)]
         public string QueryURL { get; set; }
-        [DisplayName("Woo URL is secure")]
+        [DisplayName("Woo URL is secu`re")]
         [DefaultValue(true)]
         public bool IsSecureURL { get; set; }
-        [DisplayName("Customer Key for Woo integration")]
+        [DisplayName("Consumer Key for Woo integration")]
         [StringLength(250)]
-        public string CustomerKey { get; set; }
-        [DisplayName("Customer Secret for Woo integration")]
+        public string ConsumerKey { get; set; }
+        [DisplayName("Consumer Secret for Woo integration")]
         [StringLength(250)]
-        public string CustomerSecret { get; set; }
+        public string ConsumerSecret { get; set; }
         [DisplayName("Root API Postfix")]
         [StringLength(100)]
         [DefaultValue("wc-api/v3")]
@@ -38,6 +38,18 @@ namespace RainbowOF.Models.System
         public bool OnlyInStockItemsImported { get; set; }
         [DefaultValue("false")]
         public bool AreItemQuantatiesImported { get; set; }
+        // default settings
+        public WooSettings()
+        {
+            IsSecureURL = true;
+            JSONAPIPostFix = "wp-json/wc/v3";
+            RootAPIPostFix = "wc-api/v3";
+            AreCategoriesImported = true;
+            AreAttributesImported = true;
+            AreVarietiesMapped = true;
+            OnlyInStockItemsImported = true;
+            AreItemQuantatiesImported = true;
+        }
 
 
     }

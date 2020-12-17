@@ -11,11 +11,11 @@ namespace RainbowOF.Data.SQL.Migrations
                 table: "SysPrefs");
 
             migrationBuilder.DropColumn(
-                name: "QueryParamCustomerKey",
+                name: "QueryParamConsumerKey",
                 table: "SysPrefs");
 
             migrationBuilder.DropColumn(
-                name: "QueryParamCustomerSecret",
+                name: "QueryParamConsumerSecret",
                 table: "SysPrefs");
 
             migrationBuilder.AlterColumn<string>(
@@ -29,13 +29,13 @@ namespace RainbowOF.Data.SQL.Migrations
                 oldNullable: true);
 
             migrationBuilder.AddColumn<string>(
-                name: "CustomerKey",
+                name: "ConsumerKey",
                 table: "SysPrefs",
                 maxLength: 250,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
-                name: "CustomerSecret",
+                name: "ConsumerSecret",
                 table: "SysPrefs",
                 maxLength: 250,
                 nullable: true);
@@ -62,11 +62,11 @@ namespace RainbowOF.Data.SQL.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "CustomerKey",
+                name: "ConsumerKey",
                 table: "SysPrefs");
 
             migrationBuilder.DropColumn(
-                name: "CustomerSecret",
+                name: "ConsumerSecret",
                 table: "SysPrefs");
 
             migrationBuilder.DropColumn(
@@ -99,14 +99,14 @@ namespace RainbowOF.Data.SQL.Migrations
                 defaultValue: false);
 
             migrationBuilder.AddColumn<string>(
-                name: "QueryParamCustomerKey",
+                name: "QueryParamConsumerKey",
                 table: "SysPrefs",
                 type: "nvarchar(250)",
                 maxLength: 250,
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
-                name: "QueryParamCustomerSecret",
+                name: "QueryParamConsumerSecret",
                 table: "SysPrefs",
                 type: "nvarchar(250)",
                 maxLength: 250,

@@ -87,11 +87,11 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Property<DateTime?>("LastReccurringDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("QueryParamCustomerKey")
+                    b.Property<string>("QueryParamConsumerKey")
                         .HasColumnType("nvarchar(250)")
                         .HasMaxLength(250);
 
-                    b.Property<string>("QueryParamCustomerSecret")
+                    b.Property<string>("QueryParamConsumerSecret")
                         .HasColumnType("nvarchar(250)")
                         .HasMaxLength(250);
 

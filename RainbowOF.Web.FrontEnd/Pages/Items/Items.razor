@@ -1,0 +1,87 @@
+﻿@page "/Items"
+@using Blazorise.DataGrid
+@using RainbowOF.Models.Items
+
+
+<Row>
+    <Column>
+        <Card Margin="Margin.Is2.OnY">
+            <CardHeader>
+                <CardTitle>Items</CardTitle>
+            </CardHeader>
+            <CardBody>
+                <CardText>Combine diferent datagrid options</CardText>
+            </CardBody>
+            <CardBody>
+                <Fields>
+                    <Field>
+                        <FieldLabel>
+                        </FieldLabel>
+                        <FieldBody>
+                            <Check @bind-Checked="@IsSortable">Sortable</Check>
+                        </FieldBody>
+                    </Field>
+                    @*<Field>
+                            <FieldLabel>
+                            </FieldLabel>
+                            <FieldBody>
+                                <Check @bind-Checked="@IsFilterable">Filterable</Check>
+                            </FieldBody>
+                        </Field>*@
+                    <Field>
+                        <FieldLabel>
+                        </FieldLabel>
+                        <FieldBody>
+                            <Check @bind-Checked="@DoShowPager">Show Pager</Check>
+                        </FieldBody>
+                    </Field>
+                    <Field>
+                        <FieldLabel>
+                            Custom Search
+                        </FieldLabel>
+                        <FieldBody>
+                            <TextEdit @bind-Text="@customFilterValue" />
+                        </FieldBody>
+                    </Field>
+                </Fields>
+            </CardBody>
+        </Card>
+    </Column>
+
+</Row>
+
+<DataGrid TItem="Item" Data="@ItemList" PageSize="10"
+          Sortable="@IsSortable" CustomFilter="@OnCustomFilter"
+          Editable="true" EditMode="DataGridEditMode.Popup" 
+          Striped="true" Hoverable="true" Responsive="true">
+    <EmptyTemplate>
+        No items logged yet...
+    </EmptyTemplate>
+    <LoadingTemplate>
+        <BlazorPro.Spinkit.Grid />
+    </LoadingTemplate>
+    <DataGridColumns>
+        <DataGridColumn TItem="Item" Field="@nameof(Item.SKU)" Caption="SKU" Sortable="true" />
+        <DataGridColumn TItem="Item" Field="@nameof(Item.ItemName)" Caption="Name" />
+        <DataGridColumn TItem="Item" Field="@nameof(Item.ItemDetail)" Caption="Detail" />
+        <DataGridColumn TItem="Item" Field="@nameof(Item.IsEnabled)" Caption="Enabled" />
+        <DataGridColumn TItem="Item" Field="@nameof(Item.ItemCategory)" Caption="Category" />
+        <DataGridColumn TItem="Item" Field="@nameof(Item.ItemAbbreviatedName)" Caption="Abrvt" />
+        <DataGridColumn TItem="Item" Field="@nameof(Item.SortOrder)" Caption="SOrdr" />
+    </DataGridColumns>
+    <DetailRowTemplate>
+        <DataGrid TItem="Item"
+                  Data="@ItemList"
+                  Sortable="false"
+                  ShowCaptions="false">
+            <DataGridColumn TItem="Item" Field="@nameof(Item.SKU)" Caption="SKU" />
+            <DataGridColumn TItem="Item" Field="@nameof(Item.ItemName)" Caption="Name" />
+            <DataGridColumn TItem="Item" Field="@nameof(Item.ItemDetail)" Caption="Detail" />
+            <DataGridColumn TItem="Item" Field="@nameof(Item.IsEnabled)" Caption="Enabled" />
+            <DataGridColumn TItem="Item" Field="@nameof(Item.ItemAbbreviatedName)" Caption="Abrv" />
+            <DataGridColumn TItem="Item" Field="@nameof(Item.SortOrder)" Caption="SOrdr" />
+        </DataGrid>
+    </DetailRowTemplate>
+</DataGrid>
+
+

@@ -1,0 +1,78 @@
+﻿@page "/ViewWooSyncLog"
+@using Blazorise.DataGrid
+@using RainbowOF.Models.Logs
+
+<Row>
+    <Column>
+        <Card Margin="Margin.Is2.OnY">
+            <CardHeader>
+                <CardTitle>Woo Sync Log</CardTitle>
+            </CardHeader>
+            <CardBody>
+                <CardText>Combine diferent datagrid options</CardText>
+            </CardBody>
+            <CardBody>
+                <Fields>
+                    <Field>
+                        <FieldLabel>
+                        </FieldLabel>
+                        <FieldBody>
+                            <Check @bind-Checked="@IsSortable">Sortable</Check>
+                        </FieldBody>
+                    </Field>
+                    @*<Field>
+                            <FieldLabel>
+                            </FieldLabel>
+                            <FieldBody>
+                                <Check @bind-Checked="@IsFilterable">Filterable</Check>
+                            </FieldBody>
+                        </Field>*@
+                    <Field>
+                        <FieldLabel>
+                        </FieldLabel>
+                        <FieldBody>
+                            <Check @bind-Checked="@DoShowPager">Show Pager</Check>
+                        </FieldBody>
+                    </Field>
+                    <Field>
+                        <FieldLabel>
+                            Custom Search
+                        </FieldLabel>
+                        <FieldBody>
+                            <TextEdit @bind-Text="@customFilterValue" />
+                        </FieldBody>
+                    </Field>
+                </Fields>
+            </CardBody>
+        </Card>
+    </Column>
+
+</Row>
+
+<DataGrid TItem="WooSyncLog" Data="@WooSyncLogRows" PageSize="10"
+          Sortable="@IsSortable" CustomFilter="@OnCustomFilter"
+          Striped="true" Hoverable="true" Responsive="true">
+    <EmptyTemplate>
+        No items logged yet...
+    </EmptyTemplate>
+    <LoadingTemplate>
+        <BlazorPro.Spinkit.Grid />
+    </LoadingTemplate>
+    <DataGridColumns>
+        <DataGridColumn TItem="WooSyncLog" Field="@nameof(WooSyncLog.WooSyncDateTime)" Caption="When" Sortable="true" />
+        <DataGridColumn TItem="WooSyncLog" Field="@nameof(WooSyncLog.Section)" Caption="Section" />
+        <DataGridColumn TItem="WooSyncLog" Field="@nameof(WooSyncLog.SectionID)" Caption="ID" />
+        <DataGridColumn TItem="WooSyncLog" Field="@nameof(WooSyncLog.Result)" Caption="Result" />
+    </DataGridColumns>
+    <DetailRowTemplate>
+        <DataGrid TItem="WooSyncLog"
+                  Data="@WooSyncLogRows"
+                  Sortable="false"
+                  ShowCaptions="false">
+            <DataGridColumn TItem="WooSyncLog" Field="@nameof(WooSyncLog.Parameters)" Caption="Parameters" />
+            <DataGridColumn TItem="WooSyncLog" Field="@nameof(WooSyncLog.Notes)" Caption="Notes" />
+        </DataGrid>
+    </DetailRowTemplate>
+</DataGrid>
+
+

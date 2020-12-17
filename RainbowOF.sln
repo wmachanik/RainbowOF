@@ -18,8 +18,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RainbowOF.Tools", "RainbowO
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RainbowOF.Woo.REST", "RainbowOF.Woo.REST\RainbowOF.Woo.REST.csproj", "{276F9D70-0BFF-47ED-B189-FEDE9D73DCA1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RainbowOF.Components", "RainbowOF.Components\RainbowOF.Components.csproj", "{C66C6A85-2065-4DCB-9FC4-B54771243345}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RainbowOF.FrontEnd.Models", "RainbowOF.FrontEnd.Models\RainbowOF.FrontEnd.Models.csproj", "{B6EC04D3-58D6-468E-B1D0-B8B6BD059DEA}"
 EndProject
 Global
@@ -52,10 +50,6 @@ Global
 		{276F9D70-0BFF-47ED-B189-FEDE9D73DCA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{276F9D70-0BFF-47ED-B189-FEDE9D73DCA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{276F9D70-0BFF-47ED-B189-FEDE9D73DCA1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C66C6A85-2065-4DCB-9FC4-B54771243345}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C66C6A85-2065-4DCB-9FC4-B54771243345}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C66C6A85-2065-4DCB-9FC4-B54771243345}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C66C6A85-2065-4DCB-9FC4-B54771243345}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B6EC04D3-58D6-468E-B1D0-B8B6BD059DEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B6EC04D3-58D6-468E-B1D0-B8B6BD059DEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B6EC04D3-58D6-468E-B1D0-B8B6BD059DEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
