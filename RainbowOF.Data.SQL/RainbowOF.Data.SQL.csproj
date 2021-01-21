@@ -6,15 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Migrations\20200929114908_AppSys1.cs" />
-    <Compile Remove="Migrations\20200929114908_AppSys1.Designer.cs" />
-    <Compile Remove="Migrations\20201006092203_SysVars2.cs" />
-    <Compile Remove="Migrations\20201006092203_SysVars2.Designer.cs" />
-    <Compile Remove="Migrations\20201123111025_WooCatImport2.cs" />
-    <Compile Remove="Migrations\20201123111025_WooCatImport2.Designer.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.1">
       <PrivateAssets>all</PrivateAssets>

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -7,7 +8,8 @@ namespace RainbowOF.Models.Items
 {
     public class Item
     {
-        public int ItemId { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public Guid ItemId { get; set; }
         [Required(ErrorMessage = "Item or Product name is required")]
         [StringLength(100)]
         [DisplayName("Item name")]
@@ -21,8 +23,8 @@ namespace RainbowOF.Models.Items
         public string ItemDetail { get; set; }
         public int? ItemCategoryId { get; set; }
         [DefaultValue(0)]
-        public int? ParentItemId { get; set; }
-        public int? ReplacementItemId { get; set; }
+        public Guid? ParentItemId { get; set; }
+        public Guid? ReplacementItemId { get; set; }
         [StringLength(10, ErrorMessage = "Abbreviated name")]
         public string ItemAbbreviatedName { get; set; }
         public int SortOrder { get; set; }

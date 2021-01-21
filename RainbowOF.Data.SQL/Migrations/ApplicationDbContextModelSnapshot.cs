@@ -15,16 +15,16 @@ namespace RainbowOF.Data.SQL.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.9")
+                .UseIdentityColumns()
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                .HasAnnotation("ProductVersion", "5.0.1");
 
             modelBuilder.Entity("RainbowOF.Models.Items.ActiveItemAttribute", b =>
                 {
                     b.Property<int>("ActiveItemAttributeId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .UseIdentityColumn();
 
                     b.Property<bool>("IsUsedForVariableType")
                         .HasColumnType("bit");
@@ -45,7 +45,7 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Property<int>("ActiveItemAttributeVarietyId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .UseIdentityColumn();
 
                     b.Property<bool>("IsDefault")
                         .HasColumnType("bit");
@@ -74,35 +74,37 @@ namespace RainbowOF.Data.SQL.Migrations
 
             modelBuilder.Entity("RainbowOF.Models.Items.Item", b =>
                 {
-                    b.Property<int>("ItemId")
+                    b.Property<Guid>("ItemId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsEnabled")
                         .HasColumnType("bit");
 
                     b.Property<string>("ItemAbbreviatedName")
-                        .HasColumnType("nvarchar(10)")
-                        .HasMaxLength(10);
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<int?>("ItemCategoryId")
                         .HasColumnType("int");
 
+                    b.Property<Guid?>("ItemCategoryId1")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("ItemDetail")
-                        .HasColumnType("nvarchar(255)")
-                        .HasMaxLength(255);
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("ItemName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(100)")
-                        .HasMaxLength(100);
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.Property<int?>("ParentItemId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ParentItemId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("ReplacementItemId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ReplacementItemId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -110,15 +112,15 @@ namespace RainbowOF.Data.SQL.Migrations
                         .HasColumnType("rowversion");
 
                     b.Property<string>("SKU")
-                        .HasColumnType("nvarchar(50)")
-                        .HasMaxLength(50);
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("int");
 
                     b.HasKey("ItemId");
 
-                    b.HasIndex("ItemCategoryId");
+                    b.HasIndex("ItemCategoryId1");
 
                     b.HasIndex("ItemName")
                         .IsUnique();
@@ -136,15 +138,14 @@ namespace RainbowOF.Data.SQL.Migrations
 
             modelBuilder.Entity("RainbowOF.Models.Items.ItemAttribute", b =>
                 {
-                    b.Property<int>("ItemAttributeId")
+                    b.Property<Guid>("ItemAttributeId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("AttributeName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(100)")
-                        .HasMaxLength(100);
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
@@ -162,21 +163,20 @@ namespace RainbowOF.Data.SQL.Migrations
 
             modelBuilder.Entity("RainbowOF.Models.Items.ItemAttributeVariety", b =>
                 {
-                    b.Property<int>("ItemAttributeVarietyId")
+                    b.Property<Guid>("ItemAttributeVarietyId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("BGColour")
-                        .HasColumnType("nvarchar(11)")
-                        .HasMaxLength(11);
+                        .HasMaxLength(11)
+                        .HasColumnType("nvarchar(11)");
 
-                    b.Property<int>("FGColour")
-                        .HasColumnType("int")
-                        .HasMaxLength(11);
+                    b.Property<string>("FGColour")
+                        .HasMaxLength(11)
+                        .HasColumnType("nvarchar(11)");
 
-                    b.Property<int>("ItemAttributeId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ItemAttributeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
@@ -186,14 +186,17 @@ namespace RainbowOF.Data.SQL.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
                     b.Property<string>("Symbol")
-                        .HasColumnType("nvarchar(2)")
-                        .HasMaxLength(2);
+                        .HasMaxLength(2)
+                        .HasColumnType("nvarchar(2)");
 
                     b.Property<string>("VarietyName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(100)")
-                        .HasMaxLength(100);
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("ItemAttributeVarietyId");
 
@@ -205,18 +208,20 @@ namespace RainbowOF.Data.SQL.Migrations
 
             modelBuilder.Entity("RainbowOF.Models.Items.ItemCategory", b =>
                 {
-                    b.Property<int>("ItemCategoryId")
+                    b.Property<Guid>("ItemCategoryId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ItemCategoryName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(255)")
-                        .HasMaxLength(255);
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("ParentCategoryId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -228,6 +233,8 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.HasIndex("ItemCategoryName")
                         .IsUnique();
 
+                    b.HasIndex("ParentCategoryId");
+
                     b.ToTable("ItemCategories");
                 });
 
@@ -236,7 +243,7 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Property<int>("ItemUoMId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .UseIdentityColumn();
 
                     b.Property<double>("BaseConversationFactor")
                         .HasColumnType("float");
@@ -249,13 +256,13 @@ namespace RainbowOF.Data.SQL.Migrations
 
                     b.Property<string>("UoMName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(100)")
-                        .HasMaxLength(100);
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("UoMSymbol")
                         .IsRequired()
-                        .HasColumnType("nvarchar(10)")
-                        .HasMaxLength(10);
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.HasKey("ItemUoMId");
 
@@ -274,7 +281,7 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Property<int>("WooSyncLogId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .UseIdentityColumn();
 
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
@@ -304,7 +311,7 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Property<int>("ClosureDateId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .UseIdentityColumn();
 
                     b.Property<DateTime>("DateClosed")
                         .HasColumnType("datetime2");
@@ -313,8 +320,8 @@ namespace RainbowOF.Data.SQL.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("EventName")
-                        .HasColumnType("nvarchar(50)")
-                        .HasMaxLength(50);
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime?>("NextPrepDate")
                         .HasColumnType("datetime2");
@@ -341,7 +348,7 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Property<int>("SysPrefsId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .UseIdentityColumn();
 
                     b.Property<DateTime?>("DateLastPrepDateCalcd")
                         .HasColumnType("datetime2");
@@ -356,8 +363,8 @@ namespace RainbowOF.Data.SQL.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("ImageFolderPath")
-                        .HasColumnType("nvarchar(250)")
-                        .HasMaxLength(250);
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<DateTime?>("LastReccurringDate")
                         .HasColumnType("datetime2");
@@ -380,7 +387,7 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Property<int>("WooSettingsId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .UseIdentityColumn();
 
                     b.Property<bool>("AreAttributesImported")
                         .HasColumnType("bit");
@@ -395,30 +402,30 @@ namespace RainbowOF.Data.SQL.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("ConsumerKey")
-                        .HasColumnType("nvarchar(250)")
-                        .HasMaxLength(250);
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<string>("ConsumerSecret")
-                        .HasColumnType("nvarchar(250)")
-                        .HasMaxLength(250);
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
 
                     b.Property<bool>("IsSecureURL")
                         .HasColumnType("bit");
 
                     b.Property<string>("JSONAPIPostFix")
-                        .HasColumnType("nvarchar(100)")
-                        .HasMaxLength(100);
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<bool>("OnlyInStockItemsImported")
                         .HasColumnType("bit");
 
                     b.Property<string>("QueryURL")
-                        .HasColumnType("nvarchar(500)")
-                        .HasMaxLength(500);
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("RootAPIPostFix")
-                        .HasColumnType("nvarchar(100)")
-                        .HasMaxLength(100);
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("WooSettingsId");
 
@@ -430,24 +437,24 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Property<int>("WooCategoryMapId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .UseIdentityColumn();
 
-                    b.Property<int>("ItemCategoryId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ItemCategoryId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("WooCategoryId")
                         .HasColumnType("int");
 
                     b.Property<string>("WooCategoryName")
-                        .HasColumnType("nvarchar(255)")
-                        .HasMaxLength(255);
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<int?>("WooCategoryParentId")
                         .HasColumnType("int");
 
                     b.Property<string>("WooCategorySlug")
-                        .HasColumnType("nvarchar(255)")
-                        .HasMaxLength(255);
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.HasKey("WooCategoryMapId");
 
@@ -456,30 +463,38 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.ToTable("WooCategoryMaps");
                 });
 
-            modelBuilder.Entity("RainbowOF.Models.Woo.WooProductAttributeMapping", b =>
+            modelBuilder.Entity("RainbowOF.Models.Woo.WooProductAttributeMap", b =>
                 {
-                    b.Property<int>("WooProductAttributeMappingId")
+                    b.Property<Guid>("WooProductAttributeMapId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ItemAttributeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("WooProductAttributeId")
                         .HasColumnType("int");
 
-                    b.HasKey("WooProductAttributeMappingId");
+                    b.HasKey("WooProductAttributeMapId");
 
                     b.ToTable("WooProductAttributeMappings");
                 });
 
-            modelBuilder.Entity("RainbowOF.Models.Woo.WooProductAttributeTermMapping", b =>
+            modelBuilder.Entity("RainbowOF.Models.Woo.WooProductAttributeTermMap", b =>
                 {
-                    b.Property<int>("ItemAttributeVarietyId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("WooProductAttributeTermMapId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ItemAttributeVarietyId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("WooProductAttributeTermId")
                         .HasColumnType("int");
 
-                    b.HasKey("ItemAttributeVarietyId", "WooProductAttributeTermId");
+                    b.HasKey("WooProductAttributeTermMapId");
+
+                    b.HasAlternateKey("ItemAttributeVarietyId", "WooProductAttributeTermId");
 
                     b.ToTable("WooProductAttributeTermMappings");
                 });
@@ -490,13 +505,15 @@ namespace RainbowOF.Data.SQL.Migrations
                         .WithMany()
                         .HasForeignKey("ItemUoMId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ItemUoM");
                 });
 
             modelBuilder.Entity("RainbowOF.Models.Items.Item", b =>
                 {
                     b.HasOne("RainbowOF.Models.Items.ItemCategory", "ItemCategory")
                         .WithMany()
-                        .HasForeignKey("ItemCategoryId")
+                        .HasForeignKey("ItemCategoryId1")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("RainbowOF.Models.Items.Item", "ParentItem")
@@ -508,6 +525,22 @@ namespace RainbowOF.Data.SQL.Migrations
                         .WithMany()
                         .HasForeignKey("ReplacementItemId")
                         .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("ItemCategory");
+
+                    b.Navigation("ParentItem");
+
+                    b.Navigation("ReplacementItem");
+                });
+
+            modelBuilder.Entity("RainbowOF.Models.Items.ItemCategory", b =>
+                {
+                    b.HasOne("RainbowOF.Models.Items.ItemCategory", "ParentCategory")
+                        .WithMany()
+                        .HasForeignKey("ParentCategoryId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("ParentCategory");
                 });
 
             modelBuilder.Entity("RainbowOF.Models.Items.ItemUoM", b =>
@@ -516,6 +549,8 @@ namespace RainbowOF.Data.SQL.Migrations
                         .WithOne()
                         .HasForeignKey("RainbowOF.Models.Items.ItemUoM", "BaseUoMId")
                         .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("BaseUoM");
                 });
 
             modelBuilder.Entity("RainbowOF.Models.Woo.WooCategoryMap", b =>
@@ -525,6 +560,8 @@ namespace RainbowOF.Data.SQL.Migrations
                         .HasForeignKey("ItemCategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("ItemCategory");
                 });
 #pragma warning restore 612, 618
         }

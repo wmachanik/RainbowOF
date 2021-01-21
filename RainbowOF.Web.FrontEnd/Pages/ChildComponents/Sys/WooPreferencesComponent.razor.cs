@@ -22,7 +22,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Sys
         public bool ShowSecret = false;
         public string WooStatus = "none";
         public bool Waiting = false;
-        //protected ShowModalMessage ShowModalStatus { get; set; }
+        protected ShowModalMessage ShowModalStatus { get; set; }
         public async void CheckWooStatus()
         {
             Waiting = true;
@@ -38,13 +38,17 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Sys
             };
 
             WooProduct _WooProducts = new WooProduct(_WooAPISettings, Logger);
-            int _count = await Task.Run(() => _WooProducts.GetProductCount());    //.CheckProductLink());
 
-            WooStatus = ((_count > 0) ? $"Success - product count: {_count}" : "Failed");
+            //int _count = await Task.Run(() => _WooProducts.GetProductCount());    //CheckProductLink())
+            //WooStatus = ((_count > 0) ? $"Success - product count: {_count}" : "Failed");
+
+            bool _success = await Task.Run(() => _WooProducts.CheckProductLink());   // GetProductCount());    //
+            WooStatus = (_success ? $"Success" : "Failed");
+
             Waiting = false;
             StateHasChanged();
-            //ShowModalStatus.UpdateModalMessage($"Woo API call status: {Environment.NewLine}{Environment.NewLine}  {WooStatus}");
-            //ShowModalStatus.ShowModal();
+            ShowModalStatus.UpdateModalMessage($"Woo API call status: {Environment.NewLine}{Environment.NewLine}  {WooStatus}");
+            ShowModalStatus.ShowModal();
         }
 
         protected void StatusClosed_Click()

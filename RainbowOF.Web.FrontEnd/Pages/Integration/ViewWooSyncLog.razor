@@ -8,38 +8,55 @@
             <CardHeader>
                 <CardTitle>Woo Sync Log</CardTitle>
             </CardHeader>
-            <CardBody>
-                <CardText>Combine diferent datagrid options</CardText>
-            </CardBody>
-            <CardBody>
+            <CardBody Margin="Margin.Is1">
                 <Fields>
-                    <Field>
+                    <Field Style="display: inline-flex">
                         <FieldLabel>
+                            Filter By:
                         </FieldLabel>
                         <FieldBody>
-                            <Check @bind-Checked="@IsSortable">Sortable</Check>
+                            @if (DatesInLog == null)
+                            {
+                                <span class="bg-info">Loading Dates...</span>
+                            }
+                            else
+                            {
+                                <Select @bind-SelectedValue="@IndexSelectedDateTimeInLog" @onchange="OnLogDateChanged"   >
+                                    @{
+                                        int i = 0;
+                                        foreach (var when in DatesInLog)
+                                        {
+                                            <SelectItem Value="@i">@String.Format("{0:g}",when)</SelectItem>
+                                            i++;
+                                        }
+                                    }
+                                </Select>
+                            }
                         </FieldBody>
                     </Field>
-                    @*<Field>
-                            <FieldLabel>
-                            </FieldLabel>
-                            <FieldBody>
-                                <Check @bind-Checked="@IsFilterable">Filterable</Check>
-                            </FieldBody>
-                        </Field>*@
-                    <Field>
-                        <FieldLabel>
-                        </FieldLabel>
-                        <FieldBody>
-                            <Check @bind-Checked="@DoShowPager">Show Pager</Check>
-                        </FieldBody>
-                    </Field>
-                    <Field>
+                    <Field Style="display: inline-flex">
                         <FieldLabel>
                             Custom Search
                         </FieldLabel>
                         <FieldBody>
                             <TextEdit @bind-Text="@customFilterValue" />
+                        </FieldBody>
+                    </Field>
+                    <Field JustifyContent="JustifyContent.End">
+                        <FieldLabel>
+                            Page Size
+                        </FieldLabel>
+                        <FieldBody>
+                            <Select @bind-SelectedValue="@PageSize" style="width: 6em">
+                                <SelectItem Value=10>10</SelectItem>
+                                <SelectItem Value=15>15</SelectItem>
+                                <SelectItem Value=20>20</SelectItem>
+                                <SelectItem Value=30>30</SelectItem>
+                                <SelectItem Value=50>50</SelectItem>
+                                <SelectItem Value=75>75</SelectItem>
+                                <SelectItem Value=100>100</SelectItem>
+                                <SelectItem Value=150>150</SelectItem>
+                            </Select>
                         </FieldBody>
                     </Field>
                 </Fields>
@@ -49,8 +66,7 @@
 
 </Row>
 
-<DataGrid TItem="WooSyncLog" Data="@WooSyncLogRows" PageSize="10"
-          Sortable="@IsSortable" CustomFilter="@OnCustomFilter"
+<DataGrid TItem="WooSyncLog" Data="@WooSyncLogRows" PageSize="@PageSize" Sortable="@IsSortable" CustomFilter="@OnCustomFilter" ShowPager="@DoShowPager"
           Striped="true" Hoverable="true" Responsive="true">
     <EmptyTemplate>
         No items logged yet...
@@ -59,12 +75,49 @@
         <BlazorPro.Spinkit.Grid />
     </LoadingTemplate>
     <DataGridColumns>
-        <DataGridColumn TItem="WooSyncLog" Field="@nameof(WooSyncLog.WooSyncDateTime)" Caption="When" Sortable="true" />
-        <DataGridColumn TItem="WooSyncLog" Field="@nameof(WooSyncLog.Section)" Caption="Section" />
-        <DataGridColumn TItem="WooSyncLog" Field="@nameof(WooSyncLog.SectionID)" Caption="ID" />
-        <DataGridColumn TItem="WooSyncLog" Field="@nameof(WooSyncLog.Result)" Caption="Result" />
+        <DataGridColumn TItem="WooSyncLog" Field="@nameof(WooSyncLog.WooSyncDateTime)" DisplayFormat="{0:g}" Filterable="true" Caption="When" Sortable="true">
+        </DataGridColumn>
+        <DataGridColumn TItem="WooSyncLog" Field="@nameof(WooSyncLog.Section)" Caption="Section" Sortable="true" />
+        <DataGridColumn TItem="WooSyncLog" Field="@nameof(WooSyncLog.Parameters)" Caption="Parameters" Sortable="true" />
+        <DataGridColumn TItem="WooSyncLog" Field="@nameof(WooSyncLog.Result)" Caption="Result" Sortable="true" />
+        <DataGridColumn TItem="WooSyncLog" Field="@nameof(WooSyncLog.Notes)" Caption="Notes" Sortable="true" />
     </DataGridColumns>
-    <DetailRowTemplate>
+</DataGrid>
+
+@*<Field>
+        <FieldLabel>
+        </FieldLabel>
+        <FieldBody>
+            <Check @bind-Checked="@IsSortable">Sortable</Check>
+        </FieldBody>
+    </Field>
+    <Field>
+        <FieldLabel>
+        </FieldLabel>
+        <FieldBody>
+            <Check @bind-Checked="@DoShowPager">Show Pager</Check>
+        </FieldBody>
+    </Field>
+                    </Fields>*@
+
+
+
+@*<DisplayTemplate>
+        @{
+            var date = (context as WooSyncLog)?.WooSyncDateTime;
+
+            if (date != null)
+            {
+                @($"{date.Value.ToShortDateString()}:{date.Value.ToShortTimeString()}")
+            }
+        }
+    </DisplayTemplate>*@
+
+
+@*<DetailRowTemplate>
+        @{
+            var
+        }
         <DataGrid TItem="WooSyncLog"
                   Data="@WooSyncLogRows"
                   Sortable="false"
@@ -72,7 +125,4 @@
             <DataGridColumn TItem="WooSyncLog" Field="@nameof(WooSyncLog.Parameters)" Caption="Parameters" />
             <DataGridColumn TItem="WooSyncLog" Field="@nameof(WooSyncLog.Notes)" Caption="Notes" />
         </DataGrid>
-    </DetailRowTemplate>
-</DataGrid>
-
-
+    </DetailRowTemplate>*@

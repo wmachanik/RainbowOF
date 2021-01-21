@@ -55,7 +55,7 @@ else
                     </Blazorise.Heading>
                 </Blazorise.CollapseHeader>
                 <Blazorise.CollapseBody>
-                    <WooImportCategoriesComponent WooSettingsModel="WooSettingsModel" Logger="_logger" />
+                    <WooImportItemsComponent WooSettingsModel="WooSettingsModel" Logger="_logger" />
                 </Blazorise.CollapseBody>
             </Blazorise.Collapse>
         </Blazorise.Accordion>
@@ -74,5 +74,5 @@ else
 
 
     -->
-    <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals.ShowModalMessage @ref="ShowSavedStatus" ModalMessage="Woo Preferences Saved" ModalTitle="Saving Status" />
-    <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals.ShowModalMessage @ref="ShowChangedStatus" ModalMessage="Woo Preferences not Saved please save first." ModalTitle="Woo Settngs must be saved" />
+<RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals.ShowModalMessage @ref="ShowSavedStatus" ModalMessage="Woo Preferences Saved" ModalTitle="Saving Status" />
+<RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals.ShowModalMessage @ref="ShowChangedStatus" ModalMessage="Woo Preferences not Saved please save first." ModalTitle="Woo Settngs must be saved" />

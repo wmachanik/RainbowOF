@@ -47,8 +47,8 @@ namespace RainbowOF.Data.SQL
         public virtual DbSet<WooSettings> WooSettings { get; set; }
         public virtual DbSet<WooSyncLog> WooSyncLogs { get; set; }
         public virtual DbSet<WooCategoryMap> WooCategoryMaps { get; set; }
-        public virtual DbSet<WooProductAttributeMapping> WooProductAttributeMappings { get; set; }
-        public virtual DbSet<WooProductAttributeTermMapping> WooProductAttributeTermMappings { get; set; }
+        public virtual DbSet<WooProductAttributeMap> WooProductAttributeMappings { get; set; }
+        public virtual DbSet<WooProductAttributeTermMap> WooProductAttributeTermMappings { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -90,9 +90,9 @@ namespace RainbowOF.Data.SQL
             modelBuilder.Entity<WooSyncLog>().ToTable(nameof(WooSyncLogs));
 
             modelBuilder.Entity<WooCategoryMap>().ToTable(nameof(WooCategoryMaps));
-            modelBuilder.Entity<WooProductAttributeMapping>().ToTable(nameof(WooProductAttributeMappings));
-            modelBuilder.Entity<WooProductAttributeTermMapping>().ToTable(nameof(WooProductAttributeTermMappings));
-            modelBuilder.ApplyConfiguration<WooProductAttributeTermMapping>(new WooProductAttributeTermMappingConfig());
+            modelBuilder.Entity<WooProductAttributeMap>().ToTable(nameof(WooProductAttributeMappings));
+            modelBuilder.Entity<WooProductAttributeTermMap>().ToTable(nameof(WooProductAttributeTermMappings));
+            modelBuilder.ApplyConfiguration<WooProductAttributeTermMap>(new WooProductAttributeTermMappingConfig());
             #endregion
         }
     }

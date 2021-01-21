@@ -18,7 +18,7 @@ namespace RainbowOF.Models.Woo
         public string WooCategorySlug { get; set; }
         public int? WooCategoryParentId { get; set; }
         // what it  links to on this side.
-        public int ItemCategoryId {get;set;}
+        public Guid ItemCategoryId {get;set;}
 
         public ItemCategory ItemCategory { get; set; }
     }

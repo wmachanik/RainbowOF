@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
 namespace RainbowOF.Models.Items
@@ -14,7 +15,8 @@ namespace RainbowOF.Models.Items
     //  Notes String
     public class ItemAttribute
     {
-        public int ItemAttributeId { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public Guid ItemAttributeId { get; set; }
         [DisplayName("Attribute Name")]
         [Required]
         [StringLength(100)]

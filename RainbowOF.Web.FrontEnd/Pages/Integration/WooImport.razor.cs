@@ -55,11 +55,22 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             if (WooSettingsModel != null)
             {
                 ShowSaving();
-                IAppRepository<WooSettings> _WooSettings = _AppUnitOfWork.Repository<WooSettings>();
+                IAppRepository<WooSettings> _WooSettingsRepo = _AppUnitOfWork.Repository<WooSettings>();
                 // save
-                
-                IsSaved = (int)(await _WooSettings.UpdateAsync(WooSettingsModel)) > 0; 
+                // run this update regardless 
+                if (WooSettingsModel.WooSettingsId > 0)
+                {
+                    // it means that there was a record in the database.
+                    IsSaved =  (await _WooSettingsRepo.UpdateAsync(WooSettingsModel)) > 0;
+                }
+                else
+                {
+                    // it means that there was a record in the database.
+                    IsSaved = (await _WooSettingsRepo.AddAsync(WooSettingsModel)) > 0;
+                }
                 IsChanged = false;
+                if (IsSaved) ShowChangedStatus.UpdateModalMessage("Woo settings have been saved.");
+                else ShowChangedStatus.UpdateModalMessage("Error  saving Woo settings. Please check database access.");
                 HideSaving();
                 ShowChangedStatus.ShowModal();
                 StateHasChanged();

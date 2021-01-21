@@ -17,7 +17,6 @@ namespace RanbowOF.Repositories.Common
         private DbSet<TEntity> _table = null;
         private ILoggerManager _logger { get; }
         private IAppUnitOfWork _unitOfWork { get; set; }
-
         /// should nto need this had it her to stop the error: "There is no argument given that corresponds to the required formal parameter"
         /// if it is asking for that you need to ass  : base (dbContext, logger, unitofwork) to the def 
         //public AppRepository() { }
@@ -35,7 +34,7 @@ namespace RanbowOF.Repositories.Common
 
         public int Add(TEntity newEntity)
         {
-            int _added = 0;
+            int _added = AppUnitOfWork.CONST_WASERROR;    // return if error
             _logger.LogDebug($"Adding item: {newEntity.ToString()}");
             _unitOfWork.BeginTransaction();
             try
@@ -47,48 +46,77 @@ namespace RanbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                _logger.LogError($"!!!Error Adding Item: {ex.Message}");
-                _unitOfWork.RollbackTransaction();
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Adding Item: {ex.Message} - Inner Exception {ex.InnerException}");
+#if DebugMode
                 throw;     // #Debug?
+#endif
             }
             return _added;
         }
+
+        //public static IEnumerable<string> GetIdFields(TEntity Entity)
+        //{
+        //    var ids = from p in Entity.GetType().GetProperties().Where(e  => e.PropertyType ==  )
+
+
+        //              where (from a in p.GetCustomAttributes(false)
+        //                     where a is   EdmScalarPropertyAttribute &&
+        //                       ((EdmScalarPropertyAttribute)a).EntityKeyProperty
+        //                     select true).FirstOrDefault()
+        //              select p.Name;
+        //    return ids;
+        //}
+
+        //public static string GetIdField<TEntity>() where TEntity : EntityObject
+        //{
+        //    IEnumerable<string> ids = GetIdFields<TEntity>();
+        //    string id = ids.Where(s => s.Trim().StartsWith(typeof(TEntity).Name.
+        //                  Trim())).FirstOrDefault();
+        //    if (string.IsNullOrEmpty(id)) id = ids.First();
+        //    return id;
+        //}
+
         public async Task<int> AddAsync(TEntity newEntity)
         {
-            int _added = 0;
+            int _added = AppUnitOfWork.CONST_WASERROR;    // return if error
             _logger.LogDebug($"Adding item (async): {newEntity.ToString()}");
             _unitOfWork.BeginTransaction();
             try
             {
                 _context.Entry(newEntity).State = EntityState.Added;
                 await _table.AddAsync(newEntity);
-                _added = await _unitOfWork.CompleteAsync();  // Save();
-                if ((_added > 0) && (_context.Entry(newEntity).IsKeySet))
-                {
-                    //////// may not need this since newEntry.<id> may be set and returned, need to check that.
-                    // once saved it if the table has an id field it should be set
-                    var idProperty = newEntity.GetType().GetProperty("Id").GetValue(newEntity, null);
-                    if (idProperty != null)
-                    {
-                        // if there was an idfield then it should not be null so set added to the id
-                        _added = (int)idProperty;
-                    }
-                    return (int)idProperty;
-                }
-                //_context.Database.CommitTransaction();
+                _added = await _unitOfWork.CompleteAsync();  // Save
+
+                // !!!!!!   id field is set once is save by EF - no need to set it
+                /* if ((_added > 0) && (_context.Entry(newEntity).IsKeySet))
+                //{
+                //    var _idStr = _context.Model.FindEntityType(typeof(TEntity)).FindPrimaryKey().Properties.Single().Name;
+                //    // once saved it if the table has an id field it should be set
+                //    if (!String.IsNullOrEmpty(_idStr))
+                //    {
+                //        // if there was an idfield then it should not be null so set added to the id
+                //        var _idProperty = newEntity.GetType().GetProperty(_idStr).GetValue(newEntity, null);
+                //        if (_idProperty != null)
+                //        {
+                //            _added = (int)_idProperty;       //////////////////// what about guid?
+                //        }
+                //    }
+                //}
+                */
             }
             catch (Exception ex)
             {
-                _logger.LogError($"!!!Error Adding Item (async): {ex.Message}");
-                _unitOfWork.RollbackTransaction();
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Adding Item (async): {ex.Message} - Inner Exception {ex.InnerException}");
+#if DebugMode
                 throw;     // #Debug?
+#endif
             }
             return _added;
         }
 
         public int Delete(object Id)
         {
-            int _deleted = 0;
+            int _deleted = AppUnitOfWork.CONST_WASERROR;    // return if error
             _logger.LogDebug($"Deleting item: {Id.ToString()}");
             _unitOfWork.BeginTransaction();
             try
@@ -104,16 +132,17 @@ namespace RanbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                _logger.LogError($"!!!Error Deleting Item: {ex.Message}");
-                _unitOfWork.RollbackTransaction();
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Deleting Item: {ex.Message} - Inner Exception {ex.InnerException}");
+#if DebugMode
                 throw;     // #Debug?
+#endif
             }
 
             return _deleted;
         }
         public async Task<int> DeleteAsync(object Id)
         {
-            int _deleted = 0;
+            int _deleted = AppUnitOfWork.CONST_WASERROR;    // return if error
             _logger.LogDebug($"Deleting item (async): {Id.ToString()}");
             _unitOfWork.BeginTransaction();
             try
@@ -129,17 +158,18 @@ namespace RanbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                _logger.LogError($"!!!Error Deleting Item (async): {ex.Message}");
+                _logger.LogError($"!!!Error Deleting Item (async): {ex.Message} - Inner Exception {ex.InnerException}");
                 _unitOfWork.RollbackTransaction();
+#if DebugMode
                 throw;     // #Debug?
+#endif
             }
-
             return _deleted;
         }
 
         public int DeleteBy(Expression<Func<TEntity, bool>> predicate)
         {
-            int _deleted = 0;
+            int _deleted = AppUnitOfWork.CONST_WASERROR;    // return if error
             _logger.LogDebug($"Deleting By: {predicate.ToString()}");
             _unitOfWork.BeginTransaction();
             try
@@ -155,16 +185,16 @@ namespace RanbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                _logger.LogError($"!!!Error Deleting By: {ex.Message}");
-                _unitOfWork.RollbackTransaction();
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Deleting By: {ex.Message} - Inner Exception {ex.InnerException}");
+#if DebugMode
                 throw;     // #Debug?
+#endif
             }
-
             return _deleted;
         }
         public async Task<int> DeleteByAsync(Expression<Func<TEntity, bool>> predicate)
         {
-            int _deleted = 0;
+            int _deleted = AppUnitOfWork.CONST_WASERROR;    // return if error
             _logger.LogDebug($"Deleting By (async): {predicate.ToString()}");
             _unitOfWork.BeginTransaction();
             try
@@ -180,11 +210,11 @@ namespace RanbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                _logger.LogError($"!!!Error Deleting By (async): {ex.Message}");
-                _unitOfWork.RollbackTransaction();
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Deleting By (async): {ex.Message} - Inner Exception {ex.InnerException}");
+#if DebugMode
                 throw;     // #Debug?
+#endif
             }
-
             return _deleted;
         }
 
@@ -198,8 +228,7 @@ namespace RanbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                _logger.LogError($"!!!Error Fiding first item: {ex.Message}");
-                _unitOfWork.RollbackTransaction();
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Fiding first item: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -216,8 +245,7 @@ namespace RanbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                _logger.LogError($"!!!Error Fiding first predicate item: {ex.Message}");
-                _unitOfWork.RollbackTransaction();
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Fiding first predicate item: {ex.Message} - Inner Exception {ex.InnerException}");
 
 #if DebugMode
                 throw;     // #Debug?
@@ -235,8 +263,7 @@ namespace RanbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                _logger.LogError($"!!!Error Fiding first item: {ex.Message}");
-                _unitOfWork.RollbackTransaction();
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Fiding first item: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -253,43 +280,112 @@ namespace RanbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                _logger.LogError($"!!!Error Fiding first predicate item: {ex.Message}");
-                _unitOfWork.RollbackTransaction();
-
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Fiding first predicate item: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
             return _entity;
         }
-
         public IEnumerable<TEntity> GetAll()
         {
-            return _table.ToList();
+            _logger.LogDebug($"Getting all records in Table of type: {typeof(TEntity)}");
+            try
+            {
+                return _table.ToList();
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Getting all (async): {ex.Message} - Inner Exception {ex.InnerException}");
+#if DebugMode
+                throw;     // #Debug?
+#endif
+            }
+            return null;
         }
         public async Task<IEnumerable<TEntity>> GetAllAsync()
         {
-            return await _table.ToListAsync();
+            _logger.LogDebug($"Getting all records (async) in Table of type: {typeof(TEntity)}");
+            try
+            {
+                return await _table.ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Getting all (async): {ex.Message} - Inner Exception {ex.InnerException}");
+#if DebugMode
+                throw;     // #Debug?
+#endif
+            }
+            return null;
         }
-
         public IEnumerable<TEntity> GetBy(Expression<Func<TEntity, bool>> predicate)
         {
-            return _table.Where(predicate).ToList();
+            _logger.LogDebug($"Get By all {predicate.ToString()} from table of type: {typeof(TEntity)}");
+            try
+            {
+                return _table.Where(predicate).ToList();
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Getting by: {ex.Message} - Inner Exception {ex.InnerException}");
+#if DebugMode
+                throw;     // #Debug?
+#endif
+            }
+            return null;
         }
         public async Task<IEnumerable<TEntity>> GetByAsync(Expression<Func<TEntity, bool>> predicate)
         {
-            return await _table.Where(predicate).ToListAsync();
+            IEnumerable<TEntity> _Rows = null;
+            _logger.LogDebug($"Get By all (async) {predicate.ToString()} from table of type: {typeof(TEntity)}");
+            try
+            {
+                _Rows = await _table.Where(predicate).ToListAsync();
+                _logger.LogDebug($"Get By all (async) table {nameof(_table)} returned: {_Rows.Count()} rows");
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Getting by (async): {ex.Message} - Inner Exception {ex.InnerException}");
+#if DebugMode
+                throw;     // #Debug?
+#endif
+            }
+            return _Rows;
         }
 
         public TEntity GetById(object Id)
         {
-            return _table.Find(Id);
+            _logger.LogDebug($"Get By Id (async) {Id.ToString()} from table of type: {typeof(TEntity)}");
+            try
+            {
+                return _table.Find(Id);
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Get by Id: {ex.Message} - Inner Exception {ex.InnerException}");
+#if DebugMode
+                throw;     // #Debug?
+#endif
+            }
+            return null;
         }
         public async Task<TEntity> GetByIdAsync(object Id)
         {
-            return await _table.FindAsync(Id);
+            _logger.LogDebug($"Get By Id (async) {Id.ToString()} from table of type: {typeof(TEntity)}");
+            try
+            {
+                return await _table.FindAsync(Id);
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Get by Id (async): {ex.Message} - Inner Exception {ex.InnerException}");
+#if DebugMode
+                throw;     // #Debug?
+#endif
+            }
+            return null;
         }
-
         //public async Task<bool> Save()
         //{
         //    var _saved = false;
@@ -300,7 +396,7 @@ namespace RanbowOF.Repositories.Common
         //    }
         //    catch (Exception ex)
         //    {
-        //        _logger.LogError($"!!!Error Saving: {ex.Message}");
+        //        _logger.LogError($"!!!Error Saving: {ex.Message} - Inner Exception {ex.InnerException}");
         //    }
 
         //    return (_saved);
@@ -309,8 +405,7 @@ namespace RanbowOF.Repositories.Common
         //public async Task<int> Update(TEntity updatedEntity)
         public int Update(TEntity updatedEntity)
         {
-            int _updated = 0;
-
+            int _updated = AppUnitOfWork.CONST_WASERROR;   // -1 means error only returned if there is one
             _logger.LogDebug($"Updating item: {updatedEntity.ToString()}");
             _unitOfWork.BeginTransaction();
             try
@@ -321,16 +416,16 @@ namespace RanbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                _logger.LogError($"!!!Error Updating Table: {ex.Message}");
-                _unitOfWork.RollbackTransaction();
-                throw;
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Updating Table: {ex.Message} - Inner Exception {ex.InnerException}");
+#if DebugMode
+                throw;     // #Debug?
+#endif
             }
             return _updated;
         }
         public async Task<int> UpdateAsync(TEntity updatedEntity)
         {
-            int _updated = 0;
-
+            int _updated = AppUnitOfWork.CONST_WASERROR;   // -1 means error only returned if there is one
             _logger.LogDebug($"Updating item (async): {updatedEntity.ToString()}");
             _unitOfWork.BeginTransaction();
             try
@@ -341,11 +436,13 @@ namespace RanbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                _logger.LogError($"!!!Error Updating Table (async): {ex.Message}");
-                _unitOfWork.RollbackTransaction();
-                throw;
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Updating Table (async): {ex.Message} - Inner Exception {ex.InnerException}");
+#if DebugMode
+                throw;     // #Debug?
+#endif
             }
             return _updated;
         }
+
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
 namespace RainbowOF.Models.Woo
@@ -9,9 +10,11 @@ namespace RainbowOF.Models.Woo
     //ItemAttributeVarietyId     Int     Pk with WooProductAttribTermId
     //WooProductAttributeTermId  Int     Links to woo attribute
 
-    public class WooProductAttributeTermMapping
+    public class WooProductAttributeTermMap
     {
-        public int ItemAttributeVarietyId { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public Guid WooProductAttributeTermMapId { get; set; }
+        public Guid ItemAttributeVarietyId { get; set; }
         public int WooProductAttributeTermId { get; set; }
     }
 }

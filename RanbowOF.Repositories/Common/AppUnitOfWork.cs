@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage;
 using RainbowOF.Data.SQL;
 using RainbowOF.Tools;
+using RanbowOF.Repositories.Logs;
 using RanbowOF.Repositories.System;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,8 @@ namespace RanbowOF.Repositories.Common
 {
     public class AppUnitOfWork : IAppUnitOfWork
     {
+        // CONST
+        public const int CONST_WASERROR = -1;
         // generics
         private ApplicationDbContext _context;
         private IDbContextTransaction dbTransaction = null;
@@ -19,12 +22,18 @@ namespace RanbowOF.Repositories.Common
         private readonly Dictionary<Type, object> _repositories = new Dictionary<Type, object>();
         /// Custom Repos
         private ISysPrefsRepository _sysPrefsRepository = null;
+        /// Custom Repos
+        private IWooSyncLogRepository _wooSyncLogRepository = null;
+        // Unit of Work Error handling
+        private string _ErrorMessage = String.Empty;
 
         public Dictionary<Type, object> Repositories
         {
             get { return _repositories; }
             set { Repositories = value; }
         }
+
+
         public AppUnitOfWork(ApplicationDbContext context, ILoggerManager logger)
         {
             _context = context;
@@ -50,15 +59,24 @@ namespace RanbowOF.Repositories.Common
             }
             return _sysPrefsRepository;
         }
+        public IWooSyncLogRepository wooSyncLogRepository()
+        {
+            if (_wooSyncLogRepository == null)
+            {
+                _wooSyncLogRepository = new WooSyncLogRepository(_context, _logger, this);
+            }
+            return _wooSyncLogRepository;
+        }
 
         public void BeginTransaction()
         {
-            if (dbTransaction == null)
+            ClearErrorMessage();  // assume an error has been cleared
+            if (dbTransaction == null)    // should be null - if not should we not throw an error?
                 dbTransaction = _context.Database.BeginTransaction();
         }
         public int Complete()
         {
-            int recsCommited = 0;
+            int recsCommited = CONST_WASERROR;   
             try
             {
                 _logger.LogDebug("Saving changes...");
@@ -72,17 +90,13 @@ namespace RanbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                _logger.LogError($"ERROR!! Saving changes: {ex.Message}");
-                if (dbTransaction != null)
-                {
-                    RollbackTransaction();
-                }
+                LogAndSetErrorMessage($"ERROR commiting changes:  {ex.Message} - Inner Exception {ex.InnerException}");
             }
             return recsCommited;
         }
         public async Task<int> CompleteAsync()
         {
-            int recsCommited = 0;
+            int recsCommited = CONST_WASERROR;   // -1 means error only returned if there is one
             try
             {
                 _logger.LogDebug("Saving changes (async).");
@@ -96,11 +110,7 @@ namespace RanbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                _logger.LogError($"ERROR!! Saving changes (async): {ex.Message}");
-                if (dbTransaction != null)
-                {
-                    RollbackTransaction();
-                }
+                LogAndSetErrorMessage($"ERROR commiting changes (async):  {ex.Message} - Inner Exception {ex.InnerException}");
             }
             return recsCommited;
         }
@@ -126,11 +136,33 @@ namespace RanbowOF.Repositories.Common
             }
             this.disposed = true;
         }
-
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
+        public bool IsInErrorState()
+        { 
+            return _ErrorMessage != string.Empty; 
+        }
+        public void SetErrorMessage(string ErrorMessage)
+        {
+            _ErrorMessage = ErrorMessage;
+        }
+        public void ClearErrorMessage()
+        {
+            _ErrorMessage = string.Empty;
+        }
+        public string GetErrorMessage()
+        {
+            return _ErrorMessage;
+        }
+        public void LogAndSetErrorMessage(string ErrorMessage)
+        {
+            SetErrorMessage(ErrorMessage);
+            _logger.LogError(ErrorMessage);
+            RollbackTransaction();
+        }
+
     }
 }

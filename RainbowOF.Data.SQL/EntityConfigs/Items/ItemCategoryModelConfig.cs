@@ -13,6 +13,9 @@ namespace RainbowOF.Data.SQL.EntityConfigs.Items
         {
             itemCategoryModelBuilder.HasIndex(ic => ic.ItemCategoryName)
                 .IsUnique();
+            itemCategoryModelBuilder.HasOne(ic => ic.ParentCategory)
+                .WithMany()
+                .OnDelete(DeleteBehavior.NoAction);
             //itemCategoryModelBuilder.HasIndex(i => i.SKU)
             //    
         }

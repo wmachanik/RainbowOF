@@ -12,48 +12,45 @@ namespace RainbowOF.Woo.REST.Repositories
 {
     public class WooProduct : IWooProduct
     {
-        private readonly WooAPISettings _WooAPISettings;
-        private readonly ILoggerManager _Logger;
+        private readonly IWooBase _Woo;
+
+        // private readonly WooAPISettings _WooAPISettings;
+        // private readonly ILoggerManager _Logger;
 
         public WooProduct(WooAPISettings wooAPISettings, ILoggerManager logger)
         {
-            //while (wooAPISettings.QueryURL.EndsWith("/"))
-            //    wooAPISettings.QueryURL.Remove(wooAPISettings.QueryURL.Length - 1);
+            _Woo = new WooBase(wooAPISettings, logger);
 
-            _WooAPISettings = wooAPISettings;
-            //_RestAPI = new RestAPI(wooAPISettings.FullSourceURL + "/wp-json/wc/v3/",
-            //    wooAPISettings.ConsumerKey,
-            //    wooAPISettings.ConsumerSecret, !wooAPISettings.IsSecureURL);
-
-            this._Logger = logger;
+            //_WooAPISettings = wooAPISettings;
+            // this._Logger = logger;
         }
 
-        private RestAPI GetJSONRestAPI
-        {
-            get
-            {
-                return new RestAPI(_WooAPISettings.FullSourceURL + _WooAPISettings.JSONAPIPostFix,
-               _WooAPISettings.ConsumerKey,
-               _WooAPISettings.ConsumerSecret,
-               !_WooAPISettings.IsSecureURL);
-            }
-        }
+        //private RestAPI GetJSONRestAPI
+        //{
+        //    get
+        //    {
+        //        return new RestAPI(_WooAPISettings.FullSourceURL + _WooAPISettings.JSONAPIPostFix,
+        //       _WooAPISettings.ConsumerKey,
+        //       _WooAPISettings.ConsumerSecret,
+        //       !_WooAPISettings.IsSecureURL);
+        //    }
+        //}
 
 
-        private RestAPI GetRootRestAPI
-        {
-            get
-            {
-                return new RestAPI(_WooAPISettings.FullSourceURL + _WooAPISettings.RootAPIPostFix,
-               _WooAPISettings.ConsumerKey,
-               _WooAPISettings.ConsumerSecret,
-               !_WooAPISettings.IsSecureURL);
-            }
-        }
+        //private RestAPI GetRootRestAPI
+        //{
+        //    get
+        //    {
+        //        return new RestAPI(_WooAPISettings.FullSourceURL + _WooAPISettings.RootAPIPostFix,
+        //       _WooAPISettings.ConsumerKey,
+        //       _WooAPISettings.ConsumerSecret,
+        //       !_WooAPISettings.IsSecureURL);
+        //    }
+        //}
 
         private async Task<List<Product>> GetAll(Dictionary<string, string> ProductParams)
         {
-            RestAPI _RestAPI = GetJSONRestAPI;
+            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
 
             List<Product> _WooProducts = null;
             bool _GetMore = true;
@@ -86,8 +83,8 @@ namespace RainbowOF.Woo.REST.Repositories
             }
             catch (Exception ex)
             {
-                if (_Logger != null)
-                    _Logger.LogError("Error calling WOO REST API: " + ex.Message);
+                if (_Woo.Logger != null)
+                    _Woo.Logger.LogError("Error calling WOO REST API: " + ex.Message);
             }
             return _WooProducts;
         }
@@ -98,7 +95,7 @@ namespace RainbowOF.Woo.REST.Repositories
 
         public async Task<bool> CheckProductLink()
         {
-            RestAPI _RestAPI = GetJSONRestAPI;
+            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
 
             int count = 0;
             try
@@ -110,8 +107,8 @@ namespace RainbowOF.Woo.REST.Repositories
             }
             catch (Exception ex)
             {
-                if (_Logger != null)
-                    _Logger.LogError("Error calling WOO REST JSON API: " + ex.Message);
+                if (_Woo.Logger!= null)
+                    _Woo.Logger.LogError("Error calling WOO REST JSON API: " + ex.Message);
             }
             return count > 0;
         }
@@ -124,7 +121,7 @@ namespace RainbowOF.Woo.REST.Repositories
         public async Task<int> GetProductCount()
         {
             int _count = 0;
-            RestAPI _RestAPI = GetRootRestAPI;
+            RestAPI _RestAPI = _Woo.GetRootRestAPI;
 
             try
             {
@@ -139,8 +136,8 @@ namespace RainbowOF.Woo.REST.Repositories
             }
             catch (Exception ex)
             {
-                if (_Logger != null)
-                    _Logger.LogError("Error calling WOO REST ROOT API: " + ex.Message);
+                if (_Woo.Logger != null)
+                    _Woo.Logger.LogError("Error calling WOO REST ROOT API: " + ex.Message);
             }
 
             return _count;

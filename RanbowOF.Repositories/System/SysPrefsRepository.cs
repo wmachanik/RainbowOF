@@ -69,19 +69,17 @@ namespace RanbowOF.Repositories.System
             }
             // run this update regardless 
             if (updateSysPrefsModel.WooSettings.WooSettingsId > 0)
-                {
-                    // it means that there was a record in the database.
-                    var recsUpdated = _WooSettingsRepo.Update(updateSysPrefsModel.WooSettings);
-                    updated = updated && (recsUpdated == 1);
-                }
-                else
-                {
-                    // it means that there was a record in the database.
-                    var recIsUpdated = _WooSettingsRepo.Add(updateSysPrefsModel.WooSettings) > 0;
-                    updated = updated && recIsUpdated;
-                }
-
-
+            {
+                // it means that there was a record in the database.
+                var recsUpdated = _WooSettingsRepo.Update(updateSysPrefsModel.WooSettings);
+                updated = updated && (recsUpdated == 1);
+            }
+            else
+            {
+                // it means that there was a record in the database.
+                var recIsUpdated = _WooSettingsRepo.Add(updateSysPrefsModel.WooSettings) > 0;
+                updated = updated && recIsUpdated;
+            }
             return updated;
         }
         public async Task<bool> UpdateSysPreferencesAsync(SysPrefsModel updateSysPrefsModel)
