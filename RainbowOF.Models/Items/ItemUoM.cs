@@ -11,16 +11,17 @@ namespace RainbowOF.Models.Items
     /// ItemVariableUoM
     //  Des     c	             Type	    Comments
     // -----------------------+----------+-----------
-    //  ItemVariableUoMId       Int         Pk
+    //  ItemVariableUoMId       Guid         Pk
     //  UoMName                 String(100) Should be smaller
     //  UoMSymbo                String(10)
-    //  BaseUoMId               Int?        If>0 points to the BaseUoM
+    //  BaseUoMId               Guid?        If <> null points to the BaseUoM
     //  BaseConversationFactor  Double      If not a base what is the conversion to base
     //  RoundTo                 Int         Number of decimal to round to(default 4)
     /// </summary>
     public class ItemUoM
     {
-        public int ItemUoMId { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public Guid ItemUoMId { get; set; }   
         [Required]
         [StringLength(100)]
         [DisplayName("UoM Name")]
@@ -30,7 +31,7 @@ namespace RainbowOF.Models.Items
         [DisplayName("Unit of Measure symbol")]
         public string UoMSymbol { get; set; }
         [DisplayName("Does this UoM have a base")]
-        public int? BaseUoMId { get; set; }
+        public Guid? BaseUoMId { get; set; }
         [DisplayName("What is the conversion base")]
         [DefaultValue(0.0)]
         public double BaseConversationFactor { get; set; }

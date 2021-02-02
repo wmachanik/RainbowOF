@@ -1,14 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage;
 using RainbowOF.Data.SQL;
 using RainbowOF.Tools;
-using RanbowOF.Repositories.Logs;
-using RanbowOF.Repositories.System;
+using RainbowOF.Repositories.Logs;
+using RainbowOF.Repositories.System;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using RainbowOF.Repositories.Items;
 
-namespace RanbowOF.Repositories.Common
+namespace RainbowOF.Repositories.Common
 {
     public class AppUnitOfWork : IAppUnitOfWork
     {
@@ -21,8 +22,8 @@ namespace RanbowOF.Repositories.Common
         // Generics Repos
         private readonly Dictionary<Type, object> _repositories = new Dictionary<Type, object>();
         /// Custom Repos
+        private IItemRepository _itemRepository = null;
         private ISysPrefsRepository _sysPrefsRepository = null;
-        /// Custom Repos
         private IWooSyncLogRepository _wooSyncLogRepository = null;
         // Unit of Work Error handling
         private string _ErrorMessage = String.Empty;
@@ -32,8 +33,6 @@ namespace RanbowOF.Repositories.Common
             get { return _repositories; }
             set { Repositories = value; }
         }
-
-
         public AppUnitOfWork(ApplicationDbContext context, ILoggerManager logger)
         {
             _context = context;
@@ -50,6 +49,14 @@ namespace RanbowOF.Repositories.Common
             IAppRepository<TEntity> sourceRepo = new AppRepository<TEntity>(_context, _logger, this);
             Repositories.Add(typeof(TEntity), sourceRepo);
             return sourceRepo;
+        }
+        public IItemRepository itemRepository()
+        {
+            if (_itemRepository == null)
+            {
+                _itemRepository = new ItemRepository(_context, _logger, this);
+            }
+            return _itemRepository;
         }
         public ISysPrefsRepository sysPrefsRepository()
         {
@@ -121,6 +128,9 @@ namespace RanbowOF.Repositories.Common
                 dbTransaction.Rollback();
                 dbTransaction.Dispose();
                 dbTransaction = null;
+                _context.Database.RollbackTransaction();  // not sure if this will correct the fact that the context is in error
+                //_context.Dispose();
+                //_context = new ApplicationDbContext();
             }
         }
 

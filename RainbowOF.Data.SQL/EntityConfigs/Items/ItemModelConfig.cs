@@ -10,18 +10,26 @@ namespace RainbowOF.Datsa.SQL.EntityConfigs.Items
         {
             itemModelBuilder.HasIndex(i => i.ItemName)
                 .IsUnique();
-            itemModelBuilder.HasIndex(i => i.SKU)
-                .IsUnique();
+            itemModelBuilder.Property(i => i.SKU).IsRequired(false);
+            //itemModelBuilder.HasIndex(i => i.SKU).IsUnique(); -> can do this due to the fact that item can be nullable
+            //    .IsUnique();
             //itemModelBuilder.Property(i => i.IsEnabled)
             //    .HasDefaultValue(true);
-            itemModelBuilder.HasOne(i => i.ItemCategory)
-                .WithMany()
-                .OnDelete(DeleteBehavior.SetNull);
             itemModelBuilder.HasOne(i => i.ParentItem)
                 .WithMany()
                 .OnDelete(DeleteBehavior.NoAction);
-            itemModelBuilder.HasOne(i=>i.ReplacementItem)
+            itemModelBuilder.HasOne(i => i.ReplacementItem)
                 .WithMany()
+                .OnDelete(DeleteBehavior.NoAction);
+            // list mappings
+            itemModelBuilder.HasMany(i => i.ItemCategories)
+                .WithOne()
+                .OnDelete(DeleteBehavior.NoAction);
+            itemModelBuilder.HasMany(i => i.ItemAttributes)
+                .WithOne()
+                .OnDelete(DeleteBehavior.NoAction);
+            itemModelBuilder.HasMany(i => i.ItemCategories)
+                .WithOne()
                 .OnDelete(DeleteBehavior.NoAction);
         }
     }

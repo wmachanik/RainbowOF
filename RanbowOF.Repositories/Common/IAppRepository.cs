@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RanbowOF.Repositories.Common
+namespace RainbowOF.Repositories.Common
 {
     public interface IAppRepository<TEntity> where TEntity : class
     {
@@ -22,8 +22,9 @@ namespace RanbowOF.Repositories.Common
         Task<TEntity> FindFirstAsync(Expression<Func<TEntity, bool>> predicate);
         int Add(TEntity newEntity);
         Task<int> AddAsync(TEntity newEntity);
-        int Delete(object Id);
-        Task<int> DeleteAsync(object Id);
+        Task<int> AddRangeAsync(List<TEntity> newEntities);
+        int DeleteById(object Id);
+        Task<int> DeleteByIdAsync(object Id);
         int DeleteBy(Expression<Func<TEntity, bool>> predicate);
         Task<int> DeleteByAsync(Expression<Func<TEntity, bool>> predicate);
         int Update(TEntity updatedEntity);

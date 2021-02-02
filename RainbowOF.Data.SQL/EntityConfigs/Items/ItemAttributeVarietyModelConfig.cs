@@ -1,21 +1,21 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RainbowOF.Models.Items;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
-namespace RainbowOF.Datsa.SQL.EntityConfigs.Items
+namespace RainbowOF.Data.SQL.EntityConfigs.Items
 {
     internal class ItemAttributeVarietyModelConfig : IEntityTypeConfiguration<ItemAttributeVariety>
     {
-        public void Configure(EntityTypeBuilder<ItemAttributeVariety> ItemAttributeVarietyModelBuilder)
+        public void Configure(EntityTypeBuilder<ItemAttributeVariety> activeItemAttributeVarietyModelBuilder)
         {
-            ItemAttributeVarietyModelBuilder.Property(iav => iav.ItemAttributeId)
-                .IsRequired();
-            ItemAttributeVarietyModelBuilder.HasIndex(iav => new { iav.VarietyName, iav.ItemAttributeId } )
+            activeItemAttributeVarietyModelBuilder.HasIndex(aiav => new { aiav.ItemId, aiav.ItemAttributeVarietyLookupId })
                 .IsUnique();
-
-            //ItemAttributeVarietyModelBuilder.HasOne(i=>i.ReplacementItem)
-            //    .WithMany()
-            //    .OnDelete(DeleteBehavior.SetNull);
+            activeItemAttributeVarietyModelBuilder.HasOne(aiav => aiav.ItemUoM)
+                .WithMany()
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
 
 namespace RainbowOF.Models.Items
 {
@@ -11,16 +7,7 @@ namespace RainbowOF.Models.Items
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid ItemCategoryId { get; set; }
-        [Required]
-        [StringLength(255)]
-        [DisplayName("Item Category")]
-        public string ItemCategoryName { get; set; }
-        public Guid? ParentCategoryId { get; set; }
-        public string Notes { get; set; }
-        [Timestamp]
-        public byte[] RowVersion { get; set; }
-
-        [ForeignKey("ParentCategoryId")]
-        public ItemCategory ParentCategory { get; set; }
+        public Guid ItemId { get; set; }
+        public Guid ItemCategoryLookupId { get; set; }
     }
 }

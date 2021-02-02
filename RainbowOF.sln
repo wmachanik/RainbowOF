@@ -10,7 +10,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RainbowOF.Web.FrontEnd", "R
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RainbowOF.Models", "RainbowOF.Models\RainbowOF.Models.csproj", "{20A9D39E-C0F2-41C5-B515-18BD09991062}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RanbowOF.Repositories", "RanbowOF.Repositories\RanbowOF.Repositories.csproj", "{267CE087-3905-482D-982E-85064AFDBF9D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RainbowOF.Repositories", "RanbowOF.Repositories\RainbowOF.Repositories.csproj", "{267CE087-3905-482D-982E-85064AFDBF9D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RainbowOF.Data.SQL", "RainbowOF.Data.SQL\RainbowOF.Data.SQL.csproj", "{738FBFBE-6C2A-4034-B459-14C597FDECC8}"
 EndProject

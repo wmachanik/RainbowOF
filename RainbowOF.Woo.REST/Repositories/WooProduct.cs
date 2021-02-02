@@ -48,26 +48,25 @@ namespace RainbowOF.Woo.REST.Repositories
         //    }
         //}
 
-        private async Task<List<Product>> GetAll(Dictionary<string, string> ProductParams)
+        private async Task<List<Product>> GetAllWithParams(Dictionary<string, string> pProductParams)
         {
-            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
-
             List<Product> _WooProducts = null;
-            bool _GetMore = true;
             int _Page = 1;
-            if (ProductParams == null)
-                ProductParams = new Dictionary<string, string>();
-
-            ProductParams.Add("per_page", "20");
-            ProductParams.Add("page", "0");
+            bool _GetMore = true;
+            // if there is no page setting adding
+            if (pProductParams.ContainsKey("page")) pProductParams["page"] = "0";
+            else pProductParams.Add("page", "0");
+            if (pProductParams.ContainsKey("per_page")) pProductParams["per_page"] = "20";
+            else pProductParams.Add("per_page", "20");
+            // retrieve products until the number of products returned is 0.
             try
             {
+                RestAPI _RestAPI = _Woo.GetJSONRestAPI;
                 WCObject _WC = new WCObject(_RestAPI);
-                //Get all products
                 while (_GetMore)
                 {
-                    ProductParams["page"] = _Page.ToString();
-                    List<Product> TwentyProducts = await _WC.Product.GetAll(ProductParams);
+                    pProductParams["page"] = _Page.ToString();
+                    List<Product> TwentyProducts = await _WC.Product.GetAll(pProductParams);
 
                     if (TwentyProducts.Count > 0)
                     {
@@ -88,11 +87,31 @@ namespace RainbowOF.Woo.REST.Repositories
             }
             return _WooProducts;
         }
+        private async Task<List<Product>> GetAll(Dictionary<string, string> pProductParams)
+        {
+
+            if (pProductParams == null)
+                pProductParams = new Dictionary<string, string>();
+            return await GetAllWithParams(pProductParams);
+        }
         public async Task<List<Product>> GetAllProducts()
         {
             return await GetAll(null);
         }
 
+        public async Task<List<Product>> GetAllProductsInStock()
+        {
+            Dictionary<string, string> _ProductParams = new Dictionary<string, string>();
+            _ProductParams.Add("stock_status", "instock");
+            _ProductParams.Add("status", "publish");
+            List<Product> _WooProducts = await GetAll(_ProductParams);
+            _ProductParams["status"] = "private";
+            List<Product> _WooPrivateProducts = await GetAll(_ProductParams);
+            if ((_WooProducts != null) && (_WooPrivateProducts != null))
+                _WooProducts.AddRange(_WooPrivateProducts);
+
+            return _WooProducts;
+        }
         public async Task<bool> CheckProductLink()
         {
             RestAPI _RestAPI = _Woo.GetJSONRestAPI;
@@ -107,7 +126,7 @@ namespace RainbowOF.Woo.REST.Repositories
             }
             catch (Exception ex)
             {
-                if (_Woo.Logger!= null)
+                if (_Woo.Logger != null)
                     _Woo.Logger.LogError("Error calling WOO REST JSON API: " + ex.Message);
             }
             return count > 0;
@@ -139,9 +158,7 @@ namespace RainbowOF.Woo.REST.Repositories
                 if (_Woo.Logger != null)
                     _Woo.Logger.LogError("Error calling WOO REST ROOT API: " + ex.Message);
             }
-
             return _count;
-
         }
     }
 }

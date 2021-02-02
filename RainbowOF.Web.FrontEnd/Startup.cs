@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RainbowOF.Data.SQL;
 using RainbowOF.Tools;
-using RanbowOF.Repositories.Common;
+using RainbowOF.Repositories.Common;
 
 namespace RainbowOF.Web.FrontEnd
 {

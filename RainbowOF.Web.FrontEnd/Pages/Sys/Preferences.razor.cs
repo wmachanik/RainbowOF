@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Components;
 using RainbowOF.FrontEnd.Models;
 using RainbowOF.Tools;
 using RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals;
-using RanbowOF.Repositories.Common;
-using RanbowOF.Repositories.System;
+using RainbowOF.Repositories.Common;
+using RainbowOF.Repositories.System;
 using System.Threading.Tasks;
 
 namespace RainbowOF.Web.FrontEnd.Pages.Sys
@@ -29,7 +29,6 @@ namespace RainbowOF.Web.FrontEnd.Pages.Sys
             await LoadSysPrefs();
             //return base.OnInitializedAsync();
         }
-
 /*
  *      public string ModalTitle = "Saving Status";
         public string ModalMessage = "System Preferences Saved";
@@ -46,7 +45,6 @@ namespace RainbowOF.Web.FrontEnd.Pages.Sys
             modalRef.Hide();
         }
 */
-
         private async Task LoadSysPrefs()
         {
             ISysPrefsRepository _SysPref = _AppUnitOfWork.sysPrefsRepository();
@@ -66,9 +64,11 @@ namespace RainbowOF.Web.FrontEnd.Pages.Sys
 
                 if (!_Saved)
                     ShowSavedStatus.UpdateModalMessage("Error saving preferences");
+                else
+                    ShowSavedStatus.ShowModal();
+
                 HideSaving();
                 //ShowModal();
-                ShowSavedStatus.ShowModal();
                 StateHasChanged();
             }
         }
@@ -76,7 +76,6 @@ namespace RainbowOF.Web.FrontEnd.Pages.Sys
         {
             IsSaved = false;
         }
-
         public void ShowSaving()
         {
             IsSaving = true;
@@ -87,8 +86,6 @@ namespace RainbowOF.Web.FrontEnd.Pages.Sys
             IsSaving = false;
             StateHasChanged();
         }
-
-
         protected void StatusClosed_Click()
         {
             StateHasChanged();

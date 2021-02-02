@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
@@ -14,7 +15,11 @@ namespace RainbowOF.Models.Woo
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid WooProductAttributeTermMapId { get; set; }
-        public Guid ItemAttributeVarietyId { get; set; }
+        public Guid ItemAttributeVarietyLookupId { get; set; }
         public int WooProductAttributeTermId { get; set; }
+        [DefaultValue(true)]
+        [DisplayName("Can Update?")]
+        public bool CanUpdate { get; set; }
+
     }
 }

@@ -36,8 +36,8 @@ namespace RainbowOF.Models.System
         public bool AreVarietiesMapped { get; set; }
         [DefaultValue("true")]
         public bool OnlyInStockItemsImported { get; set; }
-        [DefaultValue("false")]
-        public bool AreItemQuantatiesImported { get; set; }
+        [DefaultValue("true")]
+        public bool AreAffliateProdcutsImported { get; set; }
         // default settings
         public WooSettings()
         {
@@ -48,7 +48,7 @@ namespace RainbowOF.Models.System
             AreAttributesImported = true;
             AreVarietiesMapped = true;
             OnlyInStockItemsImported = true;
-            AreItemQuantatiesImported = true;
+            AreAffliateProdcutsImported = false;
         }
 
 

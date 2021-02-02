@@ -13,39 +13,37 @@
     </Blazorise.CardTitle>
 
     <Blazorise.CardBody>
-        @if (IsImporting() && (_maxRecs > 0))
+        @if (IsImporting() && (_importCounters.MaxRecs > 0))
         {
             <Blazorise.Progress Margin="Margin.Is3.FromBottom" Size="Size.Medium">
-                <Blazorise.ProgressBar Background="Background.Info" Max="_maxRecs" Animated="true" Min="0" Value="_PercentOfRecsImported" Striped="true">@_PercentOfRecsImported%</Blazorise.ProgressBar>
+                <Blazorise.ProgressBar Background="Background.Info" Max="_importCounters.MaxRecs" Animated="true" Min="0" Value="_importCounters.PercentOfRecsImported" Striped="true">@_importCounters.PercentOfRecsImported%</Blazorise.ProgressBar>
             </Blazorise.Progress>
         }
     </Blazorise.CardBody>
     <Blazorise.CardFooter Padding="Padding.IsAuto">
-
-        <Blazorise.Button Loading="_IsCatWaiting" Class="btn btn-outline-primary" Margin="Margin.Is1"
-                          @onclick="@ImportCategories_Click" Type="ButtonType.Button">Import Categories</Blazorise.Button>
-        <Blazorise.Button Loading="_IsAttribWaiting" Class="btn btn-outline-primary" Margin="Margin.Is1"
-                          @onclick="@ImportAttrib_Click" Type="ButtonType.Button">Import Attributes</Blazorise.Button>
-        <Blazorise.Button Loading="_IsAttribTermWaiting" Class="btn btn-outline-primary" Margin="Margin.Is1"
-                          @onclick="@ImportAttribTerm_Click" Type="ButtonType.Button">Import Attribute Terms</Blazorise.Button>
+        <Blazorise.Row Margin="Margin.Is1">
+            <Blazorise.Column ColumnSize="ColumnSize.IsThird">
+                <Blazorise.Button Loading="_IsCatImportBusy" Class="btn btn-outline-primary" Margin="Margin.Is1" Padding="Padding.Is1"
+                                  @onclick="@ImportCategories_Click" Type="ButtonType.Button">Import Categories</Blazorise.Button>
+                <Blazorise.Button Loading="_IsAttribImportBusy" Class="btn btn-outline-primary" Margin="Margin.Is1" Padding="Padding.Is1"
+                                  @onclick="@ImportAttrib_Click" Type="ButtonType.Button">Import Attributes</Blazorise.Button>
+                <Blazorise.Button Loading="_IsAttribTermImportBusy" Class="btn btn-outline-primary" Margin="Margin.Is1" Padding="Padding.Is1"
+                                  @onclick="@ImportAttribTerm_Click" Type="ButtonType.Button">Import Attribute Terms</Blazorise.Button>
+            </Blazorise.Column>
+            <Blazorise.Column Class="text-center" >
+                <Blazorise.Button Loading="_IsItemImportBusy" Class="btn btn-outline-primary" Margin="Margin.Is1" Padding="Padding.Is1"
+                                  @onclick="@ImportItems_Click" Type="ButtonType.Button">Import Woo Products</Blazorise.Button>
+            </Blazorise.Column>
+            <Blazorise.Column Class="text-center" >
+                <Blazorise.Button Loading="_IsItemImportBusy" Class="btn-outline-secondary" Margin="Margin.Is1" Padding="Padding.Is1"
+                                  Type="ButtonType.Button">Import Woo Customers</Blazorise.Button>
+            </Blazorise.Column>
+            <Blazorise.Column Class="text-center" >
+                <Blazorise.Button Class="btn btn-info" Margin="Margin.Is1" Type="ButtonType.Button" Padding="Padding.Is1" @onclick="@NavigateToLog">See Log</Blazorise.Button>
+            </Blazorise.Column>
+        </Blazorise.Row>
     </Blazorise.CardFooter>
     <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals.ShowModalMessage @ref="ShowModalStatus" ModalMessage="Woo Categories Imported" ModalTitle="Woo Categories Import" />
 </Blazorise.Card>
-
-
-
-        /*
-
-
-        Importation of attributes AND SET PRODUCT TYPE by attrib
-
-
-
-Test attribute and category import.
-
-
-        */
-
-
 
 

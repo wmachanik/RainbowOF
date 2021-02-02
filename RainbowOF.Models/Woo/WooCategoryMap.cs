@@ -1,12 +1,14 @@
 ﻿using RainbowOF.Models.Items;
+using RainbowOF.Models.Lookups;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 
 namespace RainbowOF.Models.Woo
 {
-    // Maps the ItemCategory to wooItemcategory
+    // Maps the ItemCategoryLookup to wooItemCategoryLookup
     public class WooCategoryMap
     {
         public int WooCategoryMapId { get; set; }
@@ -18,8 +20,11 @@ namespace RainbowOF.Models.Woo
         public string WooCategorySlug { get; set; }
         public int? WooCategoryParentId { get; set; }
         // what it  links to on this side.
-        public Guid ItemCategoryId {get;set;}
+        [DefaultValue(true)]
+        [DisplayName("Can Update?")]
+        public bool CanUpdate { get; set; }
+        public Guid ItemCategoryLookupId {get;set;}
 
-        public ItemCategory ItemCategory { get; set; }
+        public ItemCategoryLookup ItemCategoryLookup { get; set; }
     }
 }

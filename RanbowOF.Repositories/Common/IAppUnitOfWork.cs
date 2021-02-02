@@ -1,18 +1,20 @@
 ﻿using NLog.Web.LayoutRenderers;
-using RanbowOF.Repositories.Logs;
-using RanbowOF.Repositories.System;
+using RainbowOF.Repositories.Items;
+using RainbowOF.Repositories.Logs;
+using RainbowOF.Repositories.System;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RanbowOF.Repositories.Common
+namespace RainbowOF.Repositories.Common
 {
     public interface IAppUnitOfWork : IDisposable
     {
         // generics
         IAppRepository<TEntity> Repository<TEntity>() where TEntity : class;
         // custom repositories
+        public IItemRepository itemRepository();
         public ISysPrefsRepository sysPrefsRepository();
         public IWooSyncLogRepository wooSyncLogRepository();
         // Centralised Context Handling

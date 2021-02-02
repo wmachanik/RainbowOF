@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RanbowOF.Repositories.Common
+namespace RainbowOF.Repositories.Common
 {
     public class AppRepository<TEntity> : IAppRepository<TEntity> where TEntity : class
     {
@@ -35,7 +35,7 @@ namespace RanbowOF.Repositories.Common
         public int Add(TEntity newEntity)
         {
             int _added = AppUnitOfWork.CONST_WASERROR;    // return if error
-            _logger.LogDebug($"Adding item: {newEntity.ToString()}");
+            _logger.LogDebug($"Adding entity: {newEntity.ToString()}");
             _unitOfWork.BeginTransaction();
             try
             {
@@ -79,30 +79,14 @@ namespace RanbowOF.Repositories.Common
         public async Task<int> AddAsync(TEntity newEntity)
         {
             int _added = AppUnitOfWork.CONST_WASERROR;    // return if error
-            _logger.LogDebug($"Adding item (async): {newEntity.ToString()}");
+            _logger.LogDebug($"Adding entity (async): {newEntity.ToString()}");
             _unitOfWork.BeginTransaction();
             try
             {
-                _context.Entry(newEntity).State = EntityState.Added;
+                //_context.Entry(newEntity).State = EntityState.Added;
                 await _table.AddAsync(newEntity);
                 _added = await _unitOfWork.CompleteAsync();  // Save
-
                 // !!!!!!   id field is set once is save by EF - no need to set it
-                /* if ((_added > 0) && (_context.Entry(newEntity).IsKeySet))
-                //{
-                //    var _idStr = _context.Model.FindEntityType(typeof(TEntity)).FindPrimaryKey().Properties.Single().Name;
-                //    // once saved it if the table has an id field it should be set
-                //    if (!String.IsNullOrEmpty(_idStr))
-                //    {
-                //        // if there was an idfield then it should not be null so set added to the id
-                //        var _idProperty = newEntity.GetType().GetProperty(_idStr).GetValue(newEntity, null);
-                //        if (_idProperty != null)
-                //        {
-                //            _added = (int)_idProperty;       //////////////////// what about guid?
-                //        }
-                //    }
-                //}
-                */
             }
             catch (Exception ex)
             {
@@ -114,10 +98,33 @@ namespace RanbowOF.Repositories.Common
             return _added;
         }
 
-        public int Delete(object Id)
+        public async Task<int> AddRangeAsync(List<TEntity> newEntities)
+        {
+            int _added = AppUnitOfWork.CONST_WASERROR;    // return if error
+            _logger.LogDebug($"Adding range (async): {newEntities.ToString()}");
+            _unitOfWork.BeginTransaction();
+            try
+            {
+                foreach (var newEntity in newEntities)
+                {
+                    _context.Entry(newEntity).State = EntityState.Added;
+                }
+                await _table.AddRangeAsync(newEntities);     // !!!!!!   id field is set once is save by EF - no need to set it
+                _added = await _unitOfWork.CompleteAsync();  // Save
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Adding range (async): {ex.Message} - Inner Exception {ex.InnerException}");
+#if DebugMode
+                throw;     // #Debug?
+#endif
+            }
+            return _added;
+        }
+        public int DeleteById(object Id)
         {
             int _deleted = AppUnitOfWork.CONST_WASERROR;    // return if error
-            _logger.LogDebug($"Deleting item: {Id.ToString()}");
+            _logger.LogDebug($"Deleting entity: {Id.ToString()}");
             _unitOfWork.BeginTransaction();
             try
             {
@@ -140,10 +147,10 @@ namespace RanbowOF.Repositories.Common
 
             return _deleted;
         }
-        public async Task<int> DeleteAsync(object Id)
+        public async Task<int> DeleteByIdAsync(object Id)
         {
             int _deleted = AppUnitOfWork.CONST_WASERROR;    // return if error
-            _logger.LogDebug($"Deleting item (async): {Id.ToString()}");
+            _logger.LogDebug($"Deleting entity (async): {Id.ToString()}");
             _unitOfWork.BeginTransaction();
             try
             {
@@ -158,7 +165,7 @@ namespace RanbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                _logger.LogError($"!!!Error Deleting Item (async): {ex.Message} - Inner Exception {ex.InnerException}");
+                _logger.LogError($"!!!Error Deleting entity (async): {ex.Message} - Inner Exception {ex.InnerException}");
                 _unitOfWork.RollbackTransaction();
 #if DebugMode
                 throw;     // #Debug?
@@ -170,7 +177,7 @@ namespace RanbowOF.Repositories.Common
         public int DeleteBy(Expression<Func<TEntity, bool>> predicate)
         {
             int _deleted = AppUnitOfWork.CONST_WASERROR;    // return if error
-            _logger.LogDebug($"Deleting By: {predicate.ToString()}");
+            _logger.LogDebug($"Deleting entity by: {predicate.ToString()}");
             _unitOfWork.BeginTransaction();
             try
             {
@@ -195,7 +202,7 @@ namespace RanbowOF.Repositories.Common
         public async Task<int> DeleteByAsync(Expression<Func<TEntity, bool>> predicate)
         {
             int _deleted = AppUnitOfWork.CONST_WASERROR;    // return if error
-            _logger.LogDebug($"Deleting By (async): {predicate.ToString()}");
+            _logger.LogDebug($"Deleting entity by (async): {predicate.ToString()}");
             _unitOfWork.BeginTransaction();
             try
             {
@@ -221,14 +228,14 @@ namespace RanbowOF.Repositories.Common
         public TEntity FindFirst()
         {
             TEntity _entity = null;
-            _logger.LogDebug($"Finding First item of type: {typeof(TEntity)}");
+            _logger.LogDebug($"Finding First entity of type: {typeof(TEntity)}");
             try
             {
                 _entity = _table.FirstOrDefault();
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Fiding first item: {ex.Message} - Inner Exception {ex.InnerException}");
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Fiding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -238,14 +245,14 @@ namespace RanbowOF.Repositories.Common
         public TEntity FindFirst(Expression<Func<TEntity, bool>> predicate)
         {
             TEntity _entity = null;
-            _logger.LogDebug($"Finding First {predicate.ToString()} item of type: {typeof(TEntity)}");
+            _logger.LogDebug($"Finding First {predicate.ToString()} entity of type: {typeof(TEntity)}");
             try
             {
                 _entity = _table.FirstOrDefault(predicate);
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Fiding first predicate item: {ex.Message} - Inner Exception {ex.InnerException}");
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Fiding first predicate entity: {ex.Message} - Inner Exception {ex.InnerException}");
 
 #if DebugMode
                 throw;     // #Debug?
@@ -256,14 +263,14 @@ namespace RanbowOF.Repositories.Common
         public async Task<TEntity> FindFirstAsync()
         {
             TEntity _entity = null;
-            _logger.LogDebug($"Finding First item of type: {typeof(TEntity)}");
+            _logger.LogDebug($"Finding First entity of type: {typeof(TEntity)}");
             try
             {
                 _entity = await _table.FirstOrDefaultAsync();
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Fiding first item: {ex.Message} - Inner Exception {ex.InnerException}");
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Fiding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -273,14 +280,14 @@ namespace RanbowOF.Repositories.Common
         public async Task<TEntity> FindFirstAsync(Expression<Func<TEntity, bool>> predicate)
         {
             TEntity _entity = null;
-            _logger.LogDebug($"Finding First {predicate.ToString()} item of type: {typeof(TEntity)}");
+            _logger.LogDebug($"Finding First {predicate.ToString()} entity of type: {typeof(TEntity)}");
             try
             {
                 _entity = await _table.FirstOrDefaultAsync(predicate);
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Fiding first predicate item: {ex.Message} - Inner Exception {ex.InnerException}");
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Fiding first predicate entity: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -406,7 +413,7 @@ namespace RanbowOF.Repositories.Common
         public int Update(TEntity updatedEntity)
         {
             int _updated = AppUnitOfWork.CONST_WASERROR;   // -1 means error only returned if there is one
-            _logger.LogDebug($"Updating item: {updatedEntity.ToString()}");
+            _logger.LogDebug($"Updating entity: {updatedEntity.ToString()}");
             _unitOfWork.BeginTransaction();
             try
             {
@@ -426,7 +433,7 @@ namespace RanbowOF.Repositories.Common
         public async Task<int> UpdateAsync(TEntity updatedEntity)
         {
             int _updated = AppUnitOfWork.CONST_WASERROR;   // -1 means error only returned if there is one
-            _logger.LogDebug($"Updating item (async): {updatedEntity.ToString()}");
+            _logger.LogDebug($"Updating entity (async): {updatedEntity.ToString()}");
             _unitOfWork.BeginTransaction();
             try
             {

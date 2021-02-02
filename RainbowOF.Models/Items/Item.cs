@@ -17,26 +17,36 @@ namespace RainbowOF.Models.Items
         [StringLength(50)]
         public string SKU { get; set; }
         [DefaultValue(true)]
-        [DisplayName("Enabled?")]
+        [DisplayName("Is Enabled?")]
         public bool IsEnabled { get; set; }
         [StringLength(255)]
         public string ItemDetail { get; set; }
-        public int? ItemCategoryId { get; set; }
+        public Guid? PrimaryItemCategoryLookupId { get; set; }
         [DefaultValue(0)]
         public Guid? ParentItemId { get; set; }
         public Guid? ReplacementItemId { get; set; }
         [StringLength(10, ErrorMessage = "Abbreviated name")]
         public string ItemAbbreviatedName { get; set; }
         public int SortOrder { get; set; }
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal BasePrice { get; set; }
+
         [Timestamp]
         public byte[] RowVersion { get; set; }
 
-        public virtual ItemCategory ItemCategory { get; set; }
         [ForeignKey("ParentItemId")]
         public virtual Item ParentItem { get; set; }
         [ForeignKey("ReplacementItemId")]
         public virtual Item ReplacementItem { get; set; }
-        
+
+        [ForeignKey("ItemId")]
+        public virtual List<ItemCategory> ItemCategories { get; set; }
+        [ForeignKey("ItemId")]
+        public virtual List<ItemAttribute> ItemAttributes { get; set; }
+        [ForeignKey("ItemId")]
+        public virtual List<ItemAttributeVariety> ItemAttributeVarieties { get; set; }
+
+
         // may need these later
         //        public int? MerchantId { get; set; }
         //        [DisplayName("Qty/unit")]

@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RainbowOF.Data.SQL.EntityConfigs.Items;
+using RainbowOF.Data.SQL.EntityConfigs.Lookups;
 using RainbowOF.Datsa.SQL.EntityConfigs.Items;
 using RainbowOF.Models.Items;
 using RainbowOF.Models.Logs;
+using RainbowOF.Models.Lookups;
 using RainbowOF.Models.System;
 using RainbowOF.Models.Woo;
 using System;
@@ -32,8 +34,6 @@ namespace RainbowOF.Data.SQL
         public virtual DbSet<ItemCategory> ItemCategories { get; set; }
         public virtual DbSet<ItemAttribute> ItemAttributes { get; set; }
         public virtual DbSet<ItemAttributeVariety> ItemAttributeVarieties { get; set; }
-        public virtual DbSet<ActiveItemAttribute> ActiveItemAttributes { get; set; }
-        public virtual DbSet<ActiveItemAttributeVariety> ActiveItemAttributeVarieties { get; set; }
         public virtual DbSet<ItemUoM> ItemUoMs { get; set; }
 
         //public DbSet<ItemUnit> ItemUnits { get; set; }
@@ -43,12 +43,19 @@ namespace RainbowOF.Data.SQL
         ////public DbSet<UsedItemGroup> UsedItemGroups { get; set; }
         #endregion
 
+        #region Lookup stuff
+        public virtual DbSet<ItemCategoryLookup> ItemCategoriesLookup { get; set; }
+        public virtual DbSet<ItemAttributeLookup> ItemAttributesLookup { get; set; }
+        public virtual DbSet<ItemAttributeVarietyLookup> ItemAttributeVarietiesLookup { get; set; }
+        #endregion
+
         #region WooStuff
         public virtual DbSet<WooSettings> WooSettings { get; set; }
         public virtual DbSet<WooSyncLog> WooSyncLogs { get; set; }
         public virtual DbSet<WooCategoryMap> WooCategoryMaps { get; set; }
         public virtual DbSet<WooProductAttributeMap> WooProductAttributeMappings { get; set; }
         public virtual DbSet<WooProductAttributeTermMap> WooProductAttributeTermMappings { get; set; }
+        public virtual DbSet<WooProductMap> WooProductMaps { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -74,15 +81,19 @@ namespace RainbowOF.Data.SQL
             modelBuilder.ApplyConfiguration<ItemAttribute>(new ItemAttributeModelConfig());
             modelBuilder.Entity<ItemAttributeVariety>().ToTable(nameof(ItemAttributeVarieties));
             modelBuilder.ApplyConfiguration<ItemAttributeVariety>(new ItemAttributeVarietyModelConfig());
-            modelBuilder.Entity<ActiveItemAttribute>().ToTable(nameof(ActiveItemAttributes));
-            modelBuilder.ApplyConfiguration<ActiveItemAttribute>(new ActiveItemAttributeModelConfig());
-            modelBuilder.Entity<ActiveItemAttributeVariety>().ToTable(nameof(ActiveItemAttributeVarieties));
-            modelBuilder.ApplyConfiguration<ActiveItemAttributeVariety>(new ActiveItemAttributeVarietyModelConfig());
             modelBuilder.Entity<ItemUoM>().ToTable(nameof(ItemUoMs));
             modelBuilder.ApplyConfiguration<ItemUoM>(new ItemUoMMappingConfig());
             //modelBuilder.Entity<ItemGroup>().ToTable(nameof(ItemGroups));
             //modelBuilder.ApplyConfiguration<ItemGroup>(new ItemGroupModelConfig());
             ////modelBuilder.Entity<UsedItemGroup>().ToTable(nameof(UsedItemGroups));
+            #endregion
+            #region Lookups
+            modelBuilder.Entity<ItemCategoryLookup>().ToTable(nameof(ItemCategoriesLookup));
+            modelBuilder.ApplyConfiguration<ItemCategoryLookup>(new ItemCategoryLookupModelConfig());
+            modelBuilder.Entity<ItemAttributeLookup>().ToTable(nameof(ItemAttributesLookup));
+            modelBuilder.ApplyConfiguration<ItemAttributeLookup>(new ItemAttributeLookupModelConfig());
+            modelBuilder.Entity<ItemAttributeVarietyLookup>().ToTable(nameof(ItemAttributeVarietiesLookup));
+            modelBuilder.ApplyConfiguration<ItemAttributeVarietyLookup>(new ItemAttributeVarietyLookupModelConfig());
             #endregion
 
             #region WooStuff
@@ -93,6 +104,7 @@ namespace RainbowOF.Data.SQL
             modelBuilder.Entity<WooProductAttributeMap>().ToTable(nameof(WooProductAttributeMappings));
             modelBuilder.Entity<WooProductAttributeTermMap>().ToTable(nameof(WooProductAttributeTermMappings));
             modelBuilder.ApplyConfiguration<WooProductAttributeTermMap>(new WooProductAttributeTermMappingConfig());
+            modelBuilder.Entity<WooProductMap>().ToTable(nameof(WooProductMaps));
             #endregion
         }
     }

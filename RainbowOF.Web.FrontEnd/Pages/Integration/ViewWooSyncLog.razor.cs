@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using RainbowOF.Models.Logs;
-using RanbowOF.Repositories.Common;
-using RanbowOF.Repositories.Logs;
+using RainbowOF.Repositories.Common;
+using RainbowOF.Repositories.Logs;
 using System;
 using System.Collections.Generic;
 using System.Linq;

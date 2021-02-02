@@ -2,14 +2,14 @@
 using RainbowOF.Data.SQL;
 using RainbowOF.Models.Logs;
 using RainbowOF.Tools;
-using RanbowOF.Repositories.Common;
+using RainbowOF.Repositories.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RanbowOF.Repositories.Logs
+namespace RainbowOF.Repositories.Logs
 {
     public class WooSyncLogRepository : AppRepository<WooSyncLog>, IWooSyncLogRepository
     {

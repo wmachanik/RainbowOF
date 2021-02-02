@@ -3,24 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace RainbowOF.Data.SQL.Migrations
 {
-    public partial class Reset2 : Migration
+    public partial class Initialv13 : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "ActiveItemAttributes",
-                columns: table => new
-                {
-                    ActiveItemAttributeId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ItemId = table.Column<int>(type: "int", nullable: false),
-                    IsUsedForVariableType = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ActiveItemAttributes", x => x.ActiveItemAttributeId);
-                });
-
             migrationBuilder.CreateTable(
                 name: "ClosureDates",
                 columns: table => new
@@ -40,26 +26,27 @@ namespace RainbowOF.Data.SQL.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ItemAttributes",
+                name: "ItemAttributesLookup",
                 columns: table => new
                 {
-                    ItemAttributeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ItemAttributeLookupId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     AttributeName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     OrderBy = table.Column<int>(type: "int", nullable: false),
                     Notes = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ItemAttributes", x => x.ItemAttributeId);
+                    table.PrimaryKey("PK_ItemAttributesLookup", x => x.ItemAttributeLookupId);
                 });
 
             migrationBuilder.CreateTable(
-                name: "ItemAttributeVarieties",
+                name: "ItemAttributeVarietiesLookup",
                 columns: table => new
                 {
-                    ItemAttributeVarietyId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ItemAttributeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ItemAttributeVarietyLookupId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ItemAttributeLookupId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     VarietyName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    UoMId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     SortOrder = table.Column<int>(type: "int", nullable: false),
                     Symbol = table.Column<string>(type: "nvarchar(2)", maxLength: 2, nullable: true),
                     FGColour = table.Column<string>(type: "nvarchar(11)", maxLength: 11, nullable: true),
@@ -69,38 +56,69 @@ namespace RainbowOF.Data.SQL.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ItemAttributeVarieties", x => x.ItemAttributeVarietyId);
+                    table.PrimaryKey("PK_ItemAttributeVarietiesLookup", x => x.ItemAttributeVarietyLookupId);
                 });
 
             migrationBuilder.CreateTable(
-                name: "ItemCategories",
+                name: "ItemCategoriesLookup",
                 columns: table => new
                 {
-                    ItemCategoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ItemCategoryName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    ItemCategoryLookupId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CategoryName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     ParentCategoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     Notes = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ItemCategories", x => x.ItemCategoryId);
+                    table.PrimaryKey("PK_ItemCategoriesLookup", x => x.ItemCategoryLookupId);
                     table.ForeignKey(
-                        name: "FK_ItemCategories_ItemCategories_ParentCategoryId",
+                        name: "FK_ItemCategoriesLookup_ItemCategoriesLookup_ParentCategoryId",
                         column: x => x.ParentCategoryId,
-                        principalTable: "ItemCategories",
-                        principalColumn: "ItemCategoryId");
+                        principalTable: "ItemCategoriesLookup",
+                        principalColumn: "ItemCategoryLookupId");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Items",
+                columns: table => new
+                {
+                    ItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ItemName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    SKU = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    IsEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    ItemDetail = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    PrimaryItemCategoryLookupId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    ParentItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    ReplacementItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    ItemAbbreviatedName = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
+                    SortOrder = table.Column<int>(type: "int", nullable: false),
+                    BasePrice = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Items", x => x.ItemId);
+                    table.ForeignKey(
+                        name: "FK_Items_Items_ParentItemId",
+                        column: x => x.ParentItemId,
+                        principalTable: "Items",
+                        principalColumn: "ItemId");
+                    table.ForeignKey(
+                        name: "FK_Items_Items_ReplacementItemId",
+                        column: x => x.ReplacementItemId,
+                        principalTable: "Items",
+                        principalColumn: "ItemId");
                 });
 
             migrationBuilder.CreateTable(
                 name: "ItemUoMs",
                 columns: table => new
                 {
-                    ItemUoMId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ItemUoMId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     UoMName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     UoMSymbol = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
-                    BaseUoMId = table.Column<int>(type: "int", nullable: true),
+                    BaseUoMId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     BaseConversationFactor = table.Column<double>(type: "float", nullable: false),
                     RoundTo = table.Column<int>(type: "int", nullable: false)
                 },
@@ -140,7 +158,8 @@ namespace RainbowOF.Data.SQL.Migrations
                 {
                     WooProductAttributeMapId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     WooProductAttributeId = table.Column<int>(type: "int", nullable: false),
-                    ItemAttributeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    ItemAttributeLookupId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CanUpdate = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -152,13 +171,14 @@ namespace RainbowOF.Data.SQL.Migrations
                 columns: table => new
                 {
                     WooProductAttributeTermMapId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ItemAttributeVarietyId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    WooProductAttributeTermId = table.Column<int>(type: "int", nullable: false)
+                    ItemAttributeVarietyLookupId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    WooProductAttributeTermId = table.Column<int>(type: "int", nullable: false),
+                    CanUpdate = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_WooProductAttributeTermMappings", x => x.WooProductAttributeTermMapId);
-                    table.UniqueConstraint("AK_WooProductAttributeTermMappings_ItemAttributeVarietyId_WooProductAttributeTermId", x => new { x.ItemAttributeVarietyId, x.WooProductAttributeTermId });
+                    table.UniqueConstraint("AK_WooProductAttributeTermMappings_ItemAttributeVarietyLookupId_WooProductAttributeTermId", x => new { x.ItemAttributeVarietyLookupId, x.WooProductAttributeTermId });
                 });
 
             migrationBuilder.CreateTable(
@@ -203,44 +223,6 @@ namespace RainbowOF.Data.SQL.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Items",
-                columns: table => new
-                {
-                    ItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ItemName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    SKU = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    IsEnabled = table.Column<bool>(type: "bit", nullable: false),
-                    ItemDetail = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    ItemCategoryId = table.Column<int>(type: "int", nullable: true),
-                    ParentItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    ReplacementItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    ItemAbbreviatedName = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
-                    SortOrder = table.Column<int>(type: "int", nullable: false),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true),
-                    ItemCategoryId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Items", x => x.ItemId);
-                    table.ForeignKey(
-                        name: "FK_Items_ItemCategories_ItemCategoryId1",
-                        column: x => x.ItemCategoryId1,
-                        principalTable: "ItemCategories",
-                        principalColumn: "ItemCategoryId",
-                        onDelete: ReferentialAction.SetNull);
-                    table.ForeignKey(
-                        name: "FK_Items_Items_ParentItemId",
-                        column: x => x.ParentItemId,
-                        principalTable: "Items",
-                        principalColumn: "ItemId");
-                    table.ForeignKey(
-                        name: "FK_Items_Items_ReplacementItemId",
-                        column: x => x.ReplacementItemId,
-                        principalTable: "Items",
-                        principalColumn: "ItemId");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "WooCategoryMaps",
                 columns: table => new
                 {
@@ -250,58 +232,89 @@ namespace RainbowOF.Data.SQL.Migrations
                     WooCategoryName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     WooCategorySlug = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     WooCategoryParentId = table.Column<int>(type: "int", nullable: true),
-                    ItemCategoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    CanUpdate = table.Column<bool>(type: "bit", nullable: false),
+                    ItemCategoryLookupId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_WooCategoryMaps", x => x.WooCategoryMapId);
                     table.ForeignKey(
-                        name: "FK_WooCategoryMaps_ItemCategories_ItemCategoryId",
-                        column: x => x.ItemCategoryId,
-                        principalTable: "ItemCategories",
-                        principalColumn: "ItemCategoryId",
+                        name: "FK_WooCategoryMaps_ItemCategoriesLookup_ItemCategoryLookupId",
+                        column: x => x.ItemCategoryLookupId,
+                        principalTable: "ItemCategoriesLookup",
+                        principalColumn: "ItemCategoryLookupId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "ActiveItemAttributeVarieties",
+                name: "ItemAttributes",
                 columns: table => new
                 {
-                    ActiveItemAttributeVarietyId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ItemId = table.Column<int>(type: "int", nullable: false),
+                    ItemAttributeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ItemAttributeLookupId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IsUsedForVariableType = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ItemAttributes", x => x.ItemAttributeId);
+                    table.ForeignKey(
+                        name: "FK_ItemAttributes_ItemAttributesLookup_ItemAttributeLookupId",
+                        column: x => x.ItemAttributeLookupId,
+                        principalTable: "ItemAttributesLookup",
+                        principalColumn: "ItemAttributeLookupId");
+                    table.ForeignKey(
+                        name: "FK_ItemAttributes_Items_ItemId",
+                        column: x => x.ItemId,
+                        principalTable: "Items",
+                        principalColumn: "ItemId");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ItemCategories",
+                columns: table => new
+                {
+                    ItemCategoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ItemCategoryLookup = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ItemCategories", x => x.ItemCategoryId);
+                    table.ForeignKey(
+                        name: "FK_ItemCategories_Items_ItemId",
+                        column: x => x.ItemId,
+                        principalTable: "Items",
+                        principalColumn: "ItemId");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ItemAttributeVarieties",
+                columns: table => new
+                {
+                    ItemAttributeVarietyId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ItemAttributeId = table.Column<int>(type: "int", nullable: false),
                     IsDefault = table.Column<bool>(type: "bit", nullable: false),
-                    ItemUoMId = table.Column<int>(type: "int", nullable: true),
+                    ItemUoMId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     UoMQtyPerItem = table.Column<double>(type: "float", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ActiveItemAttributeVarieties", x => x.ActiveItemAttributeVarietyId);
+                    table.PrimaryKey("PK_ItemAttributeVarieties", x => x.ItemAttributeVarietyId);
                     table.ForeignKey(
-                        name: "FK_ActiveItemAttributeVarieties_ItemUoMs_ItemUoMId",
+                        name: "FK_ItemAttributeVarieties_Items_ItemId",
+                        column: x => x.ItemId,
+                        principalTable: "Items",
+                        principalColumn: "ItemId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ItemAttributeVarieties_ItemUoMs_ItemUoMId",
                         column: x => x.ItemUoMId,
                         principalTable: "ItemUoMs",
                         principalColumn: "ItemUoMId",
                         onDelete: ReferentialAction.SetNull);
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ActiveItemAttributes_ActiveItemAttributeId_ItemId",
-                table: "ActiveItemAttributes",
-                columns: new[] { "ActiveItemAttributeId", "ItemId" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ActiveItemAttributeVarieties_ItemId_ActiveItemAttributeVarietyId",
-                table: "ActiveItemAttributeVarieties",
-                columns: new[] { "ItemId", "ActiveItemAttributeVarietyId" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ActiveItemAttributeVarieties_ItemUoMId",
-                table: "ActiveItemAttributeVarieties",
-                column: "ItemUoMId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ClosureDates_EventName",
@@ -311,32 +324,70 @@ namespace RainbowOF.Data.SQL.Migrations
                 filter: "[EventName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ItemAttributes_AttributeName",
+                name: "IX_ItemAttributes_ItemAttributeId_ItemId",
                 table: "ItemAttributes",
+                columns: new[] { "ItemAttributeId", "ItemId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ItemAttributes_ItemAttributeLookupId",
+                table: "ItemAttributes",
+                column: "ItemAttributeLookupId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ItemAttributes_ItemId",
+                table: "ItemAttributes",
+                column: "ItemId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ItemAttributesLookup_AttributeName",
+                table: "ItemAttributesLookup",
                 column: "AttributeName",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_ItemAttributeVarieties_VarietyName_ItemAttributeId",
+                name: "IX_ItemAttributesLookup_OrderBy_AttributeName",
+                table: "ItemAttributesLookup",
+                columns: new[] { "OrderBy", "AttributeName" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ItemAttributeVarieties_ItemId_ItemAttributeId",
                 table: "ItemAttributeVarieties",
-                columns: new[] { "VarietyName", "ItemAttributeId" },
+                columns: new[] { "ItemId", "ItemAttributeId" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_ItemCategories_ItemCategoryName",
-                table: "ItemCategories",
-                column: "ItemCategoryName",
+                name: "IX_ItemAttributeVarieties_ItemUoMId",
+                table: "ItemAttributeVarieties",
+                column: "ItemUoMId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ItemAttributeVarietiesLookup_VarietyName_ItemAttributeLookupId",
+                table: "ItemAttributeVarietiesLookup",
+                columns: new[] { "VarietyName", "ItemAttributeLookupId" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_ItemCategories_ParentCategoryId",
+                name: "IX_ItemCategories_ItemCategoryId_ItemId",
                 table: "ItemCategories",
+                columns: new[] { "ItemCategoryId", "ItemId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ItemCategories_ItemId",
+                table: "ItemCategories",
+                column: "ItemId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ItemCategoriesLookup_CategoryName",
+                table: "ItemCategoriesLookup",
+                column: "CategoryName",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ItemCategoriesLookup_ParentCategoryId",
+                table: "ItemCategoriesLookup",
                 column: "ParentCategoryId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Items_ItemCategoryId1",
-                table: "Items",
-                column: "ItemCategoryId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Items_ItemName",
@@ -375,19 +426,13 @@ namespace RainbowOF.Data.SQL.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_WooCategoryMaps_ItemCategoryId",
+                name: "IX_WooCategoryMaps_ItemCategoryLookupId",
                 table: "WooCategoryMaps",
-                column: "ItemCategoryId");
+                column: "ItemCategoryLookupId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "ActiveItemAttributes");
-
-            migrationBuilder.DropTable(
-                name: "ActiveItemAttributeVarieties");
-
             migrationBuilder.DropTable(
                 name: "ClosureDates");
 
@@ -398,7 +443,10 @@ namespace RainbowOF.Data.SQL.Migrations
                 name: "ItemAttributeVarieties");
 
             migrationBuilder.DropTable(
-                name: "Items");
+                name: "ItemAttributeVarietiesLookup");
+
+            migrationBuilder.DropTable(
+                name: "ItemCategories");
 
             migrationBuilder.DropTable(
                 name: "SysPrefs");
@@ -419,10 +467,16 @@ namespace RainbowOF.Data.SQL.Migrations
                 name: "WooSyncLogs");
 
             migrationBuilder.DropTable(
+                name: "ItemAttributesLookup");
+
+            migrationBuilder.DropTable(
                 name: "ItemUoMs");
 
             migrationBuilder.DropTable(
-                name: "ItemCategories");
+                name: "Items");
+
+            migrationBuilder.DropTable(
+                name: "ItemCategoriesLookup");
         }
     }
 }

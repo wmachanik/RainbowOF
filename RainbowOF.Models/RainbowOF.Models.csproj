@@ -6,6 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Items\ActiveItemAttribute.cs" />
+    <Compile Remove="Items\ActiveItemAttributeVariety.cs" />
     <Compile Remove="System\Party.cs" />
   </ItemGroup>
 

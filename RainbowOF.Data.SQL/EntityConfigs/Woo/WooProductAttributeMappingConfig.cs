@@ -10,7 +10,7 @@ namespace RainbowOF.Datsa.SQL.EntityConfigs.Items
         public void Configure(EntityTypeBuilder<WooProductAttributeMap> WooProductAttributeMappingConfigModelBuilder)
         {
             WooProductAttributeMappingConfigModelBuilder.HasKey(wpat => wpat.WooProductAttributeMapId );
-            WooProductAttributeMappingConfigModelBuilder.HasAlternateKey(wpat => new { wpat.ItemAttributeId, wpat.WooProductAttributeId });
+            WooProductAttributeMappingConfigModelBuilder.HasAlternateKey(wpat => new { wpat.ItemAttributeLookupId, wpat.WooProductAttributeId });
             //itemModelBuilder.Property(i => i.IsEnabled)
             //    .HasDefaultValue(true);
         }

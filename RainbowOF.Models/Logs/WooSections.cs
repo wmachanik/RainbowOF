@@ -5,8 +5,9 @@
         none,
         Coupons, 
         Customers, 
-        Order, OrderRefunds, 
-        Product, ProductAttributes, ProductAttributeTerms, ProductCategories, ProductTags, 
+        Orders, OrderRefunds, 
+        Products,
+        ProductAttributes, ProductAttributeTerms, ProductCategories, ProductTags, 
         WebHooks, 
         Taxes,
         System
