@@ -1,0 +1,234 @@
+﻿@page "/ItemCategories"
+
+@using Blazority
+@using RainbowOF.ViewModels.Lookups
+
+<Row Style="z-index: 0" Margin="Margin.Is1">
+    <Column>
+        <Blazority.Card>
+            <CardHeader>
+                <Blazority.CardTitle><h2>Categories&nbsp;<Icon Name="IconName.Tag" /></h2></Blazority.CardTitle>
+            </CardHeader>
+            <CardBody>
+                <Blazority.CardBlock>
+                    <Field Style="display: inline-flex">
+                        <FieldLabel>
+                            Custom Search
+                        </FieldLabel>
+                        <FieldBody>
+                            <TextEdit @bind-Text="@customFilterValue" />
+                        </FieldBody>
+                    </Field>
+                    <Field JustifyContent="JustifyContent.End">
+                        <FieldLabel>
+                            Page Size
+                        </FieldLabel>
+                        <FieldBody>
+                            <Blazority.Select TItem="int" @bind-SelectedValue="@PageSize" style="width: 6em;" @onchange="OnSelectePageChanged">
+                                <SelectItem Value=10>10</SelectItem>
+                                <SelectItem Value=15>15</SelectItem>
+                                <SelectItem Value=20>20</SelectItem>
+                                <SelectItem Value=30>30</SelectItem>
+                                <SelectItem Value=50>50</SelectItem>
+                                <SelectItem Value=75>75</SelectItem>
+                                <SelectItem Value=100>100</SelectItem>
+                                <SelectItem Value=150>150</SelectItem>
+                            </Blazority.Select>
+                        </FieldBody>
+                    </Field>
+                </Blazority.CardBlock>
+            </CardBody>
+        </Blazority.Card>
+    </Column>
+</Row>
+<Row Margin="Margin.Is1">
+    <Column>
+        <Blazority.Card Margin="Margin.Is1">
+            <CardHeader>
+                <Blazority.CardTitle><h3>List of Categories</h3></Blazority.CardTitle>
+            </CardHeader>
+            <CardBody>
+                <Blazority.CardBlock>
+                    <Tooltip Text="Perform group actions on categories" Placement="Placement.Right">
+                        <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Disabled="!GroupButtonEnabled" Clicked="DoGroupAction">Group Action(s)</Blazorise.Button>
+                    </Tooltip>
+                </Blazority.CardBlock>
+                <Blazority.Card>
+                    <Blazority.Datagrid Items="modelItemCategoryLookupViews" Selection="SelectionMode.Multi" @bind-SelectedItems="SelectedItemCatagories"
+                        <EmptyTemplate>
+                            No items logged yet...
+                        </EmptyTemplate>
+                        <LoadingTemplate>
+                            <div class="spinner-border m-5" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </LoadingTemplate>
+                        <DataGridColumns>
+                            <DataGridMultiSelectColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.IsChecked)" Caption="[X]" Sortable="false" TextAlignment="TextAlignment.Center">
+                                <CaptionTemplate>
+                                    <Tooltip Text="Select/Un select all" Placement="Placement.Right">
+                                        <Blazorise.Button @onclick="SelectAllRows" Color="Color.Success"><Icon Name="@CheckIcon" /></Blazorise.Button>
+                                    </Tooltip>
+                                </CaptionTemplate>
+                            </DataGridMultiSelectColumn>
+                            <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.CategoryName)" Caption="Category Name" Sortable="true" Editable="true">
+                                <DisplayTemplate>
+                                    @{
+                                        var catItem = (context as ItemCategoryLookupView);
+
+                                        if (catItem != null)
+                                        {
+                                            if ((catItem.ParentCategoryId == null) || (catItem.ParentCategoryId == Guid.Empty))
+                                            {
+                                                <Blazorise.Label Style="font-weight: bold">@catItem.CategoryName</Blazorise.Label>
+                                            }
+                                            else
+                                            {
+                                                <Blazorise.Label>@catItem.CategoryName</Blazorise.Label>
+                                            }
+                                        }
+                                    }
+                                </DisplayTemplate>
+                            </DataGridColumn>
+                            <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.ParentCategoryId)" Caption="Parent Category" Sortable="true" Editable="true">
+                                <DisplayTemplate>
+                                    @{
+                                        var catItem = (context as ItemCategoryLookupView);
+
+                                        @((catItem.ParentCategory == null) ? "n/a" : catItem.ParentCategory.CategoryName);
+                                    }
+                                </DisplayTemplate>
+                                <EditTemplate>
+                                    @{
+                                        var listOfParents = GetListOfParentCategories();
+
+                                        if (listOfParents.Count > 0)
+                                        {
+                                            <Select TValue="Guid" SelectedValue="@(context.CellValue == null ? Guid.Empty : (Guid)context.CellValue)" SelectedValueChanged="@((v) => context.CellValue = v)">
+                                                <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
+
+                                                @foreach (var item in listOfParents)
+                                                {
+                                                    <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
+                                                }
+                                            </Select>
+                                        }
+                                    }
+                                </EditTemplate>
+                            </DataGridColumn>
+                            <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.CanUpdateWooMap)" Caption="Woo Can Map" Sortable="true" Editable="true">
+                                <DisplayTemplate>
+                                    @{
+                                        var wooItem = (context as ItemCategoryLookupView);
+
+                                        @( (wooItem.CanUpdateWooMap == null) ? "n/a" : ( (bool)wooItem.CanUpdateWooMap) ? "yes" : "no" ) ;
+                                    }
+                                </DisplayTemplate>
+                                <EditTemplate>
+                                    @{
+                                        if (context.CellValue == null)
+                                        {
+                                            <Blazorise.Label>n/a</Blazorise.Label>
+                                        }
+                                        else
+                                        {
+                                            <Blazorise.Check TValue="bool" Checked="@((bool) context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)">Woo Can Map</Blazorise.Check>
+                                        }
+                                    }
+                                </EditTemplate>
+                            </DataGridColumn>
+                            <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.Notes)" Caption="Notes" Sortable="true" Editable="true">
+                            </DataGridColumn>
+                            <DataGridCommandColumn TItem="ItemCategoryLookupView">
+                                <NewCommandTemplate>
+                                    <Tooltip Text="New category" Style="z-index:99" Placement="Placement.Bottom">
+                                        <Button Color="Color.Success" Clicked="@context.Clicked"><Icon Name="IconName.Add" /></Button>
+                                    </Tooltip>
+                                </NewCommandTemplate>
+                                <EditCommandTemplate>
+                                    <Tooltip Text="Edit category">
+                                        <Button Color="Color.Primary" Clicked="@context.Clicked"><Icon Name="IconName.Edit" /></Button>
+                                    </Tooltip>
+                                </EditCommandTemplate>
+                                <DeleteCommandTemplate>
+                                    <Tooltip Text="Delete category">
+                                        <Button Color="Color.Danger" Clicked="@context.Clicked"><Icon Name="IconName.Delete" /></Button>
+                                    </Tooltip>
+                                </DeleteCommandTemplate>
+                                <SaveCommandTemplate>
+                                    <Tooltip Text="Save">
+                                        <Button Color="Color.Primary" Clicked="@context.Clicked"><Icon Name="IconName.CheckCircle" /></Button>
+                                    </Tooltip>
+                                </SaveCommandTemplate>
+                                <CancelCommandTemplate>
+                                    <Tooltip Text="Undo changes">
+                                        <Button Color="Color.Secondary" Clicked="@context.Clicked"><Icon Name="IconName.Undo" /></Button>
+                                    </Tooltip>
+                                </CancelCommandTemplate>
+                                <ClearFilterCommandTemplate>
+                                    <Button Color="Color.Warning" Clicked="@context.Clicked">Clear Filter</Button>
+                                </ClearFilterCommandTemplate>
+                            </DataGridCommandColumn>
+                        </DataGridColumns>
+                    </Blazority.DataGrid>
+                </Blazority.Card>
+
+            </CardBody>
+        </Blazority.Card>
+    </Column>
+</Row>
+
+
+<RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals.ShowModalMessage ModalTitle="Category Saving Status" ModalMessage="Succss" @ref="ShowModalStatus" />-
+
+<RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals.ConfirmModal @ref="DeleteConfirmation" ConfirmationChanged="ConfirmDelete_Click" ConfirmationMessage=@($"Are you sure you want to delete ?") />
+
+
+@*<DisplayTemplate>
+    @(context.ParentCategory == null) ? "no parent:@($"Parent: {context.ParentCategory.CategoryName}")
+            </DisplayTemplate>*@
+
+
+
+
+@*
+
+                          RowInserted="@OnRowInserted"
+                          RowUpdated="@OnRowUpdated"
+                          RowRemoving="@OnRowRemoving"
+
+
+
+
+
+
+                            <DisplayTemplate>
+                                <Blazorise.Check TValue="bool" Checked="@context.IsChecked" />
+                            </DisplayTemplate>
+
+
+
+                            <CaptionTemplate>
+                                <Tooltip Text="Select/Un select all" Placement="Placement.Right">
+                                    <Blazorise.Button @onclick="SelectAllRows" Color="Color.Success"><Icon Name="@CheckIcon" /></Blazorise.Button>
+                                </Tooltip>
+                            </CaptionTemplate>
+                            <DisplayTemplate>
+                                <Blazorise.Check TValue="bool" Checked="@context.IsChecked" />
+                            </DisplayTemplate>
+
+
+                            <
+                            <CaptionTemplate>
+                                <Tooltip Text="Select/Un select all" Placement="Placement.Right">
+                                    <Blazorise.Button @onclick="SelectAllRows" Color="Color.Success"><Icon Name="@CheckIcon" /></Blazorise.Button>
+                                </Tooltip>
+                            </CaptionTemplate>
+                            <DisplayTemplate>
+                                <Blazorise.Check TValue="bool" Checked="@context.IsChecked"  />
+                            </DisplayTemplate>
+
+
+                                <Blazorise.Check TValue="bool" Checked="@context.IsChecked" CheckedChanged="SetGroupButtonStatus()" />
+
+    @onchange="eventArgs => { SetGroupButtonStatus(context.IsChecked, eventArgs.Value); }"*@

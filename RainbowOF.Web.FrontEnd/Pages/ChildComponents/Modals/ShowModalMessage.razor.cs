@@ -1,7 +1,5 @@
 ﻿using Blazorise;
 using Microsoft.AspNetCore.Components;
-using System.ComponentModel;
-using System.Threading.Tasks;
 
 namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals
 {
@@ -17,10 +15,13 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals
         {
             modalRef.Show();
         }
-
         public void HideModal()
         {
             modalRef.Hide();
+        }
+        public void UpdateModalTitle(string pTitle)
+        {
+            ModalTitle = pTitle;
         }
 
         public void UpdateModalMessage(string pMessage)

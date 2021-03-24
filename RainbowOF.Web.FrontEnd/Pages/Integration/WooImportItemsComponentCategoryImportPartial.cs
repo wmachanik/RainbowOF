@@ -38,19 +38,12 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         // Retrieve data from Woo
         public async Task<List<ProductCategory>> GetWooCategoryData()
         {
-            WooAPISettings _WooAPISettings = new WooAPISettings
-            {
-                ConsumerKey = WooSettingsModel.ConsumerKey,
-                ConsumerSecret = WooSettingsModel.ConsumerSecret,
-                QueryURL = WooSettingsModel.QueryURL,
-                IsSecureURL = WooSettingsModel.IsSecureURL,
-                JSONAPIPostFix = WooSettingsModel.JSONAPIPostFix,
-                RootAPIPostFix = WooSettingsModel.RootAPIPostFix
-            };
+            WooAPISettings _WooAPISettings = new WooAPISettings(WooSettingsModel);
+   
 
-            WooProductCategory _WooProductCategory = new WooProductCategory(_WooAPISettings, Logger);
+            IWooProductCategory _WooProductCategory = new WooProductCategory(_WooAPISettings, Logger);
             //List<ProductCategory> wooProductCategories = await _WooProductCategory.GetAllProductCategories();
-            return await _WooProductCategory.GetAllProductCategories();
+            return await _WooProductCategory.GetAllProductCategoriesAsync();
             //return wooProductCategories;
         }
         async Task<Guid> UpdateItemCategoryLookup(ProductCategory pPC, ItemCategoryLookup pItemCategoryLookup, List<WooItemWithParent> pAttribsWithParents)
@@ -58,8 +51,9 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             IAppRepository<ItemCategoryLookup> _ItemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
 
             pItemCategoryLookup.CategoryName = pPC.name;
-            // do not set parent Id here since it could cause datbase problems - if it is already null then it will be updated later.
-            // pItemCategoryLookup.ParentCategoryId = Guid.Empty;   /// need to find the  parentid if it exists - or need to say it does not exists so that we can look later?
+            pItemCategoryLookup.UsedForPrediction = (pPC.parent == null) || (pPC.parent == 0);
+            // do not set parent Id here since it could cause database problems - if it is already null then it will be updated later.
+            // pItemCategoryLookup.ParentCategoryId = Guid.Empty;   /// need to find the  ParentId if it exists - or need to say it does not exists so that we can look later?
             if (pPC.parent > 0)
             {
                 pAttribsWithParents.Add(new WooItemWithParent
@@ -83,6 +77,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                 {
                     CategoryName = pPC.name,
                     //  Null;? ParentCategoryId = Guid.Empty,
+                    UsedForPrediction = (pPC.parent == null) || (pPC.parent == 0),
                     Notes = $"Imported Woo Category ID {pPC.id}"
                 };
                 if (pPC.parent > 0)
@@ -107,7 +102,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         {
             Guid _ItemCategoryLookupId = Guid.Empty;
             IAppRepository<ItemCategoryLookup> _ItemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
-            // check if the category existgs
+            // check if the category exists
             ItemCategoryLookup _ItemCategoryLookup = await _ItemCategoryLookupRepository.FindFirstAsync(ic => ic.ItemCategoryLookupId == pWooMappedItemCategoryLookupId);
             if (_ItemCategoryLookup != null)
             {
@@ -177,11 +172,11 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         async Task<Guid> ImportAndMapCategoryData(ProductCategory pPC, List<WooItemWithParent> pCategoriesWithParents)
         {
             Guid _ItemCategoryLookupId = Guid.Empty;
-            // Get repostiory for each database we are accessing. ItemCategoryLookup. WooProductCategoryMap & WooSyncLog
+            // Get repository for each database we are accessing. ItemCategoryLookup. WooProductCategoryMap & WooSyncLog
             IAppRepository<WooCategoryMap> _WooCategoryMapRepository = _AppUnitOfWork.Repository<WooCategoryMap>();
 
             // Import the category and set sync data
-            ///first check if it exists in the mapping, just incase there has been a name change
+            ///first check if it exists in the mapping, just in case there has been a name change
             WooCategoryMap _WooCategoryMap = await _WooCategoryMapRepository.FindFirstAsync(wpc => wpc.WooCategoryId == pPC.id);
             if (_WooCategoryMap != null)                  // the id exists so update
             {
@@ -217,7 +212,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         }
         async Task<bool> SetParentCategory(Guid pChildWooCategoryId, Guid pParentWooCategoryId)
         {
-            // using the guids of the category id update the parent of that record
+            // using the GUIDs of the category id update the parent of that record
             bool _IsUpdated = false;
 
             if ((pChildWooCategoryId != Guid.Empty) && (pParentWooCategoryId != Guid.Empty))
@@ -238,7 +233,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
 
         async Task<bool> FindAndSetParentCategory(WooItemWithParent pCategoryWithParent)
         {
-            ///Logic using the ids passed look for the linked attribute to the id then look for the parentid  get the guids of each and update thed atabase
+            ///Logic using the ids passed look for the linked attribute to the id then look for the ParentId  get the GUIDs of each and update the database
             // Get pAttributeWithAParent.ID GUID from ItemAttribute Table = ParentID
             // Get pAttributeWithAParent.AttrID GUID from ItemAttribute Table = ChildID
             // Set the  ItemAttribute.ParentID = ParentID for ItemsAttrib.ID = ChildID
@@ -251,7 +246,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             return _IsDone;
         }
 
-        // cycle through catagories and add to database if they do not exists
+        // cycle through categories and add to database if they do not exists
         // Store a WooReultsDate so we can filter the results later
         // log each category and what we do with t in the log and in the WooResults
         public async Task<int> ImportCategoryData(List<ProductCategory> pWooProductCategories)
@@ -262,7 +257,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             List<WooItemWithParent> CategoriessWithParents = new List<WooItemWithParent>();
 
             //// Load the current itemCategoriers
-            // cycle through catagories and add to database if they do not exists
+            // cycle through categories and add to database if they do not exists
             foreach (var pc in pWooProductCategories)
             {
                 ImportingThis = $"Importing Category ({_importCounters.TotalImported}/{_importCounters.MaxRecs}): {pc.name}";

@@ -1,6 +1,3 @@
-using Blazorise;
-using Blazorise.Bootstrap;
-using Blazorise.Icons.FontAwesome;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +7,11 @@ using Microsoft.Extensions.Hosting;
 using RainbowOF.Data.SQL;
 using RainbowOF.Tools;
 using RainbowOF.Repositories.Common;
+// other usings~
+using Blazorise;
+using Blazorise.Bootstrap;
+using Blazorise.Icons.FontAwesome;
+using Blazored.Toast;
 
 namespace RainbowOF.Web.FrontEnd
 {
@@ -35,7 +37,6 @@ namespace RainbowOF.Web.FrontEnd
                   })
                   .AddBootstrapProviders()
                   .AddFontAwesomeIcons();
-            //services.AddSingleton<WeatherForecastService>();
 
             services.AddDbContext<ApplicationDbContext>(options =>
             {
@@ -50,9 +51,12 @@ namespace RainbowOF.Web.FrontEnd
 
             services.AddLogging();
             services.AddSingleton<ILoggerManager, LoggerManager>();
+
+            services.AddBlazoredToast();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        //public void Configure(IComponentsApplicationBuilder app, IWebHostEnvironment env)
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -66,10 +70,17 @@ namespace RainbowOF.Web.FrontEnd
 
             app.UseStaticFiles();
             app.UseRouting();
+
+            //app.ApplicationServices
+            //    .UseBootstrapProviders()
+            //    .UseFontAwesomeIcons();
+
+
+
             // Blazorise
-            app.ApplicationServices
-              .UseBootstrapProviders()
-              .UseFontAwesomeIcons();
+            //            app.ApplicationServices.
+            //  .UseBootstrapProviders()
+            //  .UseFontAwesomeIcons();
 
 
             app.UseEndpoints(endpoints =>

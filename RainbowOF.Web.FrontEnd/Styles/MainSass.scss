@@ -138,7 +138,6 @@ app {
     right: 0.75rem;
     top: 0.5rem;
 }
-
 // WGM
 // changes to Bootstrap settings.
 .form-group {
@@ -157,6 +156,15 @@ app {
 .right-form-min {
     min-width: 14em;
 }
+// other css
+grid-link a:link {
+    color: MenuText;
+    text-decoration: underline;
+}
+grid-link a:hover {
+    color: WindowText;
+    text-decoration: none;
+}
 //
 // media stuff
 @media (max-width: 767.98px) {
@@ -170,6 +178,10 @@ app {
 
     .main .top-row a, .main .top-row .btn-link {
         margin-left: 0;
+    }
+
+    .desktop-only {
+        display: none;
     }
 }
 
@@ -203,4 +215,16 @@ app {
         /* Never collapse the sidebar for wide screens */
         display: block;
     }
+
 }
+
+/// WGM Customer styles
+
+/// style to truncate when cells have too much text
+.row-text-trunc {
+    white-space: nowrap;
+    width: auto;
+    overflow: hidden;
+    text-overflow: ellipsis; 
+    display: inline-block
+ }

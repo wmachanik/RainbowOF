@@ -11,12 +11,14 @@ namespace RainbowOF.Repositories.Items
 {
     public interface IItemRepository : IAppRepository<Item>
     {
+        //Task<List<Item>> GetAllItemData(Expression<Func<Item, bool>> predicate);
+
         /// <summary>
         /// Adds an item to the database that is fully populated, making sure that the values set within it are set.
         /// </summary>
         /// <param name="newItem">New fully populateded Item</param>
         /// <returns>First Item complete with categories, attributes and variations</returns>
-        Task<Item> FindFirstWholeItemAsync(Expression<Func<Item, bool>> predicate);
+        Task<Item> FindFirstEagerLoadingItemAsync(Expression<Func<Item, bool>> predicate);
         /// <summary>
         /// Find the first Itemin the system by SKU
         /// </summary>

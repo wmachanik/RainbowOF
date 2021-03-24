@@ -40,7 +40,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             return await _WooSyncLogRepository.GetDistinctLogDates();
         }
 
-        private async Task<List<WooSyncLog>> GetSynLogRowsByDate(DateTime selectedDateTimeInLog)
+        private async Task<List<WooSyncLog>> GetSyncLogRowsByDate(DateTime selectedDateTimeInLog)
         {
             IWooSyncLogRepository _WooSyncLogRepository = _AppUnitOfWork.wooSyncLogRepository();
 
@@ -60,7 +60,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             if (DatesInLog != null)
             {
                 IndexSelectedDateTimeInLog = 0;
-                WooSyncLogRows = await GetSynLogRowsByDate(DatesInLog[0]);
+                WooSyncLogRows = await GetSyncLogRowsByDate(DatesInLog[0]);
             }
 
             // need to rather add paging this thing is gonna get arge
@@ -89,7 +89,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             string _SelectedIndexStr = (string)e.Value;
             int _SelectedIndex = int.Parse(_SelectedIndexStr);   // positiion in the list
             IndexSelectedDateTimeInLog = _SelectedIndex; //  DatesInLog.FindIndex(0, dt => dt.Date == DatesInLog[_SelectedDate]);
-            WooSyncLogRows = await GetSynLogRowsByDate(DatesInLog[_SelectedIndex]);
+            WooSyncLogRows = await GetSyncLogRowsByDate(DatesInLog[_SelectedIndex]);
             StateHasChanged();
         }
     }

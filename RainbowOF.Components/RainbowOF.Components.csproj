@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="Modals\ShowModalMessage.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="wwwroot.dooINeedThis\background.png" />
+    <Content Include="wwwroot.dooINeedThis\exampleJsInterop.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Modals\ShowModalMessage.razor" />
+  </ItemGroup>
+
+  
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blazored.Toast" Version="3.1.2" />
+    <PackageReference Include="Blazorise" Version="0.9.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="5.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RainbowOF.Tools\RainbowOF.Tools.csproj" />
+  </ItemGroup>
+
+</Project>

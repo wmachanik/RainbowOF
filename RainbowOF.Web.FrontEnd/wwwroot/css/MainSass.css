@@ -124,13 +124,23 @@ app {
 .right-form-min {
   min-width: 14em; }
 
+grid-link a:link {
+  color: MenuText;
+  text-decoration: underline; }
+
+grid-link a:hover {
+  color: WindowText;
+  text-decoration: none; }
+
 @media (max-width: 767.98px) {
   .main .top-row:not(.auth) {
     display: none; }
   .main .top-row.auth {
     justify-content: space-between; }
   .main .top-row a, .main .top-row .btn-link {
-    margin-left: 0; } }
+    margin-left: 0; }
+  .desktop-only {
+    display: none; } }
 
 @media (min-width: 768px) {
   app {
@@ -151,3 +161,10 @@ app {
   .sidebar .collapse {
     /* Never collapse the sidebar for wide screens */
     display: block; } }
+
+.row-text-trunc {
+  white-space: nowrap;
+  width: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block; }

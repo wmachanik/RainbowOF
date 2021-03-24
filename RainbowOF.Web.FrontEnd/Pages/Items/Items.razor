@@ -2,7 +2,6 @@
 @using Blazorise.DataGrid
 @using RainbowOF.Models.Items
 
-
 <Row>
     <Column>
         <Card Margin="Margin.Is2.OnY">
@@ -10,37 +9,55 @@
                 <CardTitle>Items</CardTitle>
             </CardHeader>
             <CardBody>
-                <CardText>Combine diferent datagrid options</CardText>
-            </CardBody>
-            <CardBody>
                 <Fields>
-                    <Field>
+                    <Field Style="display: inline-flex">
                         <FieldLabel>
+                            Filter By:
                         </FieldLabel>
                         <FieldBody>
-                            <Check @bind-Checked="@IsSortable">Sortable</Check>
+                            @if (ListOfItemCategories == null)
+                            {
+                                <span class="bg-info">Loading Dates...</span>
+                            }
+                            else
+                            {
+                                <Select @bind-SelectedValue="@IndexSelectedCategory" @onchange="OnCatagoeryChanged">
+                                    <SelectItem Value="0">---- All ----</SelectItem>
+                                    @{
+                                            int i = 1;
+                                            foreach (var cat in ListOfItemCategories)
+                                            {
+                                            <SelectItem Value="@i">@cat.CategoryName</SelectItem>
+                                                i++;
+                                            }
+                                    }
+                                </Select>
+                            }
                         </FieldBody>
                     </Field>
-                    @*<Field>
-                            <FieldLabel>
-                            </FieldLabel>
-                            <FieldBody>
-                                <Check @bind-Checked="@IsFilterable">Filterable</Check>
-                            </FieldBody>
-                        </Field>*@
-                    <Field>
-                        <FieldLabel>
-                        </FieldLabel>
-                        <FieldBody>
-                            <Check @bind-Checked="@DoShowPager">Show Pager</Check>
-                        </FieldBody>
-                    </Field>
-                    <Field>
+                    <Field Style="display: inline-flex">
                         <FieldLabel>
                             Custom Search
                         </FieldLabel>
                         <FieldBody>
                             <TextEdit @bind-Text="@customFilterValue" />
+                        </FieldBody>
+                    </Field>
+                    <Field JustifyContent="JustifyContent.End">
+                        <FieldLabel>
+                            Page Size
+                        </FieldLabel>
+                        <FieldBody>
+                            <Select @bind-SelectedValue="@PageSize" style="width: 6em;">
+                                <SelectItem Value=10>10</SelectItem>
+                                <SelectItem Value=15>15</SelectItem>
+                                <SelectItem Value=20>20</SelectItem>
+                                <SelectItem Value=30>30</SelectItem>
+                                <SelectItem Value=50>50</SelectItem>
+                                <SelectItem Value=75>75</SelectItem>
+                                <SelectItem Value=100>100</SelectItem>
+                                <SelectItem Value=150>150</SelectItem>
+                            </Select>
                         </FieldBody>
                     </Field>
                 </Fields>
@@ -49,38 +66,166 @@
     </Column>
 
 </Row>
-
-<DataGrid TItem="Item" Data="@ItemList" PageSize="10"
-          Sortable="@IsSortable" CustomFilter="@OnCustomFilter"
-          Editable="true" EditMode="DataGridEditMode.Popup" 
-          Striped="true" Hoverable="true" Responsive="true">
-    <EmptyTemplate>
-        No items logged yet...
-    </EmptyTemplate>
-    <LoadingTemplate>
-        <BlazorPro.Spinkit.Grid />
-    </LoadingTemplate>
-    <DataGridColumns>
-        <DataGridColumn TItem="Item" Field="@nameof(Item.SKU)" Caption="SKU" Sortable="true" />
-        <DataGridColumn TItem="Item" Field="@nameof(Item.ItemName)" Caption="Name" />
-        <DataGridColumn TItem="Item" Field="@nameof(Item.ItemDetail)" Caption="Detail" />
-        <DataGridColumn TItem="Item" Field="@nameof(Item.IsEnabled)" Caption="Enabled" />
-        <DataGridColumn TItem="Item" Field="@nameof(Item.ItemAbbreviatedName)" Caption="Abrvt" />
-        <DataGridColumn TItem="Item" Field="@nameof(Item.SortOrder)" Caption="SOrdr" />
-    </DataGridColumns>
-    <DetailRowTemplate>
-        <DataGrid TItem="Item"
-                  Data="@ItemList"
-                  Sortable="false"
-                  ShowCaptions="false">
-            <DataGridColumn TItem="Item" Field="@nameof(Item.SKU)" Caption="SKU" />
-            <DataGridColumn TItem="Item" Field="@nameof(Item.ItemName)" Caption="Name" />
-            <DataGridColumn TItem="Item" Field="@nameof(Item.ItemDetail)" Caption="Detail" />
+<Row>
+    <DataGrid TItem="Item"
+              Class="table-responsive"
+              Data="@ItemList"
+              PageSize="@PageSize"
+              Sortable="@IsSortable"
+              CustomFilter="@OnCustomFilter"
+              Editable="true"
+              EditMode="DataGridEditMode.Popup"
+              ShowPager="@DoShowPager"
+              @bind-SelectedRow="@SelectedItem"
+              Bordered="true"
+              Striped="true"
+              Hoverable="true"
+              Responsive="true"
+              RowInserted="@OnRowInserted"
+              RowUpdated="@OnRowUpdated"
+              UseInternalEditing="true">
+        <EmptyTemplate>
+            No items logged yet...
+        </EmptyTemplate>
+        <LoadingTemplate>
+            <div class="spinner-border m-5" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </LoadingTemplate>
+        <DataGridColumns>
+            <DataGridCommandColumn TItem="Item">
+                <NewCommandTemplate>
+                    <Button Color="Color.Success" Clicked="@context.Clicked">New</Button>
+                </NewCommandTemplate>
+                <EditCommandTemplate>
+                    <Button Color="Color.Primary" Clicked="@context.Clicked">Edit</Button>
+                </EditCommandTemplate>
+                <DeleteCommandTemplate />
+            </DataGridCommandColumn>
+            <DataGridColumn TItem="Item" Field="@nameof(Item.SKU)" Caption="SKU" Sortable="true" />
+            <DataGridColumn TItem="Item" Field="@nameof(Item.ItemName)" Caption="Item" Sortable="true" />
+            <DataGridColumn TItem="Item" Field="@nameof(Item.ItemDetail)" Caption="Detail" Sortable="true" CellClass="@((item)=>"d-sm-none")" class="d-sm-none" />
             <DataGridColumn TItem="Item" Field="@nameof(Item.IsEnabled)" Caption="Enabled" />
-            <DataGridColumn TItem="Item" Field="@nameof(Item.ItemAbbreviatedName)" Caption="Abrv" />
-            <DataGridColumn TItem="Item" Field="@nameof(Item.SortOrder)" Caption="SOrdr" />
-        </DataGrid>
-    </DetailRowTemplate>
-</DataGrid>
+            <DataGridColumn TItem="Item" Field="@nameof(Item.ItemAbbreviatedName)" Caption="Abrv" Sortable="true" />
+            <DataGridColumn TItem="Item" Field="@nameof(Item.SortOrder)" Caption="SOrdr" Sortable="true" />
+            <DataGridColumn TItem="Item" Field="@nameof(Item.BasePrice)" Caption="Price" Sortable="true" />
+        </DataGridColumns>
+    </DataGrid>
+</Row>
+@*
+              RowSelectable="@((i) => i.ItemId != Guid.Empty)"
+              DetailRowTrigger="@((i) => (SelectedItem != null) && (SelectedItem?.ItemId == i.ItemId))"
 
+        }
+    @*
+            <Row>
+                <Column ColumnSize="ColumnSize.IsFull">
+                    <Card Margin="Margin.Is4.FromBottom">
+                        <CardHeader>
+                            <CardTitle>Selected Item</CardTitle>
+                        </CardHeader>
+                        <CardBody>
+                            <Tabs SelectedTab="@SelectedItemTabName" SelectedTabChanged="@OnSelectedItemTabChanged" TabPosition="TabPosition.Left" Pills="true">
+                                <Items>
+                                    <Tab Name="categories">Categories</Tab>
+                                    <Tab Name="attributes">Attributes</Tab>
+                                    <Tab Name="varieties">Varieties</Tab>
+                                    <Tab Name="more">More...</Tab>
+                                </Items>
+                                <Content>
+                                    <TabPanel Name="categories">
+                                        <Fields>
+                                            @{ var _itemCats = SelectedItem?.ItemCategories;
 
+                                                if (_itemCats == null)
+                                                {
+                                                    <FieldLabel>No categories assigned to thei item.</FieldLabel>
+                                                }
+                                                else
+                                                {
+                                                    foreach (var cat in _itemCats)
+                                                    {
+                                                        <FieldLabel>@cat.ItemCategoryDetail.CategoryName &nbsp;</FieldLabel>
+                                                    }
+                                                }
+                                            }
+                                        </Fields>
+                                    </TabPanel>
+                                    <TabPanel Name="attributes">
+                                        <Fields>
+                                            @{ var _itemAtts = SelectedItem?.ItemAttributes;
+
+                                                if (_itemAtts == null)
+                                                {
+                                                    <FieldLabel>No categories assigned to thei item.</FieldLabel>
+                                                }
+                                                else
+                                                {
+                                                    <FieldLabel>Attributes:</FieldLabel>
+                                                    foreach (var att in _itemAtts)
+                                                    {
+                                                        <FieldBody>@att.ItemAttributeDetail.AttributeName &nbsp;</FieldBody>
+                                                    }
+                                                }
+                                            }
+                                        </Fields>
+                                    </TabPanel>
+                                    <TabPanel Name="varieties">
+                                        <Fields>
+                                            @{ var _itemVars = SelectedItem?.ItemAttributeVarieties;
+
+                                                if (_itemVars == null)
+                                                {
+                                                    <FieldLabel>No categories assigned to thei item.</FieldLabel>
+                                                }
+                                                else
+                                                {
+                                                    foreach (var itemVar in _itemVars)
+                                                    {
+                                                        <FieldLabel>@itemVar.ItemAttributeVarietyLookupDetail.VarietyName &nbsp;</FieldLabel>
+                                                    }
+                                                }
+                                            }
+                                        </Fields>
+                                    </TabPanel>
+                                    <TabPanel Name="more">
+                                        @{
+                                            var repItem = SelectedItem?.ReplacementItem;
+
+                                            if (repItem == null)
+                                            {
+                                                <FieldLabel>No replacement item set</FieldLabel>
+                                            }
+                                            else
+                                            {
+                                                <FieldLabel>Replacement Item:</FieldLabel>
+                                                <FieldBody>@repItem.ItemName</FieldBody>
+                                            }
+                                            <FieldLabel>@SelectedItem.ParentItem. .ItemAttributeVarietyLookupDetail.VarietyName &nbsp;</FieldLabel>
+
+                                        }
+                                    </TabPanel>
+                                </Content>
+                            </Tabs>
+                        </CardBody>
+                    </Card>
+                </Column>
+            </Row>
+
+        }
+*@
+@*<DetailRowTemplate>
+        @{
+            var itemsCategories = (context as Item).ItemCategories;
+
+            <DataGrid TItem="ItemCategories"
+                      Data="itemsCategories"
+                      Sortable="false"
+                      ShowCaptions="false">
+                < DataGridColumn TItem = "WooSyncLog" Field = "@nameof(WooSyncLog.Parameters)" Caption = "Parameters" />
+
+                < DataGridColumn TItem = "WooSyncLog" Field = "@nameof(WooSyncLog.Notes)" Caption = "Notes" />
+
+                </ DataGrid >
+        }
+    </DetailRowTemplate>*@

@@ -4,7 +4,10 @@
 
 @if (WooSettingsModel == null)
 {
-    <BlazorPro.Spinkit.Bounce />
+    <div class="spinner-border m-5" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+
 }
 else
 {
@@ -35,7 +38,7 @@ else
                     <hr />
                     <div class="form-group row justify-content-center">
                         <div class=" col-md-6justify-content-center">
-                            <Blazorise.Bootstrap.Button Loading="IsSaving" Type="ButtonType.Submit" Class="btn btn-primary">Save</Blazorise.Bootstrap.Button>
+                            <Blazorise.Button Loading="IsSaving" Type="ButtonType.Submit" Class="btn btn-primary">Save</Blazorise.Button>
                             <button class="btn btn-outline-secondary" type="button">Return</button>
                         </div>
                     </div>
@@ -74,5 +77,5 @@ else
 
 
     -->
-<RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals.ShowModalMessage @ref="ShowSavedStatus" ModalMessage="Woo Preferences Saved" ModalTitle="Saving Status" />
-<RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals.ShowModalMessage @ref="ShowChangedStatus" ModalMessage="Woo Preferences not Saved please save first." ModalTitle="Woo Settngs must be saved" />
+<RainbowOF.Components.Modals.ShowModalMessage @ref="ShowSavedStatus" ModalMessage="Woo Preferences Saved" ModalTitle="Saving Status" />
+<RainbowOF.Components.Modals.ShowModalMessage @ref="ShowChangedStatus" ModalMessage="Woo Preferences not Saved please save first." ModalTitle="Woo Settngs must be saved" />

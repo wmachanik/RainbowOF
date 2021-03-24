@@ -97,7 +97,7 @@ namespace RainbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                LogAndSetErrorMessage($"ERROR commiting changes:  {ex.Message} - Inner Exception {ex.InnerException}");
+                LogAndSetErrorMessage($"ERROR committing changes:  {ex.Message} - Inner Exception {ex.InnerException}");
             }
             return recsCommited;
         }
@@ -117,7 +117,7 @@ namespace RainbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                LogAndSetErrorMessage($"ERROR commiting changes (async):  {ex.Message} - Inner Exception {ex.InnerException}");
+                LogAndSetErrorMessage($"ERROR committing changes (async):  {ex.Message} - Inner Exception {ex.InnerException}");
             }
             return recsCommited;
         }

@@ -17,18 +17,18 @@
                         <FieldBody>
                             @if (DatesInLog == null)
                             {
-                                <span class="bg-info">Loading Dates...</span>
+                                <span class="bg-info">Loading Items...</span>
                             }
                             else
                             {
-                                <Select @bind-SelectedValue="@IndexSelectedDateTimeInLog" @onchange="OnLogDateChanged"   >
+                                <Select @bind-SelectedValue="@IndexSelectedDateTimeInLog" @onchange="OnLogDateChanged">
                                     @{
-                                        int i = 0;
-                                        foreach (var when in DatesInLog)
-                                        {
-                                            <SelectItem Value="@i">@String.Format("{0:g}",when)</SelectItem>
-                                            i++;
-                                        }
+                                            int i = 0;
+                                            foreach (var when in DatesInLog)
+                                            {
+                                            <SelectItem Value="@i">@String.Format("{0:g}", when)</SelectItem>
+                                                i++;
+                                            }
                                     }
                                 </Select>
                             }
@@ -72,7 +72,9 @@
         No items logged yet...
     </EmptyTemplate>
     <LoadingTemplate>
-        <BlazorPro.Spinkit.Grid />
+        <div class="spinner-border m-5" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
     </LoadingTemplate>
     <DataGridColumns>
         <DataGridColumn TItem="WooSyncLog" Field="@nameof(WooSyncLog.WooSyncDateTime)" DisplayFormat="{0:g}" Filterable="true" Caption="When" Sortable="true">

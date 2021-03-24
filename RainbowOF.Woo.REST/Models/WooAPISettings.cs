@@ -12,8 +12,28 @@ namespace RainbowOF.Woo.REST.Models
             get
             {
                 if (!QueryURL.EndsWith("/")) QueryURL += "/";
-                return ((IsSecureURL) ? "https://" : "http://") + QueryURL ;
+                return ((IsSecureURL) ? "https://" : "http://") + QueryURL;
             }
+        }
+
+        public WooAPISettings()
+        {
+
+        }
+
+        public WooAPISettings(WooSettings mapWooSettings)
+        {
+            MapAPISettings(mapWooSettings);
+        }
+
+        public void MapAPISettings(WooSettings mapWooSettings)
+        {
+            ConsumerKey = mapWooSettings.ConsumerKey;
+            ConsumerSecret = mapWooSettings.ConsumerSecret;
+            QueryURL = mapWooSettings.QueryURL;
+            IsSecureURL = mapWooSettings.IsSecureURL;
+            JSONAPIPostFix = mapWooSettings.JSONAPIPostFix;
+            RootAPIPostFix = mapWooSettings.RootAPIPostFix;
         }
 
     }

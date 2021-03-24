@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using WooCommerceNET.WooCommerce.v3;
 
 
-namespace RainbowOF.Woo.REST
+namespace RainbowOF.Woo.REST.Repositories
 {
     public interface IWooProductAttributeTerm
     {

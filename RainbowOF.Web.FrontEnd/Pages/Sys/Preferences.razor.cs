@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Components;
 using RainbowOF.FrontEnd.Models;
 using RainbowOF.Tools;
-using RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals;
+using RainbowOF.Components.Modals;
 using RainbowOF.Repositories.Common;
 using RainbowOF.Repositories.System;
 using System.Threading.Tasks;

@@ -25,7 +25,7 @@ namespace RainbowOF.Repositories.Items
             _appUnitOfWork = appUnitOfWork;
         }
 
-        public async Task<Item> FindFirstWholeItemAsync(Expression<Func<Item, bool>> predicate)
+        public async Task<Item> FindFirstEagerLoadingItemAsync(Expression<Func<Item, bool>> predicate)
         {
             Item _item = null;
             DbSet<Item>  _table = _context.Set<Item>();
@@ -41,7 +41,7 @@ namespace RainbowOF.Repositories.Items
             }
             catch (Exception ex)
             {
-                _appUnitOfWork.LogAndSetErrorMessage($"!!!Error Fiding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
+                _appUnitOfWork.LogAndSetErrorMessage($"!!!Error Finding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif

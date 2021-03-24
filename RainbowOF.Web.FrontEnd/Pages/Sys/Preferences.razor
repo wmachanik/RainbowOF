@@ -4,7 +4,9 @@
 
 @if (SysPrefsModel == null)
 {
-    <BlazorPro.Spinkit.Wave />
+    <div class="spinner-border m-5" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
 }
 else
 {
@@ -24,9 +26,9 @@ else
                         <Blazorise.Button Clicked="@(()=>collapseSysVisible = !collapseSysVisible)">
                             General Settings &nbsp;&nbsp;
                             @if (collapseSysVisible)
-                            {<i class="oi oi-caret-top"></i>}
+                                {<i class="oi oi-caret-top"></i>}
                             else
-                            {<i class="oi oi-caret-bottom"></i>}
+                                {<i class="oi oi-caret-bottom"></i>}
                         </Blazorise.Button>
                     </Blazorise.Heading>
                 </Blazorise.CollapseHeader>
@@ -34,7 +36,7 @@ else
                     <div class="form-group row">
                         <div class="col-md-6 input-group">
                             <div class="input-group-prepend">
-                                <span class="input-group-text left-form-min">Last Reccuring Date</span>
+                                <span class="input-group-text left-form-min">Last Recurring Date</span>
                             </div>
                             <Blazorise.DateEdit Class="form-control" id="LastRecurringDateInput" Placeholder="Last Recurring Date"
                                                 @bind-Date="SysPrefsModel.SysPrefs.LastReccurringDate" />
@@ -43,11 +45,11 @@ else
                             <div class="input-group-prepend">
                                 <div class="input-group-text">
                                     <Tooltip Text="Must recurring orders be processed" Fade="true">
-                                        <Blazorise.Check TValue="bool" 
+                                        <Blazorise.Check TValue="bool"
                                                          @bind-Value="SysPrefsModel.SysPrefs.DoReccuringOrders" />
                                     </Tooltip>
                                 </div>
-                                <span class="input-group-text">Do Reccuring Orders</span>
+                                <span class="input-group-text">Do Recurring Orders</span>
                             </div>
                         </div>
                     </div>
@@ -56,7 +58,7 @@ else
                             <div class="input-group-prepend">
                                 <span class="input-group-text left-form-min">Date Last Date Calculated</span>
                             </div>
-                            <Tooltip Text="Date the system willuse to calculate the last pre dates" Fade="true">
+                            <Tooltip Text="Date the system will use to calculate the last pre-dates" Fade="true">
                                 <Blazorise.DateEdit Class="form-control" id="DateLastPrepDateCalcdInput" Placeholder="Date Last Date Calculated"
                                                     @bind-Date="SysPrefsModel.SysPrefs.DateLastPrepDateCalcd" ReadOnly="true" />
                             </Tooltip>
@@ -70,7 +72,7 @@ else
                             <div class="input-group-prepend">
                                 <span class="input-group-text right-form-min">Number of Reminder Days</span>
                             </div>
-                            <Tooltip Text="Number of days to use as a buffer to calc notification" Fade="true">
+                            <Tooltip Text="Number of days to use as a buffer to calculate notification" Fade="true">
                                 <Blazorise.NumericEdit Class="form-control" id="ReminderDaysNumberInput" Placeholder='Number of Reminder Days'
                                                        @bind-Value="SysPrefsModel.SysPrefs.ReminderDaysNumber" Min="1" Max="21" TValue="int" Decimals="0" />
                             </Tooltip>
@@ -132,7 +134,7 @@ else
         <hr />
         <div class="form-group row justify-content-center">
             <div class=" col-md-6justify-content-center">
-                <Blazorise.Bootstrap.Button Loading="IsSaving" Type="ButtonType.Submit" Class="btn btn-primary">Save</Blazorise.Bootstrap.Button>
+                <Blazorise.Button Loading="IsSaving" Type="ButtonType.Submit" Class="btn btn-primary">Save</Blazorise.Button>
                 <button class="btn btn-outline-secondary" type="button">Return</button>
             </div>
         </div>
@@ -140,8 +142,7 @@ else
     </EditForm>
 
 
-    <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals.ShowModalMessage @ref="ShowSavedStatus" ModalMessage="System Preferences Saved" ModalTitle="Saving Status" />
- 
+    <RainbowOF.Components.Modals.ShowModalMessage @ref="ShowSavedStatus" ModalMessage="System Preferences Saved" ModalTitle="Saving Status" />
+
 }
 
-    

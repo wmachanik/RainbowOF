@@ -5,7 +5,7 @@ using RainbowOF.Models.Logs;
 using RainbowOF.Models.System;
 using RainbowOF.Models.Woo;
 using RainbowOF.Tools;
-using RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals;
+using RainbowOF.Components.Modals;
 using RainbowOF.Woo.REST.Models;
 using RainbowOF.Woo.REST.Repositories;
 using RainbowOF.Repositories.Common;
@@ -47,7 +47,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
 
         #region GenericRoutines
 
-        // Dispay Import Status if annof the imports are happening
+        // Display Import Status if any of the imports are happening
         public bool IsImporting()
         {
             return (_IsCatImportBusy || _IsAttribImportBusy || _IsAttribTermImportBusy) || _IsItemImportBusy ;
@@ -70,7 +70,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         private void InitWooImport(ref bool pIsWiaiting, string pImportThis)
         {
             // do the same as with categories but now with product AttributeTerm? 
-            // Shhoud each one be a class. The issues with that is that, to update the screen is  problem
+            // Should each one be a class. The issues with that is that, to update the screen is  problem
             pIsWiaiting = true;
             _importCounters.Reset();   // reset all counters
             _LogDate = DateTime.Now; // set here so all records for this import are the same DateTime.
@@ -90,7 +90,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         public async Task ImportCategories_Click()
         {
             // Retrieve data from Woo
-            // cycle through catagories and add to database if they do not exists
+            // cycle through categories and add to database if they do not exists
             InitWooImport(ref _IsCatImportBusy, "Categories: Checking Woo");
             await LogImport(0, "Import of Woo Categories - Initialising", Models.WooSections.ProductCategories);
             // ItemCategoryLookupImport _ItemCategoryLookupImport = new ItemCategoryLookupImport(WooSettingsModel, _importCounters );  /// need to pass the vars in
@@ -175,9 +175,9 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         {
             /// Logic a little different here, since we have to get all the imported Items, then find all its terms, and then import those terms into the Item values (terms)
             string _OnlyInstock = (WooSettingsModel.OnlyInStockItemsImported == true) ? "in-stock " : "";
-            InitWooImport(ref _IsItemImportBusy, $"Items: checking Woo, and loading all {_OnlyInstock}prodcuts of type published and private (may take a while to load)");
+            InitWooImport(ref _IsItemImportBusy, $"Items: checking Woo, and loading all {_OnlyInstock} products of type published and private (may take a while to load)");
             await LogImport(0, "Import of Woo Products - Initialising", Models.WooSections.Products);
-            // cycle through prdocuts and add to database if they do not exists - only do instock items if that is what is selected            
+            // cycle through products and add to database if they do not exists - only do in stock items if that is what is selected            
             List<Product> _WooProducts = await GetAllWooProducts(WooSettingsModel.OnlyInStockItemsImported);
             if (_WooProducts == null)
             {

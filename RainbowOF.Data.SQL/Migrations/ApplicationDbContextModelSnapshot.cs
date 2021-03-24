@@ -15,9 +15,9 @@ namespace RainbowOF.Data.SQL.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .UseIdentityColumns()
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("ProductVersion", "5.0.2");
+                .HasAnnotation("ProductVersion", "5.0.3")
+                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
             modelBuilder.Entity("RainbowOF.Models.Items.Item", b =>
                 {
@@ -127,6 +127,8 @@ namespace RainbowOF.Data.SQL.Migrations
 
                     b.HasKey("ItemAttributeVarietyId");
 
+                    b.HasIndex("ItemAttributeVarietyLookupId");
+
                     b.HasIndex("ItemUoMId");
 
                     b.HasIndex("ItemId", "ItemAttributeVarietyLookupId")
@@ -148,6 +150,8 @@ namespace RainbowOF.Data.SQL.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("ItemCategoryId");
+
+                    b.HasIndex("ItemCategoryLookupId");
 
                     b.HasIndex("ItemId");
 
@@ -199,7 +203,7 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Property<int>("WooSyncLogId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .UseIdentityColumn();
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
@@ -293,6 +297,8 @@ namespace RainbowOF.Data.SQL.Migrations
 
                     b.HasKey("ItemAttributeVarietyLookupId");
 
+                    b.HasIndex("ItemAttributeLookupId");
+
                     b.HasIndex("VarietyName", "ItemAttributeLookupId")
                         .IsUnique();
 
@@ -321,6 +327,9 @@ namespace RainbowOF.Data.SQL.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<bool>("UsedForPrediction")
+                        .HasColumnType("bit");
+
                     b.HasKey("ItemCategoryLookupId");
 
                     b.HasIndex("CategoryName")
@@ -336,7 +345,7 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Property<int>("ClosureDateId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .UseIdentityColumn();
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<DateTime>("DateClosed")
                         .HasColumnType("datetime2");
@@ -373,7 +382,7 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Property<int>("SysPrefsId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .UseIdentityColumn();
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<DateTime?>("DateLastPrepDateCalcd")
                         .HasColumnType("datetime2");
@@ -412,7 +421,7 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Property<int>("WooSettingsId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .UseIdentityColumn();
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<bool>("AreAffliateProdcutsImported")
                         .HasColumnType("bit");
@@ -462,7 +471,7 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Property<int>("WooCategoryMapId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .UseIdentityColumn();
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<bool>("CanUpdate")
                         .HasColumnType("bit");
@@ -589,6 +598,12 @@ namespace RainbowOF.Data.SQL.Migrations
 
             modelBuilder.Entity("RainbowOF.Models.Items.ItemAttributeVariety", b =>
                 {
+                    b.HasOne("RainbowOF.Models.Lookups.ItemAttributeVarietyLookup", "ItemAttributeVarietyLookupDetail")
+                        .WithMany()
+                        .HasForeignKey("ItemAttributeVarietyLookupId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.HasOne("RainbowOF.Models.Items.Item", null)
                         .WithMany("ItemAttributeVarieties")
                         .HasForeignKey("ItemId")
@@ -600,16 +615,26 @@ namespace RainbowOF.Data.SQL.Migrations
                         .HasForeignKey("ItemUoMId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.Navigation("ItemAttributeVarietyLookupDetail");
+
                     b.Navigation("ItemUoM");
                 });
 
             modelBuilder.Entity("RainbowOF.Models.Items.ItemCategory", b =>
                 {
+                    b.HasOne("RainbowOF.Models.Lookups.ItemCategoryLookup", "ItemCategoryDetail")
+                        .WithMany()
+                        .HasForeignKey("ItemCategoryLookupId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.HasOne("RainbowOF.Models.Items.Item", null)
                         .WithMany("ItemCategories")
                         .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.Navigation("ItemCategoryDetail");
                 });
 
             modelBuilder.Entity("RainbowOF.Models.Items.ItemUoM", b =>
@@ -620,6 +645,15 @@ namespace RainbowOF.Data.SQL.Migrations
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("BaseUoM");
+                });
+
+            modelBuilder.Entity("RainbowOF.Models.Lookups.ItemAttributeVarietyLookup", b =>
+                {
+                    b.HasOne("RainbowOF.Models.Lookups.ItemAttributeLookup", null)
+                        .WithMany("ItemAttributeVarietyLookups")
+                        .HasForeignKey("ItemAttributeLookupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("RainbowOF.Models.Lookups.ItemCategoryLookup", b =>
@@ -650,6 +684,11 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Navigation("ItemAttributeVarieties");
 
                     b.Navigation("ItemCategories");
+                });
+
+            modelBuilder.Entity("RainbowOF.Models.Lookups.ItemAttributeLookup", b =>
+                {
+                    b.Navigation("ItemAttributeVarietyLookups");
                 });
 #pragma warning restore 612, 618
         }

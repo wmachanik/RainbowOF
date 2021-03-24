@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RainbowOF.Models.Lookups;
+using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -26,5 +27,8 @@ namespace RainbowOF.Models.Items
         public double UoMQtyPerItem { get; set; }
         [ForeignKey("ItemUoMId")]
         public virtual ItemUoM ItemUoM { get; set; }
+        [ForeignKey("ItemAttributeVarietyLookupId")]
+        public ItemAttributeVarietyLookup ItemAttributeVarietyLookupDetail { get; set; }
+
     }
 }

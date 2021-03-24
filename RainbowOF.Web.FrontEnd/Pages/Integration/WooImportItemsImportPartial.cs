@@ -25,15 +25,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         // Retrieve data from Woo
         async Task<List<Product>> GetAllWooProducts(bool OnlyItemsInStock)
         {
-            WooAPISettings _WooAPISettings = new WooAPISettings
-            {
-                ConsumerKey = WooSettingsModel.ConsumerKey,
-                ConsumerSecret = WooSettingsModel.ConsumerSecret,
-                QueryURL = WooSettingsModel.QueryURL,
-                IsSecureURL = WooSettingsModel.IsSecureURL,
-                JSONAPIPostFix = WooSettingsModel.JSONAPIPostFix,
-                RootAPIPostFix = WooSettingsModel.RootAPIPostFix
-            };
+            WooAPISettings _WooAPISettings = new WooAPISettings(WooSettingsModel);
 
             WooProduct _WooProduct = new WooProduct(_WooAPISettings, Logger);
             List<Product> wooProducts = OnlyItemsInStock ?
@@ -68,9 +60,9 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             return pItem;
         }
         /// <summary>
-        /// Using the item sent assign the categoriues tha thw WooProduct has. Remeber that wedo not affect ItemId since the EF core 
+        /// Using the item sent assign the categories that the WooProduct has. Remember that we do not affect ItemId since the EF core 
         /// </summary>
-        /// <param name="Item">The Priduct Item t add too</param>
+        /// <param name="Item">The Product Item t add too</param>
         /// <param name="WooProduct">The Woo Product Source</param>
         /// <returns></returns>
         async Task<Item> AssignWooProductCategory(Item pItem, Product pWooProd)
@@ -88,21 +80,21 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                     _ItemCategoryLookup = await _itemCategoryLookupRepo.FindFirstAsync(ic => ic.ItemCategoryLookupId == CategoryId);
                     if (_ItemCategoryLookup != null)
                     {
-                        ///////// checkif exists if this is not a new item
+                        ///////// check if exists if this is not a new item
                         if ((_IsCatUpdate) && (pItem.ItemCategories.Exists(ic => ic.ItemCategoryLookupId == _ItemCategoryLookup.ItemCategoryLookupId)))
                         {
-                            // this attribute exists so just update it - nothing todo here at the moment.
+                            // this attribute exists so just update it - nothing to do here at the moment.
                         }
                         else
                         {
-                            // add an item to the linked list. Since it is a new item the FK must be guid.empty for efcore to work
+                            // add an item to the linked list. Since it is a new item the FK must be guid.empty for EF Core to work
                             if (pItem.ItemCategories == null)
                                 pItem.ItemCategories = new List<ItemCategory>();
                             pItem.ItemCategories.Add(new ItemCategory
                             {
                                 ItemCategoryLookupId = _ItemCategoryLookup.ItemCategoryLookupId
                             });
-                            if (_SetPrimary)    // assume the first in the list is the primary, as we have no otherw way of knowing.
+                            if (_SetPrimary)    // assume the first in the list is the primary, as we have no other way of knowing.
                             {
                                 pItem.PrimaryItemCategoryLookupId = _ItemCategoryLookup.ItemCategoryLookupId;
                                 _SetPrimary = false;
@@ -111,7 +103,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                     }
                 }
             }
-            return pItem;   // reutrn the pItem afdter we have manipulated it.
+            return pItem;   // return the pItem after we have manipulated it.
         }
         async Task<Item> AssignWooProductAttrbiutes(Item pItem, Product pWooProd)
         {
@@ -256,10 +248,10 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             Guid _ItemId = Guid.Empty;
             IItemRepository _ItemRepository = _AppUnitOfWork.itemRepository();
             // check if the Prod exists based on name since there is no mapped id
-            Item _Item = await _ItemRepository.FindFirstWholeItemAsync(i => i.ItemName == pWooProduct.name);
+            Item _Item = await _ItemRepository.FindFirstEagerLoadingItemAsync(i => i.ItemName == pWooProduct.name);
             if ((_Item == null) && (!String.IsNullOrEmpty(pWooProduct.sku)))     // check if perhaps they renamed the by looking for SKU
             {
-                _Item = await _ItemRepository.FindFirstWholeItemAsync(i => i.SKU == pWooProduct.sku);
+                _Item = await _ItemRepository.FindFirstEagerLoadingItemAsync(i => i.SKU == pWooProduct.sku);
             }
             if (_Item != null)
             {
@@ -278,7 +270,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             Guid _ItemProductId = Guid.Empty;
             IItemRepository _ItemRepository = _AppUnitOfWork.itemRepository();
             // check if the Prod based on mapped id
-            Item _Item = await _ItemRepository.FindFirstWholeItemAsync(i => i.ItemId == pWooProductMap.ItemId);  // we found the Item Id so update that Id
+            Item _Item = await _ItemRepository.FindFirstEagerLoadingItemAsync(i => i.ItemId == pWooProductMap.ItemId);  // we found the Item Id so update that Id
             /// Now update the woo Product using the _ItemProductId returned.
             if (_Item != null)
             {
@@ -401,7 +393,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
 
                 // varriations from item to item cannot be duplicated so kalita 155 / 185 fitler cannot have also brewer
                 _Imported++;
-                await LogImport((int)wooProd.id, ProductToString(wooProd, _IdImported), Models.WooSections.Product);
+                await LogImport((int)wooProd.id, ProductToString(wooProd, _IdImported), Models.WooSections.Products);
                 if (_AppUnitOfWork.IsInErrorState())
                     return AppUnitOfWork.CONST_WASERROR;
                 _importCounters.TotalImported++;

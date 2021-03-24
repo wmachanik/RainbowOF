@@ -11,7 +11,7 @@ namespace RainbowOF.Models.Lookups
     //  Desc Type    Comments
     //  ItemAttributeId Int Pk
     //  AttributeName String(100) Required, indexed
-    //  OrderBy Enum? (custom, name, num and id)	Should this be an enum?
+    //  OrderBy Enum? (custom, name, number and id)	Should this be an enum?
     //  Notes String
     public class ItemAttributeLookup
     {
@@ -24,5 +24,8 @@ namespace RainbowOF.Models.Lookups
         [DefaultValue(OrderBys.None)]
         public OrderBys OrderBy { get; set; }
         public string Notes { get; set; }
+        // Added 24 Feb 2020
+        [ForeignKey("ItemAttributeLookupId")]
+        public List<ItemAttributeVarietyLookup> ItemAttributeVarietyLookups { get; set; }    /// this can be null - will return a count zero if there is one under eager loading    
     }
 }

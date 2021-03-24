@@ -17,7 +17,7 @@ namespace RainbowOF.Repositories.Common
         private DbSet<TEntity> _table = null;
         private ILoggerManager _logger { get; }
         private IAppUnitOfWork _unitOfWork { get; set; }
-        /// should nto need this had it her to stop the error: "There is no argument given that corresponds to the required formal parameter"
+        /// should not need this had it her to stop the error: "There is no argument given that corresponds to the required formal parameter"
         /// if it is asking for that you need to ass  : base (dbContext, logger, unitofwork) to the def 
         //public AppRepository() { }
         public AppRepository(ApplicationDbContext dbContext, ILoggerManager logger, IAppUnitOfWork unitOfWork)
@@ -97,7 +97,6 @@ namespace RainbowOF.Repositories.Common
             }
             return _added;
         }
-
         public async Task<int> AddRangeAsync(List<TEntity> newEntities)
         {
             int _added = AppUnitOfWork.CONST_WASERROR;    // return if error
@@ -235,7 +234,7 @@ namespace RainbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Fiding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Finding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -252,7 +251,7 @@ namespace RainbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Fiding first predicate entity: {ex.Message} - Inner Exception {ex.InnerException}");
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Finding first predicate entity: {ex.Message} - Inner Exception {ex.InnerException}");
 
 #if DebugMode
                 throw;     // #Debug?
@@ -270,7 +269,7 @@ namespace RainbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Fiding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Finding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -287,7 +286,8 @@ namespace RainbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Fiding first predicate entity: {ex.Message} - Inner Exception {ex.InnerException}");
+                string errorMessage = $"!!!Error Finding first predicate entity: {ex.Message} - Inner Exception {ex.InnerException}";
+                _unitOfWork.LogAndSetErrorMessage(errorMessage);
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -320,6 +320,31 @@ namespace RainbowOF.Repositories.Common
             catch (Exception ex)
             {
                 _unitOfWork.LogAndSetErrorMessage($"!!!Error Getting all (async): {ex.Message} - Inner Exception {ex.InnerException}");
+#if DebugMode
+                throw;     // #Debug?
+#endif
+            }
+            return null;
+        }
+        public async Task<IEnumerable<TEntity>> GetAllEagerAsync(params Expression<Func<TEntity, object>>[] properties)
+        {
+            _logger.LogDebug($"Get By all eager loading (async) {properties.ToString()} from table of type: {typeof(TEntity)}");
+            if (properties == null)
+                throw new ArgumentNullException(nameof(properties));
+
+            var query = _table as IQueryable<TEntity>; // _dbSet = dbContext.Set<TEntity>()
+
+            query = properties
+                       .Aggregate(query, (current, property) => current.Include(property));
+
+            try
+            {
+                var result =  await query.ToListAsync();    // AsNoTracking().ToList();    //readonly
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error eager loading: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -451,5 +476,25 @@ namespace RainbowOF.Repositories.Common
             return _updated;
         }
 
+        public async Task<int> UpdateRangeAsync(List<TEntity> updateEntities)
+        {
+            int _updated = AppUnitOfWork.CONST_WASERROR;   // -1 means error only returned if there is one
+            _logger.LogDebug($"Updating range entity (async): {updateEntities.ToString()}");
+            _unitOfWork.BeginTransaction();
+            try
+            {
+                _context.Entry(updateEntities).State = EntityState.Modified;
+                _table.UpdateRange(updateEntities);
+                _updated = await _unitOfWork.CompleteAsync();  // Save();
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error Updating Table (async): {ex.Message} - Inner Exception {ex.InnerException}");
+#if DebugMode
+                throw;     // #Debug?
+#endif
+            }
+            return _updated;
+        }
     }
 }

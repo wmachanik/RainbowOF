@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using RainbowOF.Models.System;
 using RainbowOF.Tools;
-using RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals;
+using RainbowOF.Components.Modals;
 using RainbowOF.Woo.REST.Models;
 using RainbowOF.Woo.REST.Repositories;
 using System;
@@ -27,15 +27,15 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Sys
         {
             Waiting = true;
             StateHasChanged();
-            WooAPISettings _WooAPISettings = new WooAPISettings
-            {
-                ConsumerKey = WooSettingsModel.ConsumerKey,
-                ConsumerSecret = WooSettingsModel.ConsumerSecret,
-                QueryURL = WooSettingsModel.QueryURL,
-                IsSecureURL = WooSettingsModel.IsSecureURL,
-                JSONAPIPostFix = WooSettingsModel.JSONAPIPostFix,
-                RootAPIPostFix = WooSettingsModel.RootAPIPostFix
-            };
+            WooAPISettings _WooAPISettings = new WooAPISettings(WooSettingsModel);
+            //{
+            //    ConsumerKey = WooSettingsModel.ConsumerKey,
+            //    ConsumerSecret = WooSettingsModel.ConsumerSecret,
+            //    QueryURL = WooSettingsModel.QueryURL,
+            //    IsSecureURL = WooSettingsModel.IsSecureURL,
+            //    JSONAPIPostFix = WooSettingsModel.JSONAPIPostFix,
+            //    RootAPIPostFix = WooSettingsModel.RootAPIPostFix
+            //};
 
             WooProduct _WooProducts = new WooProduct(_WooAPISettings, Logger);
 

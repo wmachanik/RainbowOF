@@ -15,24 +15,24 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
     public partial class WooImportItemsComponent // for CategoryImport so file name WooImportItemsComponentAttributeTermsImport Partial
     {
         /// <summary>
-        /// All the atribute term import stuff. Attributes Terms in Woo are Attributed Varieties to us. Could we have generalised this for ezch item import with an object?
+        /// All the attribute term import stuff. Attributes Terms in Woo are Attributed Varieties to us. Could we have generalised this for each item import with an object?
         /// </summary>
         #region AttrbiuteStuff
 
         // Retrieve data from Woo
         async Task<List<ProductAttributeTerm>> GetWooAttributeTermData(ProductAttribute pProductAttribute)
         {
-            WooAPISettings _WooAPISettings = new WooAPISettings
-            {
-                ConsumerKey = WooSettingsModel.ConsumerKey,
-                ConsumerSecret = WooSettingsModel.ConsumerSecret,
-                QueryURL = WooSettingsModel.QueryURL,
-                IsSecureURL = WooSettingsModel.IsSecureURL,
-                JSONAPIPostFix = WooSettingsModel.JSONAPIPostFix,
-                RootAPIPostFix = WooSettingsModel.RootAPIPostFix
-            };
+            WooAPISettings _WooAPISettings = new WooAPISettings(WooSettingsModel);
+            //
+            //    ConsumerKey = WooSettingsModel.ConsumerKey,
+            //    ConsumerSecret = WooSettingsModel.ConsumerSecret,
+            //    QueryURL = WooSettingsModel.QueryURL,
+            //    IsSecureURL = WooSettingsModel.IsSecureURL,
+            //    JSONAPIPostFix = WooSettingsModel.JSONAPIPostFix,
+            //    RootAPIPostFix = WooSettingsModel.RootAPIPostFix
+            //};
 
-            WooProductAttributeTerm _WooProductAttributeTerm = new WooProductAttributeTerm(_WooAPISettings, Logger);
+            IWooProductAttributeTerm _WooProductAttributeTerm = new WooProductAttributeTerm(_WooAPISettings, Logger);
             List<ProductAttributeTerm> wooProductAttributeTerms = await _WooProductAttributeTerm.GetAttributeTermsByAtttribute(pProductAttribute);
             return wooProductAttributeTerms;
         }

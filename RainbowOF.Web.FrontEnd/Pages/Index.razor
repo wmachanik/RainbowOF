@@ -4,5 +4,43 @@
 
 Welcome to Rainbow Order Fulfilment manager.
 
-<NavMenu />
+<h2>
+    Currently Testing:
+</h2>
 
+<ul class="nav flex-column">
+    <li class="nav-item px-2">
+        <NavLink class="nav-link" href="/Items">
+            <span class="oi oi-list-rich" aria-hidden="true"></span> Items
+        </NavLink>
+    </li>
+    <li class="nav-item px-2">
+        <NavLink class="nav-link" href="/ItemCategories">
+            <span class="oi oi-tags" aria-hidden="true"></span> Categories
+        </NavLink>
+    </li>
+    <li class="nav-item px-2">
+        <NavLink class="nav-link" href="/ItemAttributes">
+            <span class="oi oi-badge" aria-hidden="true"></span> Attributes
+        </NavLink>
+    </li>
+</ul>
+
+<label style="background-color: @myColour; color: @myFGColour">@myColour</label>
+<Button Color="Color.Secondary" Clicked="(() => colorSelector.ShowModal())"><Icon Name="IconName.PaintRoller"></Icon></Button>
+<Button Color="Color.Secondary" Clicked="(() => colorFGSelector.ShowModal())"><Icon Name="IconName.PaintBrush"></Icon></Button>
+
+<RainbowOF.Components.Modals.ColorSelector @ref="colorSelector" ColourValue="@myColour" ColourValueChanged="@((bg)=> myColour = bg)" />
+<RainbowOF.Components.Modals.ColorSelector @ref="colorFGSelector" ColourValue="@myFGColour" ColourValueChanged="@((v) => myFGColour = v)" />
+
+@code {
+    public string myColour { get; set; } = "#F5a590";
+    public string myFGColour { get; set; } = "#000000";
+    RainbowOF.Components.Modals.ColorSelector colorSelector { get; set; }
+    RainbowOF.Components.Modals.ColorSelector colorFGSelector { get; set; }
+
+    void OnColorChanged(string value)
+    {
+        myColour = value;
+    }
+}

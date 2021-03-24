@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using RainbowOF.Models.System;
 using RainbowOF.Tools;
-using RainbowOF.Web.FrontEnd.Pages.ChildComponents.Modals;
+using RainbowOF.Components.Modals;
 using RainbowOF.Woo.REST.Models;
 using RainbowOF.Repositories.Common;
 using System;

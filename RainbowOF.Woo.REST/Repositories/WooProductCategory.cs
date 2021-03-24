@@ -13,8 +13,6 @@ namespace RainbowOF.Woo.REST.Repositories
     public class WooProductCategory : IWooProductCategory
     {
         private readonly IWooBase _Woo;
-        //private readonly WooAPISettings _WooAPISettings;
-        //private readonly ILoggerManager _Logger;
 
         public WooProductCategory(WooAPISettings wooAPISettings, ILoggerManager logger)
         {
@@ -24,32 +22,37 @@ namespace RainbowOF.Woo.REST.Repositories
             //this._Logger = logger;
         }
 
-        //private RestAPI GetJSONRestAPI
-        //{
-        //    get
-        //    {
-        //        return new RestAPI(_WooAPISettings.FullSourceURL + _WooAPISettings.JSONAPIPostFix,
-        //       _WooAPISettings.ConsumerKey,
-        //       _WooAPISettings.ConsumerSecret,
-        //       !_WooAPISettings.IsSecureURL);
-        //    }
-        //}
+        private WCObject _wcObject = null;
+        private WCObject GetWCObject
+        {
+            get
+            {
 
+                if (_wcObject == null)
+                {
+                    RestAPI _RestAPI = _Woo.GetJSONRestAPI;
+                    try
+                    {
+                        _wcObject = new WCObject(_RestAPI);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (_Woo.Logger != null)
+                            _Woo.Logger.LogError("Error setting up WOO REST API: " + ex.Message);
+                    }
+                }
 
-        //private RestAPI GetRootRestAPI
-        //{
-        //    get
-        //    {
-        //        return new RestAPI(_WooAPISettings.FullSourceURL + _WooAPISettings.RootAPIPostFix,
-        //       _WooAPISettings.ConsumerKey,
-        //       _WooAPISettings.ConsumerSecret,
-        //       !_WooAPISettings.IsSecureURL);
-        //    }
-        //}
+                return _wcObject;
+            }
+            set
+            {
+                _wcObject = value;
+            }
+        }
 
         private async Task<List<ProductCategory>> GetAll(Dictionary<string, string> ProductCategoryParams)
         {
-            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
+            //            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
 
             List<ProductCategory> _WooProductCategories = null;
             bool _GetMore = true;
@@ -61,7 +64,7 @@ namespace RainbowOF.Woo.REST.Repositories
             ProductCategoryParams.Add("page", "0");
             try
             {
-                WCObject _WC = new WCObject(_RestAPI);
+                WCObject _WC = GetWCObject;
                 //Get all ProductCategories
                 while (_GetMore)
                 {
@@ -87,12 +90,12 @@ namespace RainbowOF.Woo.REST.Repositories
             }
             return _WooProductCategories;
         }
-        public async Task<List<ProductCategory>> GetAllProductCategories()
+        public async Task<List<ProductCategory>> GetAllProductCategoriesAsync()
         {
             return await GetAll(null);
         }
 
-        public async Task<bool> CheckProductCategoryLink()
+        public async Task<bool> CheckProductCategoryLinkAsync()
         {
             RestAPI _RestAPI = _Woo.GetJSONRestAPI;
 
@@ -112,12 +115,12 @@ namespace RainbowOF.Woo.REST.Repositories
             return count > 0;
         }
 
-        public async Task<List<ProductCategory>> GetProductCategoriesOfType(string pProductCategoryType)
+        public async Task<List<ProductCategory>> GetProductCategoriesOfTypeAsync(string pProductCategoryType)
         {
             return await GetAll(new Dictionary<string, string>() { { "type", pProductCategoryType } });
         }
 
-        public async Task<int> GetProductCategoryCount()
+        public async Task<int> GetProductCategoryCountAsync()
         {
             int _count = 0;
             RestAPI _RestAPI = _Woo.GetRootRestAPI;
@@ -142,5 +145,105 @@ namespace RainbowOF.Woo.REST.Repositories
             return _count;
 
         }
+
+        public async Task<ProductCategory> GetProductCategoryByIdAsync(int deleteWooEntityId)
+        {
+            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
+            ProductCategory _productCategory = null;
+            try
+            {
+                WCObject _WC = new WCObject(_RestAPI);
+                _productCategory = await _WC.Category.Get(deleteWooEntityId);
+            }
+            catch (Exception ex)
+            {
+                if (_Woo.Logger != null)
+                    _Woo.Logger.LogError("Error calling WOO REST JSON API: " + ex.Message);
+            }
+            return _productCategory;
+        }
+
+        public async Task<ProductCategory> DeleteProductCategoryById(int wooProductCategoryId)
+        {
+            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
+            ProductCategory _productCategory = null;
+            try
+            {
+                WCObject _WC = new WCObject(_RestAPI);
+                _productCategory = await _WC.Category.Delete(wooProductCategoryId);
+            }
+            catch (Exception ex)
+            {
+                if (_Woo.Logger != null)
+                    _Woo.Logger.LogError("Error calling WOO REST JSON API: " + ex.Message);
+            }
+            return _productCategory;
+        }
+
+        public async Task<ProductCategory> DeleteProductCategoryByIdAsync(int deleteWooProductCategoryId)
+        {
+            ProductCategory _ProductCategory = null;
+            WCObject _WC = GetWCObject;
+            try
+            {
+                _ProductCategory = await _WC.Category.Delete(deleteWooProductCategoryId);
+            }
+            catch (Exception ex)
+            {
+                if (_Woo.Logger != null)
+                    _Woo.Logger.LogError($"Error calling deleting product category by id: {deleteWooProductCategoryId} Async. Error:  {ex.Message}");
+            }
+            return _ProductCategory;
+        }
+
+        public async Task<ProductCategory> AddProductCategoryAsync(ProductCategory addWooProductCategory)
+        {
+            ProductCategory _ProductCategory = null;
+            WCObject _WC = GetWCObject;
+            try
+            {
+                _ProductCategory = await _WC.Category.Add(addWooProductCategory);
+            }
+            catch (Exception ex)
+            {
+                if (_Woo.Logger != null)
+                    _Woo.Logger.LogError($"Error calling Add ProductCategoryAsync for product: {addWooProductCategory.name}. Error:  {ex.Message}");
+            }
+            return _ProductCategory;
+        }
+
+
+        public async Task<ProductCategory> UpdateProductCategoryAsync(ProductCategory updateWooProductCategory)
+        {
+            ProductCategory _ProductCategory = null;
+            WCObject _WC = GetWCObject;
+            try
+            {
+                _ProductCategory = await _WC.Category.Update((int)updateWooProductCategory.id, updateWooProductCategory);
+            }
+            catch (Exception ex)
+            {
+                if (_Woo.Logger != null)
+                    _Woo.Logger.LogError($"Error calling Update ProductCategoryAsync for product: {updateWooProductCategory.name}. Error: {ex.Message}");
+            }
+            return _ProductCategory;
+        }
+
+        //public async Task<ProductCategory> FindProductCategoryByNameAsync(string findCategoryName)
+        //{
+        //    ProductCategory _ProductCategory = null;
+        //    WCObject _WC = GetWCObject;
+        //    try
+        //    {
+        //        _ProductCategory = await _WC.Category. Update((int)updateWooProductCategory.id, updateWooProductCategory);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        if (_Woo.Logger != null)
+        //            _Woo.Logger.LogError($"Error calling Update ProductCategoryAsync for product: {updateWooProductCategory.name}. Error: {ex.Message}");
+        //    }
+        //    return _ProductCategory;
+        //}
     }
+
 }

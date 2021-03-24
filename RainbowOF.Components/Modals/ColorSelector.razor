@@ -1,0 +1,53 @@
+@using Blazorise;
+
+
+<style>
+
+    .color-item {
+        display: table-cell;
+        width: 36px;
+        height: 36px;
+        vertical-align: top;
+        text-align: center;
+        color: white;
+        cursor: pointer;
+    }
+
+    .color-item .material-icons {
+        display: flex;
+        height: 100%;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .color-item.selected { border: 1px solid black; }
+</style>
+<Blazorise.Modal  @ref="modalRef">
+    <ModalContent Style="padding: 15px; min-width:550px;">
+        <ModalHeader>
+            <ModalTitle>
+                <Icon Name="IconName.Palette" />
+                Select Colour
+            </ModalTitle>
+            <CloseButton Clicked="@HideModal" />
+        </ModalHeader>
+        <ModalBody>
+            <div>
+                @foreach (var colour in ThemeColors.Items.Values)
+                {
+                    <div>
+                        @foreach (var shade in colour.Shades.Values)
+                        {
+                            var colourValue = shade.Value;
+
+                            <div class="@(ClassNames(colourValue))" style="background: @colourValue" @onclick="(()=>OnClick(colourValue))"></div>
+                        }
+                    </div>
+                }
+            </div>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Secondary" Clicked="@HideModal">Close</Button>
+        </ModalFooter>
+    </ModalContent>
+</Blazorise.Modal>

@@ -1,0 +1,20 @@
+﻿@using Blazorise;
+
+<Modal @ref="modalRef">
+    <ModalContent IsCentered="true" Size="ModalSize.Large">
+        <ModalHeader>
+            <ModalTitle>@ConfirmationTitle</ModalTitle>
+            <CloseButton Clicked="@(() => OnConfirmationChange(false))" />
+        </ModalHeader>
+        <ModalBody>
+            @ConfirmationMessage
+        </ModalBody>
+        <ModalFooter>
+            <Blazorise.Check TValue="bool" Display="@(ShowConfirmOption ? Display.Inline : Display.None )" Checked="@OptionIsConfirmed"
+                             CheckedChanged="@((value)=>  OptionIsConfirmed = value)">@ConfirmOptionCheckText</Blazorise.Check>
+                            &nbsp;&nbsp;
+            <Blazorise.Button Color="@ConfirmColor" Clicked="@(() => OnConfirmationChange(true))">@ConfirmButtonText</Blazorise.Button>
+            <Button Color="Color.Secondary" Clicked="@(() => OnConfirmationChange(false))">@CancelButtonText</Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>

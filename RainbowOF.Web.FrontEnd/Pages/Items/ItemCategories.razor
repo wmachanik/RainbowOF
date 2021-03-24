@@ -1,0 +1,275 @@
+﻿@page "/ItemCategories"
+@using Blazorise.DataGrid
+@using RainbowOF.ViewModels.Common
+@using RainbowOF.ViewModels.Lookups
+@using RainbowOF.Components.Modals
+@inject NavigationManager NavigationManager
+
+<Row Style="z-index: 0" Margin="Margin.Is1">
+    <Column>
+        <Card Margin="Margin.Is1">
+            <CardHeader>
+                <CardTitle><h2>Categories&nbsp;<Icon Name="IconName.Tag" /></h2></CardTitle>
+            </CardHeader>
+            <CardBody>
+                <Fields>
+                    <Field Style="display: inline-flex">
+                        <FieldLabel Margin="Margin.IsAuto">
+                            Custom Search
+                        </FieldLabel>
+                        <FieldBody Style="width:80%">
+                            <TextEdit @bind-Text="@_gridSettings.customFilterValue" />
+                        </FieldBody>
+                    </Field>
+                </Fields>
+            </CardBody>
+        </Card>
+    </Column>
+</Row>
+<Row Margin="Margin.Is1">
+    <Column>
+        <Card Margin="Margin.Is1">
+            <CardHeader>
+                <CardTitle><h3>List of Categories</h3></CardTitle>
+            </CardHeader>
+            <CardSubtitle Margin="Margin.Is1" Style="border-bottom: 1px solid #999">
+                <Fields>
+                    <Field Style="display: inline-flex;" Margin="Margin.Is1" JustifyContent="JustifyContent.Start">
+                        <FieldBody>
+                            <Tooltip Text="Select a Bulk Action to do on selected rows">
+                                <Select TValue="BulkAction" SelectedValue="SelectedBulkAction" SelectedValueChanged="@((v) => SelectedBulkAction = v)" style="max-width:12em">
+                                    <SelectItem Value="BulkAction.none">none</SelectItem>
+                                    <SelectItem Value="BulkAction.AllowWooSync">Allow Woo Sync</SelectItem>
+                                    <SelectItem Value="BulkAction.DisallowWooSync">Disallow Woo Sync</SelectItem>
+                                </Select>
+                            </Tooltip>
+                        </FieldBody>
+                        <FieldBody>
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            <Tooltip Text="Perform group actions on categories" Placement="Placement.Right">
+                                <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Disabled="((SelectedBulkAction == BulkAction.none) || (SelectedItemCategoryLookups == null) || (SelectedItemCategoryLookups?.Count == 0))" Clicked="DoGroupAction">Group Action(s)</Blazorise.Button>
+                            </Tooltip>
+                        </FieldBody>
+                    </Field>
+                    <Field Style="display: inline-block;" Margin="Margin.Is1">
+                        <FieldBody>
+                            <Blazorise.Check TValue="bool" Checked="@(_gridSettings.IsNarrow)" CheckedChanged="@((v) => _gridSettings.IsNarrow = v)">Narrow Grid?</Blazorise.Check>
+                        </FieldBody>
+                        <FieldBody>
+                            <Blazorise.Check TValue="bool" Checked="@(_gridSettings.IsFilterable)" CheckedChanged="@((v) => _gridSettings.IsFilterable = v)">Filter Grid?</Blazorise.Check>
+                        </FieldBody>
+                    </Field>
+                    <Field Margin="Margin.Is1" JustifyContent="JustifyContent.End">
+                        <FieldBody>
+                            <Tooltip Text="Refresh/reload categories" Placement="Placement.Left">
+                                <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Clicked="LoadItemCategoryLookupList"><Icon Name="IconName.Sync" /></Blazorise.Button>
+                            </Tooltip>
+                        </FieldBody>
+                    </Field>
+                </Fields>
+            </CardSubtitle>
+            <CardBody>
+                <DataGrid TItem="ItemCategoryLookupView" Data="@modelItemCategoryLookupViews"
+                          Sortable="true" Editable="true"
+                          EditMode="DataGridEditMode.Popup"
+                          PageSize="@_gridSettings.PageSize" ShowPager="true"
+                          PageSizes="@(new int[] { 5, 10, 15, 25, 50, 100 })"
+                          ShowPageSizes="true" PagerPosition="DataGridPagerPosition.TopAndBottom"
+                          Bordered="true"
+                          CustomFilter="@OnCustomFilter"
+                          Striped="true"
+                          Hoverable="true"
+                          Responsive="true"
+                          NewItemDefaultSetter="@OnItemCategoryLookupNewItemDefaultSetter"
+                          SelectionMode="DataGridSelectionMode.Multiple"
+                          @bind-SelectedRows="@SelectedItemCategoryLookups"
+                          RowInserted="@OnRowInserting"
+                          RowUpdated="@OnRowUpdating"
+                          RowRemoving="@OnRowRemoving"
+                          RowRemoved="@OnRowRemoved"
+                          Narrow="@_gridSettings.IsNarrow" Filterable="@_gridSettings.IsFilterable"
+                          UseInternalEditing="true">
+                    <EmptyTemplate>
+                        No items logged yet...
+                    </EmptyTemplate>
+                    <LoadingTemplate>
+                        <div class="spinner-border m-5" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </LoadingTemplate>
+                    <DataGridColumns>
+                        <DataGridMultiSelectColumn TItem="ItemCategoryLookupView" Caption="[X]" Sortable="false" TextAlignment="TextAlignment.Center">
+                            @*<CaptionTemplate>
+                                    <Tooltip Text="Select/Un select all" Placement="Placement.Right">
+                                        <Blazorise.Button @onclick="SelectAllRows" Color="Color.Success"><Icon Name="@CheckIcon" /></Blazorise.Button>
+                                    </Tooltip>
+                                </CaptionTemplate>*@
+                        </DataGridMultiSelectColumn>
+                        <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.CategoryName)" Caption="Category Name" Sortable="true" Editable="true">
+                            <DisplayTemplate>
+                                @{
+                                    var catItem = (context as ItemCategoryLookupView);
+
+                                    if (catItem != null)
+                                    {
+                                        <NavLink ActiveClass="grid-link" @onclick="@(()=>NavigationManager.NavigateTo($"/editpage/{catItem.ItemCategoryLookupId}"))">
+                                            @if ((catItem.ParentCategoryId == null) || (catItem.ParentCategoryId == Guid.Empty))
+                                            {
+                                                <span style="font-weight: bold">@catItem.CategoryName</span>
+                                            }
+                                            else
+                                            {
+                                                <span>@catItem.CategoryName</span>
+                                            }
+                                        </NavLink>
+                                    }
+                                }
+                            </DisplayTemplate>
+                        </DataGridColumn>
+                        <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.ParentCategoryId)" Caption="Parent Category" Sortable="true" Editable="true">
+                            <DisplayTemplate>
+                                @{
+                                    var catItem = (context as ItemCategoryLookupView);
+
+                                    @((catItem.ParentCategory == null) ? "n/a" : catItem.ParentCategory.CategoryName);
+                                }
+                            </DisplayTemplate>
+                            <EditTemplate>
+                                @{
+                                    var listOfParents = GetListOfParentCategories();
+                                    var catItem = (context.Item as ItemCategoryLookupView);
+
+                                    if (listOfParents.Count > 0)
+                                    {
+                                        <Select TValue="Guid" SelectedValue="@(context.CellValue == null ? Guid.Empty : (Guid)context.CellValue)" SelectedValueChanged="@((v) => context.CellValue = v)">
+                                            <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
+
+                                            @foreach (var item in listOfParents)
+                                            {
+                                                // only add parents that are not this item
+                                                if (catItem.ItemCategoryLookupId != item.Key)
+                                                {
+                                                    <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
+                                                }
+                                            }
+                                        </Select>
+                                    }
+                                }
+                            </EditTemplate>
+                        </DataGridColumn>
+                        <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.UsedForPrediction)" Caption="Predicable" Sortable="true" Editable="true">
+                            <DisplayTemplate>
+                                @{
+                                    var wooItem = (context as ItemCategoryLookupView);
+
+                                    @( (wooItem.UsedForPrediction) ? "yes" : "no" ) ;
+                                }
+                            </DisplayTemplate>
+                            <EditTemplate>
+                                <Tooltip Text="Is this category predictable / used in predications?">
+                                    @{
+                                        <Blazorise.Check TValue="bool" Checked="@((bool) context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)"></Blazorise.Check>
+                                    }
+                                </Tooltip>
+                            </EditTemplate>
+                        </DataGridColumn>
+                        <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.CanUpdateWooMap)" Caption="Woo Can Map" Sortable="true" Editable="true">
+                            <DisplayTemplate>
+                                @{
+                                    var wooItem = (context as ItemCategoryLookupView);
+
+                                    @( (wooItem.CanUpdateWooMap == null) ? "n/a" : ( (bool)wooItem.CanUpdateWooMap) ? "yes" : "no" ) ;
+                                }
+                            </DisplayTemplate>
+                            <EditTemplate>
+                                <Tooltip Text="Is this category synchronised with Woo Categories?">
+                                    @{
+                                        if (context.CellValue == null)
+                                        {
+                                            <Blazorise.Label>n/a</Blazorise.Label>
+                                        }
+                                        else
+                                        {
+                                            <Blazorise.Check TValue="bool" Class="" Checked="@((bool) context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)"></Blazorise.Check>
+                                        }
+                                    }
+                                </Tooltip>
+                            </EditTemplate>
+                        </DataGridColumn>
+                        <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.Notes)" Caption="Notes" Sortable="true"
+                                        Editable="true" HeaderCellClass="desktop-only" CellClass="@((item)=>"desktop-only")">
+                            <DisplayTemplate>
+                                @{
+                                    var itemNotes = (context as ItemCategoryLookupView).Notes;
+
+                                    // itemNotes = itemNotes.Length <= 150 ? itemNotes : itemNotes.Substring(0, 150) + "...";  // Should rather look at a max width
+
+                                    <span class="text-wrap">@itemNotes</span>
+
+                                }
+                            </DisplayTemplate>
+                            <EditTemplate>
+                                <MemoEdit Text="@((string)context.CellValue)" Rows="5" Placeholder="Any notes for this item..." TextChanged="@((value)=>context.CellValue = value)" />
+                            </EditTemplate>
+                        </DataGridColumn>
+                        <DataGridCommandColumn TItem="ItemCategoryLookupView" Width="6em">
+                            <NewCommandTemplate>
+                                <Tooltip Text="New category" Style="z-index:99" Placement="Placement.Bottom">
+                                    <Button Color="Color.Success" Clicked="@context.Clicked"><Icon Name="IconName.Add" /></Button>
+                                </Tooltip>
+                            </NewCommandTemplate>
+                            <EditCommandTemplate>
+                                <Tooltip Text="Edit category">
+                                    <Button Color="Color.Primary" Clicked="@context.Clicked"><Icon Name="IconName.Edit" /></Button>
+                                </Tooltip>
+                            </EditCommandTemplate>
+                            <DeleteCommandTemplate>
+                                <Tooltip Text="Delete category">
+                                    <Button Color="Color.Danger" Clicked="@context.Clicked"><Icon Name="IconName.Delete" /></Button>
+                                </Tooltip>
+                            </DeleteCommandTemplate>
+                            <SaveCommandTemplate>
+                                <Tooltip Text="Save">
+                                    <Button Color="Color.Primary" Clicked="@context.Clicked"><Icon Name="IconName.CheckCircle" /></Button>
+                                </Tooltip>
+                            </SaveCommandTemplate>
+                            <CancelCommandTemplate>
+                                <Tooltip Text="Undo changes">
+                                    <Button Color="Color.Secondary" Clicked="@context.Clicked"><Icon Name="IconName.Undo" /></Button>
+                                </Tooltip>
+                            </CancelCommandTemplate>
+                            <ClearFilterCommandTemplate>
+                                <Button Color="Color.Warning" Clicked="@context.Clicked">Clear Filter</Button>
+                            </ClearFilterCommandTemplate>
+                        </DataGridCommandColumn>
+                    </DataGridColumns>
+                    <PopupTitleTemplate>
+                        @if (context.EditState == DataGridEditState.Edit)
+                        {
+                            @($"Edit Category {context.Item.CategoryName}")
+                        }
+                        else
+                        {
+                            @("Create Category")
+                        }
+                    </PopupTitleTemplate>
+
+                </DataGrid>
+            </CardBody>
+        </Card>
+    </Column>
+</Row>
+
+<RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage="Category Message" NotificationTitle="" @ref="@_gridSettings.PopUpRef" />
+
+<RainbowOF.Components.Modals.ConfirmModal @ref="_gridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_Click" />
+
+<RainbowOF.Components.Modals.ConfirmModal @ref="_gridSettings.DeleteWooItemConfirmation" ConfirmationClicked="ConfirmDeleteWooItem_Click" />
+
+<RainbowOF.Components.Modals.ConfirmModalWithOption @ref="_gridSettings.DeleteConfirmation"
+                                                    ConfirmationClicked="ConfirmDelete_Click"
+                                                    ConfirmationMessage=@($"Are you sure you want to delete ?")
+                                                    ConfirmButtonText="Delete"
+                                                    ConfirmOptionCheckText="Delete from Woo Too"
+                                                    ShowConfirmOption="true"
+                                                    CancelButtonText="Cancel" />

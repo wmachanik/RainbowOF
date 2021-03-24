@@ -1,0 +1,241 @@
+﻿@page "/ItemAttributes"
+@using Blazorise.DataGrid
+@using RainbowOF.ViewModels.Lookups
+@using RainbowOF.ViewModels.Common
+@using RainbowOF.Models.Lookups
+@using RainbowOF.Components.Modals
+@inject NavigationManager NavigationManager
+
+<Row Style="z-index: 0" Margin="Margin.Is1">
+    <Column>
+        <Card Margin="Margin.Is1">
+            <CardHeader>
+                <CardTitle><h2>Attributes&nbsp;<Icon Name="IconName.Flag" /></h2></CardTitle>
+            </CardHeader>
+            <CardBody>
+                <Fields>
+                    <Field Style="display: inline-flex">
+                        <FieldLabel Margin="Margin.IsAuto">
+                            Custom Search
+                        </FieldLabel>
+                        <FieldBody Style="width:80%">
+                            <TextEdit @bind-Text="@localGridSettings.customFilterValue" />
+                        </FieldBody>
+                    </Field>
+                </Fields>
+            </CardBody>
+        </Card>
+    </Column>
+</Row>
+<Row Margin="Margin.Is1">
+    <Column>
+        <Card Margin="Margin.Is1">
+            <CardHeader>
+                <CardTitle><h3>List of Attributes</h3></CardTitle>
+            </CardHeader>
+            <CardSubtitle Margin="Margin.Is1" Style="border-bottom: 1px solid #999">
+                <Fields>
+                    <Field Style="display: inline-flex;" Margin="Margin.Is1" JustifyContent="JustifyContent.Start">
+                        <FieldBody>
+                            <Tooltip Text="Select a Bulk Action to do on selected rows">
+                                <Select TValue="BulkAction" SelectedValue="SelectedBulkAction" SelectedValueChanged="@((v) => SelectedBulkAction = v)" style="max-width:12em">
+                                    <SelectItem Value="BulkAction.none">none</SelectItem>
+                                    <SelectItem Value="BulkAction.AllowWooSync">Allow Woo Sync</SelectItem>
+                                    <SelectItem Value="BulkAction.DisallowWooSync">Disallow Woo Sync</SelectItem>
+                                </Select>
+                            </Tooltip>
+                        </FieldBody>
+                        <FieldBody>
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            <Tooltip Text="Perform group actions on Attributes" Placement="Placement.Right">
+                                <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Disabled="((SelectedBulkAction == BulkAction.none) || (SelectedItemAttributeLookups == null) || (SelectedItemAttributeLookups?.Count == 0))" Clicked="DoGroupAction">Group Action(s)</Blazorise.Button>
+                            </Tooltip>
+                        </FieldBody>
+                    </Field>
+                    <Field Style="display: inline-block;" Margin="Margin.Is1">
+                        <FieldBody>
+                            <Blazorise.Check TValue="bool" Checked="@(localGridSettings.IsNarrow)" CheckedChanged="@((v) => localGridSettings.IsNarrow = v)">Narrow Grid?</Blazorise.Check>
+                        </FieldBody>
+                        <FieldBody>
+                            <Blazorise.Check TValue="bool" Checked="@(localGridSettings.IsFilterable)" CheckedChanged="@((v) => localGridSettings.IsFilterable = v)">Filter Grid?</Blazorise.Check>
+                        </FieldBody>
+                    </Field>
+                    <Field Margin="Margin.Is1" JustifyContent="JustifyContent.End">
+                        <FieldBody>
+                            <Tooltip Text="Refresh/reload Attributes" Placement="Placement.Left">
+                                <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Clicked="LoadItemAttributeLookupList"><Icon Name="IconName.Sync" /></Blazorise.Button>
+                            </Tooltip>
+                        </FieldBody>
+                    </Field>
+                </Fields>
+            </CardSubtitle>
+            <CardBody>
+                <DataGrid TItem="ItemAttributeLookupView" Data="@modelItemAttributeLookupViews"
+                          Sortable="true" Editable="true"
+                          EditMode="DataGridEditMode.Popup"
+                          PageSize="@localGridSettings.PageSize" ShowPager="true"
+                          PageSizes="@(new int[] { 5, 10, 15, 25, 50, 100 })"
+                          ShowPageSizes="true" PagerPosition="DataGridPagerPosition.TopAndBottom"
+                          Bordered="true"
+                          CustomFilter="@OnCustomFilter"
+                          Striped="true"
+                          Hoverable="true"
+                          Responsive="true"
+                          NewItemDefaultSetter="@OnItemAttributeLookupNewItemDefaultSetter"
+                          SelectionMode="DataGridSelectionMode.Multiple"
+                          @bind-SelectedRow="@seletectedItem"
+                          @bind-SelectedRows="@SelectedItemAttributeLookups"
+                          DetailRowTrigger="@((item)=>item.ItemAttributeVarietyLookups?.Count > 0  && item.ItemAttributeLookupId == seletectedItem?.ItemAttributeLookupId)"
+                          RowInserted="@OnRowInserted"
+                          RowUpdated="@OnRowUpdated"
+                          RowRemoving="@OnRowRemoving"
+                          RowRemoved="@OnRowRemoved"
+                          Narrow="@localGridSettings.IsNarrow" Filterable="@localGridSettings.IsFilterable"
+                          UseInternalEditing="true">
+                    <EmptyTemplate>
+                        No attributes loaded yet...
+                    </EmptyTemplate>
+                    <LoadingTemplate>
+                        <div class="spinner-border m-5" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </LoadingTemplate>
+                    <DataGridColumns>
+                        <DataGridMultiSelectColumn TItem="ItemAttributeLookupView" Caption="[X]" Sortable="false" TextAlignment="TextAlignment.Center">
+                        </DataGridMultiSelectColumn>
+                        <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.AttributeName)" Caption="Attribute Name" Sortable="true" Editable="true">
+                            <DisplayTemplate>
+                                @{
+                                    var attribItem = (context as ItemAttributeLookupView);
+
+                                    if (attribItem != null)
+                                    {
+                                        @if ((attribItem.ItemAttributeVarietyLookups == null) || (attribItem.ItemAttributeVarietyLookups.Count == 0))
+                                        {
+                                            <span>@attribItem.AttributeName</span>
+                                        }
+                                        else
+                                        {
+                                            <span style="font-weight: bold">@attribItem.AttributeName</span>
+                                        }
+                                    }
+                                }
+                            </DisplayTemplate>
+                        </DataGridColumn>
+                        <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.ItemAttributeVarietyLookups)" Caption="Attribute Variety" Sortable="true" Editable="false">
+                            <DisplayTemplate>
+                                <span class="text-wrap">
+                                    @{
+                                        var attribItem = (context as ItemAttributeLookupView);
+                                        for (int i = 0; i < attribItem.ItemAttributeVarietyLookups.Count; i++)
+                                        {
+                                            @(attribItem.ItemAttributeVarietyLookups[i].VarietyName)
+                                            @(i < (attribItem.ItemAttributeVarietyLookups.Count-1) ? ", " : ".");
+                                        }
+
+                                    }
+                                </span>
+                            </DisplayTemplate>
+                            <EditTemplate>
+                            </EditTemplate>
+                        </DataGridColumn>
+                        <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.CanUpdateWooMap)" Caption="Woo Can Map" Sortable="true" Editable="true">
+                            <DisplayTemplate>
+                                @{
+                                    var wooItem = (context as ItemAttributeLookupView);
+
+                                    @( (wooItem.CanUpdateWooMap == null) ? "n/a" : ( (bool)wooItem.CanUpdateWooMap) ? "yes" : "no" ) ;
+                                }
+                            </DisplayTemplate>
+                            <EditTemplate>
+                                @{
+                                    if (context.CellValue == null)
+                                    {
+                                        <Blazorise.Label>n/a</Blazorise.Label>
+                                    }
+                                    else
+                                    {
+                                        <Blazorise.Check TValue="bool" Checked="@((bool) context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)">Woo Can Map</Blazorise.Check>
+                                    }
+                                }
+                            </EditTemplate>
+                        </DataGridColumn>
+                        <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.Notes)" Caption="Notes" Sortable="true"
+                                        Editable="true" HeaderCellClass="desktop-only" CellClass="@((item)=>"desktop-only")" Width="SizeToCells">
+                            <DisplayTemplate>
+                                @{
+                                    var itemNotes = (context as ItemAttributeLookupView).Notes;
+                                    <span class="text-truncate">@itemNotes</span>
+                                }
+                            </DisplayTemplate>
+                            <EditTemplate>
+                                <MemoEdit Text="@((string)context.CellValue)" Rows="5" Placeholder="Any notes for this item..." TextChanged="@((value)=>context.CellValue = value)" />
+                            </EditTemplate>
+                        </DataGridColumn>
+                        <DataGridCommandColumn TItem="ItemAttributeLookupView" Width="6em">
+                            <NewCommandTemplate>
+                                <Tooltip Text="New Attribute" Style="z-index:99" Placement="Placement.Bottom">
+                                    <Button Color="Color.Success" Clicked="@context.Clicked"><Icon Name="IconName.Add" /></Button>
+                                </Tooltip>
+                            </NewCommandTemplate>
+                            <EditCommandTemplate>
+                                <Tooltip Text="Edit Attribute">
+                                    <Button Color="Color.Primary" Clicked="@context.Clicked"><Icon Name="IconName.Edit" /></Button>
+                                </Tooltip>
+                            </EditCommandTemplate>
+                            <DeleteCommandTemplate>
+                                <Tooltip Text="Delete Attribute">
+                                    <Button Color="Color.Danger" Clicked="@context.Clicked"><Icon Name="IconName.Delete" /></Button>
+                                </Tooltip>
+                            </DeleteCommandTemplate>
+                            <SaveCommandTemplate>
+                                <Tooltip Text="Save">
+                                    <Button Color="Color.Primary" Clicked="@context.Clicked"><Icon Name="IconName.CheckCircle" /></Button>
+                                </Tooltip>
+                            </SaveCommandTemplate>
+                            <CancelCommandTemplate>
+                                <Tooltip Text="Undo changes">
+                                    <Button Color="Color.Secondary" Clicked="@context.Clicked"><Icon Name="IconName.Undo" /></Button>
+                                </Tooltip>
+                            </CancelCommandTemplate>
+                            <ClearFilterCommandTemplate>
+                                <Button Color="Color.Warning" Clicked="@context.Clicked">Clear Filter</Button>
+                            </ClearFilterCommandTemplate>
+                        </DataGridCommandColumn>
+                    </DataGridColumns>
+                    <DetailRowTemplate>
+                        @{
+
+                            var thisAttribVarieties = (context as ItemAttributeLookupView).ItemAttributeVarietyLookups;
+
+                            <ItemAttributeVarieties ItemAttributeVarietyLookups="thisAttribVarieties" />
+
+                        }
+                    </DetailRowTemplate>
+                    <PopupTitleTemplate>
+                        @if (context.EditState == DataGridEditState.Edit)
+                        {
+                            @($"Edit Attribute {context.Item.AttributeName}")
+                        }
+                        else
+                        {
+                            @("Create Attrbiute")
+                        }
+                    </PopupTitleTemplate>
+                </DataGrid>
+            </CardBody>
+        </Card>
+    </Column>
+</Row>
+
+<RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage="Attribute Message" NotificationTitle="" @ref="@localGridSettings.PopUpRef" />
+
+<RainbowOF.Components.Modals.ConfirmModal @ref="localGridSettings.DeleteWooItemConfirmation" ConfirmationClicked="ConfirmDelete_Click" ConfirmationMessage=@($"Are you sure you want to delete?") ConfirmButtonText="Delete" CancelButtonText="Cancel" />
+
+
+@*
+
+
+
+
+*@

@@ -15,6 +15,8 @@ namespace RainbowOF.Models.Lookups
         [StringLength(255)]
         [DisplayName("Item Category Name")]
         public string CategoryName { get; set; }
+        [DefaultValue("true")]
+        public bool UsedForPrediction { get; set; }
         public Guid? ParentCategoryId { get; set; }
         public string Notes { get; set; }
         [Timestamp]

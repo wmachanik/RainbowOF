@@ -7,13 +7,13 @@ using System.Text;
 
 namespace RainbowOF.Data.SQL.EntityConfigs.Items
 {
-    internal class ItemAttributeModelConfig : IEntityTypeConfiguration<ItemAttribute>
+    internal class ItemCategoryModelConfig : IEntityTypeConfiguration<ItemCategory>
     {
-        public void Configure(EntityTypeBuilder<ItemAttribute> itemAttributeModelBuilder)
+        public void Configure(EntityTypeBuilder<ItemCategory> itemCategoryModelBuilder)
         {
-            itemAttributeModelBuilder.HasIndex(aia => new { aia.ItemAttributeId, aia.ItemId })
+            itemCategoryModelBuilder.HasIndex(aia => new { aia.ItemCategoryId, aia.ItemId })
                 .IsUnique();
-            itemAttributeModelBuilder.HasOne(ia => ia.ItemAttributeDetail)
+            itemCategoryModelBuilder.HasOne(aia => aia.ItemCategoryDetail)
                 .WithMany()
                 .OnDelete(DeleteBehavior.NoAction);
             //itemAttributeModelBuilder.HasIndex(i => i.SKU)

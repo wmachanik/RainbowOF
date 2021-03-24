@@ -23,17 +23,9 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         // Retrieve data from Woo
         public async Task<List<ProductAttribute>> GetWooAttributeData()
         {
-            WooAPISettings _WooAPISettings = new WooAPISettings
-            {
-                ConsumerKey = WooSettingsModel.ConsumerKey,
-                ConsumerSecret = WooSettingsModel.ConsumerSecret,
-                QueryURL = WooSettingsModel.QueryURL,
-                IsSecureURL = WooSettingsModel.IsSecureURL,
-                JSONAPIPostFix = WooSettingsModel.JSONAPIPostFix,
-                RootAPIPostFix = WooSettingsModel.RootAPIPostFix
-            };
+            WooAPISettings _WooAPISettings = new WooAPISettings(WooSettingsModel); 
 
-            WooProductAttribute _WooProductAttribute = new WooProductAttribute(_WooAPISettings, Logger);
+            IWooProductAttribute _WooProductAttribute = new WooProductAttribute(_WooAPISettings, Logger);
             List<ProductAttribute> wooProductAttributes = await _WooProductAttribute.GetAllProductAttributes();
             return wooProductAttributes;
         }
