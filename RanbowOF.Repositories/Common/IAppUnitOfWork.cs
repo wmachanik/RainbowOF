@@ -1,6 +1,7 @@
 ﻿using NLog.Web.LayoutRenderers;
 using RainbowOF.Repositories.Items;
 using RainbowOF.Repositories.Logs;
+using RainbowOF.Repositories.Lookups;
 using RainbowOF.Repositories.System;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,8 @@ namespace RainbowOF.Repositories.Common
         public IItemRepository itemRepository();
         public ISysPrefsRepository sysPrefsRepository();
         public IWooSyncLogRepository wooSyncLogRepository();
+        public IItemCategoryLookupRepository itemCategoryLookupRepository();
+        public IItemAttributeLookupRepository itemAttributeLookupRepository();
         // Centralised Context Handling
         void BeginTransaction();
         int Complete();

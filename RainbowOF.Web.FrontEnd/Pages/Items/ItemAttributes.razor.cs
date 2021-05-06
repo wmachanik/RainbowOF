@@ -1,318 +1,274 @@
 ﻿using Blazorise.DataGrid;
 using Microsoft.AspNetCore.Components;
-using RainbowOF.Models.Items;
-using RainbowOF.Models.Lookups;
-using RainbowOF.Models.Woo;
-using RainbowOF.Repositories.Common;
-using RainbowOF.Tools;
-using RainbowOF.ViewModels.Lookups;
+using Microsoft.AspNetCore.Components.Web;
 using RainbowOF.Components.Modals;
+using RainbowOF.Models.Lookups;
+using RainbowOF.Repositories.Common;
+using RainbowOF.Repositories.Lookups;
+using RainbowOF.Tools;
+using RainbowOF.Tools.Services;
+using RainbowOF.ViewModels.Common;
+using RainbowOF.ViewModels.Lookups;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using RainbowOF.ViewModels.Common;
 
 namespace RainbowOF.Web.FrontEnd.Pages.Items
 {
     public partial class ItemAttributes : ComponentBase
     {
         // Interface Stuff
-        public GridSettings localGridSettings = new GridSettings();
-
-        public ItemAttributeLookup SelectedItemAttributeLookup = null;
+        public GridSettings _gridSettings = new GridSettings();
+        public ItemAttributeLookupView SelectedItemAttributeLookup = null;
         public BulkAction SelectedBulkAction = BulkAction.none;
-
         // variables / Models
-        public List<ItemAttributeLookupView> modelItemAttributeLookupViews;
+        public List<ItemAttributeLookupView> dataModels;
         public ItemAttributeLookupView seletectedItem = null;
+        //public const string disabledStr = "N";
+        //public const string enabledStr = "Y";
+
+        public bool GroupButtonEnabled = true;
+        private bool IsLoading = false;
+        private string _Status = "";
+        DataGrid<ItemAttributeLookupView> _DataGrid;
+
+        // All there workings are here
+        IAttributeWooLinkedView _AttributeWooLinkedViewRepository;
 
         public List<ItemAttributeLookupView> SelectedItemAttributeLookups;
         [Inject]
-        IAppUnitOfWork _AppUnitOfWork { get; set; }
-        //[Parameter]
-        //public ILoggerManager Logger { get; set; }  /// not needed here
+        IAppUnitOfWork _appUnitOfWork { get; set; }
+        [Inject]
+        ApplicationState _appState { get; set; }
+        [Inject]
+        public ILoggerManager _logger { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
-            await LoadItemAttributeLookupList();
+            _AttributeWooLinkedViewRepository = new AttributeWooLinkedViewRepository(_logger, _appUnitOfWork, _gridSettings);
+            //await LoadData();
+            await InvokeAsync(StateHasChanged);
+        }
+        private async Task SetLoadStatus(string statusString)
+        {
+            _Status = statusString;
+            await InvokeAsync(StateHasChanged);
+        }
+        public async Task LoadData()
+        {
+            await HandleReadDataAsync(new DataGridReadDataEventArgs<ItemAttributeLookupView>(_gridSettings.CurrentPage, _gridSettings.PageSize, null, System.Threading.CancellationToken.None));
         }
 
-        private async Task LoadItemAttributeLookupList()
+        public async Task HandleReadDataAsync(DataGridReadDataEventArgs<ItemAttributeLookupView> inputDataGridReadData)
         {
+           if (IsLoading)
+                return;
 
-            StateHasChanged();
-            // store old select items list
-            List<ItemAttributeLookupView> oldSelectedItems = null;
-            if (SelectedItemAttributeLookups != null)
+            IsLoading = true;
+            // 
+
+            if (!inputDataGridReadData.CancellationToken.IsCancellationRequested)
             {
-                oldSelectedItems = new List<ItemAttributeLookupView>(SelectedItemAttributeLookups);
-                SelectedItemAttributeLookups.Clear(); // the refresh does this
-            }
-            /// get all the items and using those get all the attributes in of items
-            List<ItemAttributeLookup> itemAttributeLookups = await GetAllItemAttributeLookups();
-
-            modelItemAttributeLookupViews = new List<ItemAttributeLookupView>();
-            WooProductAttributeMap wooAttributeMap;
-            foreach (var ItemAttrib in itemAttributeLookups)
-            {
-                //  map all the items across to the view then allocate extra woo stuff if exists.
-                wooAttributeMap = await GetWooAttributeMappedAsync(ItemAttrib.ItemAttributeLookupId);
-
-                modelItemAttributeLookupViews.Add(new ItemAttributeLookupView
-                {
-                    ItemAttributeLookupId = ItemAttrib.ItemAttributeLookupId,
-                    AttributeName = ItemAttrib.AttributeName,
-                    ItemAttributeVarietyLookups = ItemAttrib.ItemAttributeVarietyLookups,
-                    Notes = ItemAttrib.Notes,
-
-                    CanUpdateWooMap = (wooAttributeMap == null) ? null : wooAttributeMap.CanUpdate
-                });
-            }
-            //ShowPager = (modelItemAttributeLookupViews.Count > PageSize);
-            if (oldSelectedItems != null)
-                foreach (var item in oldSelectedItems)
-                {
-                    SelectedItemAttributeLookups.Add(modelItemAttributeLookupViews.Where(ial => ial.ItemAttributeLookupId == item.ItemAttributeLookupId).FirstOrDefault());
+                DataGridParameters _dataGridParameters = _AttributeWooLinkedViewRepository.GetDataGridCurrent(inputDataGridReadData, _gridSettings.CustomFilterValue);
+                if (_gridSettings.PageSize != inputDataGridReadData.PageSize)
+                { /// page sized changed so jump back to original page
+                    _gridSettings.CurrentPage = _dataGridParameters.CurrentPage = 1;  // force this
+                    _gridSettings.PageSize = inputDataGridReadData.PageSize;
+                    //                  await Reload();
                 }
-            StateHasChanged();
+                await SetLoadStatus("Checking Woo status & loading Attributes");
+                try
+                {
+                    await SetLoadStatus("Checking Woo status");
+                    _gridSettings.WooIsActive = await _AttributeWooLinkedViewRepository.WooIsActive(_appState);
+                    await SetLoadStatus("Loading Attributes");
+                    await LoadItemAttributeLookupList(_dataGridParameters); 
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Error running async tasks: {ex.Message}");
+                    throw;
+                }
+                _Status = string.Empty;
+            }
+            IsLoading = false;
         }
 
-        //public void OnSelectePageChanged(ChangeEventArgs e)
-        //{
-        //    //(e.Value shoe be string)
-        //    PageSize = Convert.ToInt32(e.Value);
-        //    ShowPager = (modelItemAttributeLookupViews != null) && (modelItemAttributeLookupViews.Count > PageSize);
-
-        //}
-        private async Task<WooProductAttributeMap> GetWooAttributeMappedAsync(Guid WooAttributeMap)
+        private async Task LoadItemAttributeLookupList(DataGridParameters currentDataGridParameters) 
         {
-            IAppRepository<WooProductAttributeMap> wooAttributeMapRepository = _AppUnitOfWork.Repository<WooProductAttributeMap>();
-
-            return await wooAttributeMapRepository.FindFirstAsync(wcm => wcm.ItemAttributeLookupId == WooAttributeMap);
+            // store old select items list
+            try
+            {
+                var response = await _AttributeWooLinkedViewRepository.LoadViewItemsPaginatedAsync(currentDataGridParameters);  
+                if (dataModels == null)
+                    dataModels = new List<ItemAttributeLookupView>(response);  // not sure why we have to use a holding variable just following the demo code
+                else
+                {
+                    dataModels.Clear();
+                    dataModels.AddRange(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error running async tasks: {ex.Message}");
+                throw;
+            }
+            //restore the old items that were selected.
+            SelectedItemAttributeLookups = _AttributeWooLinkedViewRepository.PopSelectedItems(dataModels);
+            StateHasChanged();
         }
 
         private async Task<List<ItemAttributeLookup>> GetAllItemAttributeLookups()
         {
-            IAppRepository<ItemAttributeLookup> _ItemAttributeLookupRepository = _AppUnitOfWork.Repository<ItemAttributeLookup>();
+            IAppRepository<ItemAttributeLookup> _ItemAttributeLookupRepository = _appUnitOfWork.Repository<ItemAttributeLookup>();
             List<ItemAttributeLookup> _ItemAttributeLookups = (await _ItemAttributeLookupRepository.GetAllEagerAsync(ial => ial.ItemAttributeVarietyLookups))
                 .OrderBy(ial => ial.OrderBy)
-                .ThenBy(ial => ial.AttributeName).ToList();
+                .ToList();
 
             return _ItemAttributeLookups;
         }
 
-        bool OnCustomFilter(ItemAttributeLookupView model)
+        async Task HandleCustomerSearchOnKeyUp(KeyboardEventArgs kbEventHandler)
         {
-            if (string.IsNullOrEmpty(localGridSettings.customFilterValue))
-                return true;
-
-            return
-                model.AttributeName?.Contains(localGridSettings.customFilterValue, StringComparison.OrdinalIgnoreCase) == true
-                || (bool)model.ItemAttributeVarietyLookups?.Exists(iav => iav.VarietyName.Contains(localGridSettings.customFilterValue, StringComparison.OrdinalIgnoreCase));
+            var key = (string)kbEventHandler.Key;   // not using this but just in case
+                                                    //if (_gridSettings.CustomFilterValue.Length > 2)
+                                                    //{
+            await _DataGrid.Reload();
+            //}
         }
-        ItemAttributeLookup GetItemAttributeLookupItemFromView(ItemAttributeLookupView pItem)
-        {
-            ItemAttributeLookup newItemAttributeLookup = new ItemAttributeLookup
-            {
-                ItemAttributeLookupId = pItem.ItemAttributeLookupId,
-                AttributeName = pItem.AttributeName,
-                ItemAttributeVarietyLookups = pItem.ItemAttributeVarietyLookups,
-                Notes = pItem.Notes,
-            };
+        //bool OnCustomFilter(ItemAttributeLookupView model)
+        //{
+        //    if (string.IsNullOrEmpty(_gridSettings.CustomFilterValue))
+        //        return true;
+        //    return
+        //        model.AttributeName?.Contains(_gridSettings.CustomFilterValue, StringComparison.OrdinalIgnoreCase) == true
+        //        || model.ParentAttribute?.AttributeName.Contains(_gridSettings.CustomFilterValue, StringComparison.OrdinalIgnoreCase) == true;
+        //}
+        //ItemAttributeLookup GetItemAttributeLookupItemFromView(ItemAttributeLookupView pItem)
+        //{
+        //    ItemAttributeLookup newItemAttributeLookup = new ItemAttributeLookup
+        //    {
+        //        ItemAttributeLookupId = pItem.ItemAttributeLookupId,
+        //        AttributeName = pItem.AttributeName,
+        //        OrderBy = pItem.OrderBy
+        //        Notes = pItem.Notes,
+        //    };
 
-            return newItemAttributeLookup;
-        }
-        async Task OnRowInserted(SavedRowItem<ItemAttributeLookupView, Dictionary<string, object>> pInsertedItem)
+        //    return newItemAttributeLookup;
+        //}
+        async Task OnRowInserting(SavedRowItem<ItemAttributeLookupView, Dictionary<string, object>> pInsertedItem)
         {
             var newItem = pInsertedItem.Item;
-            IAppRepository<ItemAttributeLookup> _ItemAttributeLookupRepository = _AppUnitOfWork.Repository<ItemAttributeLookup>();
-            // first check if we do not already have a Attribute like this.
-            if (await _ItemAttributeLookupRepository.FindFirstAsync(ial => ial.AttributeName == newItem.AttributeName) == null)
-            {
-                int _recsAdded = await _ItemAttributeLookupRepository.AddAsync(GetItemAttributeLookupItemFromView(newItem));
-                if (_recsAdded != AppUnitOfWork.CONST_WASERROR)
-                    localGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"{newItem.AttributeName} - {_AppUnitOfWork.GetErrorMessage()}", "Attribute Added");
-                else
-                    localGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{newItem.AttributeName} - {_AppUnitOfWork.GetErrorMessage()}", "Error adding Attribute");
-            }
-            else
-                localGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{newItem.AttributeName} already exists, so could not be added.");
-            await LoadItemAttributeLookupList();   // reload the list so the latest item is displayed
-        }
-        void OnItemAttributeLookupNewItemDefaultSetter(ItemAttributeLookup pNewAttr)
-        {
-            if (pNewAttr == null)
-                pNewAttr = new ItemAttributeLookup();
 
-            pNewAttr.AttributeName = "Attribute (must be unique)";
-            pNewAttr.Notes = $"Added {DateTime.Now.Date}";
-            pNewAttr.ItemAttributeVarietyLookups = new List<ItemAttributeVarietyLookup>();  // needs a blank one
+            await _AttributeWooLinkedViewRepository.InsertRowAsync(newItem);
+            await _DataGrid.Reload();
         }
-        async Task<int> UpdateItemAttributeLookup(ItemAttributeLookup pUpdatedAttr)
+        void OnItemAttributeLookupNewItemDefaultSetter(ItemAttributeLookupView newItem) //ItemAttributeLookup pNewCatItem)
         {
-            int _recsUpdted = 0;
-            IAppRepository<ItemAttributeLookup> _ItemAttributeLookupRepository = _AppUnitOfWork.Repository<ItemAttributeLookup>();
-            // first check it exists - it could have been deleted 
-            ItemAttributeLookup pUpdatedLookup = await _ItemAttributeLookupRepository.GetByIdAsync(pUpdatedAttr.ItemAttributeLookupId);
-
-            if (pUpdatedLookup == null)
-            {
-                localGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Attribute: {pUpdatedAttr.AttributeName} is no longer found, was it deleted?");
-                return AppUnitOfWork.CONST_WASERROR;
-            }
-            else
-            {
-                pUpdatedLookup.AttributeName = pUpdatedAttr.AttributeName;
-                pUpdatedLookup.ItemAttributeVarietyLookups = pUpdatedAttr.ItemAttributeVarietyLookups;
-                pUpdatedLookup.Notes = pUpdatedAttr.Notes;
-                _recsUpdted = await _ItemAttributeLookupRepository.UpdateAsync(pUpdatedLookup);
-                if (_recsUpdted == AppUnitOfWork.CONST_WASERROR)
-                    localGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{pUpdatedAttr.AttributeName} - {_AppUnitOfWork.GetErrorMessage()}", "Error adding Attribute");
-            }
-            return _recsUpdted;
+            newItem = _AttributeWooLinkedViewRepository.NewItemDefaultSetter(newItem);
         }
-
-        async Task<int> UpdateWooAttributeMap(ItemAttributeLookupView pUpdatedItem)
+        async Task<int> UpdateItemAttributeLookup(ItemAttributeLookupView UpdatedCatItemView)
         {
-            int _recsUpdated = 0;
-
-            WooProductAttributeMap updateWooAttributeMap = await GetWooAttributeMappedAsync(pUpdatedItem.ItemAttributeLookupId);
-            if (updateWooAttributeMap != null)
-            {
-                if (updateWooAttributeMap.CanUpdate == pUpdatedItem.CanUpdateWooMap)
-                {
-                    // not necessary to display message.
-                    //    PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Warning, $"Woo Attribute Map for Attribute: {pUpdatedItem.AttributeName} has not changed, so was not updated?");
-                }
-                else
-                {
-                    updateWooAttributeMap.CanUpdate = (bool)pUpdatedItem.CanUpdateWooMap;
-                    IAppRepository<WooProductAttributeMap> wooAttributeMapRepository = _AppUnitOfWork.Repository<WooProductAttributeMap>();
-                    _recsUpdated = await wooAttributeMapRepository.UpdateAsync(updateWooAttributeMap);
-                    localGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Attribute: {pUpdatedItem.AttributeName} was updated.");
-                }
-            }
-            else
-                localGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Attribute Map for Attribute: {pUpdatedItem.AttributeName} is no longer found, was it deleted?");
-
-            return _recsUpdated;
+            int _result = await _AttributeWooLinkedViewRepository.UpdateItemAsync(UpdatedCatItemView);
+            await _DataGrid.Reload();
+            return _result;
         }
-        private bool IsDuplicate(ItemAttributeLookupView pItem)
+        async Task OnRowUpdating(SavedRowItem<ItemAttributeLookupView, Dictionary<string, object>> pUpdatedItem)
         {
-            // check if does not exist in the list already (they edited it and it is the same name as another. Only a max of one should exists
-            var _exists = modelItemAttributeLookupViews.FindAll(ml => ml.AttributeName == pItem.AttributeName);
-            return ((_exists != null) && (_exists.Count > 1));
-        }
-        private bool IsValid(ItemAttributeLookupView pItem)
-        {
-            // check that there is a loop back on PaerentId
-            return true;  /// may need a check here
-        }
-        async Task OnRowUpdated(SavedRowItem<ItemAttributeLookupView, Dictionary<string, object>> pUpdatedItem)
-        {
-            ItemAttributeLookupView updatedItem = pUpdatedItem.Item;
-            if (IsDuplicate(updatedItem))
-                localGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Attribute Name: {updatedItem.AttributeName} - already exists, cannot be updated", "Exists already");
-            else
-            {
-                if (IsValid(updatedItem))
-                {
-                    ItemAttributeLookup updatedItemAttributeLookup = GetItemAttributeLookupItemFromView(updatedItem);
-                    // update and check for errors 
-                    if (await UpdateItemAttributeLookup(updatedItemAttributeLookup) != AppUnitOfWork.CONST_WASERROR)
-                    {
-                        if ((updatedItem.HasWooAttributeMap) && (await UpdateWooAttributeMap(updatedItem) == AppUnitOfWork.CONST_WASERROR))
-                            localGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"WooAttribute map for Item: {updatedItem.AttributeName} - {_AppUnitOfWork.GetErrorMessage()}", "Error updating");
-                        //else
-                        //    PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Attribute: {updatedItem.AttributeName} was updated.");
-                    }
-                }
-                else
-                    localGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Attribute Item {updatedItem.AttributeName} not valid", "Error updating");
+            await _AttributeWooLinkedViewRepository.UpdateRowAsync(pUpdatedItem.Item);
+            await _DataGrid.Reload();
 
-            }
-            await LoadItemAttributeLookupList();   // reload the list so the latest item is displayed
         }
         void OnRowRemoving(CancellableRowChange<ItemAttributeLookupView> modelItem)
         {
             // set the Selected Item Attribute for use later
             SelectedItemAttributeLookup = modelItem.Item;
             var deleteItem = modelItem;
-            localGridSettings.DeleteConfirmation.ShowModal("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.AttributeName}?");  //,"Delete","Cancel"); - passed in on init
+            _gridSettings.DeleteConfirmation.ShowModal("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.AttributeName}?", SelectedItemAttributeLookup.HasWooAttributeMap);  //,"Delete","Cancel"); - passed in on init
         }
-
-        //protected async Task
-        async Task ConfirmDelete_Click(bool deleteConfirmed)
+        //
+        async Task ConfirmAddWooItem_Click(bool confirm)
         {
-            if (deleteConfirmed)
+            if (confirm)
             {
-                IAppRepository<ItemAttributeLookup> _ItemAttributeLookupRepository = _AppUnitOfWork.Repository<ItemAttributeLookup>();
-
-                var _recsDelete = await _ItemAttributeLookupRepository.DeleteByIdAsync(SelectedItemAttributeLookup.ItemAttributeLookupId);
-
-                if (_recsDelete == AppUnitOfWork.CONST_WASERROR)
-                    localGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Attribute: {SelectedItemAttributeLookup.AttributeName} is no longer found, was it deleted?");
-                else
-                    localGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Attribute: {SelectedItemAttributeLookup.AttributeName} was it deleted?");
+                // they want to add the item to Woo 
+                await _AttributeWooLinkedViewRepository.AddWooItemAndMapAsync(SelectedItemAttributeLookup);
+                await _DataGrid.Reload();
             }
-            await LoadItemAttributeLookupList();   // reload the list so the latest item is displayed
         }
-        public void OnRowRemoved(ItemAttributeLookupView modelItem)
+        async Task ConfirmDeleteWooItem_Click(bool confirm)
         {
-            var deleteItem = modelItem;
+            // they want to delete the item to Woo 
+            await _AttributeWooLinkedViewRepository.DeleteWooItemAsync(SelectedItemAttributeLookup.ItemAttributeLookupId, confirm);
+            //  regardless of how we got here they wanted to delete the original Attribute so delete it now, but only after Woo delete if they wanted it deleted.
+            await _AttributeWooLinkedViewRepository.DeleteRowAsync(SelectedItemAttributeLookup);
+            await _DataGrid.Reload();
+        }
+        //protected async Task
+        async Task ConfirmDelete_Click(ConfirmModalWithOption.ConfirmResults confirmationOption)
+        {
+            if ((confirmationOption == ConfirmModalWithOption.ConfirmResults.confirm) || (confirmationOption == ConfirmModalWithOption.ConfirmResults.confirmWithOption))
+            {
+                // if there is a WooAttribute and we have to delete it, then delete that first.
+                if (confirmationOption == ConfirmModalWithOption.ConfirmResults.confirmWithOption)
+                    _gridSettings.DeleteWooItemConfirmation.ShowModal("Are you sure?", $"Delete {SelectedItemAttributeLookup.AttributeName} from Woo too?", "Delete", "Cancel");
+                else
+                    await _AttributeWooLinkedViewRepository.DeleteRowAsync(SelectedItemAttributeLookup);
+
+            }
+            await _DataGrid.Reload();
+        }
+        public async Task OnRowRemoved(ItemAttributeLookupView modelItem)
+        {
+            await InvokeAsync(StateHasChanged);
+            await _DataGrid.Reload();  // reload the list so the latest item is displayed - not working here I think because of the awaits so move to confirm_clicks
+            await InvokeAsync(StateHasChanged);
+            //            var deleteItem = modelItem;
             //if ( dataModels.Contains( model ) )
             //{
             //    dataModels.Remove( model );
             //}
         }
-
-        public List<string> GetListOfAttributeVarieties()
-        {
-            List<string> _ListOfVarieties = new List<string>();
-            foreach (var model in modelItemAttributeLookupViews)
-            {
-                if ((model.ItemAttributeVarietyLookups != null) && (model.ItemAttributeVarietyLookups.Count > 0))
-                {
-                    foreach (var item in model.ItemAttributeVarietyLookups)
-                    {
-                        _ListOfVarieties.Add(item.VarietyName);
-
-                    }
-                }
-            }
-
-            return _ListOfVarieties;
-        }
-
-
-        async Task<int> DoActionOnItem(ItemAttributeLookupView pItem)
-        {
-            if (SelectedBulkAction == BulkAction.AllowWooSync)
-                pItem.CanUpdateWooMap = true;
-            else if (SelectedBulkAction == BulkAction.DisallowWooSync)
-                pItem.CanUpdateWooMap = false;
-            return await UpdateWooAttributeMap(pItem);
-        }
+        //public Dictionary<Guid, string> GetListOfParentAttributes()
+        //{
+        //    Dictionary<Guid, string> _ListOfParents = new Dictionary<Guid, string>();
+        //    foreach (var model in dataModels)
+        //    {
+        //        if (model.ParentAttributeId == null)
+        //        {
+        //            _ListOfParents.Add(model.ItemAttributeLookupId, model.AttributeName);
+        //        }
+        //    }
+        //    return _ListOfParents;
+        //}
         async Task DoGroupAction()
         {
             //if (SelectedBulkAction == BulkAction.none)
             //    return;   ----> button should be disabled 
 
-            localGridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Info, "Applying the bulk action as requested");
+            _gridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Info, "Applying the bulk action as requested");
 
             int done = 0;
             int failed = 0;
             foreach (var item in SelectedItemAttributeLookups)
             {
-                if (await DoActionOnItem(item) > 0) done++;
-                else failed++;
+                if (await _AttributeWooLinkedViewRepository.DoGroupActionAsync(item, SelectedBulkAction) > 0)
+                    done++;
+                else
+                    failed++;
             }
-            localGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Info, $"Bulk Action applied to {done} items and not applied to {failed} items.");
-            ///SelectedItemAttributeLookups.Clear();  // need to do this since we are reloading
-            await LoadItemAttributeLookupList();   // reload the list so the latest item is displayed
+            _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Info, $"Bulk Action applied to {done} items and not applied to {failed} items.");
+            await _DataGrid.Reload();
         }
-//        #region VarietyGridStuff
+
+        async Task Reload()
+        {
+            _gridSettings.CurrentPage = 1;
+            await _DataGrid.Reload();
+        }
+
+        //        #region VarietyGridStuff
         // ------------------------------------
         // All the Attribute Variety stuff
         // ------------------------------------

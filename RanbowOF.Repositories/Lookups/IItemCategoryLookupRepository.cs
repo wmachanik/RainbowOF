@@ -1,5 +1,6 @@
 ﻿using RainbowOF.Models.Lookups;
 using RainbowOF.Repositories.Common;
+using RainbowOF.ViewModels.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,5 +12,6 @@ namespace RainbowOF.Repositories.Lookups
     public interface IItemCategoryLookupRepository : IAppRepository<ItemCategoryLookup>
     {
         Task<List<ItemCategoryLookup>> GetAllEagerLoadingAsync();
+        Task<DataGridItems<ItemCategoryLookup>> GetPagedDataEagerWithFilterAndOrderByAsync(DataGridParameters currentDataGridParameters);  // (int startPage, int currentPageSize);
     }
 }

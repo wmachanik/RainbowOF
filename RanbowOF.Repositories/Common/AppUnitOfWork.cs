@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using RainbowOF.Repositories.Items;
+using RainbowOF.Repositories.Lookups;
 
 namespace RainbowOF.Repositories.Common
 {
@@ -25,6 +26,8 @@ namespace RainbowOF.Repositories.Common
         private IItemRepository _itemRepository = null;
         private ISysPrefsRepository _sysPrefsRepository = null;
         private IWooSyncLogRepository _wooSyncLogRepository = null;
+        private IItemCategoryLookupRepository _itemCategoryLookupRepository = null;
+        private IItemAttributeLookupRepository _itemAttributeLookupRepository = null;
         // Unit of Work Error handling
         private string _ErrorMessage = String.Empty;
 
@@ -38,14 +41,12 @@ namespace RainbowOF.Repositories.Common
             _context = context;
             _logger = logger;
         }
-
         public IAppRepository<TEntity> Repository<TEntity>() where TEntity : class
         {
             if (Repositories.ContainsKey(typeof(TEntity)))
             {
                 return Repositories[typeof(TEntity)] as AppRepository<TEntity>;
             }
-
             IAppRepository<TEntity> sourceRepo = new AppRepository<TEntity>(_context, _logger, this);
             Repositories.Add(typeof(TEntity), sourceRepo);
             return sourceRepo;
@@ -53,28 +54,33 @@ namespace RainbowOF.Repositories.Common
         public IItemRepository itemRepository()
         {
             if (_itemRepository == null)
-            {
                 _itemRepository = new ItemRepository(_context, _logger, this);
-            }
             return _itemRepository;
         }
         public ISysPrefsRepository sysPrefsRepository()
         {
             if (_sysPrefsRepository == null)
-            {
                 _sysPrefsRepository = new SysPrefsRepository(_context, _logger, this);
-            }
             return _sysPrefsRepository;
         }
         public IWooSyncLogRepository wooSyncLogRepository()
         {
             if (_wooSyncLogRepository == null)
-            {
                 _wooSyncLogRepository = new WooSyncLogRepository(_context, _logger, this);
-            }
             return _wooSyncLogRepository;
         }
-
+        public IItemCategoryLookupRepository itemCategoryLookupRepository()
+        {
+            if (_itemCategoryLookupRepository == null)
+                _itemCategoryLookupRepository = new ItemCategoryLookupRepository(_context, _logger, this);
+            return _itemCategoryLookupRepository;
+        }
+        public IItemAttributeLookupRepository itemAttributeLookupRepository()
+        {
+            if (_itemAttributeLookupRepository == null)
+                _itemAttributeLookupRepository = new ItemAttributeLookupRepository(_context, _logger, this);
+            return _itemAttributeLookupRepository;
+        }
         public void BeginTransaction()
         {
             ClearErrorMessage();  // assume an error has been cleared

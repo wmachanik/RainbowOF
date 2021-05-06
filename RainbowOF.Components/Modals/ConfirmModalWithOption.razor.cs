@@ -15,7 +15,7 @@ namespace RainbowOF.Components.Modals
         }
 
         public Modal modalRef;
-        protected bool OptionIsConfirmed { get; set; } = false;
+        protected bool _OptionIsConfirmed { get; set; } = false;
         
         [Parameter]
         public string ConfirmationTitle { get; set; } = "Confirm";
@@ -34,18 +34,38 @@ namespace RainbowOF.Components.Modals
         [Parameter]
         public EventCallback<ConfirmResults> ConfirmationClicked { get; set; }
 
+        #region internal variables
+        private string _ConfirmationTitle;
+        private string _ConfirmationMessage;
+        private Blazorise.Color _ConfirmColor;
+        private string _ConfirmButtonText;
+        private bool _ShowConfirmOption;
+        private string _ConfirmOptionCheckText;
+        private string _CancelButtonText;
+        #endregion
+
+        protected override void OnInitialized()
+        {
+            _ConfirmationTitle = ConfirmationTitle;
+            _ConfirmationMessage = ConfirmationMessage;
+            _ConfirmColor = ConfirmColor;
+            _ConfirmButtonText = ConfirmButtonText;
+            _ShowConfirmOption = ShowConfirmOption;
+            _ConfirmOptionCheckText = ConfirmOptionCheckText;
+            _CancelButtonText = CancelButtonText;
+        }
         protected async Task OnConfirmationChange(bool confirmed)
         {
             modalRef.Hide();
             await ConfirmationClicked.InvokeAsync(
-                confirmed ? (OptionIsConfirmed ? ConfirmResults.confirmWithOption : ConfirmResults.confirm)
+                confirmed ? (_OptionIsConfirmed ? ConfirmResults.confirmWithOption : ConfirmResults.confirm)
                           : ConfirmResults.cancel);
         }
 
         internal void SetTitleAndMessage(string pTitle, string pMessage)
         {
-            ConfirmationTitle = pTitle;
-            ConfirmationMessage = pMessage;
+            _ConfirmationTitle = pTitle;
+            _ConfirmationMessage = pMessage;
         }
         /// <summary>
         /// ShowModal
@@ -55,12 +75,13 @@ namespace RainbowOF.Components.Modals
         /// <param name="Color">Modal Colour</param>
         public void ShowModal()
         {
+            StateHasChanged();
             modalRef.Show();
         }
 
         public void ShowModal(string modalTitle)
         {
-            ConfirmationTitle = modalTitle;
+            _ConfirmationTitle = modalTitle;
             ShowModal();
         }
         public void ShowModal(string modalTitle, string modalMessage)
@@ -70,13 +91,20 @@ namespace RainbowOF.Components.Modals
         }
         public void ShowModal(string modalTitle, string modalMessage, bool modalShowConfirmation)
         {
-            ShowConfirmOption = modalShowConfirmation;
+            _ShowConfirmOption = modalShowConfirmation;
+            SetTitleAndMessage(modalTitle, modalMessage);
+            ShowModal();
+        }
+        public void ShowModal(string modalTitle, string modalMessage, string modalOptionText, bool modalShowConfirmation)
+        {
+            _ShowConfirmOption = modalShowConfirmation;
+            _ConfirmOptionCheckText = modalOptionText;
             SetTitleAndMessage(modalTitle, modalMessage);
             ShowModal();
         }
         public void ShowModal(string modalTitle, string modalMessage, Blazorise.Color modalColour)
         {
-            ConfirmColor = modalColour;
+            _ConfirmColor = modalColour;
             SetTitleAndMessage(modalTitle, modalMessage);
             ShowModal();
         }
@@ -84,15 +112,15 @@ namespace RainbowOF.Components.Modals
             string modalConfirmationButtonText, string modalCancelButtonText)
         {
             SetTitleAndMessage(modalTitle, modalMessage);
-            ConfirmButtonText = modalConfirmationButtonText;
-            CancelButtonText = modalCancelButtonText;
+            _ConfirmButtonText = modalConfirmationButtonText;
+            _CancelButtonText = modalCancelButtonText;
             ShowModal();
         }
         public void ShowModal(string modalTitle, string modalMessage, 
             string modalConfirmationButtonText, string modalCancelButtonText, 
             Blazorise.Color modalColour)
         {
-            ConfirmColor = modalColour;
+            _ConfirmColor = modalColour;
             ShowModal(modalTitle, modalMessage, modalConfirmationButtonText, modalCancelButtonText);
             ShowModal();
         }
@@ -100,19 +128,18 @@ namespace RainbowOF.Components.Modals
             string modalOptionText, string modalConfirmationButtonText, string modalCancelButtonText,
             Blazorise.Color modalColour)
         {
-            ConfirmOptionCheckText = modalOptionText;
-            ConfirmColor = modalColour;
+            _ConfirmOptionCheckText = modalOptionText;
+            _ConfirmColor = modalColour;
             ShowModal(modalTitle, modalMessage, modalConfirmationButtonText, modalCancelButtonText);
             ShowModal();
         }
         public void ShowModal(string modalTitle, string modalMessage,
           string modalOptionText, string modalConfirmationButtonText, string modalCancelButtonText)
         {
-            ConfirmOptionCheckText = modalOptionText;
+            _ConfirmOptionCheckText = modalOptionText;
             ShowModal(modalTitle, modalMessage, modalConfirmationButtonText, modalCancelButtonText);
             ShowModal();
         }
-
         public void HideModal()
         {
             modalRef.Hide();

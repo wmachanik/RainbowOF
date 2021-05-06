@@ -10,9 +10,12 @@ namespace RainbowOF.ViewModels.Common
     public class GridSettings
     {
         public int PageSize  {get; set; }= 15;
-        public string customFilterValue { get; set; } = string.Empty;
+        public int TotalItems { get; set; } = 0;
+        public int CurrentPage { get; set; } = 1;
+        public string CustomFilterValue { get; set; } = string.Empty;
         public bool IsNarrow { get; set; } = true;
         public bool IsFilterable { get; set; } = false;
+        public bool WooIsActive { get; set; } = false;
         public ConfirmModal AddToWooConfirmation { get; set; }
         public ConfirmModal DeleteWooItemConfirmation { get; set; }
         public ConfirmModalWithOption DeleteConfirmation { get; set; }

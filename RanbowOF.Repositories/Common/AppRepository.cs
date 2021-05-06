@@ -31,7 +31,10 @@ namespace RainbowOF.Repositories.Common
         public ApplicationDbContext appDbContext { get { return _context; } set { _context = value; } }
 
         public ILoggerManager loggerManager { get { return _logger; } }
-
+        public async Task<int> CountAsync()
+        {
+            return await _table.CountAsync();
+        }
         public int Add(TEntity newEntity)
         {
             int _added = AppUnitOfWork.CONST_WASERROR;    // return if error
@@ -339,7 +342,32 @@ namespace RainbowOF.Repositories.Common
 
             try
             {
-                var result =  await query.ToListAsync();    // AsNoTracking().ToList();    //readonly
+                var result = await query.ToListAsync();    // AsNoTracking().ToList();    //readonly
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.LogAndSetErrorMessage($"!!!Error eager loading: {ex.Message} - Inner Exception {ex.InnerException}");
+#if DebugMode
+                throw;     // #Debug?
+#endif
+            }
+            return null;
+        }
+        public async Task<IEnumerable<TEntity>> GetPagedEagerAsync(int startPage, int currentPageSize, params Expression<Func<TEntity, object>>[] properties)
+        {
+            _logger.LogDebug($"Get By all eager loading (async) {properties.ToString()} from table of type: {typeof(TEntity)}");
+            if (properties == null)
+                throw new ArgumentNullException(nameof(properties));
+
+            var query = _table as IQueryable<TEntity>; // _dbSet = dbContext.Set<TEntity>()
+
+            query = properties
+                       .Aggregate(query, (current, property) => current.Include(property));
+
+            try
+            {
+                var result = await query.Skip(startPage * currentPageSize).Take(currentPageSize).ToListAsync();
                 return result;
             }
             catch (Exception ex)

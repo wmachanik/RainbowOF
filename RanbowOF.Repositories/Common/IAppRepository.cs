@@ -10,12 +10,13 @@ namespace RainbowOF.Repositories.Common
 {
     public interface IAppRepository<TEntity> where TEntity : class
     {
-
+        Task<int> CountAsync();
         TEntity GetById(object Id);
         Task<TEntity> GetByIdAsync(object Id);
         IEnumerable<TEntity> GetAll();
         Task<IEnumerable<TEntity>> GetAllAsync();
         Task<IEnumerable<TEntity>> GetAllEagerAsync(params Expression<Func<TEntity, object>>[] properties);
+        Task<IEnumerable<TEntity>> GetPagedEagerAsync(int startPage, int currentPageSize, params Expression<Func<TEntity, object>>[] properties);
         IEnumerable<TEntity> GetBy(Expression<Func<TEntity, bool>> predicate);
         Task<IEnumerable<TEntity>> GetByAsync(Expression<Func<TEntity, bool>> predicate);
         TEntity FindFirst();

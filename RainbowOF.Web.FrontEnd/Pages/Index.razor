@@ -33,14 +33,52 @@ Welcome to Rainbow Order Fulfilment manager.
 <RainbowOF.Components.Modals.ColorSelector @ref="colorSelector" ColourValue="@myColour" ColourValueChanged="@((bg)=> myColour = bg)" />
 <RainbowOF.Components.Modals.ColorSelector @ref="colorFGSelector" ColourValue="@myFGColour" ColourValueChanged="@((v) => myFGColour = v)" />
 
+
+<hr />
+
+
+<Check TValue="bool"  Checked="@(myShowOption)" CheckedChanged="@((v) => myShowOption = v)">Show Confirm Option</Check>
+
+<Button Color="Color.Light" Clicked="(() => ShowConfirm())"><Icon Name="IconName.Bell"></Icon>Confirmation</Button>
+
+
+<RainbowOF.Components.Modals.ConfirmModalWithOption @ref="_confirmModalWithOption"
+                                                    ConfirmationClicked="ConfirmPopUp_Click"
+                                                    ConfirmationMessage=@($"Are you sure?")
+                                                    ConfirmButtonText="Yes"
+                                                    ConfirmOptionCheckText="Maybe"
+                                                    ShowConfirmOption="false"
+                                                    CancelButtonText="Cancel" />
+
+<label class="alert-info">@myValue</label>
+
 @code {
     public string myColour { get; set; } = "#F5a590";
     public string myFGColour { get; set; } = "#000000";
     RainbowOF.Components.Modals.ColorSelector colorSelector { get; set; }
     RainbowOF.Components.Modals.ColorSelector colorFGSelector { get; set; }
 
+    private string myValue = "";
+    private bool myShowOption = true;
+
+    private RainbowOF.Components.Modals.ConfirmModalWithOption _confirmModalWithOption { get; set; }
+
     void OnColorChanged(string value)
     {
         myColour = value;
     }
+
+    void ShowConfirm()
+    {
+        _confirmModalWithOption.ShowModal("This is a confirmation","Are you sure you want to confirm?","Please Confirm",myShowOption);
+        //StateHasChanged();
+    }
+
+    void ConfirmPopUp_Click(RainbowOF.Components.Modals.ConfirmModalWithOption.ConfirmResults confirmationOption)
+    {
+        myValue = $"Clicked: {confirmationOption.ToString()}";
+        StateHasChanged();
+    }
+
+
 }

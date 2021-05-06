@@ -145,7 +145,6 @@ namespace RainbowOF.Woo.REST.Repositories
             return _count;
 
         }
-
         public async Task<ProductCategory> GetProductCategoryByIdAsync(int deleteWooEntityId)
         {
             RestAPI _RestAPI = _Woo.GetJSONRestAPI;
@@ -163,22 +162,22 @@ namespace RainbowOF.Woo.REST.Repositories
             return _productCategory;
         }
 
-        public async Task<ProductCategory> DeleteProductCategoryById(int wooProductCategoryId)
-        {
-            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
-            ProductCategory _productCategory = null;
-            try
-            {
-                WCObject _WC = new WCObject(_RestAPI);
-                _productCategory = await _WC.Category.Delete(wooProductCategoryId);
-            }
-            catch (Exception ex)
-            {
-                if (_Woo.Logger != null)
-                    _Woo.Logger.LogError("Error calling WOO REST JSON API: " + ex.Message);
-            }
-            return _productCategory;
-        }
+        //public async Task<ProductCategory> DeleteProductCategoryById(int wooProductCategoryId)
+        //{
+        //    RestAPI _RestAPI = _Woo.GetJSONRestAPI;
+        //    ProductCategory _productCategory = null;
+        //    try
+        //    {
+        //        WCObject _WC = new WCObject(_RestAPI);
+        //        _productCategory = await _WC.Category.Delete(wooProductCategoryId);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        if (_Woo.Logger != null)
+        //            _Woo.Logger.LogError("Error calling WOO REST JSON API: " + ex.Message);
+        //    }
+        //    return _productCategory;
+        //}
 
         public async Task<ProductCategory> DeleteProductCategoryByIdAsync(int deleteWooProductCategoryId)
         {
@@ -186,7 +185,8 @@ namespace RainbowOF.Woo.REST.Repositories
             WCObject _WC = GetWCObject;
             try
             {
-                _ProductCategory = await _WC.Category.Delete(deleteWooProductCategoryId);
+                // looks like it may need a force parameter, is this a good thing?
+                _ProductCategory = await _WC.Category.Delete(deleteWooProductCategoryId, true);   // force = true
             }
             catch (Exception ex)
             {

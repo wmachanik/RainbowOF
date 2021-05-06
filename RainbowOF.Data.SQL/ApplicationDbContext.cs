@@ -103,7 +103,7 @@ namespace RainbowOF.Data.SQL
             modelBuilder.Entity<WooCategoryMap>().ToTable(nameof(WooCategoryMaps));
             modelBuilder.Entity<WooProductAttributeMap>().ToTable(nameof(WooProductAttributeMappings));
             modelBuilder.Entity<WooProductAttributeTermMap>().ToTable(nameof(WooProductAttributeTermMappings));
-            modelBuilder.ApplyConfiguration<WooProductAttributeTermMap>(new WooProductAttributeTermMappingConfig());
+            modelBuilder.ApplyConfiguration<WooProductAttributeTermMap>(new WooProductAttributeTermMappingModelConfig());
             modelBuilder.Entity<WooProductMap>().ToTable(nameof(WooProductMaps));
             #endregion
         }

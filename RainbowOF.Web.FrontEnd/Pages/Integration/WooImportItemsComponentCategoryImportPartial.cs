@@ -122,7 +122,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             // copy data across
             pWooCategoryMap.WooCategoryName = pPC.name;
             pWooCategoryMap.WooCategorySlug = pPC.slug;
-            pWooCategoryMap.WooCategoryParentId = pPC.parent;
+            pWooCategoryMap.WooCategoryParentId = (int) pPC.parent;
             _ItemCategoryLookupId = await AddOrUpdateItemCategoryLookup(pPC, pWooCategoryMap.ItemCategoryLookupId, pCategoriesWithParents);
             if (_ItemCategoryLookupId != Guid.Empty)
             {
@@ -148,7 +148,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                 {
                     WooCategoryName = pPC.name,
                     WooCategorySlug = pPC.slug,
-                    WooCategoryParentId = pPC.parent,
+                    WooCategoryParentId = (int)pPC.parent,
                     ItemCategoryLookupId = _ItemCategoryLookupId,
                     WooCategoryId = (int)pPC.id
                 };

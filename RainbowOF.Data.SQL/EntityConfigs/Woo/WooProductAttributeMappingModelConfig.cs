@@ -5,7 +5,7 @@ using RainbowOF.Models.Woo;
 
 namespace RainbowOF.Datsa.SQL.EntityConfigs.Items
 {
-    internal class WooProductAttributeMappingConfig : IEntityTypeConfiguration<WooProductAttributeMap>
+    internal class WooProductAttributeMappingModelConfig : IEntityTypeConfiguration<WooProductAttributeMap>
     {
         public void Configure(EntityTypeBuilder<WooProductAttributeMap> WooProductAttributeMappingConfigModelBuilder)
         {

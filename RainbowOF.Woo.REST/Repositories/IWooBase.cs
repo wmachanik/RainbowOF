@@ -15,6 +15,7 @@ namespace RainbowOF.Woo.REST.Repositories
         ILoggerManager Logger { get; set; }
         RestAPI GetJSONRestAPI { get; }
         RestAPI GetRootRestAPI { get; }
+        bool IsActive();
 
     }
 }

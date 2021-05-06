@@ -2,12 +2,11 @@
 @using Blazorise.DataGrid
 @using RainbowOF.ViewModels.Common
 @using RainbowOF.ViewModels.Lookups
-@using RainbowOF.Components.Modals
-@inject NavigationManager NavigationManager
+@*@inject NavigationManager NavigationManager*@
 
-<Row Style="z-index: 0" Margin="Margin.Is1">
+<Row Style="z-index: 0" Margin="Margin.Is0">
     <Column>
-        <Card Margin="Margin.Is1">
+        <Card Margin="Margin.Is0">
             <CardHeader>
                 <CardTitle><h2>Categories&nbsp;<Icon Name="IconName.Tag" /></h2></CardTitle>
             </CardHeader>
@@ -18,7 +17,7 @@
                             Custom Search
                         </FieldLabel>
                         <FieldBody Style="width:80%">
-                            <TextEdit @bind-Text="@_gridSettings.customFilterValue" />
+                            <TextEdit @bind-Text="@_gridSettings.CustomFilterValue" @onkeyup="HandleCustomerSearchOnKeyUp" />
                         </FieldBody>
                     </Field>
                 </Fields>
@@ -26,9 +25,9 @@
         </Card>
     </Column>
 </Row>
-<Row Margin="Margin.Is1">
+<Row Margin="Margin.Is0">
     <Column>
-        <Card Margin="Margin.Is1">
+        <Card Margin="Margin.Is0">
             <CardHeader>
                 <CardTitle><h3>List of Categories</h3></CardTitle>
             </CardHeader>
@@ -39,8 +38,12 @@
                             <Tooltip Text="Select a Bulk Action to do on selected rows">
                                 <Select TValue="BulkAction" SelectedValue="SelectedBulkAction" SelectedValueChanged="@((v) => SelectedBulkAction = v)" style="max-width:12em">
                                     <SelectItem Value="BulkAction.none">none</SelectItem>
-                                    <SelectItem Value="BulkAction.AllowWooSync">Allow Woo Sync</SelectItem>
-                                    <SelectItem Value="BulkAction.DisallowWooSync">Disallow Woo Sync</SelectItem>
+                                    @{ if (_gridSettings.WooIsActive)
+                                        {
+                                            <SelectItem Value="BulkAction.AllowWooSync">Allow Woo Sync</SelectItem>
+                                            <SelectItem Value="BulkAction.DisallowWooSync">Disallow Woo Sync</SelectItem>
+                                        }
+                                    }
                                 </Select>
                             </Tooltip>
                         </FieldBody>
@@ -62,24 +65,27 @@
                     <Field Margin="Margin.Is1" JustifyContent="JustifyContent.End">
                         <FieldBody>
                             <Tooltip Text="Refresh/reload categories" Placement="Placement.Left">
-                                <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Clicked="LoadItemCategoryLookupList"><Icon Name="IconName.Sync" /></Blazorise.Button>
+                                <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Clicked="Reload"><Icon Name="IconName.Sync" /></Blazorise.Button>
                             </Tooltip>
                         </FieldBody>
                     </Field>
                 </Fields>
             </CardSubtitle>
-            <CardBody>
-                <DataGrid TItem="ItemCategoryLookupView" Data="@modelItemCategoryLookupViews"
+            <CardBody Padding="Padding.IsAuto">
+                <DataGrid @ref="_DataGrid"
+                          TItem="ItemCategoryLookupView" Data="@dataModels"
+                          ReadData="HandleReadDataAsync"
                           Sortable="true" Editable="true"
+                          Striped="true"
+                          Hoverable="true"
+                          Responsive="true"
                           EditMode="DataGridEditMode.Popup"
                           PageSize="@_gridSettings.PageSize" ShowPager="true"
                           PageSizes="@(new int[] { 5, 10, 15, 25, 50, 100 })"
                           ShowPageSizes="true" PagerPosition="DataGridPagerPosition.TopAndBottom"
+                          TotalItems="_gridSettings.TotalItems"
                           Bordered="true"
                           CustomFilter="@OnCustomFilter"
-                          Striped="true"
-                          Hoverable="true"
-                          Responsive="true"
                           NewItemDefaultSetter="@OnItemCategoryLookupNewItemDefaultSetter"
                           SelectionMode="DataGridSelectionMode.Multiple"
                           @bind-SelectedRows="@SelectedItemCategoryLookups"
@@ -88,22 +94,43 @@
                           RowRemoving="@OnRowRemoving"
                           RowRemoved="@OnRowRemoved"
                           Narrow="@_gridSettings.IsNarrow" Filterable="@_gridSettings.IsFilterable"
-                          UseInternalEditing="true">
+                          UseInternalEditing="true"
+                          CurrentPage="_gridSettings.CurrentPage"
+                          PageChanged="(e) => _gridSettings.CurrentPage = e.Page"
+                          Padding="Padding.Is0">
                     <EmptyTemplate>
-                        No items logged yet...
+                        @if (string.IsNullOrEmpty(_Status))
+                        {
+
+                        }
+                        else
+                        {
+                            <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                                <Column>
+                                    <span class="alert-info">@_Status</span>
+                                </Column>
+                                <Column>
+                                    <div class="spinner-border m-5" role="status">
+                                        <span class="sr-only">Checking Woo Link and Loading Categories...</span>
+                                    </div>
+                                </Column>
+                            </Row>
+                        }
                     </EmptyTemplate>
                     <LoadingTemplate>
-                        <div class="spinner-border m-5" role="status">
-                            <span class="sr-only">Loading...</span>
-                        </div>
+                        <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                            <Column>
+                                <span class="alert-info">@_Status</span>
+                            </Column>
+                            <Column>
+                                <div class="spinner-border m-5" role="status">
+                                    <span class="sr-only">Checking Woo Link and Loading Categories...</span>
+                                </div>
+                            </Column>
+                        </Row>
                     </LoadingTemplate>
                     <DataGridColumns>
                         <DataGridMultiSelectColumn TItem="ItemCategoryLookupView" Caption="[X]" Sortable="false" TextAlignment="TextAlignment.Center">
-                            @*<CaptionTemplate>
-                                    <Tooltip Text="Select/Un select all" Placement="Placement.Right">
-                                        <Blazorise.Button @onclick="SelectAllRows" Color="Color.Success"><Icon Name="@CheckIcon" /></Blazorise.Button>
-                                    </Tooltip>
-                                </CaptionTemplate>*@
                         </DataGridMultiSelectColumn>
                         <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.CategoryName)" Caption="Category Name" Sortable="true" Editable="true">
                             <DisplayTemplate>
@@ -112,7 +139,7 @@
 
                                     if (catItem != null)
                                     {
-                                        <NavLink ActiveClass="grid-link" @onclick="@(()=>NavigationManager.NavigateTo($"/editpage/{catItem.ItemCategoryLookupId}"))">
+                                        @*<NavLink ActiveClass="grid-link" @onclick="@(()=>NavigationManager.NavigateTo($"/editpage/{catItem.ItemCategoryLookupId}"))">*@
                                             @if ((catItem.ParentCategoryId == null) || (catItem.ParentCategoryId == Guid.Empty))
                                             {
                                                 <span style="font-weight: bold">@catItem.CategoryName</span>
@@ -121,7 +148,7 @@
                                             {
                                                 <span>@catItem.CategoryName</span>
                                             }
-                                        </NavLink>
+                                        @*</NavLink>*@
                                     }
                                 }
                             </DisplayTemplate>
@@ -157,43 +184,69 @@
                                 }
                             </EditTemplate>
                         </DataGridColumn>
-                        <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.UsedForPrediction)" Caption="Predicable" Sortable="true" Editable="true">
+                        <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.UsedForPrediction)" Caption="Prediction" Sortable="true" Editable="true">
                             <DisplayTemplate>
                                 @{
-                                    var wooItem = (context as ItemCategoryLookupView);
+                                    var catItem = (context as ItemCategoryLookupView);
 
-                                    @( (wooItem.UsedForPrediction) ? "yes" : "no" ) ;
+                                    @( ((catItem.UsedForPrediction) ? "enable" : "disabled")) ;
                                 }
                             </DisplayTemplate>
                             <EditTemplate>
                                 <Tooltip Text="Is this category predictable / used in predications?">
                                     @{
-                                        <Blazorise.Check TValue="bool" Checked="@((bool) context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)"></Blazorise.Check>
+                                        <Blazorise.Check TValue="bool" Checked="@((bool)context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)">Is used for prediction</Blazorise.Check>
                                     }
                                 </Tooltip>
                             </EditTemplate>
+                            <FilterTemplate>
+                                @{
+                                    <Select TValue="string" SelectedValue="@(string.IsNullOrEmpty(context.SearchValue) ? String.Empty : (context.SearchValue) )"
+                                            SelectedValueChanged="@((e) => context.TriggerFilterChange(string.IsNullOrEmpty(e) ? "" : e.ToString()))">
+                                        <SelectItem Value="@String.Empty">none</SelectItem>
+                                        <SelectItem Value="@disabledStr">disabled</SelectItem>
+                                        <SelectItem Value="@enabledStr">enabled</SelectItem>
+                                    </Select>
+                                }
+                            </FilterTemplate>
                         </DataGridColumn>
-                        <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.CanUpdateWooMap)" Caption="Woo Can Map" Sortable="true" Editable="true">
+                        <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.CanUpdateWooMap)" Caption="Woo Linked" Sortable="false" Filterable="false" Editable="@(_gridSettings.WooIsActive)">
                             <DisplayTemplate>
                                 @{
-                                    var wooItem = (context as ItemCategoryLookupView);
+                                    if (_gridSettings.WooIsActive)
+                                    {
+                                        var wooItem = (context as ItemCategoryLookupView);
 
-                                    @( (wooItem.CanUpdateWooMap == null) ? "n/a" : ( (bool)wooItem.CanUpdateWooMap) ? "yes" : "no" ) ;
+                                        @( (wooItem.CanUpdateWooMap == null) ? "n/a" : ((bool)wooItem.CanUpdateWooMap ? "yes"  : "no" )) ;
+                                    }
+                                    else
+                                    {
+                                        @("inactive")
+                                    }
                                 }
                             </DisplayTemplate>
                             <EditTemplate>
-                                <Tooltip Text="Is this category synchronised with Woo Categories?">
-                                    @{
-                                        if (context.CellValue == null)
-                                        {
-                                            <Blazorise.Label>n/a</Blazorise.Label>
-                                        }
-                                        else
-                                        {
-                                            <Blazorise.Check TValue="bool" Class="" Checked="@((bool) context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)"></Blazorise.Check>
-                                        }
+                                @{
+                                    @if (_gridSettings.WooIsActive)
+                                    {
+                                        <Tooltip Text="Is this category synchronised with Woo Categories?">
+                                            @if (context.CellValue == null)
+                                            {
+                                                <Blazorise.Check TValue="bool" Class="" Checked="@((context.CellValue==null) ? false : (bool) context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)">Add To Woo</Blazorise.Check>
+                                            }
+                                            else
+                                            {
+                                                <Blazorise.Check TValue="bool" Class="" Checked="@((bool) context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)">Allow Woo Updates</Blazorise.Check>
+                                            }
+                                        </Tooltip>
                                     }
-                                </Tooltip>
+                                    else
+                                    {
+                                        <Tooltip Text="There is not active link to Woo">
+                                            @("no woo link active")
+                                        </Tooltip>
+                                    }
+                                }
                             </EditTemplate>
                         </DataGridColumn>
                         <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.Notes)" Caption="Notes" Sortable="true"
@@ -256,11 +309,36 @@
 
                 </DataGrid>
             </CardBody>
+            <CardFooter Style="display: inline-flex">
+                <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                    <Column ColumnSize="ColumnSize.IsAuto">Statuses:</Column>
+                    <Column ColumnSize="ColumnSize.IsAuto">
+                        <Row>
+                            <Column ColumnSize="ColumnSize.IsAuto">
+                                <Tooltip Text="Current Woo Status" Placement="Placement.Right">
+                                    Woo link:
+                                </Tooltip>
+                            </Column>
+                            <Column ColumnSize="ColumnSize.IsAuto">
+                                @{
+                                    string IconColor = _gridSettings.WooIsActive ? "green" : "red";
+                                    <Icon Name="@( _gridSettings.WooIsActive ? IconName.CheckCircle : IconName.MinusCircle)"
+                                          Style="@($"color: {IconColor}; display: inline-flex")" />
+
+                                }
+                            </Column>
+                            <Column>
+                                &nbsp; @* more statuses here *@
+                            </Column>
+                        </Row>
+                    </Column>
+                </Row>
+            </CardFooter>
         </Card>
     </Column>
 </Row>
 
-<RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage="Category Message" NotificationTitle="" @ref="@_gridSettings.PopUpRef" />
+<RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage=" Category Message" NotificationTitle="" @ref="@_gridSettings.PopUpRef" />
 
 <RainbowOF.Components.Modals.ConfirmModal @ref="_gridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_Click" />
 

@@ -14,7 +14,7 @@ namespace RainbowOF.Repositories.Lookups
     /// <summary>
     /// Interface that uses the general model for grid CRUD to implement the attribute variety
     /// </summary>
-    public interface IAttributeVarietyWooLinkedView : IWooLinkedView<ItemAttributeVarietyLookup, ItemAttributeVarietyLookupView, WooProductAttributeTermMap>
+    public interface IAttributeVarietyWooLinkedView : IWooLinkedView<ItemAttributeVarietyLookup, ItemAttributeVarietyLookupView, WooProductAttributeMap>
     {
         //Task<List<ItemAttributeVarietyLookup>> GetAllItemsAsync();
         //Task<WooProductAttributeTermMap> GetWooMappedItemAsync(Guid mapWooEntityID);

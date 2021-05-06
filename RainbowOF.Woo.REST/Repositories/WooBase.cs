@@ -60,5 +60,13 @@ namespace RainbowOF.Woo.REST.Repositories
             }
         }
 
+        public bool IsActive()
+        {
+            RestAPI _RestAPI = GetJSONRestAPI;
+
+            Type _type = _RestAPI.GetType();
+
+            return _type != null;
+        }
     }
 }

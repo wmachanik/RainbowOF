@@ -8,6 +8,9 @@ using System.Text;
 using System.Threading.Tasks;
 using RainbowOF.ViewModels.Lookups;
 using RainbowOF.ViewModels.Common;
+using RainbowOF.Woo.REST.Models;
+using RainbowOF.Tools.Services;
+using Blazorise.DataGrid;
 
 namespace RainbowOF.Repositories.Lookups
 {
@@ -22,24 +25,31 @@ namespace RainbowOF.Repositories.Lookups
                                                                          where TEntityView : class
                                                                          where TWooMapEntity : class
     {
-        Task<List<TEntity>> GetAllItemsAsync();
+        // Replaced by GetDataGridCurrent - Task<List<TEntity>> GetAllItemsAsync();
+        Task<WooAPISettings> GetWooAPISettingsAsync();
+        Task<bool> WooIsActive(ApplicationState currentApplicationState); 
         void PushSelectedItems(List<TEntityView> currentSelectedItems);
         List<TEntityView> PopSelectedItems(List<TEntityView> modelViewItems);
-        Task<TWooMapEntity> GetWooMappedItemAsync(Guid mapWooEntityID);
-        Task<List<TEntityView>> LoadAllViewItems();
+        //--- replaced by: GetWooMappedItemsAsync Task<TWooMapEntity> GetWooMappedItemAsync(Guid mapWooEntityID);
+        Task<List<TWooMapEntity>> GetWooMappedItemsAsync(List<Guid> mapWooEntityID);
+        // Only used for in memory Task<List<TEntityView>> LoadAllViewItemsAsync();
+        // REplaced by GetDataGridCurrent - Task<List<TEntity>> GetPagedItemsAsync(DataGridParameters currentDataGridParameters); // int startPage, int currentPageSize);
+        DataGridParameters GetDataGridCurrent(DataGridReadDataEventArgs<TEntityView> inputDataGridReadData, string inputCustomFilter);
+        Task<List<TEntityView>> LoadViewItemsPaginatedAsync(DataGridParameters currentDataGridParameters);
         Task InsertRowAsync(TEntityView newVeiwEntity);
-        void NewItemDefaultSetter(TEntityView newViewEntity);
+        TEntityView NewItemDefaultSetter(TEntityView newViewEntity);
         Task<int> UpdateWooMappingAsync(TEntityView updateVeiwEntity);
         Task<bool> IsDuplicate(TEntity checkEntity);
         bool IsValid(TEntity checkEntity);
         TEntity GetItemFromView(TEntityView fromVeiwEntity);
-        Task<int> UpdateItemAsync(TEntity updateItem);
-        Task UpdateRowAsync(TEntityView updateVeiwEntity);
         Task DeleteRowAsync(TEntityView deleteVeiwEntity);
         Task<int> DoGroupActionAsync(TEntityView toVeiwEntity, BulkAction selectedAction);
-        Task<int> DeleteWooItemAsync(Guid deleteWooEntityId);
-        Task<int> AddWooItemAsync(TEntity addEntity);
-        Task<int> UpdateWooItemAsync(TEntityView updateViewEntity, TWooMapEntity updateWooMapEntity);
+        Task<int> DeleteWooItemAsync(Guid deleteWooEntityId, bool deleteFromWoo);
+        Task<int> AddWooItemAndMapAsync(TEntity addEntity);
+        Task<int> UpdateWooItemAsync(TEntityView updateViewEntity);
+        Task<int> UpdateWooItemAndMapping(TEntityView updateViewEntity);
+        Task<int> UpdateItemAsync(TEntityView updateItem);
+        Task UpdateRowAsync(TEntityView updateVeiwEntity);
     }
 }
 

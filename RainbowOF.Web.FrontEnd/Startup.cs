@@ -12,6 +12,7 @@ using Blazorise;
 using Blazorise.Bootstrap;
 using Blazorise.Icons.FontAwesome;
 using Blazored.Toast;
+using RainbowOF.Tools.Services;
 
 namespace RainbowOF.Web.FrontEnd
 {
@@ -48,7 +49,7 @@ namespace RainbowOF.Web.FrontEnd
             });
 
             services.AddScoped<IAppUnitOfWork, AppUnitOfWork>();
-
+            services.AddScoped<ApplicationState>();         //-> used to store any global states
             services.AddLogging();
             services.AddSingleton<ILoggerManager, LoggerManager>();
 
