@@ -1,166 +1,54 @@
-﻿@using Blazorise.DataGrid
-@using RainbowOF.ViewModels.Lookups
-@using RainbowOF.Models.Lookups
-@using RainbowOF.Components.Modals
+﻿@page "/ItemAttributeVarieties"
+@using Blazorise
 
-<DataGrid TItem="ItemAttributeVarietyLookup"
-          Data="attribVarieties"
-          Sortable="true"
-          ShowCaptions="true"
-          EditMode="DataGridEditMode.Inline"
-          Filterable="@FilterVars"
-          Margin="Margin.Is2"
-          PageSizes="@(new int[] { 5, 10, 15, 25, 50, 100 })"
-          ShowPageSizes="true" PagerPosition="DataGridPagerPosition.TopAndBottom"
-          ShowPager="true"
-          RowInserted="@OnVarietyRowInserted"
-          RowUpdated="@OnVarietyRowUpdated"
-          RowRemoving="@OnVarietyRowRemoving"
-          Editable="true">
-    <DataGridCommandColumn TItem="ItemAttributeVarietyLookup" Context="attribVarieties" Width="6.5em">
-        <NewCommandTemplate>
-            <Button Color="Color.Success" Outline="true" Clicked="@attribVarieties.Clicked"><Icon Name="IconName.Add" /></Button>
-            @{
-                var ShowIcon = (FilterVars) ? IconName.MinusCircle : IconName.Filter;
-            }
-            <Button Color="Color.Info" Outline="true" Clicked="@(()=>FilterVars = !FilterVars)"><Icon Name="@ShowIcon" /></Button>
-        </NewCommandTemplate>
-        <EditCommandTemplate>
-            <Button Color="Color.Primary" Outline="true" Clicked="@attribVarieties.Clicked"><Icon Name="IconName.Edit" /></Button>
-        </EditCommandTemplate>
-        <SaveCommandTemplate>
-            <Button Color="Color.Primary" Outline="true" Clicked="@attribVarieties.Clicked"><Icon Name="IconName.Save" /></Button>
-        </SaveCommandTemplate>
-        <DeleteCommandTemplate>
-            <Button Color="Color.Danger" Outline="true" Clicked="@attribVarieties.Clicked"><Icon Name="IconName.Delete" /></Button>
-        </DeleteCommandTemplate>
-        <CancelCommandTemplate>
-            <Button Color="Color.Secondary" Outline="true" Clicked="@attribVarieties.Clicked"><Icon Name="IconName.Undo" /></Button>
-        </CancelCommandTemplate>
-        <ClearFilterCommandTemplate>
-            <Button Color="Color.Secondary" Outline="true" Clicked="@attribVarieties.Clicked"><Icon Name="IconName.Clear" /></Button>
-        </ClearFilterCommandTemplate>
-    </DataGridCommandColumn>
-    <DataGridColumn TItem="ItemAttributeVarietyLookup" Field="@nameof(ItemAttributeVarietyLookup.VarietyName)" Context="attribVarieties" Caption="Variety" Editable="true" Filterable="true" />
-
-    <DataGridColumn TItem="ItemAttributeVarietyLookup" Field="@nameof(ItemAttributeVarietyLookup.UoMId)" Caption="Unit" Editable="true" Context="attribVarieties">
-        <DisplayTemplate Context="attribVarieties">
-            @{
-                var varItem = attribVarieties.UoM;
-
-                @((varItem == null) ? "n/a" : varItem.UoMSymbol );
-            }
-        </DisplayTemplate>
-        <EditTemplate Context="attribVarieties">
-            @{
-                var listOfUoMs = GetListOfUoMs();
-                var attrItem = attribVarieties.CellValue;
-
-                if ((listOfUoMs != null) && (listOfUoMs.Count > 0))
-                {
-                    //                                        <Select TValue="Guid" SelectedValue="@(context.CellValue == null ? Guid.Empty : (Guid)context.CellValue)" SelectedValueChanged="@((v) => context.CellValue = v)">
-
-                    <Select TValue="Guid" SelectedValue="@(attribVarieties.CellValue == null ? Guid.Empty : (Guid)attribVarieties.CellValue)" SelectedValueChanged="@((v) => attribVarieties.CellValue = v)">
-                        <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
-
-                        @foreach (var item in listOfUoMs)
-                        {
-                            // only add UoMs that are not this item
-                            <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
-                        }
-                    </Select>
-                }
-            }
-        </EditTemplate>
-    </DataGridColumn>
-    <DataGridColumn TItem="ItemAttributeVarietyLookup" Field="@nameof(ItemAttributeVarietyLookup.Symbol)" Caption="Symbol" Editable="true" Context="attribVarieties">
-        <EditTemplate Context="attribVarieties">
-            @{
-                var listOfSymbols = GetListOSymbols();
-                var selectedVarItem = (string)(attribVarieties?.CellValue ?? "n/a");
-
-                <Select TValue="string" SelectedValue="@((string) (attribVarieties?.CellValue ?? "n/a"))" SelectedValueChanged="@((v)=>attribVarieties.CellValue = v)">
-                    <SelectItem TValue="string" Value="@selectedVarItem">@selectedVarItem</SelectItem>
-
-                    @foreach (var item in listOfSymbols)
-                    {
-                        // only add UoMs that are not this item
-                        if (selectedVarItem != item)
-                        {
-                            <SelectItem TValue="string" Value="@(item)">@item</SelectItem>
-                        }
-                    }
-                </Select>
-            }
-        </EditTemplate>
-    </DataGridColumn>
-    <DataGridColumn TItem="ItemAttributeVarietyLookup" Field="@nameof(ItemAttributeVarietyLookup.FGColour)" Caption="FGColour" Editable="true" Context="attribVarieties">
-        <DisplayTemplate Context="attribVarieties">
-            @if ((attribVarieties.FGColour != null) && (attribVarieties.FGColour != ItemAttributeVarietyLookup.CONST_NULL_COLOUR))
-            {
-                <span style="clear:both; padding:6px; color: @attribVarieties.FGColour; background-color: @attribVarieties.BGColour ">@attribVarieties.FGColour</span>
-            }
-        </DisplayTemplate>
-        <EditTemplate Context="attribVarieties">
-            @{
-                if ((attribVarieties.CellValue == null) || (attribVarieties.CellValue.ToString() == ItemAttributeVarietyLookup.CONST_NULL_COLOUR))
-                {
-                    string DefaultColour = "#000000";
-                    <Tooltip Text="Enable Foreground Colour" Fade="true">
-                        <Button Color="Color.Secondary" Outline="false" Clicked="(() => attribVarieties.CellValue = DefaultColour)"><Icon Name="IconName.PaintBrush"></Icon></Button>
-                    </Tooltip>
-                }
-                else
-                {
-                    string bgColour = (attribVarieties.Item.BGColour == null) ? "#ffffff" : attribVarieties.Item.BGColour;
-                    <span style="clear:both; padding:6px; color: @attribVarieties.CellValue.ToString(); background-color: @bgColour">@attribVarieties.CellValue.ToString()</span>
-                    <Tooltip Text="Change Foreground Colour" Fade="true">
-                        <Button Color="Color.Primary" Clicked="(() => colorFGSelector.ShowModal())"><Icon Name="IconName.PaintBrush"></Icon></Button>
-                    </Tooltip>
-                    <Tooltip Text="Disable Foreground Colour" Fade="true">
-                        <Button Color="Color.Warning" Outline="false" Clicked="(() => attribVarieties.CellValue = null)"><Icon Name="IconName.MinusCircle"></Icon></Button>
-                    </Tooltip>
-                    <RainbowOF.Components.Modals.ColorSelector @ref="colorFGSelector" ColourValue="@(attribVarieties.CellValue.ToString())" ColourValueChanged="@((value) => attribVarieties.CellValue = value)" />
-                }
-            }
-        </EditTemplate>
-    </DataGridColumn>
-    <DataGridColumn TItem="ItemAttributeVarietyLookup" Field="@nameof(ItemAttributeVarietyLookup.BGColour)" Caption="BGColour" Editable="true" Context="attribVarieties">
-        <DisplayTemplate Context="attribVarieties">
-            @if ((attribVarieties.BGColour != null) && (attribVarieties.BGColour != ItemAttributeVarietyLookup.CONST_NULL_COLOUR))
-            {
-                <span style="clear:both; padding:6px; color: @attribVarieties.FGColour;  background-color: @attribVarieties.BGColour ">@attribVarieties.BGColour</span>
-            }
-        </DisplayTemplate>
-        <EditTemplate Context="attribVarieties">
-            @{
-                if ((attribVarieties.CellValue == null) || (attribVarieties.CellValue.ToString() == ItemAttributeVarietyLookup.CONST_NULL_COLOUR))
-                {
-                    string DefaultColour = "#FFFFFF";
-                    <Tooltip Text="Enable Background Colour" Fade="true">
-                        <Button Color="Color.Secondary" Outline="false" Clicked="(() => attribVarieties.CellValue = DefaultColour)"><Icon Name="IconName.PaintRoller"></Icon></Button>
-                    </Tooltip>
-                }
-                else
-                {
-                    string fgColour = (attribVarieties.Item.FGColour == null) ? "#FFFFFF" : attribVarieties.Item.FGColour;
-                    <span style="clear:both; padding:6px; color: @fgColour; background-color: @attribVarieties.CellValue.ToString()">@attribVarieties.CellValue.ToString()</span>
-                    <Tooltip Text="Change Background Colour" Fade="true">
-                        <Button Color="Color.Primary" Clicked="(() => colorBGSelector.ShowModal())"><Icon Name="IconName.PaintRoller"></Icon></Button>
-                    </Tooltip>
-                    <Tooltip Text="Disable Background Colour" Fade="true">
-                        <Button Color="Color.Warning" Outline="false" Clicked="(() => attribVarieties.CellValue = null)"><Icon Name="IconName.MinusCircle"></Icon></Button>
-                    </Tooltip>
-                    <RainbowOF.Components.Modals.ColorSelector @ref="colorBGSelector" ColourValue="@(attribVarieties.CellValue.ToString())" ColourValueChanged="@((value) => attribVarieties.CellValue = value)" />
-                }
-            }
-        </EditTemplate>
-    </DataGridColumn>
-    <DataGridNumericColumn TItem="ItemAttributeVarietyLookup" Field="@nameof(ItemAttributeVarietyLookup.SortOrder)" Caption="SortOrder" Editable="true" Context="attribVarieties" />
-    <DataGridColumn TItem="ItemAttributeVarietyLookup" Field="@nameof(ItemAttributeVarietyLookup.Notes)" Caption="Notes" Editable="true" Context="attribVarieties"
-                    HeaderCellClass="desktop-only" CellClass="@((item)=>"desktop-only")" />
-</DataGrid>
-
-<RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage="Attribute Message" NotificationTitle="" @ref="@_GridSettings.PopUpRef" />
-<RainbowOF.Components.Modals.ConfirmModal @ref="_GridSettings.DeleteWooItemConfirmation" ConfirmationClicked="ConfirmVarietyDelete_Click" ConfirmationMessage=@($"Are you sure you want to delete?") ConfirmButtonText="Delete" CancelButtonText="Cancel" />
-
+<Row Style="z-index: 0" Margin="Margin.Is0">
+    <Column>
+        <Card Margin="Margin.Is0">
+            <CardHeader>
+                <CardTitle><h2>Attribute Varieties&nbsp;<Icon Name="IconName.BookReader" /></h2></CardTitle>
+            </CardHeader>
+            <CardBody>
+                <Fields>
+                    <Field Style="display: inline-flex">
+                        <FieldLabel Margin="Margin.Is1">
+                            Item Attribute&nbsp;
+                        </FieldLabel>
+                        <FieldBody Margin="Margin.IsAuto">
+                            @if (_ItemAttributes == null)
+                            {
+                                <Blazorise.Badge Color="Color.Primary">Loading...</Blazorise.Badge>
+                            }
+                            else
+                            {
+                                <Tooltip Text="Select a Attribute whose varieties you want to edit">
+                                    <Select TValue="Guid" SelectedValue="@AttributeParentId" SelectedValueChanged="@((v) => OnSelectedAttributeChange(v) )">
+                                        <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
+                                        @foreach (var item in _ItemAttributes)
+                                        {
+                                            <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
+                                        }
+                                    </Select>
+                                </Tooltip>
+                            }
+                        </FieldBody>
+                    </Field>
+                </Fields>
+            </CardBody>
+        </Card>
+    </Column>
+</Row>
+@if (AttributeParentId != Guid.Empty)
+{
+    <Row Margin="Margin.IsAuto">
+        <Column>
+            <Card Margin="Margin.Is0">
+                <CardHeader>
+                    <CardTitle><h3>@_ItemAttributes[AttributeParentId]:&nbsp;</h3></CardTitle>
+                </CardHeader>
+                <CardBody Margin="Margin.Is0">
+                    <ItemAttributeVarietiesComponent @ref="@_VarietiesComponent" ParentItemAttributeLookupId="@AttributeParentId" StartingPageSize="15" />
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+}

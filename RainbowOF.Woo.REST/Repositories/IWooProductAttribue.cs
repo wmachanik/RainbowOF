@@ -13,7 +13,7 @@ namespace RainbowOF.Woo.REST.Repositories
         Task<List<ProductAttribute>> GetAllProductAttributes();
         Task<bool> CheckProductAttributeLink();
         Task<int> GetProductAttributeCount();
-        Task<ProductAttribute> GetProductAttributeByIdAsync(int deleteWooEntityId);
+        Task<ProductAttribute> GetProductAttributeByIdAsync(int sourceWooEntityId);
         Task<ProductAttribute> DeleteProductAttributeByIdAsync(int deleteWooProductAttributeId);
         Task<ProductAttribute> AddProductAttributeAsync(ProductAttribute addWooProductAttribute);
         //        Task<ProductAttribute> FindProductAttributeByNameAsync(string findAttributeName); -> woocommerce does not support a search by string

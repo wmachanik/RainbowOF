@@ -58,9 +58,6 @@
                         <FieldBody>
                             <Blazorise.Check TValue="bool" Checked="@(_gridSettings.IsNarrow)" CheckedChanged="@((v) => _gridSettings.IsNarrow = v)">Narrow Grid?</Blazorise.Check>
                         </FieldBody>
-                        <FieldBody>
-                            <Blazorise.Check TValue="bool" Checked="@(_gridSettings.IsFilterable)" CheckedChanged="@((v) => _gridSettings.IsFilterable = v)">Filter Grid?</Blazorise.Check>
-                        </FieldBody>
                     </Field>
                     <Field Margin="Margin.Is1" JustifyContent="JustifyContent.End">
                         <FieldBody>
@@ -101,7 +98,7 @@
                     <EmptyTemplate>
                         @if (string.IsNullOrEmpty(_Status))
                         {
-
+                            <span>...</span>
                         }
                         else
                         {
@@ -140,14 +137,14 @@
                                     if (catItem != null)
                                     {
                                         @*<NavLink ActiveClass="grid-link" @onclick="@(()=>NavigationManager.NavigateTo($"/editpage/{catItem.ItemCategoryLookupId}"))">*@
-                                            @if ((catItem.ParentCategoryId == null) || (catItem.ParentCategoryId == Guid.Empty))
-                                            {
-                                                <span style="font-weight: bold">@catItem.CategoryName</span>
-                                            }
-                                            else
-                                            {
-                                                <span>@catItem.CategoryName</span>
-                                            }
+                                        @if ((catItem.ParentCategoryId == null) || (catItem.ParentCategoryId == Guid.Empty))
+                                        {
+                                            <span style="font-weight: bold">@catItem.CategoryName</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@catItem.CategoryName</span>
+                                        }
                                         @*</NavLink>*@
                                     }
                                 }
@@ -265,10 +262,13 @@
                                 <MemoEdit Text="@((string)context.CellValue)" Rows="5" Placeholder="Any notes for this item..." TextChanged="@((value)=>context.CellValue = value)" />
                             </EditTemplate>
                         </DataGridColumn>
-                        <DataGridCommandColumn TItem="ItemCategoryLookupView" Width="6em">
+                        <DataGridCommandColumn TItem="ItemCategoryLookupView" Width="6.5em">
                             <NewCommandTemplate>
                                 <Tooltip Text="New category" Style="z-index:99" Placement="Placement.Bottom">
                                     <Button Color="Color.Success" Clicked="@context.Clicked"><Icon Name="IconName.Add" /></Button>
+                                </Tooltip>
+                                <Tooltip Text="Filter by Column" Style="z-index:99" Placement="Placement.Left">
+                                    <Button Color="Color.Info" Clicked="@(()=>_gridSettings.IsFilterable= !_gridSettings.IsFilterable)"><Icon Name="@((_gridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" /></Button>
                                 </Tooltip>
                             </NewCommandTemplate>
                             <EditCommandTemplate>
@@ -292,7 +292,9 @@
                                 </Tooltip>
                             </CancelCommandTemplate>
                             <ClearFilterCommandTemplate>
-                                <Button Color="Color.Warning" Clicked="@context.Clicked">Clear Filter</Button>
+                                <Tooltip Text="Clear Filter" Style="z-index:99" Placement="Placement.Left">
+                                    <Button Color="Color.Info" Outline="true" Clicked="@context.Clicked"><Icon Name="IconName.Clear" /></Button>
+                                </Tooltip>
                             </ClearFilterCommandTemplate>
                         </DataGridCommandColumn>
                     </DataGridColumns>

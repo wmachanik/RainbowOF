@@ -9,11 +9,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="wwwroot.dooINeedThis\background.png" />
-    <Content Include="wwwroot.dooINeedThis\exampleJsInterop.js" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="Modals\ShowModalMessage.razor" />
   </ItemGroup>
 
@@ -24,9 +19,9 @@
 
   <ItemGroup>
     <PackageReference Include="Blazored.Toast" Version="3.1.2" />
-    <PackageReference Include="Blazorise" Version="0.9.3.4" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="5.0.5" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.5" />
+    <PackageReference Include="Blazorise" Version="0.9.3.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="5.0.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.6" />
   </ItemGroup>
 
   <ItemGroup>

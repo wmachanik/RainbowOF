@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Lookups
 {
-    public class ItemCategoryLookupRepository : AppRepository<ItemCategoryLookup>, IItemCategoryLookupRepository
+     public class ItemCategoryLookupRepository : AppRepository<ItemCategoryLookup>, IItemCategoryLookupRepository
     {
         private ApplicationDbContext _context = null;
         private ILoggerManager _logger { get; set; }

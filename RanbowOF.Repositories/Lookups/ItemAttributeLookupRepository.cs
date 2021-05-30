@@ -97,10 +97,10 @@ namespace RainbowOF.Repositories.Lookups
                         break;
 
                     //case nameof(ItemAttributeLookup.ItemAttributeVarietyLookups):
-                    //    _filterByExpressions.Add(ial => ial.ItemAttributeVarietyLookups.Exists(iavl => iavl.VarietyName.ToLower().Contains(col.FilterBy))) ;
+                    //    _filterByExpressions.Add(ial => ial.ItemAttributeVarietyLookups.Select(ial => ial.ItemAttributeLookup).Where(iavl => iavl.VarietyName.ToLower().Contains(col.FilterBy))) ;
                     //    //bool _IsTrue = ((col.FilterBy.Contains("y", StringComparison.OrdinalIgnoreCase)) || (col.FilterBy.Contains("enable", StringComparison.OrdinalIgnoreCase)));      // assume yes and no / enable or disable
                     //    //_filterByExpressions.Add(ial => (ial.UsedForPrediction == _IsTrue));
-                    //    break;
+                    //   break;
 
                     case nameof(ItemAttributeLookup.Notes):
                         _filterByExpressions.Add(ial => ial.Notes.ToLower().Contains(col.FilterBy));
@@ -125,7 +125,7 @@ namespace RainbowOF.Repositories.Lookups
                 List<Expression<Func<ItemAttributeLookup, bool>>> _filterByExpressions = GetFilterByExpressions(currentDataGridParameters.FilterParams);
 
                 // start with a basic Linq Query with Eager loading
-                IQueryable<ItemAttributeLookup> _query = _table.Include(ial => ial.ItemAttributeVarietyLookups);
+                IQueryable<ItemAttributeLookup> _query = _table.Include(ial => ial.ItemAttributeVarietyLookups.Take(AppUnitOfWork.CONST_MAX_DETAIL_PAGES));    //only take the first 50
                 if ((_orderByExpressions != null) && (_orderByExpressions.Count > 0))
                 {
                     // add order bys

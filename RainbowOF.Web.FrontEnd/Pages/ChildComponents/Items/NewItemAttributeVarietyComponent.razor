@@ -1,0 +1,47 @@
+﻿<Modal @ref="NewAttributeVarietieModalRef">
+    <ModalContent Size="Blazorise.ModalSize.Default" Centered="true">
+        <ModalHeader>
+            <ModalTitle>
+                <Icon Name="IconName.Add" />
+                Add Attribute Variety
+            </ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldLabel>Variety Name</FieldLabel>
+                <TextEdit Autofocus="true" Text="@_NewItemAttributeVarietyLookupView.VarietyName" Placeholder="Enter variety name..." />
+            </Field>
+            <Field>
+                <FieldLabel>UoM</FieldLabel>
+                <UoMSelecteListComponent PopUpRef="PopUpRef" SourceUoMId="_NewItemAttributeVarietyLookupView.UoMId" UoMIdChanged="@((v) => _NewItemAttributeVarietyLookupView.UoMId = v)"></UoMSelecteListComponent>
+            </Field>
+            <Field>
+                <FieldLabel>Sort Order</FieldLabel>
+                <TextEdit TextChanged="((sv) => _NewItemAttributeVarietyLookupView.SortOrder = Convert.ToInt32(sv))" InputMode="TextInputMode.Numeric" Text="@_NewItemAttributeVarietyLookupView.SortOrder.ToString()" Placeholder="Enter variety sort order..." />
+            </Field>
+            <Field>
+                <FieldLabel>Add To Woo</FieldLabel>
+                <Blazorise.Check Checked="@_NewItemAttributeVarietyLookupView.CanUpdateWooMap"></Blazorise.Check>
+            </Field>
+            <Field>
+                <FieldLabel>Notes</FieldLabel>
+                <TextEdit Text="@_NewItemAttributeVarietyLookupView.Notes" Placeholder="Any notes..." />
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Primary" Clicked="@(() => HideModal(true))">
+                <Tooltip Text="Save Changes">
+                    <Icon Name="IconName.Save"></Icon>
+                </Tooltip>
+            </Button>
+            <Button Color="Color.Secondary" Clicked="@(() => HideModal(false))">
+                <Tooltip Text="Close">
+                    <Icon Name="IconName.Undo"></Icon>
+                </Tooltip>
+            </Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
+
+

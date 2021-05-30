@@ -18,6 +18,32 @@ namespace RainbowOF.Woo.REST.Repositories
         {
             _Woo = new WooBase(wooAPISettings, logger);
         }
+
+        private WCObject _wcObject = null;
+        private WCObject GetWCObject
+        {
+            get
+            {
+                if (_wcObject == null)
+                {
+                    RestAPI _RestAPI = _Woo.GetJSONRestAPI;
+                    try
+                    {
+                        _wcObject = new WCObject(_RestAPI);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (_Woo.Logger != null)
+                            _Woo.Logger.LogError("Error setting up WOO REST API: " + ex.Message);
+                    }
+                }
+                return _wcObject;
+            }
+            set
+            {
+                _wcObject = value;
+            }
+        }
         public async Task<List<ProductAttributeTerm>> GetAttributeTermsByAtttribute(ProductAttribute pProductAttribute)
         {
             RestAPI _RestAPI = _Woo.GetJSONRestAPI;
@@ -55,6 +81,71 @@ namespace RainbowOF.Woo.REST.Repositories
                     _Woo.Logger.LogError("Error calling WOO REST API: " + ex.Message);
             }
             return _WooProductAttributeTerms;
+        }
+        public async Task<ProductAttributeTerm> GetProductAttributeTermByIdAsync(int sourceWooEntityId, int parentWooAttributeId)
+        {
+            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
+            ProductAttributeTerm _productAttributeTerm = null;
+            try
+            {
+                WCObject _WC = new WCObject(_RestAPI);
+                _productAttributeTerm = await _WC.Attribute.Terms.Get(sourceWooEntityId,parentWooAttributeId);
+            }
+            catch (Exception ex)
+            {
+                if (_Woo.Logger != null)
+                    _Woo.Logger.LogError("Error calling WOO REST JSON API: " + ex.Message);
+            }
+            return _productAttributeTerm;
+        }
+
+        public async Task<ProductAttributeTerm> AddProductAttributeTermAsync(ProductAttributeTerm addWooProductAttribute, int parentWooAttributeId)
+        {
+            ProductAttributeTerm _ProductAttributeTerm = null;
+            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
+            try
+            {
+                WCObject _WC = new(_RestAPI);
+                _ProductAttributeTerm = await _WC.Attribute.Terms.Add(addWooProductAttribute, parentWooAttributeId);
+            }
+            catch (Exception ex)
+            {
+                if (_Woo.Logger != null)
+                    _Woo.Logger.LogError($"Error calling Add ProductAttributeAsync for product: {addWooProductAttribute.name}. Error:  {ex.Message}");
+            }
+            return _ProductAttributeTerm;
+        }
+        public async Task<string> DeleteProductAttributeTermByIdAsync(int deleteWooAttributeTermId, int parentWooAttributeId)
+        {
+            string _ProductAttributeTerm = null;
+            WCObject _WC = GetWCObject;
+            try
+            {
+                // looks like it may need a force parameter, is this a good thing?
+                _ProductAttributeTerm = await _WC.Attribute.Terms.Delete(deleteWooAttributeTermId, parentWooAttributeId, true);   // force = true
+            }
+            catch (Exception ex)
+            {
+                if (_Woo.Logger != null)
+                    _Woo.Logger.LogError($"Error calling deleting product category by id: {deleteWooAttributeTermId} Async. Error:  {ex.Message}");
+            }
+            return _ProductAttributeTerm;
+        }
+        public async Task<ProductAttributeTerm> UpdateProductAttributeTermAsync(ProductAttributeTerm updateWooProductAttribute, int parentWooAttributeId)
+        {
+            ProductAttributeTerm _ProductAttributeTerm = null;
+            WCObject _WC = GetWCObject;
+            try
+            {
+                // looks like it may need a force parameter, is this a good thing?
+                _ProductAttributeTerm = await _WC.Attribute.Terms.Update((int)updateWooProductAttribute.id, updateWooProductAttribute, parentWooAttributeId);   // force = true
+            }
+            catch (Exception ex)
+            {
+                if (_Woo.Logger != null)
+                    _Woo.Logger.LogError($"Error calling deleting product category by id: {updateWooProductAttribute} Async. Error:  {ex.Message}");
+            }
+            return _ProductAttributeTerm;
         }
 
     }

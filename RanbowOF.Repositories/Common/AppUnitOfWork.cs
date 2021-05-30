@@ -16,6 +16,7 @@ namespace RainbowOF.Repositories.Common
     {
         // CONST
         public const int CONST_WASERROR = -1;
+        public const int CONST_MAX_DETAIL_PAGES = 50;
         // generics
         private ApplicationDbContext _context;
         private IDbContextTransaction dbTransaction = null;
@@ -28,6 +29,7 @@ namespace RainbowOF.Repositories.Common
         private IWooSyncLogRepository _wooSyncLogRepository = null;
         private IItemCategoryLookupRepository _itemCategoryLookupRepository = null;
         private IItemAttributeLookupRepository _itemAttributeLookupRepository = null;
+        private IItemAttributeVarietyLookupRepository _itemAttributeVarietyLookupRepository = null;
         // Unit of Work Error handling
         private string _ErrorMessage = String.Empty;
 
@@ -80,6 +82,12 @@ namespace RainbowOF.Repositories.Common
             if (_itemAttributeLookupRepository == null)
                 _itemAttributeLookupRepository = new ItemAttributeLookupRepository(_context, _logger, this);
             return _itemAttributeLookupRepository;
+        }
+        public IItemAttributeVarietyLookupRepository itemAttributeVarietyLookupRepository()
+        {
+            if (_itemAttributeVarietyLookupRepository == null)
+                _itemAttributeVarietyLookupRepository = new ItemAttributeVarietyLookupRepository(_context, _logger, this);
+            return _itemAttributeVarietyLookupRepository;
         }
         public void BeginTransaction()
         {

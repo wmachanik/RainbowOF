@@ -20,6 +20,7 @@ namespace RainbowOF.Repositories.Common
         public IWooSyncLogRepository wooSyncLogRepository();
         public IItemCategoryLookupRepository itemCategoryLookupRepository();
         public IItemAttributeLookupRepository itemAttributeLookupRepository();
+        public IItemAttributeVarietyLookupRepository itemAttributeVarietyLookupRepository();
         // Centralised Context Handling
         void BeginTransaction();
         int Complete();

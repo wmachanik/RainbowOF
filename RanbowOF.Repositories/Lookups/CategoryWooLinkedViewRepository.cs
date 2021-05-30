@@ -31,16 +31,16 @@ namespace RainbowOF.Repositories.Lookups
             //_gridSettings = gridSettings;
         }
 
-        public override async Task DeleteRowAsync(ItemCategoryLookupView deleteVeiwEntity)
+        public override async Task DeleteRowAsync(ItemCategoryLookupView deleteViewEntity)
         {
             IAppRepository<ItemCategoryLookup> _ItemCategoryLookupRepository = _appUnitOfWork.Repository<ItemCategoryLookup>();
 
-            var _recsDelete = await _ItemCategoryLookupRepository.DeleteByIdAsync(deleteVeiwEntity.ItemCategoryLookupId);     //DeleteByAsync(icl => icl.ItemCategoryLookupId == SelectedItemCategoryLookup.ItemCategoryLookupId);
+            var _recsDelete = await _ItemCategoryLookupRepository.DeleteByIdAsync(deleteViewEntity.ItemCategoryLookupId);     //DeleteByAsync(icl => icl.ItemCategoryLookupId == SelectedItemCategoryLookup.ItemCategoryLookupId);
 
             if (_recsDelete == AppUnitOfWork.CONST_WASERROR)
-                _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Category: {deleteVeiwEntity.CategoryName} is no longer found, was it deleted?");
+                _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Category: {deleteViewEntity.CategoryName} is no longer found, was it deleted?");
             else
-                _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Category: {deleteVeiwEntity.CategoryName} was it deleted?");
+                _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Category: {deleteViewEntity.CategoryName} was it deleted?");
         }
         async Task<int> UpdateWooCategoryMap(ItemCategoryLookupView updatedViewEntity)
         {

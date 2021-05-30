@@ -85,14 +85,14 @@ namespace RainbowOF.Woo.REST.Repositories
             return _count;
         }
 
-        public async Task<ProductAttribute> GetProductAttributeByIdAsync(int deleteWooEntityId)
+        public async Task<ProductAttribute> GetProductAttributeByIdAsync(int sourceWooEntityId)
         {
             RestAPI _RestAPI = _Woo.GetJSONRestAPI;
             ProductAttribute _productAttribute = null;
             try
             {
                 WCObject _WC = new WCObject(_RestAPI);
-                _productAttribute = await _WC.Attribute.Get(deleteWooEntityId);
+                _productAttribute = await _WC.Attribute.Get(sourceWooEntityId);
             }
             catch (Exception ex)
             {

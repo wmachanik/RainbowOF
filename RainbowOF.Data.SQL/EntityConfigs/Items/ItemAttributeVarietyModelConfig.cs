@@ -16,7 +16,7 @@ namespace RainbowOF.Data.SQL.EntityConfigs.Items
             activeItemAttributeVarietyModelBuilder.HasOne(aiav => aiav.ItemAttributeVarietyLookupDetail)
                 .WithMany()
                 .OnDelete(DeleteBehavior.NoAction);
-            activeItemAttributeVarietyModelBuilder.HasOne(aiav => aiav.ItemUoM)
+            activeItemAttributeVarietyModelBuilder.HasOne(aiav => aiav.UoM)
                 .WithMany()
                 .OnDelete(DeleteBehavior.SetNull);
         }

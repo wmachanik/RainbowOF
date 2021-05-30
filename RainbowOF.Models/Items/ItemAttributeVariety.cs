@@ -11,7 +11,7 @@ namespace RainbowOF.Models.Items
     // ItemAttributeVarietyId   Int           Pk
     // ItemId                   Int           Link to the Item that has this attribute
     // ItemAttributeId          Int           Links to parent attribute (could be excluded)
-    // IsDefault	            Bool	      Is this the default variety (of variabletype)
+    // IsDefault	            Bool	      Is this the default variety (of variable type)
     // UoMId	                Int?	      ->ItemUoM.Id
     // UoMQtyPerItem            double(12,6)  The quantity this is for UoM
     public class ItemAttributeVariety
@@ -22,12 +22,12 @@ namespace RainbowOF.Models.Items
         public Guid ItemAttributeVarietyLookupId { get; set; }
         [DefaultValue(false)]
         public bool IsDefault { get; set; }
-        public Guid? ItemUoMId { get; set; }
+        public Guid? UoMId { get; set; }
         [DefaultValue(1.0)]
         public double UoMQtyPerItem { get; set; }
-        [ForeignKey("ItemUoMId")]
-        public virtual ItemUoM ItemUoM { get; set; }
-        [ForeignKey("ItemAttributeVarietyLookupId")]
+        [ForeignKey(nameof(UoMId))]
+        public virtual ItemUoM UoM { get; set; }
+        [ForeignKey(nameof(ItemAttributeVarietyLookupId))]
         public ItemAttributeVarietyLookup ItemAttributeVarietyLookupDetail { get; set; }
 
     }

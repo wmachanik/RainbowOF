@@ -38,18 +38,18 @@ namespace RainbowOF.Repositories.Lookups
         Task<List<TEntityView>> LoadViewItemsPaginatedAsync(DataGridParameters currentDataGridParameters);
         Task InsertRowAsync(TEntityView newVeiwEntity);
         TEntityView NewItemDefaultSetter(TEntityView newViewEntity);
-        Task<int> UpdateWooMappingAsync(TEntityView updateVeiwEntity);
+        Task<int> UpdateWooMappingAsync(TEntityView updateViewEntity);
         Task<bool> IsDuplicate(TEntity checkEntity);
         bool IsValid(TEntity checkEntity);
         TEntity GetItemFromView(TEntityView fromVeiwEntity);
-        Task DeleteRowAsync(TEntityView deleteVeiwEntity);
+        Task DeleteRowAsync(TEntityView deleteViewEntity);
         Task<int> DoGroupActionAsync(TEntityView toVeiwEntity, BulkAction selectedAction);
         Task<int> DeleteWooItemAsync(Guid deleteWooEntityId, bool deleteFromWoo);
         Task<int> AddWooItemAndMapAsync(TEntity addEntity);
         Task<int> UpdateWooItemAsync(TEntityView updateViewEntity);
         Task<int> UpdateWooItemAndMapping(TEntityView updateViewEntity);
         Task<int> UpdateItemAsync(TEntityView updateItem);
-        Task UpdateRowAsync(TEntityView updateVeiwEntity);
+        Task UpdateRowAsync(TEntityView updateViewEntity);
     }
 }
 

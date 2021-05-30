@@ -283,30 +283,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             return _ListOfParents;
         }
 
-        //void SelectAllRows()
-        //{
-        //    if (AreAllChecked)
-        //        SelectedItemCategoryLookups.Clear();
-        //    else
-        //    {
-        //        foreach (var item in modelItemCategoryLookupViews)
-        //        {
-        //            if (!SelectedItemCategoryLookups.Exists(ic => ic.ItemCategoryLookupId == item.ItemCategoryLookupId))
-        //                SelectedItemCategoryLookups.Add(item);
-        //        }
-        //    }
-        //    CheckIcon = AreAllChecked ? Blazorise.IconName.CheckSquare : Blazorise.IconName.Square;
-        //    AreAllChecked = !AreAllChecked;
-        //    StateHasChanged();
-        //}
-        //async Task<int> DoActionOnItem(ItemCategoryLookupView pItem)
-        //{
-        //    if (SelectedBulkAction == BulkAction.AllowWooSync)
-        //        pItem.CanUpdateWooMap = true;
-        //    else if (SelectedBulkAction == BulkAction.DisallowWooSync)
-        //        pItem.CanUpdateWooMap = false;
-        //    return await UpdateWooCategoryMap(pItem);
-        //}
+     
         async Task DoGroupAction()
         {
             //if (SelectedBulkAction == BulkAction.none)

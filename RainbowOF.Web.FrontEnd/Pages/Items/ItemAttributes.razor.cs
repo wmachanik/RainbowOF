@@ -1,14 +1,17 @@
-﻿using Blazorise.DataGrid;
+﻿using Blazorise;
+using Blazorise.DataGrid;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using RainbowOF.Components.Modals;
 using RainbowOF.Models.Lookups;
+using RainbowOF.Models.System;
 using RainbowOF.Repositories.Common;
 using RainbowOF.Repositories.Lookups;
 using RainbowOF.Tools;
 using RainbowOF.Tools.Services;
 using RainbowOF.ViewModels.Common;
 using RainbowOF.ViewModels.Lookups;
+using RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +26,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         public ItemAttributeLookupView SelectedItemAttributeLookup = null;
         public BulkAction SelectedBulkAction = BulkAction.none;
         // variables / Models
-        public List<ItemAttributeLookupView> dataModels;
+        public List<ItemAttributeLookupView> dataModels = null;
         public ItemAttributeLookupView seletectedItem = null;
         //public const string disabledStr = "N";
         //public const string enabledStr = "Y";
@@ -119,15 +122,15 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             StateHasChanged();
         }
 
-        private async Task<List<ItemAttributeLookup>> GetAllItemAttributeLookups()
-        {
-            IAppRepository<ItemAttributeLookup> _ItemAttributeLookupRepository = _appUnitOfWork.Repository<ItemAttributeLookup>();
-            List<ItemAttributeLookup> _ItemAttributeLookups = (await _ItemAttributeLookupRepository.GetAllEagerAsync(ial => ial.ItemAttributeVarietyLookups))
-                .OrderBy(ial => ial.OrderBy)
-                .ToList();
+        //private async Task<List<ItemAttributeLookup>> GetAllItemAttributeLookups()
+        //{
+        //    IAppRepository<ItemAttributeLookup> _ItemAttributeLookupRepository = _appUnitOfWork.Repository<ItemAttributeLookup>();
+        //    List<ItemAttributeLookup> _ItemAttributeLookups = (await _ItemAttributeLookupRepository.GetAllEagerAsync(ial => ial.ItemAttributeVarietyLookups))
+        //        .OrderBy(ial => ial.OrderBy)
+        //        .ToList();
 
-            return _ItemAttributeLookups;
-        }
+        //    return _ItemAttributeLookups;
+        //}
 
         async Task HandleCustomerSearchOnKeyUp(KeyboardEventArgs kbEventHandler)
         {
@@ -137,26 +140,6 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             await _DataGrid.Reload();
             //}
         }
-        //bool OnCustomFilter(ItemAttributeLookupView model)
-        //{
-        //    if (string.IsNullOrEmpty(_gridSettings.CustomFilterValue))
-        //        return true;
-        //    return
-        //        model.AttributeName?.Contains(_gridSettings.CustomFilterValue, StringComparison.OrdinalIgnoreCase) == true
-        //        || model.ParentAttribute?.AttributeName.Contains(_gridSettings.CustomFilterValue, StringComparison.OrdinalIgnoreCase) == true;
-        //}
-        //ItemAttributeLookup GetItemAttributeLookupItemFromView(ItemAttributeLookupView pItem)
-        //{
-        //    ItemAttributeLookup newItemAttributeLookup = new ItemAttributeLookup
-        //    {
-        //        ItemAttributeLookupId = pItem.ItemAttributeLookupId,
-        //        AttributeName = pItem.AttributeName,
-        //        OrderBy = pItem.OrderBy
-        //        Notes = pItem.Notes,
-        //    };
-
-        //    return newItemAttributeLookup;
-        //}
         async Task OnRowInserting(SavedRowItem<ItemAttributeLookupView, Dictionary<string, object>> pInsertedItem)
         {
             var newItem = pInsertedItem.Item;
@@ -178,7 +161,6 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         {
             await _AttributeWooLinkedViewRepository.UpdateRowAsync(pUpdatedItem.Item);
             await _DataGrid.Reload();
-
         }
         void OnRowRemoving(CancellableRowChange<ItemAttributeLookupView> modelItem)
         {
@@ -224,24 +206,21 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             await InvokeAsync(StateHasChanged);
             await _DataGrid.Reload();  // reload the list so the latest item is displayed - not working here I think because of the awaits so move to confirm_clicks
             await InvokeAsync(StateHasChanged);
-            //            var deleteItem = modelItem;
-            //if ( dataModels.Contains( model ) )
-            //{
-            //    dataModels.Remove( model );
-            //}
         }
-        //public Dictionary<Guid, string> GetListOfParentAttributes()
-        //{
-        //    Dictionary<Guid, string> _ListOfParents = new Dictionary<Guid, string>();
-        //    foreach (var model in dataModels)
-        //    {
-        //        if (model.ParentAttributeId == null)
-        //        {
-        //            _ListOfParents.Add(model.ItemAttributeLookupId, model.AttributeName);
-        //        }
-        //    }
-        //    return _ListOfParents;
-        //}
+
+        Dictionary<OrderBys, string> _ListOfOrderBys = null;
+        public Dictionary<OrderBys, string> GetListOfOrderBys()
+        {
+            if (_ListOfOrderBys == null)
+            {
+                _ListOfOrderBys = new Dictionary<OrderBys, string>();
+                foreach (OrderBys obs in Enum.GetValues(typeof(OrderBys)))
+                {
+                    _ListOfOrderBys.Add(obs, obs.ToString());
+                }
+            }
+            return _ListOfOrderBys;
+        }
         async Task DoGroupAction()
         {
             //if (SelectedBulkAction == BulkAction.none)
@@ -261,7 +240,6 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Info, $"Bulk Action applied to {done} items and not applied to {failed} items.");
             await _DataGrid.Reload();
         }
-
         async Task Reload()
         {
             _gridSettings.CurrentPage = 1;
@@ -272,6 +250,32 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         // ------------------------------------
         // All the Attribute Variety stuff
         // ------------------------------------
+        private NewItemAttributeVarietyComponent NewAttributeVariety;
+
+//            Modal NewAttributeVarietieModalRef;
+        //        Deprecated
+        // ------------------------------------
+        //bool OnCustomFilter(ItemAttributeLookupView model)
+        //{
+        //    if (string.IsNullOrEmpty(_gridSettings.CustomFilterValue))
+        //        return true;
+        //    return
+        //        model.AttributeName?.Contains(_gridSettings.CustomFilterValue, StringComparison.OrdinalIgnoreCase) == true
+        //        || model.ParentAttribute?.AttributeName.Contains(_gridSettings.CustomFilterValue, StringComparison.OrdinalIgnoreCase) == true;
+        //}
+        //ItemAttributeLookup GetItemAttributeLookupItemFromView(ItemAttributeLookupView pItem)
+        //{
+        //    ItemAttributeLookup newItemAttributeLookup = new ItemAttributeLookup
+        //    {
+        //        ItemAttributeLookupId = pItem.ItemAttributeLookupId,
+        //        AttributeName = pItem.AttributeName,
+        //        OrderBy = pItem.OrderBy
+        //        Notes = pItem.Notes,
+        //    };
+
+        //    return newItemAttributeLookup;
+        //}
+
     }
 }
 

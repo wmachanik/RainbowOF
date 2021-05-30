@@ -71,114 +71,137 @@ namespace RainbowOF.Repositories.Lookups
 
         public virtual Task<int> AddWooItemAndMapAsync(TEntity addEntity)
         {
+            _logger.LogError($"AddWooItemAndMapAsync for Entity: {addEntity.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
 
-        public virtual Task DeleteRowAsync(TEntityView deleteVeiwEntity)
+        public virtual Task DeleteRowAsync(TEntityView deleteViewEntity)
         {
+            _logger.LogError($"DeleteRowAsync for Entity: {deleteViewEntity.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
 
         public virtual Task<int> DeleteWooItemAsync(Guid deleteWooEntityId, bool deleteFromWoo)
         {
+            _logger.LogError($"DeleteWooItemAsync for Entity: {deleteWooEntityId.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
 
         public virtual Task<int> DoGroupActionAsync(TEntityView toVeiwEntity, BulkAction selectedAction)
         {
+            _logger.LogError($"DoGroupActionAsync for Entity: {toVeiwEntity.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
 
         public virtual Task<List<TEntity>> GetAllItemsAsync()
         {
+            _logger.LogError($"GetAllItemsAsync for Entity not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
 
         public virtual TEntity GetItemFromView(TEntityView fromVeiwEntity)
         {
+            _logger.LogError($"GetItemFromView for Entity: {fromVeiwEntity.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
 
         public virtual Task<TWooMapEntity> GetWooMappedItemAsync(Guid mapWooEntityID)
         {
+            _logger.LogError($"GetWooMappedItemAsync for Entity: {mapWooEntityID.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
         public virtual Task<List<TWooMapEntity>> GetWooMappedItemsAsync(List<Guid> mapWooEntityIDs)
         {
+            _logger.LogError($"GetWooMappedItemsAsync for Entity: {mapWooEntityIDs.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
 
         public virtual Task InsertRowAsync(TEntityView newVeiwEntity)
         {
+            _logger.LogError($"InsertRowAsync for Entity: {newVeiwEntity.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
 
         public virtual Task<bool> IsDuplicate(TEntity checkEntity)
         {
+            _logger.LogError($"IsDuplicate for Entity: {checkEntity.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
 
         public virtual bool IsValid(TEntity checkEntity)
         {
+            _logger.LogError($"IsValid for Entity: {checkEntity.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
 
         public virtual Task<List<TEntityView>> LoadAllViewItemsAsync()
         {
+            _logger.LogError($"LoadAllViewItemsAsync for Entity not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
 
         public virtual TEntityView NewItemDefaultSetter(TEntityView newViewEntity)
         {
+            _logger.LogError($"NewItemDefaultSetter for Entity: {newViewEntity.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
 
         public virtual List<TEntityView> PopSelectedItems(List<TEntityView> modelViewItems)
         {
+            _logger.LogError($"PopSelectedItems for Entity: {modelViewItems.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
 
         public virtual void PushSelectedItems(List<TEntityView> currentSelectedItems)
         {
+            _logger.LogError($"PushSelectedItems for Entity: {currentSelectedItems.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
 
         public virtual Task<int> UpdateItemAsync(TEntityView updateItem)
         {
+            _logger.LogError($"UpdateItemAsync for Entity: {updateItem.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
 
-        public virtual Task UpdateRowAsync(TEntityView updateVeiwEntity)
+        public virtual Task UpdateRowAsync(TEntityView updateViewEntity)
         {
+            _logger.LogError($"UpdateRowAsync for Entity: {updateViewEntity.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
 
         public virtual Task<int> UpdateWooItemAndMapping(TEntityView updateViewEntity)
         {
+            _logger.LogError($"UpdateWooItemAndMapping for Entity: {updateViewEntity.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
 
         public virtual Task<int> UpdateWooItemAsync(TEntityView updateViewEntity)
         {
+            _logger.LogError($"UpdateWooItemAsync for Entity: {updateViewEntity.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
 
-        public virtual Task<int> UpdateWooMappingAsync(TEntityView updateVeiwEntity)
+        public virtual Task<int> UpdateWooMappingAsync(TEntityView updateViewEntity)
         {
+            _logger.LogError($"UpdateWooMappingAsync for Entity: {updateViewEntity.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
 
         public virtual Task<List<TEntity>> GetPagedItemsAsync(DataGridParameters currentDataGridParameters) // int startPage, int currentPageSize)
         {
+            _logger.LogError($"GetPagedItemsAsync for Entity: {currentDataGridParameters.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
 
         public virtual DataGridParameters GetDataGridCurrent(DataGridReadDataEventArgs<TEntityView> inputDataGridReadData, string inputCustomerFilter)
         {
+            _logger.LogError($"GetDataGridCurrent for Entity: {inputDataGridReadData.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
         public virtual Task<List<TEntityView>> LoadViewItemsPaginatedAsync(DataGridParameters currentDataGridParameters)
         {
+            _logger.LogError($"LoadViewItemsPaginatedAsync for Entity: {currentDataGridParameters.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
     }
