@@ -155,8 +155,8 @@
                                     {
                                         <br />
                                     }
-                                    <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items.UoMSelecteListComponent PopUpRef="@_VarietiesGridSettings.PopUpRef" SourceUoMId="VarietyDataModels.Item.UoMId"
-                                                                                                                UoMIdChanged="@((v) => VarietyDataModels.CellValue = v)"  />
+                                    <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items.UoMSelecteListComponent PopUpRef="@_VarietiesGridSettings.PopUpRef" SourceUoMId="VarietyDataModels.Item.UoMId" 
+                                                                                                                UoMIdChanged="@((v) => VarietyDataModels.CellValue = v)" />
                                 }
                             </EditTemplate>
                         </DataGridColumn>
@@ -225,7 +225,7 @@
                             <EditTemplate Context="VarietyDataModels">
                                 @{
                                     if (!_VarietiesDataGrid.EditMode.Equals(DataGridEditMode.Inline))
-                                        {
+                                    {
                                         <br />
                                     }
                                     if ((VarietyDataModels.CellValue == null) || (VarietyDataModels.CellValue.ToString() == ItemAttributeVarietyLookupView.CONST_NULL_COLOUR))

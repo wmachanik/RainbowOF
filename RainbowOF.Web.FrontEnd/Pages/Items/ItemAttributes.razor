@@ -164,6 +164,7 @@
                                     var attribItem = (context as ItemAttributeLookupView);
                                     @if ((attribItem.ItemAttributeVarietyLookups == null) || (attribItem.ItemAttributeVarietyLookups.Count == 0))   // no variety exists so ask if they want to add one
                                     {
+                                        <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items.NewItemAttributeVarietyComponent @ref="@NewAttributeVariety" PopUpRef="_gridSettings.PopUpRef" AddItemToWoo="_gridSettings.WooIsActive" />
                                         <Button Color="Color.Primary" Clicked="@(() => NewAttributeVariety.ShowModal(attribItem.ItemAttributeLookupId))">
                                             Add Variety
                                         </Button>
@@ -378,4 +379,3 @@
                                                     ShowConfirmOption="true"
                                                     CancelButtonText="Cancel" />
 
-<RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items.NewItemAttributeVarietyComponent @ref="@NewAttributeVariety" PopUpRef="_gridSettings.PopUpRef" />

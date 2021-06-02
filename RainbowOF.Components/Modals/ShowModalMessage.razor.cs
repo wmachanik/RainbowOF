@@ -28,42 +28,6 @@ namespace RainbowOF.Components.Modals
         {
             ModalMessage = pMessage;
         }
-
-
-
-        //    protected bool IsShowModal { get; set; }
-        //    private Modal modalRef; 
-
-        //    [Parameter]
-        //    public string ModalTitle { get; set; } = "Status Message";
-        //    [Parameter]
-        //    public string ModalMessage { get; set; } = "Something Happened";
-        //    public void ShowModal()
-        //    {
-        //        //IsShowModal = true;
-        //        modalRef.Show();
-        //        StateHasChanged();
-        //    }
-
-        //    public void UpdateModalMessage(string pMessage)
-        //    {
-        //        ModalMessage = pMessage;
-        //        StateHasChanged();
-        //    }
-        //    private void HideModal()
-        //    {
-        //        modalRef.Hide();
-        //        StateHasChanged();
-        //    }
-        //    protected void OnModalClosing(CancelEventArgs e)
-        //    {
-        //        e.Cancel = true;
-        //        HideModal(); 
-        //    }
-        //}
     }
 }
 
-
-//1. not saving pref when no records exists
-//2. modal dialog fo saved on closing is OnClosed being called

@@ -9,6 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 using RainbowOF.Repositories.Items;
 using RainbowOF.Repositories.Lookups;
+using RainbowOF.Models.Items;
+using System.Linq;
 
 namespace RainbowOF.Repositories.Common
 {
@@ -30,6 +32,10 @@ namespace RainbowOF.Repositories.Common
         private IItemCategoryLookupRepository _itemCategoryLookupRepository = null;
         private IItemAttributeLookupRepository _itemAttributeLookupRepository = null;
         private IItemAttributeVarietyLookupRepository _itemAttributeVarietyLookupRepository = null;
+        // Internal vars
+        private Dictionary<Guid, string> _listOfUoMSymbols;
+
+
         // Unit of Work Error handling
         private string _ErrorMessage = String.Empty;
 
@@ -89,6 +95,30 @@ namespace RainbowOF.Repositories.Common
                 _itemAttributeVarietyLookupRepository = new ItemAttributeVarietyLookupRepository(_context, _logger, this);
             return _itemAttributeVarietyLookupRepository;
         }
+        public Dictionary<Guid, string> GetListOfUoMSymbols(bool IsForceReload = false)
+        {
+            if (IsForceReload)
+            {
+                _listOfUoMSymbols.Clear();
+                _listOfUoMSymbols = null; // would prefer to dispose it but cannot see how
+            }
+            if (_listOfUoMSymbols == null)
+            {
+                IAppRepository<ItemUoM> appRepository = this.Repository<ItemUoM>();
+                List<ItemUoM> _itemUoMs = appRepository.GetAll().ToList(); // (await _UoMRepository.GetAllAsync()).ToList();
+                _listOfUoMSymbols = new();
+                if (_itemUoMs != null)
+                {
+                    foreach (var item in _itemUoMs)
+                    {
+                        _listOfUoMSymbols.Add(item.ItemUoMId, item.UoMSymbol);
+                    }
+                }
+            }
+            return _listOfUoMSymbols;
+            }
+
+
         public void BeginTransaction()
         {
             ClearErrorMessage();  // assume an error has been cleared

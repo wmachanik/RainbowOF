@@ -318,7 +318,8 @@ namespace RainbowOF.Repositories.Common
             _logger.LogDebug($"Getting all records (async) in Table of type: {typeof(TEntity)}");
             try
             {
-                return await _table.ToListAsync();
+                var _result =  await _table.ToListAsync();
+                return _result;
             }
             catch (Exception ex)
             {

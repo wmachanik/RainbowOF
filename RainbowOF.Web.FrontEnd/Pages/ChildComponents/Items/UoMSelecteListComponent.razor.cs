@@ -24,42 +24,47 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         private bool IsUoMTableChecked = false;
         private NewUoMComponent NewUoMComponentRef;
         private Guid SelectedUoMId;
-        Dictionary<Guid, string> _ListOfUoMs = null;
+        private Dictionary<Guid, string> ListOfUoMSymbols = null;
+
 
         protected override async Task OnInitializedAsync()
         {
             SelectedUoMId = ((SourceUoMId ?? Guid.Empty) == Guid.Empty) ? Guid.Empty : (Guid)SourceUoMId;  // store in a local var to keep state until modal closed. If not Select list changes to original value
-            _ListOfUoMs = await GetListOfUoMs();
+            if (ListOfUoMSymbols == null)
+                ListOfUoMSymbols = await Task.Run(() => _appUnitOfWork.GetListOfUoMSymbols());
         }
-        private async Task<Dictionary<Guid, string>> LoadUoMsFromData()
-        {
-            Dictionary<Guid, string>  _listOfUoMs = new Dictionary<Guid, string>();
-            IAppRepository<ItemUoM> _UoMRepository = _appUnitOfWork.Repository<ItemUoM>();
-            List<ItemUoM> _listOfitemUoMs = (await _UoMRepository.GetAllAsync()).ToList();
-            if (_listOfitemUoMs != null)
-            {
-                foreach (var item in _listOfitemUoMs)
-                {
-                    _listOfUoMs.Add(item.ItemUoMId, item.UoMSymbol);
-                }
-                IsUoMTableChecked = true;   // tell the component to show the add button
-            }
-            return _listOfUoMs;
-        }
+        //private async Task<Dictionary<Guid, string>> LoadUoMsFromData()
+        //{
 
-        public async Task<Dictionary<Guid, string>> GetListOfUoMs()
-        {
-            //if we have not tried this before, and if the table is not blank.
-            if ((!IsUoMTableChecked) && (_ListOfUoMs == null))
-            {
-                _ListOfUoMs = await LoadUoMsFromData();
-            }
-            return _ListOfUoMs;
-        }
+        //    Dictionary<Guid, string> _listOfUoMSymbols = new Dictionary<Guid, string>();
+        //    IAppRepository<ItemUoM> _UoMRepository = _appUnitOfWork.Repository<ItemUoM>();
+
+        //    List<ItemUoM> _itemUoMs = (await _UoMRepository.GetAllAsync()).ToList();
+        //    if (_itemUoMs != null)
+        //    {
+        //        foreach (var item in _itemUoMs)
+        //        {
+        //            _listOfUoMSymbols.Add(item.ItemUoMId, item.UoMSymbol);
+        //        }
+        //    }
+        //    IsUoMTableChecked = true;   // tell the component to show the add button
+        //    return _listOfUoMSymbols;
+        //}
+        //public async Task<Dictionary<Guid, string>> GetListOfUoMs()
+        //{
+        //    //if we have not tried this before, and if the table is not blank.
+        //    if ((!IsUoMTableChecked))   // && (_ListOfUoMSymbols == null))
+        //    {
+        //        if (ListOfUoMSymbols != null) ListOfUoMSymbols.Clear();
+        //        ListOfUoMSymbols = await LoadUoMsFromData();
+        //    }
+        //    return ListOfUoMSymbols;
+        //}
         private async Task ReloadUoMList()
         {
-            _ListOfUoMs.Clear();
-            _ListOfUoMs = await LoadUoMsFromData();
+            if (ListOfUoMSymbols != null) ListOfUoMSymbols.Clear();
+            var _result = await Task.Run(() => _appUnitOfWork.GetListOfUoMSymbols(true));
+            ListOfUoMSymbols = _result;
             StateHasChanged();
         }
         protected async Task OnUoMIdChanged(Guid newUoMId)

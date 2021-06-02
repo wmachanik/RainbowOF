@@ -8,25 +8,28 @@
 *@
 
 
-@{
-    <div class="d-inline-block">
-        @if ((_ListOfUoMs != null) && (_ListOfUoMs.Count > 0))
-        {
-        <Select TValue="Guid" SelectedValue="@SelectedUoMId" SelectedValueChanged="@((v) => OnUoMIdChanged(v))">
-            <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
-            @foreach (var item in _ListOfUoMs)
+<Fields>
+    <Field Style="display: inline-flex">
+        @{
+            if ((ListOfUoMSymbols != null) && (ListOfUoMSymbols.Count > 0))
             {
+            <Select TValue="Guid" SelectedValue="@SelectedUoMId" SelectedValueChanged="@((v) => OnUoMIdChanged(v))">
+                <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
+                @foreach (var item in ListOfUoMSymbols)
+                {
                 <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
+                }
+            </Select>
             }
-        </Select>
-        }
+        } &nbsp;
         <Button Color="Color.Primary" Clicked="@(() => NewUoMComponentRef.ShowModal())">
             <Tooltip Text="Add Unit of Measure">
                 <Icon IconStyle="IconStyle.Solid" Name="IconName.Add"></Icon>
             </Tooltip>
         </Button>
-    </div>
-}
+        <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items.NewUoMComponent @ref="@NewUoMComponentRef" PopUpRef="PopUpRef" UoMAdded="@((r) => ReloadUoMList())" />
+    </Field>
+</Fields>
 
 
-<RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items.NewUoMComponent @ref="@NewUoMComponentRef" PopUpRef="PopUpRef" UoMAdded="@((r) => ReloadUoMList())" />    @* not using the result as yet *@
+

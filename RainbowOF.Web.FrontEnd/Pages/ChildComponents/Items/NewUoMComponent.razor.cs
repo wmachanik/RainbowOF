@@ -21,9 +21,18 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
 
         private Modal NewUoMModalRef;
 
-        public ItemUoM _NewItemUoM = new ItemUoM();
+        public ItemUoM _NewItemUoM = new();
+        private Dictionary<Guid, string> ListOfUoMSymbols = null;
 
-        public void ShowModal() // (ModalSize modalSize, int? maxHeight = null, bool centered = false)
+
+        protected override async Task OnInitializedAsync()
+        {
+            //SelectedUoMId = ((SourceUoMId ?? Guid.Empty) == Guid.Empty) ? Guid.Empty : (Guid)SourceUoMId;  // store in a local var to keep state until modal closed. If not Select list changes to original value
+            if (ListOfUoMSymbols == null)
+                ListOfUoMSymbols = await Task.Run(() => _appUnitOfWork.GetListOfUoMSymbols());
+        }
+
+        public void ShowModal()
         {
             _NewItemUoM.UoMName = "each";
             _NewItemUoM.UoMSymbol = "@";
@@ -50,5 +59,6 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
             NewUoMModalRef.Hide();
             await UoMAdded.InvokeAsync(SaveClicked);   // tell the parent if we saved or not -> We could change SavedClicked if there was an error.
         }
+
     }
 }
