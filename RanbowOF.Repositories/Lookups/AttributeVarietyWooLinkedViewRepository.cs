@@ -314,7 +314,6 @@ namespace RainbowOF.Repositories.Lookups
                     _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{updateViewItem.VarietyName} - {_appUnitOfWork.GetErrorMessage()}", "Error updating Attribute Variety");
                 if (await UpdateWooItemAndMapping(updateViewItem) == AppUnitOfWork.CONST_WASERROR)
                     _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{updateViewItem.VarietyName} - {_appUnitOfWork.GetErrorMessage()}", "Error updating Attribute Variety Map");   // should we send a message here error = mapping not updated 
-
             }
             return _recsUpdted;
         }

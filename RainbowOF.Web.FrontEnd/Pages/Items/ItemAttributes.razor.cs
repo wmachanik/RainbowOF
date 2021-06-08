@@ -37,7 +37,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         DataGrid<ItemAttributeLookupView> _DataGrid;
 
         // All there workings are here
-        IAttributeWooLinkedView _AttributeWooLinkedViewRepository;
+        ItemWooLinkedView _AttributeWooLinkedViewRepository;
 
         public List<ItemAttributeLookupView> SelectedItemAttributeLookups;
         [Inject]

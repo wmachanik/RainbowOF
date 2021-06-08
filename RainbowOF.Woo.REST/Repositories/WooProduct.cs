@@ -13,10 +13,7 @@ namespace RainbowOF.Woo.REST.Repositories
     public class WooProduct : IWooProduct
     {
         private readonly IWooBase _Woo;
-
-        // private readonly WooAPISettings _WooAPISettings;
-        // private readonly ILoggerManager _Logger;
-
+        #region Initialisation Stuff
         public WooProduct(WooAPISettings wooAPISettings, ILoggerManager logger)
         {
             _Woo = new WooBase(wooAPISettings, logger);
@@ -24,7 +21,7 @@ namespace RainbowOF.Woo.REST.Repositories
             //_WooAPISettings = wooAPISettings;
             // this._Logger = logger;
         }
-
+        #endregion
         //private RestAPI GetJSONRestAPI
         //{
         //    get
@@ -47,7 +44,34 @@ namespace RainbowOF.Woo.REST.Repositories
         //       !_WooAPISettings.IsSecureURL);
         //    }
         //}
-
+        #region Private VARS
+        private WCObject _wcObject = null;
+        private WCObject GetWCObject
+        {
+            get
+            {
+                if (_wcObject == null)
+                {
+                    RestAPI _RestAPI = _Woo.GetJSONRestAPI;
+                    try
+                    {
+                        _wcObject = new WCObject(_RestAPI);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (_Woo.Logger != null)
+                            _Woo.Logger.LogError("Error setting up WOO REST API: " + ex.Message);
+                    }
+                }
+                return _wcObject;
+            }
+            set
+            {
+                _wcObject = value;
+            }
+        }
+        #endregion
+        #region Data Retrieval stuff
         private async Task<List<Product>> GetAllWithParams(Dictionary<string, string> pProductParams)
         {
             List<Product> _WooProducts = null;
@@ -160,5 +184,75 @@ namespace RainbowOF.Woo.REST.Repositories
             }
             return _count;
         }
+        #endregion
+        #region UILinkedRoutiones
+        public async Task<Product> GetProductByIdAsync(int deleteWooEntityId)
+        {
+            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
+            Product _Product = null;
+            try
+            {
+                WCObject _WC = new WCObject(_RestAPI);
+                _Product = await _WC.Product.Get(deleteWooEntityId);
+            }
+            catch (Exception ex)
+            {
+                if (_Woo.Logger != null)
+                    _Woo.Logger.LogError("Error calling WOO REST JSON API: " + ex.Message);
+            }
+            return _Product;
+        }
+
+        public async Task<Product> DeleteProductByIdAsync(int deleteWooProductId)
+        {
+            Product _Product = null;
+            WCObject _WC = GetWCObject;
+            try
+            {
+                // looks like it may need a force parameter, is this a good thing?
+                _Product = await _WC.Product.Delete(deleteWooProductId, true);   // force = true
+            }
+            catch (Exception ex)
+            {
+                if (_Woo.Logger != null)
+                    _Woo.Logger.LogError($"Error calling deleting product category by id: {deleteWooProductId} Async. Error:  {ex.Message}");
+            }
+            return _Product;
+        }
+
+        public async Task<Product> AddProductAsync(Product addWooProduct)
+        {
+            Product _Product = null;
+            WCObject _WC = GetWCObject;
+            try
+            {
+                _Product = await _WC.Product.Add(addWooProduct);
+            }
+            catch (Exception ex)
+            {
+                if (_Woo.Logger != null)
+                    _Woo.Logger.LogError($"Error calling Add ProductAsync for product: {addWooProduct.name}. Error:  {ex.Message}");
+            }
+            return _Product;
+        }
+
+
+        public async Task<Product> UpdateProductAsync(Product updateWooProduct)
+        {
+            Product _Product = null;
+            WCObject _WC = GetWCObject;
+            try
+            {
+                _Product = await _WC.Product.Update((int)updateWooProduct.id, updateWooProduct);
+            }
+            catch (Exception ex)
+            {
+                if (_Woo.Logger != null)
+                    _Woo.Logger.LogError($"Error calling Update ProductAsync for product: {updateWooProduct.name}. Error: {ex.Message}");
+            }
+            return _Product;
+        }
+
+        #endregion
     }
 }

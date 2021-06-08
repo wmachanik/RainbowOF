@@ -25,15 +25,11 @@ namespace RainbowOF.Repositories.Lookups
                                                                          where TEntityView : class
                                                                          where TWooMapEntity : class
     {
-        // Replaced by GetDataGridCurrent - Task<List<TEntity>> GetAllItemsAsync();
         Task<WooAPISettings> GetWooAPISettingsAsync();
         Task<bool> WooIsActive(ApplicationState currentApplicationState); 
         void PushSelectedItems(List<TEntityView> currentSelectedItems);
         List<TEntityView> PopSelectedItems(List<TEntityView> modelViewItems);
-        //--- replaced by: GetWooMappedItemsAsync Task<TWooMapEntity> GetWooMappedItemAsync(Guid mapWooEntityID);
         Task<List<TWooMapEntity>> GetWooMappedItemsAsync(List<Guid> mapWooEntityID);
-        // Only used for in memory Task<List<TEntityView>> LoadAllViewItemsAsync();
-        // REplaced by GetDataGridCurrent - Task<List<TEntity>> GetPagedItemsAsync(DataGridParameters currentDataGridParameters); // int startPage, int currentPageSize);
         DataGridParameters GetDataGridCurrent(DataGridReadDataEventArgs<TEntityView> inputDataGridReadData, string inputCustomFilter);
         Task<List<TEntityView>> LoadViewItemsPaginatedAsync(DataGridParameters currentDataGridParameters);
         Task InsertRowAsync(TEntityView newVeiwEntity);

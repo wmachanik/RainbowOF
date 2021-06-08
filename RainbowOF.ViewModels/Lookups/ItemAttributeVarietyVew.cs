@@ -6,13 +6,15 @@ using RainbowOF.Models.Woo;
 
 namespace RainbowOF.ViewModels.Lookups
 {
-    public class ItemAttributeLookupView : ItemAttributeLookup
+    public class ItemAttributeVarietyLookupView : ItemAttributeVarietyLookup
     {
-        // inherits all the item Attribute Lookup values the ItemAttributeId used for reference
+        // inherits all the item AttributeVariety Lookup values the ItemAttributeVarietyId used for reference
         public bool? CanUpdateWooMap { get; set; }
-        public bool HasWooAttributeMap
+        public bool HasWooAttributeVarietyMap
         {
             get { return (CanUpdateWooMap != null); }
         }
+
+        //public ItemDisplayColour ItemColour { get; set; }
     }
 }

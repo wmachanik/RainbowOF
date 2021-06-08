@@ -16,35 +16,22 @@ namespace RainbowOF.Repositories.Lookups
 {
     public class ItemAttributeLookupRepository : AppRepository<ItemAttributeLookup>, IItemAttributeLookupRepository
     {
+        #region Injected Items
         private ApplicationDbContext _context = null;
         private ILoggerManager _logger { get; set; }
         private IAppUnitOfWork _appUnitOfWork { get; set; }
+        #endregion
+
+        #region Initialisation
         public ItemAttributeLookupRepository(ApplicationDbContext dbContext, ILoggerManager logger, IAppUnitOfWork appUnitOfWork) : base(dbContext, logger, appUnitOfWork)
         {
             _context = dbContext;
             _logger = logger;
             _appUnitOfWork = appUnitOfWork;
         }
+        #endregion
 
-        //        public async Task<List<ItemAttributeLookup>> GetAllEagerLoadingAsync()
-        //        {
-        //            List<ItemAttributeLookup> _items = null;
-        //            DbSet<ItemAttributeLookup> _table = _context.Set<ItemAttributeLookup>();
-
-        //            try
-        //            {
-        //                _logger.LogDebug($"Getting all records with eager loading of ItemAttributeLookup");
-        //                _items = await _table.Include(ial => ial.ParentAttribute).ToListAsync();
-        //            }
-        //            catch (Exception ex)
-        //            {
-        //                _appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all records from ItemAttributeLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
-        //#if DebugMode
-        //                throw;     // #Debug?
-        //#endif
-        //            }
-        //            return _items;
-        //        }
+        #region DataGrid Handling
         List<OrderByParameter<ItemAttributeLookup>> GetOrderByExpressions(List<SortParam> currentSortParams)
         {
             if (currentSortParams == null)
@@ -182,6 +169,7 @@ namespace RainbowOF.Repositories.Lookups
             }
             return _dataGridData;
         }
+        #endregion
 
     }
 

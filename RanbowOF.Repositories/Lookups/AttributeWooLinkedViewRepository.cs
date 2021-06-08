@@ -18,7 +18,7 @@ using WooCommerceNET.WooCommerce.v3;
 
 namespace RainbowOF.Repositories.Lookups
 {
-    public class AttributeWooLinkedViewRepository : WooLinkedView<ItemAttributeLookup, ItemAttributeLookupView, WooProductAttributeMap>, IAttributeWooLinkedView
+    public class AttributeWooLinkedViewRepository : WooLinkedView<ItemAttributeLookup, ItemAttributeLookupView, WooProductAttributeMap>, ItemWooLinkedView
     {
         public AttributeWooLinkedViewRepository(ILoggerManager logger, IAppUnitOfWork appUnitOfWork, GridSettings gridSettings) : base(logger, appUnitOfWork, gridSettings)
         {

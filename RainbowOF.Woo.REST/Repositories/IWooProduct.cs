@@ -14,5 +14,12 @@ namespace RainbowOF.Woo.REST.Repositories
         Task<List<Product>> GetAllProductsInStock();
         Task<bool> CheckProductLink();
         Task<int> GetProductCount();
+        //// all UI related stuff here
+        #region DataHandlingStuffForUIIntegration
+        Task<Product> GetProductByIdAsync(int deleteWooEntityId);
+        Task<Product> AddProductAsync(Product addWooProduct);
+        Task<Product> DeleteProductByIdAsync(int deleteWooProductId);
+        Task<Product> UpdateProductAsync(Product updateWooProduct);
+        #endregion
     }
 }

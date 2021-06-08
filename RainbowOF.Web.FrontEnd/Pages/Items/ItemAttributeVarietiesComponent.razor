@@ -1,4 +1,21 @@
-﻿@using Blazorise.DataGrid
+﻿@*
+     -------------------------------------------------------------
+     Component to add Display a grid of Attribute Variety
+
+     Parameter:
+      > Guid ParentItemAttributeLookupId the ItemAttribute that variety is associated to default = Guid.Empty;
+      > int StartingPageSize starting page size of grid default is 5;
+      > bool IsSubGrid is it a sub grid (i.e. change the colours) default = false;
+
+     Uses:
+        IAppUnitOfWork _appUnitOfWork 
+        ApplicationState _appState 
+        ILoggerManager _logger 
+     -------------------------------------------------------------
+*@
+
+
+@using Blazorise.DataGrid
 @using RainbowOF.ViewModels.Lookups
 @using RainbowOF.Models.Lookups
 @using RainbowOF.ViewModels.Common
@@ -155,7 +172,7 @@
                                     {
                                         <br />
                                     }
-                                    <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items.UoMSelecteListComponent PopUpRef="@_VarietiesGridSettings.PopUpRef" SourceUoMId="VarietyDataModels.Item.UoMId" 
+                                    <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items.UoMSelecteListComponent PopUpRef="@_VarietiesGridSettings.PopUpRef" SourceUoMId="VarietyDataModels.Item.UoMId"
                                                                                                                 UoMIdChanged="@((v) => VarietyDataModels.CellValue = v)" />
                                 }
                             </EditTemplate>

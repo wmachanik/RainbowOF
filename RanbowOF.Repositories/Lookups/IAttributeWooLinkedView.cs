@@ -7,7 +7,7 @@ namespace RainbowOF.Repositories.Lookups
     /// <summary>
     /// Inherits Interface for general model for grid CRUD linked to Woo
     /// </summary>
-    public interface IAttributeWooLinkedView : IWooLinkedView<ItemAttributeLookup, ItemAttributeLookupView, WooProductAttributeMap>
+    public interface ItemWooLinkedView : IWooLinkedView<ItemAttributeLookup, ItemAttributeLookupView, WooProductAttributeMap>
     {
         // nothing here inherit it all
     }

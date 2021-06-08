@@ -1,9 +1,9 @@
 ﻿@*
     -------------------------------------------------------------
      Component to add a new Unit of Measure
-    -------------------------------------------------------------
      Parameter:
        > PopUpAndLogNotification PopUpRef - to display the notifications (and log them)
+    -------------------------------------------------------------
 *@
 
 <Modal @ref="NewUoMModalRef">
@@ -37,35 +37,35 @@
                                     <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
                                 }
                             </Select>
-                            }
                         }
                     }
-                </Field>
-                @if ((_NewItemUoM.BaseUoMId != null) && (!_NewItemUoM.BaseUoMId.Equals(Guid.Empty)))
-                {
-                    <Field>
-                        <FieldLabel>Base conversation</FieldLabel>
-                        <Blazorise.NumericEdit Decimals="@_NewItemUoM.RoundTo" Value="@_NewItemUoM.BaseConversationFactor" Placeholder="How to convert this UoM to the base UoM, eg 1kg = 1000g"></Blazorise.NumericEdit>>
-                    </Field>
                 }
+            </Field>
+            @if ((_NewItemUoM.BaseUoMId != null) && (!_NewItemUoM.BaseUoMId.Equals(Guid.Empty)))
+            {
                 <Field>
-                    <FieldLabel>Round To</FieldLabel>
-                    <Blazorise.NumericEdit TValue="int" Value="@_NewItemUoM.RoundTo" Decimals="0" ValueChanged="@((v) => _NewItemUoM.RoundTo = (int)v)" Placeholder="What to round the displayed values to (eg 2 means 1.005 becomes 1.01"></Blazorise.NumericEdit>
+                    <FieldLabel>Base conversation</FieldLabel>
+                    <Blazorise.NumericEdit Decimals="@_NewItemUoM.RoundTo" Value="@_NewItemUoM.BaseConversationFactor" Placeholder="How to convert this UoM to the base UoM, eg 1kg = 1000g"></Blazorise.NumericEdit>>
                 </Field>
-            </ModalBody>
-            <ModalFooter>
-                <Button Color="Color.Primary" Clicked="@(() => HideModal(true))">
-                    <Tooltip Text="Save Changes">
-                        <Icon Name="IconName.Save"></Icon>
-                    </Tooltip>
-                </Button>
-                <Button Color="Color.Secondary" Clicked="@(() => HideModal(false))">
-                    <Tooltip Text="Close/Cancel">
-                        <Icon Name="IconName.Undo"></Icon>
-                    </Tooltip>
-                </Button>
-            </ModalFooter>
-        </ModalContent>
-    </Modal>
+            }
+            <Field>
+                <FieldLabel>Round To</FieldLabel>
+                <Blazorise.NumericEdit TValue="int" Value="@_NewItemUoM.RoundTo" Decimals="0" ValueChanged="@((v) => _NewItemUoM.RoundTo = (int)v)" Placeholder="What to round the displayed values to (eg 2 means 1.005 becomes 1.01"></Blazorise.NumericEdit>
+            </Field>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Primary" Clicked="@(() => HideModal(true))">
+                <Tooltip Text="Save Changes">
+                    <Icon Name="IconName.Save"></Icon>
+                </Tooltip>
+            </Button>
+            <Button Color="Color.Secondary" Clicked="@(() => HideModal(false))">
+                <Tooltip Text="Close/Cancel">
+                    <Icon Name="IconName.Undo"></Icon>
+                </Tooltip>
+            </Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
 
 

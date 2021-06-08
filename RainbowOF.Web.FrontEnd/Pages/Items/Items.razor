@@ -1,117 +1,475 @@
-﻿@page "/Items"
+﻿@*
+    -------------------------------------------------------------
+     Main page to display Items
+
+     Uses:
+         IAppUnitOfWork _appUnitOfWork
+         ApplicationState _appState
+         ILoggerManager _logger
+    -------------------------------------------------------------
+*@
+@page "/Items"
 @using Blazorise.DataGrid
 @using RainbowOF.Models.Items
+@using RainbowOF.ViewModels.Items;
+@using RainbowOF.ViewModels.Common
 
-<Row>
+<Row Style="z-index: 0" Margin="Margin.Is0">
     <Column>
-        <Card Margin="Margin.Is2.OnY">
+        <Card Margin="Margin.Is0">
             <CardHeader>
-                <CardTitle>Items</CardTitle>
+                <CardTitle><h2>Attributes&nbsp;<Icon Name="IconName.Bookmark" /></h2></CardTitle>
             </CardHeader>
             <CardBody>
                 <Fields>
                     <Field Style="display: inline-flex">
-                        <FieldLabel>
-                            Filter By:
-                        </FieldLabel>
-                        <FieldBody>
-                            @if (ListOfItemCategories == null)
-                            {
-                                <span class="bg-info">Loading Dates...</span>
-                            }
-                            else
-                            {
-                                <Select @bind-SelectedValue="@IndexSelectedCategory" @onchange="OnCatagoeryChanged">
-                                    <SelectItem Value="0">---- All ----</SelectItem>
-                                    @{
-                                            int i = 1;
-                                            foreach (var cat in ListOfItemCategories)
-                                            {
-                                            <SelectItem Value="@i">@cat.CategoryName</SelectItem>
-                                                i++;
-                                            }
-                                    }
-                                </Select>
-                            }
-                        </FieldBody>
-                    </Field>
-                    <Field Style="display: inline-flex">
-                        <FieldLabel>
+                        <FieldLabel Margin="Margin.IsAuto">
                             Custom Search
                         </FieldLabel>
-                        <FieldBody>
-                            <TextEdit @bind-Text="@customFilterValue" />
-                        </FieldBody>
-                    </Field>
-                    <Field JustifyContent="JustifyContent.End">
-                        <FieldLabel>
-                            Page Size
-                        </FieldLabel>
-                        <FieldBody>
-                            <Select @bind-SelectedValue="@PageSize" style="width: 6em;">
-                                <SelectItem Value=10>10</SelectItem>
-                                <SelectItem Value=15>15</SelectItem>
-                                <SelectItem Value=20>20</SelectItem>
-                                <SelectItem Value=30>30</SelectItem>
-                                <SelectItem Value=50>50</SelectItem>
-                                <SelectItem Value=75>75</SelectItem>
-                                <SelectItem Value=100>100</SelectItem>
-                                <SelectItem Value=150>150</SelectItem>
-                            </Select>
+                        <FieldBody Style="width:80%">
+                            <TextEdit @bind-Text="@_gridSettings.CustomFilterValue" @onkeyup="HandleCustomerSearchOnKeyUp" />
                         </FieldBody>
                     </Field>
                 </Fields>
             </CardBody>
         </Card>
     </Column>
+</Row>
+<Row Margin="Margin.Is0">
+    <Column>
+        <Card Margin="Margin.Is0">
+            <CardHeader>
+                <CardTitle><h3>List of Attributes</h3></CardTitle>
+            </CardHeader>
+            <CardSubtitle Margin="Margin.Is1" Style="border-bottom: 1px solid #999">
+                <Fields>
+                    <Field Style="display: inline-flex;" Margin="Margin.Is1" JustifyContent="JustifyContent.Start">
+                        <FieldBody>
+                            <Tooltip Text="Select a Bulk Action to do on selected rows">
+                                <Select TValue="BulkAction" SelectedValue="SelectedBulkAction" SelectedValueChanged="@((v) => SelectedBulkAction = v)" style="max-width:12em">
+                                    <SelectItem Value="BulkAction.none">none</SelectItem>
+                                    @{ if (_gridSettings.WooIsActive)
+                                        {
+                                            <SelectItem Value="BulkAction.AllowWooSync">Allow Woo Sync</SelectItem>
+                                            <SelectItem Value="BulkAction.DisallowWooSync">Disallow Woo Sync</SelectItem>
+                                        }
+                                    }
+                                </Select>
+                            </Tooltip>
+                        </FieldBody>
+                        <FieldBody>
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                            <Tooltip Text="Perform group actions on Attributes" Placement="Placement.Right">
+                                <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Disabled="((SelectedBulkAction == BulkAction.none) || (SelectedItemRows == null) || (SelectedItemRows?.Count == 0))" Clicked="DoGroupAction">Group Action(s)</Blazorise.Button>
+                            </Tooltip>
+                        </FieldBody>
+                    </Field>
+                    <Field Style="display: inline-block;" Margin="Margin.Is1">
+                        <FieldBody>
+                            <Blazorise.Check TValue="bool" Checked="@(_gridSettings.IsNarrow)" CheckedChanged="@((v) => _gridSettings.IsNarrow = v)">Narrow Grid?</Blazorise.Check>
+                        </FieldBody>
+                    </Field>
+                    <Field Margin="Margin.Is1" JustifyContent="JustifyContent.End">
+                        <FieldBody>
+                            <Tooltip Text="Refresh/reload Attributes" Placement="Placement.Left">
+                                <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Clicked="Reload"><Icon Name="IconName.Sync" /></Blazorise.Button>
+                            </Tooltip>
+                        </FieldBody>
+                    </Field>
+                </Fields>
+            </CardSubtitle>
+            <CardBody Padding="Padding.IsAuto">
+                <DataGrid @ref="_DataGrid"
+                          TItem="ItemView" Data="@dataModels"
+                          ReadData="HandleReadDataAsync"
+                          Sortable="true" Editable="true"
+                          Striped="true"
+                          Hoverable="true"
+                          Responsive="true"
+                          EditMode="DataGridEditMode.Popup"
+                          PageSize="@_gridSettings.PageSize" ShowPager="true"
+                          PageSizes="@(new int[] { 5, 10, 15, 25, 50, 100 })"
+                          ShowPageSizes="true" PagerPosition="DataGridPagerPosition.TopAndBottom"
+                          TotalItems="_gridSettings.TotalItems"
+                          Bordered="true"
+                          NewItemDefaultSetter="@OnItemNewItemDefaultSetter"
+                          SelectionMode="DataGridSelectionMode.Multiple"
+                          @bind-SelectedRow="@seletectedItem"
+                          @bind-SelectedRows="@SelectedItemRows"
+                          RowInserted="@OnRowInserting"
+                          RowUpdated="@OnRowUpdating"
+                          RowRemoving="@OnRowRemoving"
+                          RowRemoved="@OnRowRemoved"
+                          Narrow="@_gridSettings.IsNarrow" Filterable="@_gridSettings.IsFilterable"
+                          UseInternalEditing="true"
+                          CurrentPage="_gridSettings.CurrentPage"
+                          PageChanged="(e) => _gridSettings.CurrentPage = e.Page"
+                          ValidationsSummaryLabel="Error validating data. Following error occurs..."
+                          ShowValidationsSummary="true"
+                          ShowValidationFeedback="true"
+                          Padding="Padding.Is0">
+                    <EmptyTemplate>
+                        @{
+                            if (string.IsNullOrEmpty(_Status))
+                            {
+                                if (@IsLoading)
+                                {
+                                    <Blazorise.Badge Color="Color.Primary">Loading...</Blazorise.Badge>
+                                }
+                                else
+                                {
+                                    <Blazorise.Badge Color="Color.Warning">No attributes found, please add one.</Blazorise.Badge>
+                                }
+                            }
+                            else
+                            {
+                                <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                                    <Column>
+                                        <span class="alert-info">@_Status</span>
+                                    </Column>
+                                    <Column>
+                                        <div class="spinner-border m-5" role="status">
+                                            <span class="sr-only">Checking Woo Link and Loading Attributes...</span>
+                                        </div>
+                                    </Column>
+                                </Row>
+                            }
+                        }
+                    </EmptyTemplate>
+                    <LoadingTemplate>
+                        <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                            <Column>
+                                <span class="alert-info">@_Status</span>
+                            </Column>
+                            <Column>
+                                <div class="spinner-border m-5" role="status">
+                                    <span class="sr-only">Checking Woo Link and Loading Attributes...</span>
+                                </div>
+                            </Column>
+                        </Row>
+                    </LoadingTemplate>
+                    <DataGridColumns>
+                        <DataGridMultiSelectColumn TItem="ItemView" Caption="[X]" Sortable="false" TextAlignment="TextAlignment.Center" Width="1em">
+                        </DataGridMultiSelectColumn>
+                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ItemName)" Context="dataModels" Caption="Name" Sortable="true" Editable="true" ValidationPattern="^\S.{2,100}">
+                            <DisplayTemplate Context="dataModels">
+                                @{
+                                    var rowItem = (dataModels as ItemView);
+                                    <span style="font-weight: bold">@rowItem.ItemName</span>
+                                }1
+                            </DisplayTemplate>
+                        </DataGridColumn>
+                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.SKU)" Caption="SKU" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,100}">
+                        </DataGridColumn>
+                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.IsEnabled)" Caption="Enabled?" Sortable="true" Editable="true">
+                            <DisplayTemplate>
+                                @{
+                                    var rowItem = (context as ItemView);
+                                    @(rowItem.IsEnabled ? "yes" : "no");
+                                }
+                            </DisplayTemplate>
+                            <EditTemplate>
+                                <Tooltip Text="Is this item enabled?">
+                                    @{
+                                        <Blazorise.Check TValue="bool" Checked="@((bool)context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)">Is Enabled</Blazorise.Check>
+                                    }
+                                </Tooltip>
+                            </EditTemplate>
+                            <FilterTemplate>
+                                @{
+                                    <Select TValue="string" SelectedValue="@(string.IsNullOrEmpty(context.SearchValue) ? String.Empty : (context.SearchValue) )"
+                                            SelectedValueChanged="@((e) => context.TriggerFilterChange(string.IsNullOrEmpty(e) ? "" : e.ToString()))">
+                                        <SelectItem Value="@String.Empty">none</SelectItem>
+                                        <SelectItem Value="@($"enabled")">enabled</SelectItem>
+                                        <SelectItem Value="@($"disabled")">disabled</SelectItem>
+                                    </Select>
+                                }
+                            </FilterTemplate>
+                        </DataGridColumn>
+                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ItemDetail)" Caption="Item Detail" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,100}">
+                        </DataGridColumn>
+                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ParentItemId)" Caption="Item Parent" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,100}">
+                            <EditTemplate>
+                                <Select TValue="Guid" SelectedValue="@(context.CellValue == null ? Guid.Empty : (Guid)context.CellValue)" SelectedValueChanged="@((v) => context.CellValue = v)">
+                                    <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
+                                    <SelectItem TValue="Guid" Value="@Guid.NewGuid()">---New parent---</SelectItem>
+                                    @*@foreach (var item in listOfParents)
+                    {
+                        // only add parents that are not this item
+                        if (catItem.ItemCategoryLookupId != item.Key)
+                        {
+                            <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
+                        }
+                    }*@
+                                </Select>
+                            </EditTemplate>
+                        </DataGridColumn>
+                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ItemAbbreviatedName)" Caption="Abrv" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,10}">
+                        </DataGridColumn>
+                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.SortOrder)" Caption="Sort Order" Sortable="true" Editable="true" Filterable="true" ValidationPattern="\d">
+                        </DataGridColumn>
+                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.BasePrice)" Caption="Base Price" Sortable="true" Editable="true" Filterable="true">
+                        </DataGridColumn>
+                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.CanUpdateWooMap)" Caption="Woo Linked" Sortable="false" Filterable="false" Editable="@(_gridSettings.WooIsActive)">
+                            <DisplayTemplate>
+                                @{
+                                    if (_gridSettings.WooIsActive)
+                                    {
+                                        var wooItem = (context as ItemView);
+                                        @((wooItem.CanUpdateWooMap == null) ? "n/a" : ((bool)wooItem.CanUpdateWooMap ? "yes" : "no"));
+                                    }
+                                    else
+                                    {
+                                        @("inactive")
+                                    }
+                                }
+                            </DisplayTemplate>
+                            <EditTemplate>
+                                @{
+                                    @if (_gridSettings.WooIsActive)
+                                    {
+                                        <Tooltip Text="Is this Attribute synchronised with Woo Categories?">
+                                            @if (context.CellValue == null)
+                                            {
+                                                <Blazorise.Check TValue="bool" Class="" Checked="@((context.CellValue==null) ? false : (bool) context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)"> Add To Woo</Blazorise.Check>
+                                            }
+                                            else
+                                            {
+                                                <Blazorise.Check TValue="bool" Class="" Checked="@((bool) context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)"> Allow Woo Updates</Blazorise.Check>
+                                            }
+                                        </Tooltip>
+                                    }
+                                    else
+                                    {
+                                        <Tooltip Text="There is not active link to Woo">
+                                            @("no woo link active")
+                                        </Tooltip>
+                                    }
+                                }
+                            </EditTemplate>
+                        </DataGridColumn>
+                        <DataGridCommandColumn TItem="ItemView" Width="6.5em">
+                            <NewCommandTemplate>
+                                <Tooltip Text="New Attribute" Style="z-index:99" Placement="Placement.Bottom">
+                                    <Button Color="Color.Success" Clicked="@context.Clicked">
+                                        <Icon Name="IconName.Add" />
+                                    </Button>
+                                </Tooltip>
+                                <Tooltip Text="Filter by Column" Style="z-index:99" Placement="Placement.Left">
+                                    <Button Color="Color.Info" Clicked="@(()=>_gridSettings.IsFilterable= !_gridSettings.IsFilterable)">
+                                        <Icon Name="@((_gridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" />
+                                    </Button>
+                                </Tooltip>
+                            </NewCommandTemplate>
+                            <EditCommandTemplate>
+                                <Tooltip Text="Edit Attribute">
+                                    <Button Color="Color.Primary" Clicked="@context.Clicked">
+                                        <Icon Name="IconName.Edit" />
+                                    </Button>
+                                </Tooltip>
+                            </EditCommandTemplate>
+                            <DeleteCommandTemplate>
+                                <Tooltip Text="Delete Attribute">
+                                    <Button Color="Color.Danger" Clicked="@context.Clicked">
+                                        <Icon Name="IconName.Delete" />
+                                    </Button>
+                                </Tooltip>
+                            </DeleteCommandTemplate>
+                            <SaveCommandTemplate>
+                                <Tooltip Text="Save">
+                                    <Button Color="Color.Primary" Clicked="@context.Clicked">
+                                        <Icon Name="IconName.CheckCircle" />
+                                    </Button>
+                                </Tooltip>
+                            </SaveCommandTemplate>
+                            <CancelCommandTemplate>
+                                <Tooltip Text="Undo changes">
+                                    <Button Color="Color.Secondary" Clicked="@context.Clicked">
+                                        <Icon Name="IconName.Undo" />
+                                    </Button>
+                                </Tooltip>
+                            </CancelCommandTemplate>
+                            <ClearFilterCommandTemplate>
+                                <Tooltip Text="Clear Filter" Style="z-index:99" Placement="Placement.Left">
+                                    <Button Color="Color.Info" Outline="true" Clicked="@context.Clicked">
+                                        <Icon Name="IconName.Clear" />
+                                    </Button>
+                                </Tooltip>
+                            </ClearFilterCommandTemplate>
+                        </DataGridCommandColumn>
+                    </DataGridColumns>
+                    @*<DetailRowTemplate>
+                        @{
+                            var thisAttribParentId = (context as ItemView).ItemId;
+                            <ItemAttributeVarietiesComponent ParentItemId="thisAttribParentId" IsSubGrid="true" />
+                        }
+                    </DetailRowTemplate>*@
+                    <PopupTitleTemplate>
+                        @if (context.EditState == DataGridEditState.Edit)
+                        {
+                            @($"Edit Item {context.Item.ItemName}")
+                        }
+                        else
+                        {
+                            @("Create Item")
+                        }
+                    </PopupTitleTemplate>
+                </DataGrid>
+            </CardBody>
+            <CardFooter Style="display: inline-flex">
+                <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                    <Column ColumnSize="ColumnSize.IsAuto"> Statuses:</Column>
+                    <Column ColumnSize="ColumnSize.IsAuto">
+                        <Row>
+                            <Column ColumnSize="ColumnSize.IsAuto">
+                                <Tooltip Text="Current Woo Status" Placement="Placement.Right">
+                                    Woo link:
+                                </Tooltip>
+                            </Column>
+                            <Column ColumnSize="ColumnSize.IsAuto">
+                                @{
+                                    string IconColor = _gridSettings.WooIsActive ? "green" : "red";
+                                    <Icon Name="@( _gridSettings.WooIsActive ? IconName.CheckCircle : IconName.MinusCircle)"
+                                          Style="@($"color: { IconColor}; display: inline - flex")" />
 
+                                }
+                            </Column>
+                            <Column>
+                                &nbsp; @* more statuses here *@
+                            </Column>
+                        </Row>
+                    </Column>
+                </Row>
+            </CardFooter>
+        </Card>
+    </Column>
 </Row>
-<Row>
-    <DataGrid TItem="Item"
-              Class="table-responsive"
-              Data="@ItemList"
-              PageSize="@PageSize"
-              Sortable="@IsSortable"
-              CustomFilter="@OnCustomFilter"
-              Editable="true"
-              EditMode="DataGridEditMode.Popup"
-              ShowPager="@DoShowPager"
-              @bind-SelectedRow="@SelectedItem"
-              Bordered="true"
-              Striped="true"
-              Hoverable="true"
-              Responsive="true"
-              RowInserted="@OnRowInserted"
-              RowUpdated="@OnRowUpdated"
-              UseInternalEditing="true">
-        <EmptyTemplate>
-            No items logged yet...
-        </EmptyTemplate>
-        <LoadingTemplate>
-            <div class="spinner-border m-5" role="status">
-                <span class="sr-only">Loading...</span>
-            </div>
-        </LoadingTemplate>
-        <DataGridColumns>
-            <DataGridCommandColumn TItem="Item">
-                <NewCommandTemplate>
-                    <Button Color="Color.Success" Clicked="@context.Clicked">New</Button>
-                </NewCommandTemplate>
-                <EditCommandTemplate>
-                    <Button Color="Color.Primary" Clicked="@context.Clicked">Edit</Button>
-                </EditCommandTemplate>
-                <DeleteCommandTemplate />
-            </DataGridCommandColumn>
-            <DataGridColumn TItem="Item" Field="@nameof(Item.SKU)" Caption="SKU" Sortable="true" />
-            <DataGridColumn TItem="Item" Field="@nameof(Item.ItemName)" Caption="Item" Sortable="true" />
-            <DataGridColumn TItem="Item" Field="@nameof(Item.ItemDetail)" Caption="Detail" Sortable="true" CellClass="@((item)=>"d-sm-none")" class="d-sm-none" />
-            <DataGridColumn TItem="Item" Field="@nameof(Item.IsEnabled)" Caption="Enabled" />
-            <DataGridColumn TItem="Item" Field="@nameof(Item.ItemAbbreviatedName)" Caption="Abrv" Sortable="true" />
-            <DataGridColumn TItem="Item" Field="@nameof(Item.SortOrder)" Caption="SOrdr" Sortable="true" />
-            <DataGridColumn TItem="Item" Field="@nameof(Item.BasePrice)" Caption="Price" Sortable="true" />
-        </DataGridColumns>
-    </DataGrid>
-</Row>
+
+
+<RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage=" Attribute Message" NotificationTitle="" @ref="@_gridSettings.PopUpRef" />
+
+<RainbowOF.Components.Modals.ConfirmModal @ref="_gridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_Click" />
+
+<RainbowOF.Components.Modals.ConfirmModal @ref="_gridSettings.DeleteWooItemConfirmation" ConfirmationClicked="ConfirmDeleteWooItem_Click" />
+
+<RainbowOF.Components.Modals.ConfirmModalWithOption @ref="_gridSettings.DeleteConfirmation"
+                                                    ConfirmationClicked="ConfirmDelete_Click"
+                                                    ConfirmationMessage=@($"Are you sure you want to delete ?")
+                                                    ConfirmButtonText="Delete"
+                                                    ConfirmOptionCheckText="Delete from Woo Too"
+                                                    ShowConfirmOption="true"
+                                                    CancelButtonText="Cancel" />
+
+
+@*<Row>
+        <Column>
+            <Card Margin="Margin.Is2.OnY">
+                <CardHeader>
+                    <CardTitle>Items</CardTitle>
+                </CardHeader>
+                <CardBody>
+                    <Fields>
+                        <Field Style="display: inline-flex">
+                            <FieldLabel>
+                                Filter By:
+                            </FieldLabel>
+                            <FieldBody>
+                                @if (ListOfItemCategories == null)
+                                {
+                                    <span class="bg-info">Loading Dates...</span>
+                                }
+                                else
+                                {
+                                    <Select @bind-SelectedValue="@IndexSelectedCategory" @onchange="OnCatagoeryChanged">
+                                        <SelectItem Value="0">---- All ----</SelectItem>
+                                        @{
+                                                int i = 1;
+                                                foreach (var cat in ListOfItemCategories)
+                                                {
+                                                <SelectItem Value="@i">@cat.CategoryName</SelectItem>
+                                                    i++;
+                                                }
+                                        }
+                                    </Select>
+                                }
+                            </FieldBody>
+                        </Field>
+                        <Field Style="display: inline-flex">
+                            <FieldLabel>
+                                Custom Search
+                            </FieldLabel>
+                            <FieldBody>
+                                <TextEdit @bind-Text="@customFilterValue" />
+                            </FieldBody>
+                        </Field>
+                        <Field JustifyContent="JustifyContent.End">
+                            <FieldLabel>
+                                Page Size
+                            </FieldLabel>
+                            <FieldBody>
+                                <Select @bind-SelectedValue="@PageSize" style="width: 6em;">
+                                    <SelectItem Value=10>10</SelectItem>
+                                    <SelectItem Value=15>15</SelectItem>
+                                    <SelectItem Value=20>20</SelectItem>
+                                    <SelectItem Value=30>30</SelectItem>
+                                    <SelectItem Value=50>50</SelectItem>
+                                    <SelectItem Value=75>75</SelectItem>
+                                    <SelectItem Value=100>100</SelectItem>
+                                    <SelectItem Value=150>150</SelectItem>
+                                </Select>
+                            </FieldBody>
+                        </Field>
+                    </Fields>
+                </CardBody>
+            </Card>
+        </Column>
+
+    </Row>
+    <Row>
+        <DataGrid TItem="Item"
+                  Data="@ItemList"
+                  PageSize="@PageSize"
+                  Sortable="@IsSortable"
+                  CustomFilter="@OnCustomFilter"
+                  Editable="true"
+                  EditMode="DataGridEditMode.Popup"
+                  ShowPager="@DoShowPager"
+                  @bind-SelectedRow="@SelectedItem"
+                  Bordered="true"
+                  Striped="true"
+                  Hoverable="true"
+                  Responsive="true"
+                  RowInserted="@OnRowInserted"
+                  RowUpdated="@OnRowUpdated"
+                  UseInternalEditing="true">
+            <EmptyTemplate>
+                No items logged yet...
+            </EmptyTemplate>
+            <LoadingTemplate>
+                <div class="spinner-border m-5" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </LoadingTemplate>
+            <DataGridColumns>
+                <DataGridCommandColumn TItem="Item">
+                    <NewCommandTemplate>
+                        <Button Color="Color.Success" Clicked="@context.Clicked">New</Button>
+                    </NewCommandTemplate>
+                    <EditCommandTemplate>
+                        <Button Color="Color.Primary" Clicked="@context.Clicked">Edit</Button>
+                    </EditCommandTemplate>
+                    <DeleteCommandTemplate />
+                </DataGridCommandColumn>
+                <DataGridColumn TItem="Item" Field="@nameof(Item.SKU)" Caption="SKU" Sortable="true" />
+                <DataGridColumn TItem="Item" Field="@nameof(Item.ItemName)" Caption="Item" Sortable="true" />
+                <DataGridColumn TItem="Item" Field="@nameof(Item.ItemDetail)" Caption="Detail" Sortable="true" CellClass="@((item)=>"d-sm-none")" class="d-sm-none" />
+                <DataGridColumn TItem="Item" Field="@nameof(Item.IsEnabled)" Caption="Enabled" />
+                <DataGridColumn TItem="Item" Field="@nameof(Item.ItemAbbreviatedName)" Caption="Abrv" Sortable="true" />
+                <DataGridColumn TItem="Item" Field="@nameof(Item.SortOrder)" Caption="SOrdr" Sortable="true" />
+                <DataGridColumn TItem="Item" Field="@nameof(Item.BasePrice)" Caption="Price" Sortable="true" />
+            </DataGridColumns>
+        </DataGrid>
+    </Row>*@
 @*
               RowSelectable="@((i) => i.ItemId != Guid.Empty)"
               DetailRowTrigger="@((i) => (SelectedItem != null) && (SelectedItem?.ItemId == i.ItemId))"

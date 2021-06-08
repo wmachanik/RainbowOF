@@ -1,4 +1,15 @@
-﻿@page "/ItemAttributes"
+﻿@*
+   -------------------------------------------------------------
+    Main page to display Item Attributes
+
+    Uses:
+        IAppUnitOfWork _appUnitOfWork
+        ApplicationState _appState
+        ILoggerManager _logger
+   -------------------------------------------------------------
+*@
+
+@page "/ItemAttributes"
 @using Blazorise.DataGrid
 @using RainbowOF.ViewModels.Lookups
 @using RainbowOF.ViewModels.Common
@@ -93,6 +104,9 @@
                           RowRemoved="@OnRowRemoved"
                           Narrow="@_gridSettings.IsNarrow" Filterable="@_gridSettings.IsFilterable"
                           UseInternalEditing="true"
+                          ValidationsSummaryLabel="Error validating data. Following error occurs..."
+                          ShowValidationsSummary="true"
+                          ShowValidationFeedback="true"
                           CurrentPage="_gridSettings.CurrentPage"
                           PageChanged="(e) => _gridSettings.CurrentPage = e.Page"
                           Padding="Padding.Is0">
@@ -139,7 +153,7 @@
                     <DataGridColumns>
                         <DataGridMultiSelectColumn TItem="ItemAttributeLookupView" Caption="[X]" Sortable="false" TextAlignment="TextAlignment.Center" Width="1em">
                         </DataGridMultiSelectColumn>
-                        <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.AttributeName)" Context="dataModels" Caption="Attribute Name" Sortable="true" Editable="true">
+                        <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.AttributeName)" Context="dataModels" Caption="Attribute Name" Sortable="true" Editable="true" ValidationPattern="^\S.{2,100}" >
                             <DisplayTemplate Context="dataModels">
                                 @{
                                     var attribItem = (dataModels as ItemAttributeLookupView);
@@ -253,7 +267,7 @@
                                 }
                             </EditTemplate>
                         </DataGridColumn>
-                        <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.Notes)" Caption="Notes" Sortable="true"
+                        <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.Notes)" Caption="Notes" Sortable="true" ValidationPattern="^\S.{2,100}" 
                                         Editable="true" HeaderCellClass="desktop-only" CellClass="@((item)=>"desktop - only")" Width="SizeToCells">
                             <DisplayTemplate>
                                 @{

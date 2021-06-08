@@ -16,6 +16,7 @@
     <Compile Remove="Pages\Items\ItemAttributeVarieties_New.razor.cs" />
     <Compile Remove="Pages\Items\ItemAttributeVarieties_Old.razor.cs" />
     <Compile Remove="Pages\Items\ItemCategories-blazority.razor.cs" />
+    <Compile Remove="Pages\Items\Items - Old.razor.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +24,7 @@
     <Content Remove="Pages\Items\ItemAttributes_Old.razor" />
     <Content Remove="Pages\Items\ItemAttributeVarieties_Old.razor" />
     <Content Remove="Pages\Items\ItemCategories-blazority.razor" />
+    <Content Remove="Pages\Items\Items - Old.razor" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,7 +41,6 @@
     <PackageReference Include="Blazorise.Bootstrap" Version="0.9.3.6" />
     <PackageReference Include="Blazorise.DataGrid" Version="0.9.3.6" />
     <PackageReference Include="Blazorise.Icons.FontAwesome" Version="0.9.3.6" />
-    <PackageReference Include="BuildWebCompiler" Version="1.12.405" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.6" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.6">
       <PrivateAssets>all</PrivateAssets>

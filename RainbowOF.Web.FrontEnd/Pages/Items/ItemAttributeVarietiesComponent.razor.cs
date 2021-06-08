@@ -88,7 +88,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
 
         public async Task HandleReadDataAsync(DataGridReadDataEventArgs<ItemAttributeVarietyLookupView> inputDataGridReadData)
         {
-            if ((IsLoading) || (ParentItemAttributeLookupId == Guid.Empty))
+            if (/*(IsLoading) || */(ParentItemAttributeLookupId == Guid.Empty))
                 return;
 
             IsLoading = true;  // prevent re-entry
