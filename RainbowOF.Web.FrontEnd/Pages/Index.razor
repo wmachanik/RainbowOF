@@ -33,6 +33,20 @@ Welcome to Rainbow Order Fulfilment manager.
 
 
 <Blazorise.Divider />
+<ul>
+    <li class="nav-item">
+        <NavLink class="nav-link" href="/WooImport">
+            <span class="oi oi-cloud-upload" aria-hidden="true"></span> from Woo
+        </NavLink>
+    </li>
+    <li class="nav-item">
+        <NavLink class="nav-link" href="/Test">
+            <span class="oi oi-badge" aria-hidden="true" /> Test
+        </NavLink>
+    </li>
+</ul>
+
+<Blazorise.Divider />
 <label style="background-color: @myColour; color: @myFGColour">@myColour</label>
 <Button Color="Color.Secondary" Clicked="(() => colorSelector.ShowModal())"><Icon Name="IconName.PaintRoller"></Icon></Button>
 <Button Color="Color.Secondary" Clicked="(() => colorFGSelector.ShowModal())"><Icon Name="IconName.PaintBrush"></Icon></Button>
@@ -44,7 +58,7 @@ Welcome to Rainbow Order Fulfilment manager.
 <hr />
 
 
-<Check TValue="bool"  Checked="@(myShowOption)" CheckedChanged="@((v) => myShowOption = v)">Show Confirm Option</Check>
+<Check TValue="bool" Checked="@(myShowOption)" CheckedChanged="@((v) => myShowOption = v)">Show Confirm Option</Check>
 
 <Button Color="Color.Light" Clicked="(() => ShowConfirm())"><Icon Name="IconName.Bell"></Icon>Confirmation</Button>
 
@@ -77,7 +91,7 @@ Welcome to Rainbow Order Fulfilment manager.
 
     void ShowConfirm()
     {
-        _confirmModalWithOption.ShowModal("This is a confirmation","Are you sure you want to confirm?","Please Confirm",myShowOption);
+        _confirmModalWithOption.ShowModal("This is a confirmation", "Are you sure you want to confirm?", "Please Confirm", myShowOption);
         //StateHasChanged();
     }
 

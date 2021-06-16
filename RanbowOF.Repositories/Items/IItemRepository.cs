@@ -30,7 +30,7 @@ namespace RainbowOF.Repositories.Items
         /// </summary>
         /// <param name="SKU">SKU to search for</param>
         /// <returns>null for none and Item if found</returns>
-        Task<Item> FindFirstItemBySKU(string pSKU);
+        Task<Item> FindFirstItemBySKU(string sourceSKU);
         /// <summary>
         /// Add and Item to the cross-checking for SKU duplication first
         /// </summary>

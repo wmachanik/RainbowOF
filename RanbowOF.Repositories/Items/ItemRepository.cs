@@ -18,17 +18,17 @@ namespace RainbowOF.Repositories.Items
     {
 
         #region Injected Items
-        private ApplicationDbContext _context = null;
-        private ILoggerManager _logger { get; set; }
-        private IAppUnitOfWork _appUnitOfWork { get; set; }
+        private ApplicationDbContext _Context = null;
+        private ILoggerManager _Logger { get; set; }
+        private IAppUnitOfWork _AppUnitOfWork { get; set; }
         #endregion
 
-        #region Inititmisation
+        #region Initialisation
         public ItemRepository(ApplicationDbContext dbContext, ILoggerManager logger, IAppUnitOfWork appUnitOfWork) : base(dbContext, logger, appUnitOfWork)
         {
-            _context = dbContext;
-            _logger = logger;
-            _appUnitOfWork = appUnitOfWork;
+            _Context = dbContext;
+            _Logger = logger;
+            _AppUnitOfWork = appUnitOfWork;
         }
         #endregion
 
@@ -82,7 +82,7 @@ namespace RainbowOF.Repositories.Items
         {
             if (currentFilterParams == null)
                 return null;
-            List<Expression<Func<Item, bool>>> _filterByExpressions = new List<Expression<Func<Item, bool>>>();
+            List<Expression<Func<Item, bool>>> _filterByExpressions = new();
             foreach (var col in currentFilterParams)
             {
                 col.FilterBy = col.FilterBy.ToLower();
@@ -93,7 +93,7 @@ namespace RainbowOF.Repositories.Items
                         break;
 
                     case nameof(Item.SKU):
-                        _filterByExpressions.Add(itm => itm.SKU.ToString().ToLower().Contains(col.FilterBy));
+                        _filterByExpressions.Add(itm => itm.SKU.ToLower().Contains(col.FilterBy));
                         break;
 
                     case nameof(Item.IsEnabled):
@@ -126,23 +126,27 @@ namespace RainbowOF.Repositories.Items
         public async Task<DataGridItems<Item>> GetPagedDataEagerWithFilterAndOrderByAsync(DataGridParameters currentDataGridParameters) // (int startPage, int currentPageSize)
         {
             DataGridItems<Item> _dataGridData = null;
-            DbSet<Item> _table = _context.Set<Item>();
+            DbSet<Item> _table = _Context.Set<Item>();
 
             try
             {
-                _logger.LogDebug($"Getting all records with eager loading of Item order by an filter Data Grid Parameters: {currentDataGridParameters.ToString()}");
+                _Logger.LogDebug($"Getting all records with eager loading of Item order by an filter Data Grid Parameters: {currentDataGridParameters.ToString()}");
                 // get a list of Order bys and filters
                 List<OrderByParameter<Item>> _orderByExpressions = GetOrderByExpressions(currentDataGridParameters.SortParams);
                 List<Expression<Func<Item, bool>>> _filterByExpressions = GetFilterByExpressions(currentDataGridParameters.FilterParams);
-
-
-//--------------------------->>>> here need to think about what we waht to retrieve? Eager or not?
-
-
-
                 // start with a basic Linq Query with Eager loading
-                IQueryable<Item> _query = _table.Include(itm => itm.ItemCategories)
-                                                .Include(itm => itm.ItemAttributes);    // for load of categories and attributes
+                // do eager loading since we are working with paging, so load parent, replacement, categories, attributes and attribute varieties
+                IQueryable<Item> _query = _table
+                    .Include(itm => itm.ParentItem)
+                    .Include(itm => itm.ReplacementItem)
+                    .Include(itm => itm.ItemCategories)
+                        .ThenInclude(cats => cats.ItemCategoryDetail)
+                    .Include(itm => itm.ItemAttributes)
+                        .ThenInclude(itmAtts => itmAtts.ItemAttributeVarieties)
+                        .ThenInclude(itmAttVars => itmAttVars.ItemAttributeVarietyLookupDetail)
+                    .Include(itm => itm.ItemAttributes)
+                        .ThenInclude(itmAtts => itmAtts.ItemAttributeDetail);
+                //now add the order by expressions
                 if ((_orderByExpressions != null) && (_orderByExpressions.Count > 0))
                 {
                     // add order bys
@@ -193,7 +197,7 @@ namespace RainbowOF.Repositories.Items
             }
             catch (Exception ex)
             {
-                _appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all records from ItemRepository: {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all records from ItemRepository: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -206,20 +210,26 @@ namespace RainbowOF.Repositories.Items
         public async Task<Item> FindFirstEagerLoadingItemAsync(Expression<Func<Item, bool>> predicate)
         {
             Item _item = null;
-            DbSet<Item>  _table = _context.Set<Item>();
+            DbSet<Item>  _table = _Context.Set<Item>();
 
             try
             {
-                _logger.LogDebug($"Finding first whole item using predicate: {predicate.ToString()}");
+                _Logger.LogDebug($"Finding first eager loading - whole item using predicate: {predicate.ToString()}");
                 _item = await _table
-                    .Include(itm => itm.ItemAttributes)
-                    .Include(itm => itm.ItemAttributeVarieties)
+                    .Include(itm => itm.ParentItem)
+                    .Include(itm => itm.ReplacementItem)
                     .Include(itm => itm.ItemCategories)
+                        .ThenInclude(itmCat => itmCat.ItemCategoryDetail)
+                    .Include(itm => itm.ItemAttributes)
+                        .ThenInclude(itmAtts => itmAtts.ItemAttributeDetail)
+                    .Include(itm => itm.ItemAttributes)
+                        .ThenInclude(itmAtts => itmAtts.ItemAttributeVarieties)
+                        .ThenInclude(itmAttVars => itmAttVars.ItemAttributeVarietyLookupDetail)
                     .FirstOrDefaultAsync(predicate);
             }
             catch (Exception ex)
             {
-                _appUnitOfWork.LogAndSetErrorMessage($"!!!Error Finding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Finding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -227,9 +237,9 @@ namespace RainbowOF.Repositories.Items
             return _item;
         }
 
-        public async Task<Item> FindFirstItemBySKU(string pSKU)
+        public async Task<Item> FindFirstItemBySKU(string sourceSKU)
         {
-            return await FindFirstAsync(i => i.SKU == pSKU);
+            return await FindFirstAsync(i => i.SKU == sourceSKU);
             
         }
 
@@ -239,7 +249,7 @@ namespace RainbowOF.Repositories.Items
             {
                 if (await FindFirstItemBySKU(newItem.SKU) != null)
                 {
-                    _appUnitOfWork.LogAndSetErrorMessage($"ERROR adding Item:  {newItem.ToString()} - duplicate SKU found in database");
+                    _AppUnitOfWork.LogAndSetErrorMessage($"ERROR adding Item:  {newItem.ToString()} - duplicate SKU found in database");
                     return AppUnitOfWork.CONST_WASERROR;
                 }
             }

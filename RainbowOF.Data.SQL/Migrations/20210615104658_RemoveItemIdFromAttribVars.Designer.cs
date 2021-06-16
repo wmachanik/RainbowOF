@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RainbowOF.Data.SQL;
 
 namespace RainbowOF.Data.SQL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210615104658_RemoveItemIdFromAttribVars")]
+    partial class RemoveItemIdFromAttribVars
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -95,17 +97,20 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Property<Guid>("ItemAttributeLookupId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("ItemAttributeVarietyId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("ItemId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("ItemAttributeId");
 
-                    b.HasIndex("ItemAttributeId")
-                        .IsUnique();
-
                     b.HasIndex("ItemAttributeLookupId");
 
                     b.HasIndex("ItemId");
+
+                    b.HasIndex("ItemAttributeId", "ItemId")
+                        .IsUnique();
 
                     b.ToTable("ItemAttributes");
                 });
@@ -119,9 +124,6 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Property<bool>("IsDefault")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("ItemAttributeId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("ItemAttributeVarietyLookupId")
                         .HasColumnType("uniqueidentifier");
 
@@ -133,9 +135,8 @@ namespace RainbowOF.Data.SQL.Migrations
 
                     b.HasKey("ItemAttributeVarietyId");
 
-                    b.HasIndex("ItemAttributeId");
-
-                    b.HasIndex("ItemAttributeVarietyLookupId");
+                    b.HasIndex("ItemAttributeVarietyLookupId")
+                        .IsUnique();
 
                     b.HasIndex("UoMId");
 
@@ -605,7 +606,7 @@ namespace RainbowOF.Data.SQL.Migrations
                 {
                     b.HasOne("RainbowOF.Models.Items.ItemAttribute", null)
                         .WithMany("ItemAttributeVarieties")
-                        .HasForeignKey("ItemAttributeId")
+                        .HasForeignKey("ItemAttributeVarietyId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 

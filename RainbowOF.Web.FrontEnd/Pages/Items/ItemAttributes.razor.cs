@@ -22,7 +22,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
     public partial class ItemAttributes : ComponentBase
     {
         // Interface Stuff
-        public GridSettings _gridSettings = new GridSettings();
+        public GridSettings _GridSettings = new GridSettings();
         public ItemAttributeLookupView SelectedItemAttributeLookup = null;
         public BulkAction SelectedBulkAction = BulkAction.none;
         // variables / Models
@@ -41,15 +41,15 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
 
         public List<ItemAttributeLookupView> SelectedItemAttributeLookups;
         [Inject]
-        IAppUnitOfWork _appUnitOfWork { get; set; }
+        public IAppUnitOfWork _AppUnitOfWork { get; set; }
         [Inject]
-        ApplicationState _appState { get; set; }
+        public ApplicationState _AppState { get; set; }
         [Inject]
-        public ILoggerManager _logger { get; set; }
+        public ILoggerManager _Logger { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
-            _AttributeWooLinkedViewRepository = new AttributeWooLinkedViewRepository(_logger, _appUnitOfWork, _gridSettings);
+            _AttributeWooLinkedViewRepository = new AttributeWooLinkedViewRepository(_Logger, _AppUnitOfWork, _GridSettings);
             //await LoadData();
             await InvokeAsync(StateHasChanged);
         }
@@ -60,37 +60,35 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         }
         public async Task LoadData()
         {
-            await HandleReadDataAsync(new DataGridReadDataEventArgs<ItemAttributeLookupView>(_gridSettings.CurrentPage, _gridSettings.PageSize, null, System.Threading.CancellationToken.None));
+            await HandleReadDataAsync(new DataGridReadDataEventArgs<ItemAttributeLookupView>(_GridSettings.CurrentPage, _GridSettings.PageSize, null, System.Threading.CancellationToken.None));
         }
 
         public async Task HandleReadDataAsync(DataGridReadDataEventArgs<ItemAttributeLookupView> inputDataGridReadData)
         {
            if (IsLoading)
                 return;
-
             IsLoading = true;
             // 
-
             if (!inputDataGridReadData.CancellationToken.IsCancellationRequested)
             {
-                DataGridParameters _dataGridParameters = _AttributeWooLinkedViewRepository.GetDataGridCurrent(inputDataGridReadData, _gridSettings.CustomFilterValue);
-                if (_gridSettings.PageSize != inputDataGridReadData.PageSize)
+                DataGridParameters _dataGridParameters = _AttributeWooLinkedViewRepository.GetDataGridCurrent(inputDataGridReadData, _GridSettings.CustomFilterValue);
+                if (_GridSettings.PageSize != inputDataGridReadData.PageSize)
                 { /// page sized changed so jump back to original page
-                    _gridSettings.CurrentPage = _dataGridParameters.CurrentPage = 1;  // force this
-                    _gridSettings.PageSize = inputDataGridReadData.PageSize;
+                    _GridSettings.CurrentPage = _dataGridParameters.CurrentPage = 1;  // force this
+                    _GridSettings.PageSize = inputDataGridReadData.PageSize;
                     //                  await Reload();
                 }
                 await SetLoadStatus("Checking Woo status & loading Attributes");
                 try
                 {
                     await SetLoadStatus("Checking Woo status");
-                    _gridSettings.WooIsActive = await _AttributeWooLinkedViewRepository.WooIsActive(_appState);
+                    _GridSettings.WooIsActive = await _AttributeWooLinkedViewRepository.WooIsActive(_AppState);
                     await SetLoadStatus("Loading Attributes");
                     await LoadItemAttributeLookupList(_dataGridParameters); 
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"Error running async tasks: {ex.Message}");
+                    _Logger.LogError($"Error running async tasks: {ex.Message}");
                     throw;
                 }
                 _Status = string.Empty;
@@ -103,18 +101,18 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             // store old select items list
             try
             {
-                var response = await _AttributeWooLinkedViewRepository.LoadViewItemsPaginatedAsync(currentDataGridParameters);  
+                var _response = await _AttributeWooLinkedViewRepository.LoadViewItemsPaginatedAsync(currentDataGridParameters);  
                 if (dataModels == null)
-                    dataModels = new List<ItemAttributeLookupView>(response);  // not sure why we have to use a holding variable just following the demo code
+                    dataModels = new List<ItemAttributeLookupView>(_response);  // not sure why we have to use a holding variable just following the demo code
                 else
                 {
                     dataModels.Clear();
-                    dataModels.AddRange(response);
+                    dataModels.AddRange(_response);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error running async tasks: {ex.Message}");
+                _Logger.LogError($"Error running async tasks: {ex.Message}");
                 throw;
             }
             //restore the old items that were selected.
@@ -140,9 +138,9 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             await _DataGrid.Reload();
             //}
         }
-        async Task OnRowInserting(SavedRowItem<ItemAttributeLookupView, Dictionary<string, object>> pInsertedItem)
+        async Task OnRowInserting(SavedRowItem<ItemAttributeLookupView, Dictionary<string, object>> insertedItem)
         {
-            var newItem = pInsertedItem.Item;
+            var newItem = insertedItem.Item;
 
             await _AttributeWooLinkedViewRepository.InsertRowAsync(newItem);
             await _DataGrid.Reload();
@@ -151,15 +149,15 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         {
             newItem = _AttributeWooLinkedViewRepository.NewItemDefaultSetter(newItem);
         }
-        async Task<int> UpdateItemAttributeLookup(ItemAttributeLookupView UpdatedCatItemView)
+        async Task<int> UpdateItemAttributeLookup(ItemAttributeLookupView updatedCatItemView)
         {
-            int _result = await _AttributeWooLinkedViewRepository.UpdateItemAsync(UpdatedCatItemView);
+            int _result = await _AttributeWooLinkedViewRepository.UpdateItemAsync(updatedCatItemView);
             await _DataGrid.Reload();
             return _result;
         }
-        async Task OnRowUpdating(SavedRowItem<ItemAttributeLookupView, Dictionary<string, object>> pUpdatedItem)
+        async Task OnRowUpdating(SavedRowItem<ItemAttributeLookupView, Dictionary<string, object>> updatedItem)
         {
-            await _AttributeWooLinkedViewRepository.UpdateRowAsync(pUpdatedItem.Item);
+            await _AttributeWooLinkedViewRepository.UpdateRowAsync(updatedItem.Item);
             await _DataGrid.Reload();
         }
         void OnRowRemoving(CancellableRowChange<ItemAttributeLookupView> modelItem)
@@ -167,22 +165,22 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             // set the Selected Item Attribute for use later
             SelectedItemAttributeLookup = modelItem.Item;
             var deleteItem = modelItem;
-            _gridSettings.DeleteConfirmation.ShowModal("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.AttributeName}?", SelectedItemAttributeLookup.HasWooAttributeMap);  //,"Delete","Cancel"); - passed in on init
+            _GridSettings.DeleteConfirmation.ShowModal("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.AttributeName}?", SelectedItemAttributeLookup.HasWooAttributeMap);  //,"Delete","Cancel"); - passed in on init
         }
         //
-        async Task ConfirmAddWooItem_Click(bool confirm)
+        async Task ConfirmAddWooItem_Click(bool confirmClicked)
         {
-            if (confirm)
+            if (confirmClicked)
             {
                 // they want to add the item to Woo 
                 await _AttributeWooLinkedViewRepository.AddWooItemAndMapAsync(SelectedItemAttributeLookup);
                 await _DataGrid.Reload();
             }
         }
-        async Task ConfirmDeleteWooItem_Click(bool confirm)
+        async Task ConfirmDeleteWooItem_Click(bool confirmClicked)
         {
             // they want to delete the item to Woo 
-            await _AttributeWooLinkedViewRepository.DeleteWooItemAsync(SelectedItemAttributeLookup.ItemAttributeLookupId, confirm);
+            await _AttributeWooLinkedViewRepository.DeleteWooItemAsync(SelectedItemAttributeLookup.ItemAttributeLookupId, confirmClicked);
             //  regardless of how we got here they wanted to delete the original Attribute so delete it now, but only after Woo delete if they wanted it deleted.
             await _AttributeWooLinkedViewRepository.DeleteRowAsync(SelectedItemAttributeLookup);
             await _DataGrid.Reload();
@@ -194,7 +192,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             {
                 // if there is a WooAttribute and we have to delete it, then delete that first.
                 if (confirmationOption == ConfirmModalWithOption.ConfirmResults.confirmWithOption)
-                    _gridSettings.DeleteWooItemConfirmation.ShowModal("Are you sure?", $"Delete {SelectedItemAttributeLookup.AttributeName} from Woo too?", "Delete", "Cancel");
+                    _GridSettings.DeleteWooItemConfirmation.ShowModal("Are you sure?", $"Delete {SelectedItemAttributeLookup.AttributeName} from Woo too?", "Delete", "Cancel");
                 else
                     await _AttributeWooLinkedViewRepository.DeleteRowAsync(SelectedItemAttributeLookup);
 
@@ -208,25 +206,25 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             await InvokeAsync(StateHasChanged);
         }
 
-        Dictionary<OrderBys, string> _ListOfOrderBys = null;
+        Dictionary<OrderBys, string> _listOfOrderBys = null;
         public Dictionary<OrderBys, string> GetListOfOrderBys()
         {
-            if (_ListOfOrderBys == null)
+            if (_listOfOrderBys == null)
             {
-                _ListOfOrderBys = new Dictionary<OrderBys, string>();
+                _listOfOrderBys = new Dictionary<OrderBys, string>();
                 foreach (OrderBys obs in Enum.GetValues(typeof(OrderBys)))
                 {
-                    _ListOfOrderBys.Add(obs, obs.ToString());
+                    _listOfOrderBys.Add(obs, obs.ToString());
                 }
             }
-            return _ListOfOrderBys;
+            return _listOfOrderBys;
         }
         async Task DoGroupAction()
         {
             //if (SelectedBulkAction == BulkAction.none)
             //    return;   ----> button should be disabled 
 
-            _gridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Info, "Applying the bulk action as requested");
+            _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Info, "Applying the bulk action as requested");
 
             int done = 0;
             int failed = 0;
@@ -237,12 +235,12 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
                 else
                     failed++;
             }
-            _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Info, $"Bulk Action applied to {done} items and not applied to {failed} items.");
+            _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Info, $"Bulk Action applied to {done} items and not applied to {failed} items.");
             await _DataGrid.Reload();
         }
         async Task Reload()
         {
-            _gridSettings.CurrentPage = 1;
+            _GridSettings.CurrentPage = 1;
             await _DataGrid.Reload();
         }
 

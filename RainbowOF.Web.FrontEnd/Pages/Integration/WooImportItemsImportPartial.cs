@@ -18,46 +18,46 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
     public partial class WooImportItemsComponent // for CategoryImport so file name WooImportItemsComponentProductsImport Partial
     {
         /// <summary>
-        /// All the atribute term import stuff. Attributes Terms in Woo are Attributed Varieties to us. Could we have generalised this for ezch item import with an object?
+        /// All the attribute term import stuff. Attributes Terms in Woo are Attributed Varieties to us. Could we have generalised this for ezch item import with an object?
         /// </summary>
         #region AttrbiuteStuff
 
         // Retrieve data from Woo
         async Task<List<Product>> GetAllWooProducts(bool OnlyItemsInStock)
         {
-            WooAPISettings _WooAPISettings = new WooAPISettings(WooSettingsModel);
+            WooAPISettings _wooAPISettings = new WooAPISettings(AppWooSettings);
 
-            WooProduct _WooProduct = new WooProduct(_WooAPISettings, Logger);
+            WooProduct _wooProduct = new WooProduct(_wooAPISettings, _Logger);
             List<Product> wooProducts = OnlyItemsInStock ?
-                await _WooProduct.GetAllProductsInStock() :
-                await _WooProduct.GetAllProducts();
+                await _wooProduct.GetAllProductsInStock() :
+                await _wooProduct.GetAllProducts();
 
             // unique check not needed 
             //  var _wooProducts = wooProducts.GroupBy(wp => wp.id).Select(wp => wp.FirstOrDefault()); // wooProducts that are distinct;
             //  wooProducts = _wooProducts.ToList();
             return wooProducts;
         }
-        // there is essentiall on master item and then variations. how those are represented in a order is eitehr each or using UOOm a qty of each
-        // this routine is used both for update and add/create. If null create a new one otherwise update, then bsic Product info across
-        private Item CopyWooProductInfo(Product pWooProd, Item pItem, ref List<WooItemWithParent> pWooProductsWithParents)
+        // there is essential on master item and then variations. how those are represented in a order is either each or using UOOm a Qty of each
+        // this routine is used both for update and add/create. If null create a new one otherwise update, then basic Product info across
+        private Item CopyWooProductInfo(Product sourceWooProd, Item currItem, ref List<WooItemWithParent> currWooProductsWithParents)
         {
-            if (pItem == null)
-                pItem = new Item();
-            pItem.ItemName = _StringTools.Truncate(pWooProd.name, 100);  // max length is 100
-            pItem.SKU = _StringTools.Truncate(pWooProd.sku, 50);  // max length is 50
-            pItem.IsEnabled = true;
-            pItem.ItemDetail = _StringTools.Truncate(_StringTools.StripHTML(pWooProd.short_description), 250);   // max length is 255
-            pItem.ItemAbbreviatedName = _StringTools.MakeAbbriviation(pWooProd.name);
-            pItem.SortOrder = Convert.ToInt32(pWooProd.menu_order);  //  (pWooProd.menu_order == null) ? 50 : (int)pWooProd.menu_order;
-            pItem.BasePrice = Convert.ToDecimal(pWooProd.price); // (pWooProd.price == null) ? 0 :(decimal)pWooProd.price;
+            if (currItem == null)
+                currItem = new Item();
+            currItem.ItemName = _StringTools.Truncate(sourceWooProd.name, 100);  // max length is 100
+            currItem.SKU = _StringTools.Truncate(sourceWooProd.sku, 50);  // max length is 50
+            currItem.IsEnabled = true;
+            currItem.ItemDetail = _StringTools.Truncate(_StringTools.StripHTML(sourceWooProd.short_description), 250);   // max length is 255
+            currItem.ItemAbbreviatedName = _StringTools.MakeAbbriviation(sourceWooProd.name);
+            currItem.SortOrder = Convert.ToInt32(sourceWooProd.menu_order);  //  (currWooProd.menu_order == null) ? 50 : (int)currWooProd.menu_order;
+            currItem.BasePrice = Convert.ToDecimal(sourceWooProd.price); // (currWooProd.price == null) ? 0 :(decimal)currWooProd.price;
 
-            if ((pWooProd.parent_id != null) && (pWooProd.parent_id > 0))
-                pWooProductsWithParents.Add(new WooItemWithParent
+            if ((sourceWooProd.parent_id != null) && (sourceWooProd.parent_id > 0))
+                currWooProductsWithParents.Add(new WooItemWithParent
                 {
-                    ChildId = (int)pWooProd.id,
-                    ParentId = (int)pWooProd.parent_id
+                    ChildId = (int)sourceWooProd.id,
+                    ParentId = (int)sourceWooProd.parent_id
                 });
-            return pItem;
+            return currItem;
         }
         /// <summary>
         /// Using the item sent assign the categories that the WooProduct has. Remember that we do not affect ItemId since the EF core 
@@ -65,132 +65,145 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         /// <param name="Item">The Product Item t add too</param>
         /// <param name="WooProduct">The Woo Product Source</param>
         /// <returns></returns>
-        async Task<Item> AssignWooProductCategory(Item pItem, Product pWooProd)
+        async Task<Item> AssignWooProductCategory(Item currItem, Product currWooProd)
         {
-            bool _IsCatUpdate = pItem.ItemCategories != null;
-            if (pItem != null)
+            bool _isCatUpdate = currItem.ItemCategories != null;
+            if (currItem != null)
             {
                 // if we get here then we have an item and it has an id
                 IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepo = _AppUnitOfWork.Repository<ItemCategoryLookup>();
-                ItemCategoryLookup _ItemCategoryLookup = null;
+                ItemCategoryLookup _itemCategoryLookup = null;
                 bool _SetPrimary = true;
-                foreach (var cat in pWooProd.categories)
+                foreach (var cat in currWooProd.categories)
                 {
                     Guid CategoryId = await GetCategoryById((int)cat.id);
-                    _ItemCategoryLookup = await _itemCategoryLookupRepo.FindFirstAsync(ic => ic.ItemCategoryLookupId == CategoryId);
-                    if (_ItemCategoryLookup != null)
+                    _itemCategoryLookup = await _itemCategoryLookupRepo.FindFirstAsync(ic => ic.ItemCategoryLookupId == CategoryId);
+                    if (_itemCategoryLookup != null)
                     {
                         ///////// check if exists if this is not a new item
-                        if ((_IsCatUpdate) && (pItem.ItemCategories.Exists(ic => ic.ItemCategoryLookupId == _ItemCategoryLookup.ItemCategoryLookupId)))
+                        if ((_isCatUpdate) && (currItem.ItemCategories.Exists(ic => ic.ItemCategoryLookupId == _itemCategoryLookup.ItemCategoryLookupId)))
                         {
                             // this attribute exists so just update it - nothing to do here at the moment.
                         }
                         else
                         {
                             // add an item to the linked list. Since it is a new item the FK must be guid.empty for EF Core to work
-                            if (pItem.ItemCategories == null)
-                                pItem.ItemCategories = new List<ItemCategory>();
-                            pItem.ItemCategories.Add(new ItemCategory
+                            if (currItem.ItemCategories == null)
+                                currItem.ItemCategories = new List<ItemCategory>();
+                            currItem.ItemCategories.Add(new ItemCategory
                             {
-                                ItemCategoryLookupId = _ItemCategoryLookup.ItemCategoryLookupId
+                                ItemCategoryLookupId = _itemCategoryLookup.ItemCategoryLookupId
                             });
                             if (_SetPrimary)    // assume the first in the list is the primary, as we have no other way of knowing.
                             {
-                                pItem.PrimaryItemCategoryLookupId = _ItemCategoryLookup.ItemCategoryLookupId;
+                                currItem.PrimaryItemCategoryLookupId = _itemCategoryLookup.ItemCategoryLookupId;
                                 _SetPrimary = false;
                             }
                         }
                     }
                 }
             }
-            return pItem;   // return the pItem after we have manipulated it.
+            return currItem;   // return the currItem after we have manipulated it.
         }
-        async Task<Item> AssignWooProductAttrbiutes(Item pItem, Product pWooProd)
+        async Task<Item> AssignWooProductAttrbiutes(Item currItem, Product currWooProd)
         {
-            bool _IsAttribUpdate = pItem.ItemAttributes != null;
-            bool _IsAttrVarietyUpdate = pItem.ItemAttributeVarieties != null;
-            if (pItem != null)
+            if (currItem != null)
             {
+                bool _isAttribUpdate = currItem.ItemAttributes != null;
                 // loop through all the attributes and see if the are used for variations and add all the terms a variations
-                foreach (var attrib in pWooProd.attributes)
+                foreach (var attrib in currWooProd.attributes)
                 {
-                    pItem = await AddOrUpdateItemsAttributes(pItem, attrib, _IsAttribUpdate, _IsAttrVarietyUpdate);
+                    currItem = await AddOrUpdateItemsAttributes(currItem, attrib, _isAttribUpdate);   
                 }
             }
-            return pItem;   // reutrn the pItem afdter we have manipulated it.
+            return currItem;   // return the currItem after we have manipulated it.
         }
 
-        async Task<Item> AddOrUpdateItemsAttributes(Item pItem, ProductAttributeLine pAttrib, bool pIsAttribUpdate, bool pIsAttrVarietyUpdate)
+        async Task<Item> AddOrUpdateItemsAttributes(Item currItem, ProductAttributeLine prodAttrib, bool HasAttributes) 
         {
             // if we get here then we have an item and it has an id
-            IAppRepository<ItemAttributeLookup> _itemAttributeLookupRepo = _AppUnitOfWork.Repository<ItemAttributeLookup>();
+//            IAppRepository<ItemAttributeLookup> _itemAttributeLookupRepo = _AppUnitOfWork.Repository<ItemAttributeLookup>();
             IAppRepository<WooProductAttributeMap> _wooProductAttributeMapRepo = _AppUnitOfWork.Repository<WooProductAttributeMap>();
             // check if this is an update or an add for categories and attributes
-            WooProductAttributeMap _wooProductAttributeMap = await _wooProductAttributeMapRepo.FindFirstAsync(wpa => wpa.WooProductAttributeId == pAttrib.id);
+            WooProductAttributeMap _wooProductAttributeMap = await _wooProductAttributeMapRepo.FindFirstAsync(wpa => wpa.WooProductAttributeId == prodAttrib.id);
             if (_wooProductAttributeMap != null)
             {
-                if ((pIsAttribUpdate) && (pItem.ItemAttributes.Exists(ic => ic.ItemAttributeLookupId == _wooProductAttributeMap.ItemAttributeLookupId)))
+                if ((HasAttributes) && (currItem.ItemAttributes.Exists(ic => ic.ItemAttributeLookupId == _wooProductAttributeMap.ItemAttributeLookupId)))
                 {
                     // this attribute exists so just update it
-                    ItemAttribute _itemAttribute = pItem.ItemAttributes.Find(ic => ic.ItemAttributeLookupId == _wooProductAttributeMap.ItemAttributeLookupId);
-                    _itemAttribute.IsUsedForVariableType = pAttrib.variation == null ? false : (bool)pAttrib.variation;  // the only thing that we can really update
+                    ItemAttribute _itemAttribute = currItem.ItemAttributes.Find(ic => ic.ItemAttributeLookupId == _wooProductAttributeMap.ItemAttributeLookupId);
+                    _itemAttribute.IsUsedForVariableType = prodAttrib.variation == null ? false : (bool)prodAttrib.variation;  // the only thing that we can really update
                 }
                 else
                 {
-                    if (pItem.ItemAttributes == null)
-                        pItem.ItemAttributes = new List<ItemAttribute>();
-                    // create a new attribute and update the itemdetails. Do not change Item Id as then EF core knows it is a new record.
-                    pItem.ItemAttributes.Add(new ItemAttribute
+                    if (currItem.ItemAttributes == null)
+                        currItem.ItemAttributes = new List<ItemAttribute>();
+                    // create a new attribute and update the ItemDetails. Do not change Item Id as then EF core knows it is a new record.
+                    currItem.ItemAttributes.Add(new ItemAttribute
                     {
-                        IsUsedForVariableType = pAttrib.variation == null ? false : (bool)pAttrib.variation,
+                        IsUsedForVariableType = prodAttrib.variation == null ? false : (bool)prodAttrib.variation,
                         ItemAttributeLookupId = _wooProductAttributeMap.ItemAttributeLookupId,
                     });
                 }
-                if (Convert.ToBoolean(pAttrib.variation))
-                {
-                    pItem = await AddOrUpdateVarieties(pItem, pAttrib, pIsAttrVarietyUpdate);
-                }
+                //if (Convert.ToBoolean(prodAttrib.variation))
+                //{   --> not sure why we had this but we were only adding terms / varieties if they were used for variations, but this means attributes are left hanging.
+                currItem = await AddOrUpdateVarieties(currItem, prodAttrib, _wooProductAttributeMap); //--> need to check each attribute, IsAttributeVarietyUpddate);
+                //}
             }
-            return pItem;
+            return currItem;
         }
         /// <summary>
         /// Add or update variation of this item
         /// </summary>
-        /// <param name="pItem">the item </param>
-        /// <param name="pAttrib">the attribut</param>
-        /// <param name="pIsAttrVarietyUpdate">the attribute variation/term</param>
-        /// <returns></returns>
-
-        async Task<Item> AddOrUpdateVarieties(Item pItem, ProductAttributeLine pAttrib, bool pIsAttrVarietyUpdate)
+        /// <param name="currItem">the item </param>
+        /// <param name="prodAttrib">the attribute</param>
+        /// <returns>Item modified with new data</returns>
+        async Task<Item> AddOrUpdateVarieties(Item currItem, ProductAttributeLine prodAttrib, WooProductAttributeMap currWooProductAttributeMap) //, bool IsAttributeVarietyUpddate)
         {
-            IAppRepository<ItemAttributeVarietyLookup> _itemAttribVarietyLookup = _AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
-            ItemAttributeVarietyLookup _itemAttributeVarietyLkup = null;
-            foreach (var attrbiTerm in pAttrib.options)
+            IAppRepository<ItemAttributeVarietyLookup> _itemAttribVarietyLookupRepo = _AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
+            ItemAttributeVarietyLookup _itemAttributeVarietyLookup = null;
+            foreach (var attrbiTerm in prodAttrib.options)
             {
-                _itemAttributeVarietyLkup = await _itemAttribVarietyLookup.FindFirstAsync(ItemAttributeVariety => ItemAttributeVariety.VarietyName == attrbiTerm);
+                _itemAttributeVarietyLookup = await _itemAttribVarietyLookupRepo.FindFirstAsync(ItemAttributeVariety => ItemAttributeVariety.VarietyName == attrbiTerm);
+                if (_itemAttributeVarietyLookup != null)
+                {
+                    // found so update or add
+                    ItemAttribute _itemAttribute = currItem.ItemAttributes.Find(ic => ic.ItemAttributeLookupId == currWooProductAttributeMap.ItemAttributeLookupId);
+                    if (_itemAttribute == null)
+                        return currItem; // this should never occur  
 
-                if (_itemAttributeVarietyLkup != null)
-                {    // found so update or add
-                    if ((pIsAttrVarietyUpdate) && (pItem.ItemAttributeVarieties.Exists(iav => iav.ItemAttributeVarietyLookupId == _itemAttributeVarietyLkup.ItemAttributeVarietyLookupId)))
+                    // does this attribute have this variety, if so update otherwise add
+                    if ((_itemAttribute.ItemAttributeVarieties !=null) && (_itemAttribute.ItemAttributeVarieties.Exists(iav => iav.ItemAttributeVarietyLookupId == _itemAttributeVarietyLookup.ItemAttributeVarietyLookupId)))
                     {
-                        // this attribute exists so just update it. Do stuff here if we need - so far nada
+                        // this attribute variety / term exists so just update it. Do stuff here if we need - so far nada
+                        //make sure this matches
+                        ItemAttributeVariety _itemAttributeVariety = _itemAttribute.ItemAttributeVarieties.FirstOrDefault(iav => iav.ItemAttributeVarietyLookupId == _itemAttributeVarietyLookup.ItemAttributeVarietyLookupId);
+                        ///-> can this be null? It should never be
+                        // copy the whole item across just in case there have been changes
+                        _itemAttributeVariety.ItemAttributeVarietyLookupDetail = _itemAttributeVarietyLookup;   
+                        _itemAttributeVariety.ItemAttributeId = _itemAttribute.ItemAttributeId;
                     }
                     else
                     {
-                        if (pItem.ItemAttributeVarieties == null)
-                            pItem.ItemAttributeVarieties = new List<ItemAttributeVariety>();
-                        // create a new variety assume 1.0 as in 1-1 Qty and update the itemdetails. Do not change Item Id as then EF core knows it is a new record.
-                        pItem.ItemAttributeVarieties.Add(new ItemAttributeVariety
+                        // we have a attribute variety, this means we should have an attribute that, that belongs too.
+
+                        if (_itemAttribute.ItemAttributeVarieties == null)
+                            _itemAttribute.ItemAttributeVarieties = new List<ItemAttributeVariety>();
+                        // create a new variety assume 1.0 as in 1-1 QTY and update the ItemDetails. Do not change Item Id as then EF core knows it is a new record.
+                        _itemAttribute.ItemAttributeVarieties.Add(new ItemAttributeVariety
                         {
-                            ItemAttributeVarietyLookupId = _itemAttributeVarietyLkup.ItemAttributeVarietyLookupId,
+                            ItemAttributeVarietyLookupId = _itemAttributeVarietyLookup.ItemAttributeVarietyLookupId,
+                            ItemAttributeVarietyLookupDetail = _itemAttributeVarietyLookup,    // copy the whole attribute across
+                            ItemAttributeId = _itemAttribute.ItemAttributeId,
+                            UoMId = _itemAttributeVarietyLookup.UoMId,
+                            UoM = _itemAttributeVarietyLookup.UoM,
                             UoMQtyPerItem = 1.0
-                        });
+                        }); 
                     }
                 }
             }
-            return pItem;
+            return currItem;
         }
-
         /// <summary>
         ///   CopyWooDetails:
         ///           The copies the info across:
@@ -198,15 +211,15 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         ///   •	For ItemCategotyId – selected the first Category in the array find the CategoryId of it using the WooCategoryMapping and set.We assume the first is primary.Perhaps we should look for one those without parents?
         ///   •	For ParentItemId Add to a List ItemParents the ParentId and the ItemId
         /// </summary>
-        async Task<Guid> AddItem(Product pWooProd, List<WooItemWithParent> pWooProductsWithParents)
+        async Task<Guid> AddItem(Product currWooProd, List<WooItemWithParent> currWooProductsWithParents)
         {
-            // using the prod we need to add the item and link all its Settings: AssginedCategory, Attributes and Attribute variteies
-            Item _item = CopyWooProductInfo(pWooProd, null, ref pWooProductsWithParents);
+            // using the prod we need to add the item and link all its Settings: AssginedCategory, Attributes and Attribute varieties
+            Item _item = CopyWooProductInfo(currWooProd, null, ref currWooProductsWithParents);
             if (_item != null)
             {
                 /// once we get here we have a new ID for the ItemID so we can continue
-                _item = await AssignWooProductCategory(_item, pWooProd);    // adding the item but not the linked items
-                _item = await AssignWooProductAttrbiutes(_item, pWooProd);
+                _item = await AssignWooProductCategory(_item, currWooProd);    // adding the item but not the linked items
+                _item = await AssignWooProductAttrbiutes(_item, currWooProd);
                 IItemRepository _itemRepo = _AppUnitOfWork.itemRepository();
                 if (await _itemRepo.AddItem(_item) == 0)
                 {
@@ -216,162 +229,160 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             return _item.ItemId;
         }
         /// <summary>
-        /// Update an item that has been found in the wooproduct link
+        /// Update an item that has been found in the WooPoduct link
         /// </summary>
-        /// <param name="pWooProd"></param>
-        /// <param name="pItem"></param>
-        /// <param name="pWooProductsWithParents"></param>
+        /// <param name="currWooProd"></param>
+        /// <param name="currItem"></param>
+        /// <param name="currWooProductsWithParents"></param>
         /// <returns></returns>
-        async Task<Guid> UpdateItem(Product pWooProd, Item pItem, List<WooItemWithParent> pWooProductsWithParents)
+        async Task<Guid> UpdateItem(Product currWooProd, Item currItem, List<WooItemWithParent> currWooProductsWithParents)
         {
-            // using the prod we need to add the item and link all its Settings: AssginedCategory, Attributes and Attribute variteies
-
-            pItem = CopyWooProductInfo(pWooProd, pItem, ref pWooProductsWithParents);
-            if (pItem != null)
+            // using the prod we need to add the item and link all its Settings: AssginedCategory, Attributes and Attribute varieties
+            currItem = CopyWooProductInfo(currWooProd, currItem, ref currWooProductsWithParents);
+            if (currItem != null)
             {
                 //int _RecsDone;  //used for error checking
                 /// once we get here we have a new ID for the ItemID so we can continue
-                pItem = await AssignWooProductCategory(pItem, pWooProd);
-                pItem = await AssignWooProductAttrbiutes(pItem, pWooProd);
+                currItem = await AssignWooProductCategory(currItem, currWooProd);
+                currItem = await AssignWooProductAttrbiutes(currItem, currWooProd);
                 // now update the item
                 IItemRepository _itemRepo = _AppUnitOfWork.itemRepository();
-                if (await _itemRepo.UpdateAsync(pItem) == 0)
+                if (await _itemRepo.UpdateAsync(currItem) == 0)
                 {
-                    pItem.ItemId = Guid.Empty;
+                    currItem.ItemId = Guid.Empty;
                 }
             }
-            return pItem.ItemId;
+            return currItem.ItemId;
         }
 
-        async Task<Guid> AddOrGetIDItem(Product pWooProduct, List<WooItemWithParent> pWooProductsWithParents)
+        async Task<Guid> AddOrGetIDItem(Product currWooProduct, List<WooItemWithParent> currWooProductsWithParents)
         {
-            Guid _ItemId = Guid.Empty;
+            Guid _itemId = Guid.Empty;
             IItemRepository _ItemRepository = _AppUnitOfWork.itemRepository();
             // check if the Prod exists based on name since there is no mapped id
-            Item _Item = await _ItemRepository.FindFirstEagerLoadingItemAsync(i => i.ItemName == pWooProduct.name);
-            if ((_Item == null) && (!String.IsNullOrEmpty(pWooProduct.sku)))     // check if perhaps they renamed the by looking for SKU
+            Item _item = await _ItemRepository.FindFirstEagerLoadingItemAsync(i => i.ItemName == currWooProduct.name);
+            if ((_item == null) && (!String.IsNullOrEmpty(currWooProduct.sku)))     // check if perhaps they renamed the by looking for SKU
             {
-                _Item = await _ItemRepository.FindFirstEagerLoadingItemAsync(i => i.SKU == pWooProduct.sku);
+                _item = await _ItemRepository.FindFirstEagerLoadingItemAsync(i => i.SKU == currWooProduct.sku);
             }
-            if (_Item != null)
+            if (_item != null)
             {
-                _ItemId = await UpdateItem(pWooProduct, _Item, pWooProductsWithParents);
+                _itemId = await UpdateItem(currWooProduct, _item, currWooProductsWithParents);
             }
             else
             {
-                _ItemId = await AddItem(pWooProduct, pWooProductsWithParents);
+                _itemId = await AddItem(currWooProduct, currWooProductsWithParents);
             }
-            return _ItemId;
+            return _itemId;
         }
-        async Task<Guid> UpdateItemWithProduct(Product pWooProduct, WooProductMap pWooProductMap, List<WooItemWithParent> pWooProductsWithParents)
+        async Task<Guid> UpdateItemWithProduct(Product currWooProduct, WooProductMap currWooProductMap, List<WooItemWithParent> currWooProductsWithParents)
         {
-            Guid _ItemId = Guid.Empty;
-            // we have found a mapping between the woo Product Product and our Product id so update the Attrbiute table just incase.
-            Guid _ItemProductId = Guid.Empty;
-            IItemRepository _ItemRepository = _AppUnitOfWork.itemRepository();
+            // We have found a mapping between the woo Product and our Product id so update the Attribute table just in case.
+            Guid _itemId = Guid.Empty;
+            Guid _itemProductId = Guid.Empty;
+            IItemRepository _itemRepository = _AppUnitOfWork.itemRepository();
             // check if the Prod based on mapped id
-            Item _Item = await _ItemRepository.FindFirstEagerLoadingItemAsync(i => i.ItemId == pWooProductMap.ItemId);  // we found the Item Id so update that Id
+            Item _item = await _itemRepository.FindFirstEagerLoadingItemAsync(i => i.ItemId == currWooProductMap.ItemId); 
             /// Now update the woo Product using the _ItemProductId returned.
-            if (_Item != null)
-            {
-                _ItemId = await UpdateItem(pWooProduct, _Item, pWooProductsWithParents);
-                _importCounters.TotalUpdated++;
+            if (_item != null)
+            {    // we found the Item Id so update that Id
+                _itemId = await UpdateItem(currWooProduct, _item, currWooProductsWithParents);
+                currImportCounters.TotalUpdated++;
             }
             else
             {
                 // if we got here then the product map is pointing to the wrong ID, so delete the ID and add the item
-                await DeleteWooProductMap(pWooProductMap);
-                _ItemId = await AddProductToItems(pWooProduct, pWooProductsWithParents);
+                await DeleteWooProductMap(currWooProductMap);
+                _itemId = await AddProductToItems(currWooProduct, currWooProductsWithParents);
             }
-            return _ItemId;
+            return _itemId;
         }
 
-        private async Task<int> DeleteWooProductMap(WooProductMap pWooProductMap)
+        private async Task<int> DeleteWooProductMap(WooProductMap currWooProductMap)
         {
-            IAppRepository<WooProductMap> _WooProductMapRepository = _AppUnitOfWork.Repository<WooProductMap>();
-            return await _WooProductMapRepository.DeleteByIdAsync(pWooProductMap.WooProductMapId);
+            IAppRepository<WooProductMap> _wooProductMapRepository = _AppUnitOfWork.Repository<WooProductMap>();
+            return await _wooProductMapRepository.DeleteByIdAsync(currWooProductMap.WooProductMapId);
         }
 
         //does not exists add and CopyWooDetails to new record increase Counter.added
-        async Task<Guid> AddProductToItems(Product pWooProd, List<WooItemWithParent> pProductsWithParents)
+        async Task<Guid> AddProductToItems(Product currWooProd, List<WooItemWithParent> pProductsWithParents)
         {
-            Guid _ItemId = Guid.Empty;
-            IAppRepository<WooProductMap> _WooProductMapRepository = _AppUnitOfWork.Repository<WooProductMap>();
-            //it may not be in the map, but we may have a proudct with tat name so see if we do -Add Item Product if it does not exist
-            _ItemId = await AddOrGetIDItem(pWooProd, pProductsWithParents);
-            if (_ItemId != Guid.Empty)
+            Guid _itemId = Guid.Empty;
+            IAppRepository<WooProductMap> _wooProductMapRepository = _AppUnitOfWork.Repository<WooProductMap>();
+            //it may not be in the map, but we may have a product with tat name so see if we do -Add Item Product if it does not exist
+            _itemId = await AddOrGetIDItem(currWooProd, pProductsWithParents);
+            if (_itemId != Guid.Empty)
             {
-                WooProductMap _WooProductMap = new WooProductMap
+                WooProductMap _wooProductMap = new WooProductMap
                 {
-                    WooProductId = (int)pWooProd.id,
-                    ItemId = _ItemId,
+                    WooProductId = (int)currWooProd.id,
+                    ItemId = _itemId,
                     CanUpdate = true
                 };
-                if (await _WooProductMapRepository.AddAsync(_WooProductMap) == AppUnitOfWork.CONST_WASERROR)
+                if (await _wooProductMapRepository.AddAsync(_wooProductMap) == AppUnitOfWork.CONST_WASERROR)
                 {
                     // did not add so set _ItemProductId to ItemProductID to Guid.Empty = error
-                    _ItemId = Guid.Empty;
+                    _itemId = Guid.Empty;
                 }
-                _importCounters.TotalAdded++;
+                currImportCounters.TotalAdded++;
             }
-            return _ItemId;
+            return _itemId;
         }
         /// <summary>
         /// For each product
         ///     o If the product does not exists add and CopyWooDetails to new record increase Counter.added
         ///     o If product does exist and CanUpdate is true then Update by copying the WooDetaits that are not keys, increase Counter.update
         /// </summary>
-        async Task<Guid> ImportAndMapWooProductData(Product pWooProd, List<WooItemWithParent> pProductsWithParents)
+        async Task<Guid> ImportAndMapWooProductData(Product currWooProd, List<WooItemWithParent> pProductsWithParents)
         {
-            Guid _ItemProductId = Guid.Empty;
-            // Get repostiory for each database we are accessing. ItemProduct. WooProductMap & WooSyncLog
-            IAppRepository<WooProductMap> _WooProductMapRepository = _AppUnitOfWork.Repository<WooProductMap>();
+            Guid _itemProductId = Guid.Empty;
+            // Get repository for each database we are accessing. ItemProduct. WooProductMap & WooSyncLog
+            IAppRepository<WooProductMap> _wooProductMapRepository = _AppUnitOfWork.Repository<WooProductMap>();
 
             // Import the Product and set sync data
-            ///first check if it exists in the mapping, just incase there has been a name change
-            WooProductMap _WooProductMap = await _WooProductMapRepository.FindFirstAsync(wp => wp.WooProductId == pWooProd.id);
-            if (_WooProductMap != null)   // the id exists so update
+            ///first check if it exists in the mapping, just in case there has been a name change
+            WooProductMap _wooProductMap = await _wooProductMapRepository.FindFirstAsync(wp => wp.WooProductId == currWooProd.id);
+            if (_wooProductMap != null)   // the id exists so update
             {
-                if (_WooProductMap.CanUpdate)    /// only if the product can be updated 
+                if (_wooProductMap.CanUpdate)    /// only if the product can be updated 
                 {
-                    _ItemProductId = await UpdateItemWithProduct(pWooProd, _WooProductMap, pProductsWithParents);
+                    _itemProductId = await UpdateItemWithProduct(currWooProd, _wooProductMap, pProductsWithParents);
                 }
             }
             else      // the id does not exists so add
             {
-                _ItemProductId = await AddProductToItems(pWooProd, pProductsWithParents);
-                _importCounters.TotalAdded++;
+                _itemProductId = await AddProductToItems(currWooProd, pProductsWithParents);
+                currImportCounters.TotalAdded++;
             }
 
-            return _ItemProductId;
+            return _itemProductId;
         }
         // Get the Variety's Parent id using the WooMapping, if is not found then return Empty
-        async Task<Guid> GetItemId(int pWooProductId)
+        async Task<Guid> GetItemId(int currWooProductId)
         {
-            IAppRepository<WooProductMap> _WooProductMapRepo = _AppUnitOfWork.Repository<WooProductMap>();
+            IAppRepository<WooProductMap> _wooProductMapRepo = _AppUnitOfWork.Repository<WooProductMap>();
 
-            WooProductMap _WooProductMap = await _WooProductMapRepo.FindFirstAsync(wpa => wpa.WooProductId == pWooProductId);
-            return (_WooProductMap == null) ? Guid.Empty : _WooProductMap.ItemId;
-
+            WooProductMap _wooProductMap = await _wooProductMapRepo.FindFirstAsync(wpa => wpa.WooProductId == currWooProductId);
+            return (_wooProductMap == null) ? Guid.Empty : _wooProductMap.ItemId;
         }
-        async Task<bool> FindAndSetParentProduct(WooItemWithParent pWooProductWithAParent)
+        async Task<bool> FindAndSetParentProduct(WooItemWithParent currWooProductWithAParent)
         {
-            ///Logic using the ids passed look for the linked attribute to the id then look for the parentid  get the guids of each and update thed atabase
-            // Get pAttributeWithAParent.ID GUID from ItemAttribute Table = ParentID
-            // Get pAttributeWithAParent.AttrID GUID from ItemAttribute Table = ChildID
+            ///Logic using the ids passed look for the linked attribute to the id then look for the ParentId  get the Guids of each and update the database
+            // Get prodAttributeWithAParent.ID GUID from ItemAttribute Table = ParentID
+            // Get prodAttributeWithAParent.AttrID GUID from ItemAttribute Table = ChildID
             // Set the  ItemAttribute.ParentID = ParentID for ItemsAttrib.ID = ChildID
-            Guid _AttribId = await GetItemId(pWooProductWithAParent.ChildId);
-            Guid _ParentAttribId = await GetItemId(pWooProductWithAParent.ParentId);
+            Guid _attribId = await GetItemId(currWooProductWithAParent.ChildId);
+            Guid _parentAttribId = await GetItemId(currWooProductWithAParent.ParentId);
 
-            bool _IsDone = await SetParentCategory(_AttribId, _ParentAttribId);
+            bool _isDone = await SetParentCategory(_attribId, _parentAttribId);
 
-            await LogImport(pWooProductWithAParent.ChildId, $"Setting of Parent of Child Item id: {pWooProductWithAParent.ChildId} to Parent Id {pWooProductWithAParent.ParentId} status: {_IsDone}", Models.WooSections.ProductCategories);
-            return _IsDone;
+            await LogImport(currWooProductWithAParent.ChildId, $"Setting of Parent of Child Item id: {currWooProductWithAParent.ChildId} to Parent Id {currWooProductWithAParent.ParentId} status: {_isDone}", Models.WooSections.ProductCategories);
+            return _isDone;
         }
 
-        string ProductToString(Product pWooProd, Guid pImportedId)
+        string ProductToString(Product currWooProd, Guid importedId)
         {
-            return $"Product {pWooProd.name}, id: {pWooProd.id}, imported and Item Id is {pImportedId}";
+            return $"Product {currWooProd.name}, id: {currWooProd.id}, imported and Item Id is {importedId}";
         }
         /// <summary>
         /// Get All Woo Products
@@ -379,29 +390,31 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         /// Import each product
         /// Once finished we need to map an Items parents.We do this by cycling through the list of items that have parents, then we find the item and parent’s GUID and take match them.
         /// </summary>
-        async Task<int> ImportProductData(List<Product> _WooProducts)
+        async Task<int> ImportProductData(List<Product> _wooProducts)
         {
-            Guid _IdImported;
-            List<WooItemWithParent> _ProductsWithParents = new List<WooItemWithParent>();
+            Guid _importedId;
+            List<WooItemWithParent> _productsWithParents = new List<WooItemWithParent>();
             int _Imported = 0;
-            foreach (var wooProd in _WooProducts)
+            foreach (var wooProd in _wooProducts)
             {
-                ImportingThis = $"Importing Product ({_importCounters.TotalImported}/{_importCounters.MaxRecs}): {wooProd.name} woo id: {wooProd.id}";
+                ImportingThis = $"Importing Product ({currImportCounters.TotalImported}/{currImportCounters.MaxRecs}): {wooProd.name} woo id: {wooProd.id}";
                 await LogImport((int)wooProd.id, ImportingThis, Models.WooSections.Products);
                 // set the values as per
-                _IdImported = await ImportAndMapWooProductData(wooProd, _ProductsWithParents);
-
-                // varriations from item to item cannot be duplicated so kalita 155 / 185 fitler cannot have also brewer
-                _Imported++;
-                await LogImport((int)wooProd.id, ProductToString(wooProd, _IdImported), Models.WooSections.Products);
+                _importedId = await ImportAndMapWooProductData(wooProd, _productsWithParents);
+                // abort if there was an error - Or should we log and restart? need to restart DbContext somehow
                 if (_AppUnitOfWork.IsInErrorState())
+                {
+                    await LogImport((int)wooProd.id, $"Error occurred importing {wooProd.name}", Models.WooSections.Products);
                     return AppUnitOfWork.CONST_WASERROR;
-                _importCounters.TotalImported++;
-                _importCounters.PercentOfRecsImported = _importCounters.CalcPercentage(_importCounters.TotalImported);
+                }
+                _Imported++;
+                await LogImport((int)wooProd.id, ProductToString(wooProd, _importedId), Models.WooSections.Products);
+                currImportCounters.TotalImported++;
+                currImportCounters.PercentOfRecsImported = currImportCounters.CalcPercentage(currImportCounters.TotalImported);
                 StateHasChanged();
             }
-            // Now we loop through all the Attribues that have parents and find them
-            foreach (var ProductWithAParent in _ProductsWithParents)
+            // Now we loop through all the Attributes that have parents and find them
+            foreach (var ProductWithAParent in _productsWithParents)
             {
                 if (!await FindAndSetParentProduct(ProductWithAParent))
                 {

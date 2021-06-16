@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using RainbowOF.Tools.Services;
 
 namespace RainbowOF.Web.FrontEnd.Pages.Integration
 {
@@ -18,15 +19,15 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         public bool IsSaved = false;
         public bool IsSaving = false;
         public bool IsChanged = false;
-        public WooSettings WooSettingsModel { get; set; } = null;
+        public WooSettings modelWooSettings { get; set; } = null;
         //for saving
         protected ShowModalMessage ShowSavedStatus { get; set; }
         //for changing
         protected ShowModalMessage ShowChangedStatus { get; set; }
         [Inject]
-        public IAppUnitOfWork _AppUnitOfWork { get; set; }
+        private IAppUnitOfWork _AppUnitOfWork { get; set; }
         [Inject]
-        public ILoggerManager _logger { get; set; }
+        private ILoggerManager _Logger { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
@@ -37,14 +38,14 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
 
         private async Task LoadWooPrefs()
         {
-            IAppRepository<WooSettings> _WooPrefs = _AppUnitOfWork.Repository<WooSettings>();
+            IAppRepository<WooSettings> _wooPrefs = _AppUnitOfWork.Repository<WooSettings>();
 
             StateHasChanged();
 
-             WooSettingsModel = await _WooPrefs.FindFirstAsync();
-            if (WooSettingsModel == null)
+             modelWooSettings = await _wooPrefs.FindFirstAsync();
+            if (modelWooSettings == null)
             {
-                WooSettingsModel = new WooSettings();   // if nothing send back a empty record
+                modelWooSettings = new WooSettings();   // if nothing send back a empty record
             }
 
             IsSaved = false;
@@ -52,21 +53,21 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         }
         public async void HandleValidSubmit()
         {
-            if (WooSettingsModel != null)
+            if (modelWooSettings != null)
             {
                 ShowSaving();
                 IAppRepository<WooSettings> _WooSettingsRepo = _AppUnitOfWork.Repository<WooSettings>();
                 // save
                 // run this update regardless 
-                if (WooSettingsModel.WooSettingsId > 0)
+                if (modelWooSettings.WooSettingsId > 0)
                 {
                     // it means that there was a record in the database.
-                    IsSaved =  (await _WooSettingsRepo.UpdateAsync(WooSettingsModel)) > 0;
+                    IsSaved =  (await _WooSettingsRepo.UpdateAsync(modelWooSettings)) > 0;
                 }
                 else
                 {
                     // it means that there was a record in the database.
-                    IsSaved = (await _WooSettingsRepo.AddAsync(WooSettingsModel)) > 0;
+                    IsSaved = (await _WooSettingsRepo.AddAsync(modelWooSettings)) > 0;
                 }
                 IsChanged = false;
                 if (IsSaved) ShowChangedStatus.UpdateModalMessage("Woo settings have been saved.");

@@ -26,8 +26,6 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
 
         [Inject]
         IAppUnitOfWork _AppUnitOfWork { get; set; }
-
-
         protected override async Task OnInitializedAsync()
         {
             await LoadWooSyncLog();
@@ -54,16 +52,16 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             ////////
             /// What we want to do here get the dates in the log that are distinct, then display in a list and select the latest one
             /// Then we want to return only those records that are from that date
-            /// We need to reselect each time the ddl is changed
+            /// We need to reselect each time the DDL is changed
             ///
-            DatesInLog = await GetAllUniqueLogDates();   /// gets unique dates and sorts decsending
+            DatesInLog = await GetAllUniqueLogDates();   /// gets unique dates and sorts descending
             if (DatesInLog != null)
             {
                 IndexSelectedDateTimeInLog = 0;
                 WooSyncLogRows = await GetSyncLogRowsByDate(DatesInLog[0]);
             }
 
-            // need to rather add paging this thing is gonna get arge
+            // need to rather add paging this thing is gonna get large
             //await Task.Run(() => WooSyncLogRows = _WooSyncLog.GetAll().OrderByDescending(wslr => wslr.WooSyncDateTime).ToList());
             ////// may need to add error checking into repo
             //DatesInLog = WooSyncLogRows.Select(wsl => wsl.WooSyncDateTime).Distinct().ToList();
@@ -87,7 +85,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         public async Task OnLogDateChanged(ChangeEventArgs e)
         {
             string _SelectedIndexStr = (string)e.Value;
-            int _SelectedIndex = int.Parse(_SelectedIndexStr);   // positiion in the list
+            int _SelectedIndex = int.Parse(_SelectedIndexStr);   // position in the list
             IndexSelectedDateTimeInLog = _SelectedIndex; //  DatesInLog.FindIndex(0, dt => dt.Date == DatesInLog[_SelectedDate]);
             WooSyncLogRows = await GetSyncLogRowsByDate(DatesInLog[_SelectedIndex]);
             StateHasChanged();

@@ -33,14 +33,14 @@ namespace RainbowOF.Repositories.Lookups
 
         public override async Task DeleteRowAsync(ItemCategoryLookupView deleteViewEntity)
         {
-            IAppRepository<ItemCategoryLookup> _ItemCategoryLookupRepository = _appUnitOfWork.Repository<ItemCategoryLookup>();
+            IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
 
-            var _recsDelete = await _ItemCategoryLookupRepository.DeleteByIdAsync(deleteViewEntity.ItemCategoryLookupId);     //DeleteByAsync(icl => icl.ItemCategoryLookupId == SelectedItemCategoryLookup.ItemCategoryLookupId);
+            var _recsDelete = await _itemCategoryLookupRepository.DeleteByIdAsync(deleteViewEntity.ItemCategoryLookupId);     //DeleteByAsync(icl => icl.ItemCategoryLookupId == SelectedItemCategoryLookup.ItemCategoryLookupId);
 
             if (_recsDelete == AppUnitOfWork.CONST_WASERROR)
-                _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Category: {deleteViewEntity.CategoryName} is no longer found, was it deleted?");
+                _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Category: {deleteViewEntity.CategoryName} is no longer found, was it deleted?");
             else
-                _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Category: {deleteViewEntity.CategoryName} was it deleted?");
+                _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Category: {deleteViewEntity.CategoryName} was it deleted?");
         }
         async Task<int> UpdateWooCategoryMap(ItemCategoryLookupView updatedViewEntity)
         {
@@ -55,9 +55,9 @@ namespace RainbowOF.Repositories.Lookups
                 else
                 {
                     updateWooCategoryMap.CanUpdate = (bool)updatedViewEntity.CanUpdateWooMap;
-                    IAppRepository<WooCategoryMap> wooCategoryMapRepository = _appUnitOfWork.Repository<WooCategoryMap>();
+                    IAppRepository<WooCategoryMap> wooCategoryMapRepository = _AppUnitOfWork.Repository<WooCategoryMap>();
                     _recsUpdated = await wooCategoryMapRepository.UpdateAsync(updateWooCategoryMap);
-                    _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Category: {updatedViewEntity.CategoryName} was updated.");
+                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Category: {updatedViewEntity.CategoryName} was updated.");
                 }
             }
             else
@@ -65,7 +65,7 @@ namespace RainbowOF.Repositories.Lookups
                 // nothing was found, so this probably means they now want to add. We should had a Pop up to check
                 int _result = await AddWooItemAndMapAsync(GetItemFromView(updatedViewEntity));
                 if (_result != AppUnitOfWork.CONST_WASERROR)
-                    _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Category {updatedViewEntity.CategoryName} has been added to woo?");
+                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Category {updatedViewEntity.CategoryName} has been added to woo?");
             }
 
             return _recsUpdated;
@@ -81,12 +81,12 @@ namespace RainbowOF.Repositories.Lookups
         }
         public override async Task<List<ItemCategoryLookup>> GetAllItemsAsync()
         {
-            IAppRepository<ItemCategoryLookup> _ItemCategoryLookupRepository = _appUnitOfWork.Repository<ItemCategoryLookup>();
-            List<ItemCategoryLookup> _ItemCategoryLookups = (await _ItemCategoryLookupRepository.GetAllEagerAsync(icl => icl.ParentCategory))
+            IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
+            List<ItemCategoryLookup> _itemCategoryLookups = (await _itemCategoryLookupRepository.GetAllEagerAsync(icl => icl.ParentCategory))
                 .OrderBy(icl => icl.ParentCategoryId)
                 .ThenBy(icl => icl.CategoryName).ToList();
 
-            return _ItemCategoryLookups;
+            return _itemCategoryLookups;
         }
         // used to the Push and Pop
         List<ItemCategoryLookupView> _oldSelectedItems = null;
@@ -118,7 +118,7 @@ namespace RainbowOF.Repositories.Lookups
         }
         public override async Task<List<WooCategoryMap>> GetWooMappedItemsAsync(List<Guid> mapWooEntityIDs)
         {
-            IAppRepository<WooCategoryMap> _wooCategoryMapRepository = _appUnitOfWork.Repository<WooCategoryMap>();
+            IAppRepository<WooCategoryMap> _wooCategoryMapRepository = _AppUnitOfWork.Repository<WooCategoryMap>();
 
             var _WooMappedItems = await _wooCategoryMapRepository.GetByAsync(wcm => mapWooEntityIDs.Contains(wcm.ItemCategoryLookupId));
             return _WooMappedItems.ToList();   //  (await _wooCategoryMapRepository.GetByAsync(wcm => mapWooEntityIDs.Contains(wcm.ItemCategoryLookupId)));
@@ -126,7 +126,7 @@ namespace RainbowOF.Repositories.Lookups
 
         public override async Task<WooCategoryMap> GetWooMappedItemAsync(Guid mapWooEntityID)
         {
-            IAppRepository<WooCategoryMap> _wooCategoryMapRepository = _appUnitOfWork.Repository<WooCategoryMap>();
+            IAppRepository<WooCategoryMap> _wooCategoryMapRepository = _AppUnitOfWork.Repository<WooCategoryMap>();
 
             return await _wooCategoryMapRepository.FindFirstAsync(wcm => wcm.ItemCategoryLookupId == mapWooEntityID);
         }
@@ -134,8 +134,8 @@ namespace RainbowOF.Repositories.Lookups
         public override async Task<bool> IsDuplicate(ItemCategoryLookup targetEntity)
         {
             // check if does not exist in the list already (they edited it and it is the same name as another. Only a max of one should exists
-            IAppRepository<ItemCategoryLookup> _ItemCategoryLookupRepository = _appUnitOfWork.Repository<ItemCategoryLookup>();
-            var _exists = (await _ItemCategoryLookupRepository.GetByAsync(ml => ml.CategoryName == targetEntity.CategoryName)).ToList();
+            IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
+            var _exists = (await _itemCategoryLookupRepository.GetByAsync(ml => ml.CategoryName == targetEntity.CategoryName)).ToList();
             return ((_exists != null) && (_exists.Count > 1));
         }
 
@@ -168,14 +168,13 @@ namespace RainbowOF.Repositories.Lookups
         }
         public override async Task<List<ItemCategoryLookup>> GetPagedItemsAsync(DataGridParameters currentDataGridParameters)    //int startPage, int currentPageSize)
         {
-            IItemCategoryLookupRepository _ItemCategoryLookupRepository = _appUnitOfWork.itemCategoryLookupRepository();
-            //_gridSettings.TotalItems = await _ItemCategoryLookupRepository.CountAsync();  // get the total number of items to use for paging.
-            DataGridItems<ItemCategoryLookup> _dataGridItems = await _ItemCategoryLookupRepository.GetPagedDataEagerWithFilterAndOrderByAsync(currentDataGridParameters);
-            List<ItemCategoryLookup> _ItemCategoryLookups = _dataGridItems.Entities.ToList();
-            _gridSettings.TotalItems = _dataGridItems.TotalRecordCount;
+            IItemCategoryLookupRepository _itemCategoryLookupRepository = _AppUnitOfWork.itemCategoryLookupRepository();
+            //_gridSettings.TotalItems = await _itemCategoryLookupRepository.CountAsync();  // get the total number of items to use for paging.
+            DataGridItems<ItemCategoryLookup> _dataGridItems = await _itemCategoryLookupRepository.GetPagedDataEagerWithFilterAndOrderByAsync(currentDataGridParameters);
+            List<ItemCategoryLookup> _itemCategoryLookups = _dataGridItems.Entities.ToList();
+            _GridSettings.TotalItems = _dataGridItems.TotalRecordCount;
 
-
-            return _ItemCategoryLookups;
+            return _itemCategoryLookups;
         }
         public override DataGridParameters GetDataGridCurrent(DataGridReadDataEventArgs<ItemCategoryLookupView> inputDataGridReadData, string inputCustomerFilter)
         {
@@ -188,7 +187,6 @@ namespace RainbowOF.Repositories.Lookups
 
             if (inputDataGridReadData.Columns != null)
             {
-
                 foreach (var col in inputDataGridReadData.Columns)
                 {
                     if (col.Direction != Blazorise.SortDirection.None)
@@ -220,9 +218,9 @@ namespace RainbowOF.Repositories.Lookups
             List<ItemCategoryLookup> _itemCategoryLookups = await GetPagedItemsAsync(currentDataGridParameters);
             List<ItemCategoryLookupView> _itemCategoryViewLookups = new List<ItemCategoryLookupView>();
             // Get a list of all the category maps that exists
-            List<Guid> _ItemCatIds = _itemCategoryLookups.Where(it => it.ItemCategoryLookupId != Guid.Empty).Select(it => it.ItemCategoryLookupId).ToList();   // get all the ids selected
+            List<Guid> _itemCatIds = _itemCategoryLookups.Where(it => it.ItemCategoryLookupId != Guid.Empty).Select(it => it.ItemCategoryLookupId).ToList();   // get all the ids selected
             // Get all related ids
-            List<WooCategoryMap> wooCategoryMaps = await GetWooMappedItemsAsync(_ItemCatIds);
+            List<WooCategoryMap> wooCategoryMaps = await GetWooMappedItemsAsync(_itemCatIds);
             // Map Items to Woo CategoryMap
             foreach (var itemCat in _itemCategoryLookups)
             {
@@ -278,61 +276,61 @@ namespace RainbowOF.Repositories.Lookups
         public override async Task<int> UpdateItemAsync(ItemCategoryLookupView updateViewItem)
         {
             int _recsUpdted = 0;
-            IAppRepository<ItemCategoryLookup> _ItemCategoryLookupRepository = _appUnitOfWork.Repository<ItemCategoryLookup>();
+            IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
             // first check it exists - it could have been deleted 
-            ItemCategoryLookup _CurrentItemCategoryLookup = await _ItemCategoryLookupRepository.GetByIdAsync(updateViewItem.ItemCategoryLookupId);
-            if (_CurrentItemCategoryLookup == null)
+            ItemCategoryLookup _currentItemCategoryLookup = await _itemCategoryLookupRepository.GetByIdAsync(updateViewItem.ItemCategoryLookupId);
+            if (_currentItemCategoryLookup == null)
             {
-                _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Category: {updateViewItem.CategoryName} is no longer found, was it deleted?");
+                _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Category: {updateViewItem.CategoryName} is no longer found, was it deleted?");
                 return AppUnitOfWork.CONST_WASERROR;
             }
             else
             {
-                _CurrentItemCategoryLookup.CategoryName = updateViewItem.CategoryName;
-                _CurrentItemCategoryLookup.ParentCategoryId = (updateViewItem.ParentCategoryId == Guid.Empty) ? null : updateViewItem.ParentCategoryId;
-                _CurrentItemCategoryLookup.UsedForPrediction = updateViewItem.UsedForPrediction;
-                _CurrentItemCategoryLookup.Notes = updateViewItem.Notes;
-                _recsUpdted = await _ItemCategoryLookupRepository.UpdateAsync(_CurrentItemCategoryLookup);
+                _currentItemCategoryLookup.CategoryName = updateViewItem.CategoryName;
+                _currentItemCategoryLookup.ParentCategoryId = (updateViewItem.ParentCategoryId == Guid.Empty) ? null : updateViewItem.ParentCategoryId;
+                _currentItemCategoryLookup.UsedForPrediction = updateViewItem.UsedForPrediction;
+                _currentItemCategoryLookup.Notes = updateViewItem.Notes;
+                _recsUpdted = await _itemCategoryLookupRepository.UpdateAsync(_currentItemCategoryLookup);
                 if (_recsUpdted == AppUnitOfWork.CONST_WASERROR)
-                    _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{updateViewItem.CategoryName} - {_appUnitOfWork.GetErrorMessage()}", "Error updating Category");
+                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{updateViewItem.CategoryName} - {_AppUnitOfWork.GetErrorMessage()}", "Error updating Category");
                 if (await UpdateWooItemAndMapping(updateViewItem) == AppUnitOfWork.CONST_WASERROR)
-                    _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{updateViewItem.CategoryName} - {_appUnitOfWork.GetErrorMessage()}", "Error updating Category Map");   // should we send a message here error = mapping not updated 
+                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{updateViewItem.CategoryName} - {_AppUnitOfWork.GetErrorMessage()}", "Error updating Category Map");   // should we send a message here error = mapping not updated 
 
             }
             return _recsUpdted;
         }
         public override async Task InsertRowAsync(ItemCategoryLookupView newVeiwEntity)
         {
-            IAppRepository<ItemCategoryLookup> _ItemCategoryLookupRepository = _appUnitOfWork.Repository<ItemCategoryLookup>();
+            IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
             // first check we do not already have a category like this.
-            if (await _ItemCategoryLookupRepository.FindFirstAsync(icl => icl.CategoryName == newVeiwEntity.CategoryName) == null)
+            if (await _itemCategoryLookupRepository.FindFirstAsync(icl => icl.CategoryName == newVeiwEntity.CategoryName) == null)
             {
                 ItemCategoryLookup _NewItemCategoryLookup = GetItemFromView(newVeiwEntity); // store this here since when it is added it will automatically update the id field
-                int _recsAdded = await _ItemCategoryLookupRepository.AddAsync(_NewItemCategoryLookup);
+                int _recsAdded = await _itemCategoryLookupRepository.AddAsync(_NewItemCategoryLookup);
                 if (_recsAdded != AppUnitOfWork.CONST_WASERROR)
                 {
-                    _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"{newVeiwEntity.CategoryName} - added", "Category Added");
+                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"{newVeiwEntity.CategoryName} - added", "Category Added");
                     if (newVeiwEntity.CanUpdateWooMap ?? false)
                     {
                         // they selected to update woo so add to Woo
                         if (await AddWooItemAndMapAsync(_NewItemCategoryLookup) == AppUnitOfWork.CONST_WASERROR)   // add if they select to update
-                            _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Error adding {newVeiwEntity.CategoryName} to Woo - {_appUnitOfWork.GetErrorMessage()}", "Error adding Woo Category");
+                            _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Error adding {newVeiwEntity.CategoryName} to Woo - {_AppUnitOfWork.GetErrorMessage()}", "Error adding Woo Category");
                         else
-                            _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"{newVeiwEntity.CategoryName} - added to Woo", "Woo Category Added");
+                            _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"{newVeiwEntity.CategoryName} - added to Woo", "Woo Category Added");
                     }
                 }
                 else
-                    _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{newVeiwEntity.CategoryName} - {_appUnitOfWork.GetErrorMessage()}", "Error adding Category");
+                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{newVeiwEntity.CategoryName} - {_AppUnitOfWork.GetErrorMessage()}", "Error adding Category");
             }
             else
-                _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{newVeiwEntity.CategoryName} already exists, so could not be added.");
+                _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{newVeiwEntity.CategoryName} already exists, so could not be added.");
             //-> done in parent       await LoadAllViewItemsAsync();   // reload the list so the latest item is displayed
         }
 
         public override async Task UpdateRowAsync(ItemCategoryLookupView updateVeiwEntity)
         {
             if (await IsDuplicate(updateVeiwEntity))
-                _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Category Name: {updateVeiwEntity.CategoryName} - already exists, cannot be updated", "Exists already");
+                _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Category Name: {updateVeiwEntity.CategoryName} - already exists, cannot be updated", "Exists already");
             else
             {
                 if (IsValid(updateVeiwEntity))
@@ -340,14 +338,14 @@ namespace RainbowOF.Repositories.Lookups
                     // update and check for errors 
                     if (await UpdateItemAsync(updateVeiwEntity) == AppUnitOfWork.CONST_WASERROR)
                     {
-                        _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Error updating category: {updateVeiwEntity.CategoryName} -  {_appUnitOfWork.GetErrorMessage()}", "Updating Category Error");
+                        _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Error updating category: {updateVeiwEntity.CategoryName} -  {_AppUnitOfWork.GetErrorMessage()}", "Updating Category Error");
                     }
                     else
-                        _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"category: {updateVeiwEntity.CategoryName} was updated.");
+                        _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"category: {updateVeiwEntity.CategoryName} was updated.");
                 }
                 else
                 {
-                    _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Category Item {updateVeiwEntity.CategoryName} cannot be parent and child.", "Error updating");
+                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Category Item {updateVeiwEntity.CategoryName} cannot be parent and child.", "Error updating");
                 }
             }
             //-> done in parent await LoadAllViewItemsAsync();   // reload the list so the latest item is displayed
@@ -356,24 +354,24 @@ namespace RainbowOF.Repositories.Lookups
         {
             int _recsUpdated = 0;
 
-            WooCategoryMap updateWooCategoryMap = await GetWooMappedItemAsync(updatedViewEntity.ItemCategoryLookupId);
-            if (updateWooCategoryMap != null)
+            WooCategoryMap _updateWooCategoryMap = await GetWooMappedItemAsync(updatedViewEntity.ItemCategoryLookupId);
+            if (_updateWooCategoryMap != null)
             {
-                if (updateWooCategoryMap.CanUpdate == updatedViewEntity.CanUpdateWooMap)
+                if (_updateWooCategoryMap.CanUpdate == updatedViewEntity.CanUpdateWooMap)
                 {
                     // not necessary to display message.
                     //    PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Warning, $"Woo Category Map for category: {updatedViewEntity.CategoryName} has not changed, so was not updated?");
                 }
                 else
                 {
-                    updateWooCategoryMap.CanUpdate = (bool)updatedViewEntity.CanUpdateWooMap;
-                    IAppRepository<WooCategoryMap> wooCategoryMapRepository = _appUnitOfWork.Repository<WooCategoryMap>();
-                    _recsUpdated = await wooCategoryMapRepository.UpdateAsync(updateWooCategoryMap);
-                    _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Category: {updatedViewEntity.CategoryName} was updated.");
+                    _updateWooCategoryMap.CanUpdate = (bool)updatedViewEntity.CanUpdateWooMap;
+                    IAppRepository<WooCategoryMap> wooCategoryMapRepository = _AppUnitOfWork.Repository<WooCategoryMap>();
+                    _recsUpdated = await wooCategoryMapRepository.UpdateAsync(_updateWooCategoryMap);
+                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Category: {updatedViewEntity.CategoryName} was updated.");
                 }
             }
             else
-                _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Category Map for category: {updatedViewEntity.CategoryName} is no longer found, was it deleted?");
+                _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Category Map for category: {updatedViewEntity.CategoryName} is no longer found, was it deleted?");
 
             await LoadAllViewItemsAsync();
             return _recsUpdated;
@@ -384,14 +382,14 @@ namespace RainbowOF.Repositories.Lookups
             if (sourceWooEntityId == null)
                 return null;
 
-            IAppRepository<WooCategoryMap> _wooCategoryMapRepo = _appUnitOfWork.Repository<WooCategoryMap>();
+            IAppRepository<WooCategoryMap> _wooCategoryMapRepo = _AppUnitOfWork.Repository<WooCategoryMap>();
             WooCategoryMap _wooCategoryMap = await _wooCategoryMapRepo.FindFirstAsync(wcm => wcm.ItemCategoryLookupId == sourceWooEntityId);
             return _wooCategoryMap;
         }
         private async Task<int> DeleteWooCategoryLink(WooCategoryMap deleteWooCategoryMap)
         {
             int _result = 0;
-            IAppRepository<WooCategoryMap> _wooCategoryMapRepo = _appUnitOfWork.Repository<WooCategoryMap>();
+            IAppRepository<WooCategoryMap> _wooCategoryMapRepo = _AppUnitOfWork.Repository<WooCategoryMap>();
 
             _result = await _wooCategoryMapRepo.DeleteByIdAsync(deleteWooCategoryMap.WooCategoryMapId);
 
@@ -406,7 +404,7 @@ namespace RainbowOF.Repositories.Lookups
             //    return null;
             //WooAPISettings _wooAPISettings = new WooAPISettings(_wooSettings);
             WooAPISettings _wooAPISettings = await GetWooAPISettingsAsync();
-            return new WooProductCategory(_wooAPISettings, _logger);
+            return new WooProductCategory(_wooAPISettings, _Logger);
         }
         private async Task<int> DeleteWooCategory(WooCategoryMap deleteWooCategoryMap)
         {
@@ -415,8 +413,8 @@ namespace RainbowOF.Repositories.Lookups
             IWooProductCategory _WooProductCategoryRepository = await GetIWooProductCategory();
             if (_WooProductCategoryRepository != null)
             {
-                ProductCategory _TempWooCat = await _WooProductCategoryRepository.DeleteProductCategoryByIdAsync(deleteWooCategoryMap.WooCategoryId);
-                _result =   (_TempWooCat == null) ? AppUnitOfWork.CONST_WASERROR : Convert.ToInt32(_TempWooCat.id);  // return the id
+                ProductCategory _tempWooCat = await _WooProductCategoryRepository.DeleteProductCategoryByIdAsync(deleteWooCategoryMap.WooCategoryId);
+                _result =   (_tempWooCat == null) ? AppUnitOfWork.CONST_WASERROR : Convert.ToInt32(_tempWooCat.id);  // return the id
             }
             return _result;
         }
@@ -432,29 +430,29 @@ namespace RainbowOF.Repositories.Lookups
             // delete the woo category
             WooCategoryMap _wooCategoryMap = await GetWooCategoryMapFromID(deleteWooEntityId);
             if (_wooCategoryMap == null)
-                _gridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product Category Id {deleteWooEntityId} was not found to have a Woo Category Map.");
+                _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product Category Id {deleteWooEntityId} was not found to have a Woo Category Map.");
             else
             {
                 if (deleteFromWoo)
                 {
                     _result = await DeleteWooCategory(_wooCategoryMap); ///Delete the category in Woo
                     if (_result == AppUnitOfWork.CONST_WASERROR)
-                        _gridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product Category Id {_wooCategoryMap.WooCategoryId} was not deleted from Woo categories. Error {_appUnitOfWork.GetErrorMessage()}");
+                        _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product Category Id {_wooCategoryMap.WooCategoryId} was not deleted from Woo categories. Error {_AppUnitOfWork.GetErrorMessage()}");
                     else
-                        _gridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Woo Product Category Id {_wooCategoryMap.WooCategoryId} was deleted from Woo categories.");
+                        _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Woo Product Category Id {_wooCategoryMap.WooCategoryId} was deleted from Woo categories.");
                 }
                 _result = await DeleteWooCategoryLink(_wooCategoryMap);   //Delete our link data, if there was an error should we?
                 if (_result == AppUnitOfWork.CONST_WASERROR)
-                    _gridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product Category Id {_wooCategoryMap.WooCategoryId} was not deleted from Woo linked categories. Error {_appUnitOfWork.GetErrorMessage()}");
+                    _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product Category Id {_wooCategoryMap.WooCategoryId} was not deleted from Woo linked categories. Error {_AppUnitOfWork.GetErrorMessage()}");
                 else
-                    _gridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Woo Product Category Id {_wooCategoryMap.WooCategoryId} was deleted from Woo linked categories.");
+                    _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Woo Product Category Id {_wooCategoryMap.WooCategoryId} was deleted from Woo linked categories.");
             }
             return _result;
         }
         private async Task<ProductCategory> AddItemToWooOnlySync(ItemCategoryLookup addEntity)
         {
-            IWooProductCategory _WooProductCategoryRepository = await GetIWooProductCategory();
-            if (_WooProductCategoryRepository == null)
+            IWooProductCategory _wooProductCategoryRepository = await GetIWooProductCategory();
+            if (_wooProductCategoryRepository == null)
                 return null;
 
             ProductCategory _wooProductCategory = new ProductCategory
@@ -470,15 +468,15 @@ namespace RainbowOF.Repositories.Lookups
                     _wooProductCategory.parent = (uint)_WooParentCategoryMap.WooCategoryId;
             }
 
-            return await _WooProductCategoryRepository.AddProductCategoryAsync(_wooProductCategory);  // should return a new version with ID
+            return await _wooProductCategoryRepository.AddProductCategoryAsync(_wooProductCategory);  // should return a new version with ID
         }
         private async Task<int> MapOurItemToWooItemSync(ProductCategory newWooProductCategory, ItemCategoryLookup addViewEntity)
         {
             // create a map to the woo category maps using the id and the category
             //
-            IAppRepository<WooCategoryMap> _WooCategoryMapRepository = _appUnitOfWork.Repository<WooCategoryMap>();
+            IAppRepository<WooCategoryMap> _wooCategoryMapRepository = _AppUnitOfWork.Repository<WooCategoryMap>();
 
-            return await _WooCategoryMapRepository.AddAsync(new WooCategoryMap
+            return await _wooCategoryMapRepository.AddAsync(new WooCategoryMap
             {
                 ItemCategoryLookupId = addViewEntity.ItemCategoryLookupId,
                 WooCategoryId = (int)newWooProductCategory.id,
@@ -496,7 +494,6 @@ namespace RainbowOF.Repositories.Lookups
         public override async Task<int> AddWooItemAndMapAsync(ItemCategoryLookup addEntity)
         {
             // check it the item exists in woo (we did not do this as there is no such call;, if so get is id and return, otherwise add it and get its id
-
             //ProductCategory _wooProductCategory = await GetWooProductCategoryByName(addViewEntity.CategoryName);
             //if (_wooProductCategory == null)
             //{
@@ -521,8 +518,8 @@ namespace RainbowOF.Repositories.Lookups
             int _result = 0;  /// null or not found
             if ((updateViewEntity.HasWooCategoryMap) && ((bool)(updateViewEntity.CanUpdateWooMap)))
             {
-                IWooProductCategory _WooProductCategoryRepository = await GetIWooProductCategory();
-                if (_WooProductCategoryRepository != null)                     //  - > if it does not exist then what?
+                IWooProductCategory _wooProductCategoryRepository = await GetIWooProductCategory();
+                if (_wooProductCategoryRepository != null)                     //  - > if it does not exist then what?
                 {
                     WooCategoryMap _updateWooMapEntity = await GetWooCategoryMapFromID(updateViewEntity.ItemCategoryLookupId);
                     if (_updateWooMapEntity == null)
@@ -531,8 +528,8 @@ namespace RainbowOF.Repositories.Lookups
                     }
                     else
                     {
-                        ProductCategory _WooProductCategory = await _WooProductCategoryRepository.GetProductCategoryByIdAsync(_updateWooMapEntity.WooCategoryId);
-                        if (_WooProductCategory == null)
+                        ProductCategory _wooProductCategory = await _wooProductCategoryRepository.GetProductCategoryByIdAsync(_updateWooMapEntity.WooCategoryId);
+                        if (_wooProductCategory == null)
                         {
                             return AppUnitOfWork.CONST_WASERROR;  /// oops what happened >?
                         }
@@ -541,11 +538,11 @@ namespace RainbowOF.Repositories.Lookups
                             // get id of parent
                             WooCategoryMap _ParentWooCategoryMap = await GetWooCategoryMapFromID(updateViewEntity.ParentCategoryId);
                             int _newParentId = (_ParentWooCategoryMap == null) ? 0 : _ParentWooCategoryMap.WooCategoryId;
-                            if ((!_WooProductCategory.name.Equals(updateViewEntity.CategoryName)) || ((_WooProductCategory.parent ?? 0) != _newParentId))
+                            if ((!_wooProductCategory.name.Equals(updateViewEntity.CategoryName)) || ((_wooProductCategory.parent ?? 0) != _newParentId))
                             {
-                                _WooProductCategory.name = updateViewEntity.CategoryName;  // only update if necessary
-                                _WooProductCategory.parent = (uint)_newParentId;
-                                var _res = ((await _WooProductCategoryRepository.UpdateProductCategoryAsync(_WooProductCategory)));
+                                _wooProductCategory.name = updateViewEntity.CategoryName;  // only update if necessary
+                                _wooProductCategory.parent = (uint)_newParentId;
+                                var _res = ((await _wooProductCategoryRepository.UpdateProductCategoryAsync(_wooProductCategory)));
                                 _result = ((_res == null) || (_res.id ==null)) ? AppUnitOfWork.CONST_WASERROR : (int)_res.id; // if null there is an issue
                             }
                         }
@@ -563,9 +560,9 @@ namespace RainbowOF.Repositories.Lookups
         {
             int _result = await UpdateWooItemAsync(updateViewEntity);
             if (_result > 0)
-                _gridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Updated woo category {updateViewEntity.CategoryName}.");
+                _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Updated woo category {updateViewEntity.CategoryName}.");
             else if (_result == AppUnitOfWork.CONST_WASERROR)
-                _gridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo category {updateViewEntity.CategoryName} update failed.");
+                _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo category {updateViewEntity.CategoryName} update failed.");
 
             _result = await UpdateWooCategoryMap(updateViewEntity);
             return _result;

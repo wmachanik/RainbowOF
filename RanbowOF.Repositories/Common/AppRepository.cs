@@ -13,50 +13,52 @@ namespace RainbowOF.Repositories.Common
 {
     public class AppRepository<TEntity> : IAppRepository<TEntity> where TEntity : class
     {
-        private ApplicationDbContext _context { get; set; }  // = null;
-        private DbSet<TEntity> _table = null;
-        private ILoggerManager _logger { get; }
-        private IAppUnitOfWork _unitOfWork { get; set; }
+        private ApplicationDbContext _Context { get; set; }  // = null;
+        private DbSet<TEntity> _Table = null;
+        private ILoggerManager _Logger { get; }
+        private IAppUnitOfWork _AppUnitOfWork { get; set; }
         /// should not need this had it her to stop the error: "There is no argument given that corresponds to the required formal parameter"
-        /// if it is asking for that you need to ass  : base (dbContext, logger, unitofwork) to the def 
+        /// if it is asking for that you need to ass  : base (dbContext, logger, UnitOfWork) to the def 
         //public AppRepository() { }
         public AppRepository(ApplicationDbContext dbContext, ILoggerManager logger, IAppUnitOfWork unitOfWork)
         {
-            _context = dbContext;
-            _table = dbContext.Set<TEntity>();
-            _logger = logger;
-            _unitOfWork = unitOfWork;
+            _Context = dbContext;
+            _Table = dbContext.Set<TEntity>();
+            _Logger = logger;
+            _AppUnitOfWork = unitOfWork;
         }
 
-        public ApplicationDbContext appDbContext { get { return _context; } set { _context = value; } }
-
-        public ILoggerManager loggerManager { get { return _logger; } }
+        //public ApplicationDbContext appDbContext { get { return _context; } set { _context = value; } }
+        public ApplicationDbContext GetAppDbContext()
+        {
+            return _Context;
+        }
+        //public ILoggerManager loggerManager { get { return _logger; } }
         public async Task<int> CountAsync()
         {
-            return await _table.CountAsync();
+            return await _Table.CountAsync();
         }
         public int Add(TEntity newEntity)
         {
             int _added = AppUnitOfWork.CONST_WASERROR;    // return if error
-            _logger.LogDebug($"Adding entity: {newEntity.ToString()}");
-            _unitOfWork.BeginTransaction();
+            _Logger.LogDebug($"Adding entity: {newEntity.ToString()}");
+            _AppUnitOfWork.BeginTransaction();
             try
             {
-                _context.Entry(newEntity).State = EntityState.Added;
-                _table.Add(newEntity);
-                _added = _unitOfWork.Complete();  // Save();
+                _Context.Entry(newEntity).State = EntityState.Added;
+                _Table.Add(newEntity);
+                _added = _AppUnitOfWork.Complete();  // Save();
                 //_context.Database.CommitTransaction();
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Adding Item: {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Adding Item: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
             return _added;
         }
-
         //public static IEnumerable<string> GetIdFields(TEntity Entity)
         //{
         //    var ids = from p in Entity.GetType().GetProperties().Where(e  => e.PropertyType ==  )
@@ -82,18 +84,18 @@ namespace RainbowOF.Repositories.Common
         public async Task<int> AddAsync(TEntity newEntity)
         {
             int _added = AppUnitOfWork.CONST_WASERROR;    // return if error
-            _logger.LogDebug($"Adding entity (async): {newEntity.ToString()}");
-            _unitOfWork.BeginTransaction();
+            _Logger.LogDebug($"Adding entity (async): {newEntity.ToString()}");
+            _AppUnitOfWork.BeginTransaction();
             try
             {
                 //_context.Entry(newEntity).State = EntityState.Added;
-                await _table.AddAsync(newEntity);
-                _added = await _unitOfWork.CompleteAsync();  // Save
+                await _Table.AddAsync(newEntity);
+                _added = await _AppUnitOfWork.CompleteAsync();  // Save
                 // !!!!!!   id field is set once is save by EF - no need to set it
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Adding Item (async): {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Adding Item (async): {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -103,45 +105,45 @@ namespace RainbowOF.Repositories.Common
         public async Task<int> AddRangeAsync(List<TEntity> newEntities)
         {
             int _added = AppUnitOfWork.CONST_WASERROR;    // return if error
-            _logger.LogDebug($"Adding range (async): {newEntities.ToString()}");
-            _unitOfWork.BeginTransaction();
+            _Logger.LogDebug($"Adding range (async): {newEntities.ToString()}");
+            _AppUnitOfWork.BeginTransaction();
             try
             {
                 foreach (var newEntity in newEntities)
                 {
-                    _context.Entry(newEntity).State = EntityState.Added;
+                    _Context.Entry(newEntity).State = EntityState.Added;
                 }
-                await _table.AddRangeAsync(newEntities);     // !!!!!!   id field is set once is save by EF - no need to set it
-                _added = await _unitOfWork.CompleteAsync();  // Save
+                await _Table.AddRangeAsync(newEntities);     // !!!!!!   id field is set once is save by EF - no need to set it
+                _added = await _AppUnitOfWork.CompleteAsync();  // Save
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Adding range (async): {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Adding range (async): {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
             return _added;
         }
-        public int DeleteById(object Id)
+        public int DeleteById(object sourceId)
         {
             int _deleted = AppUnitOfWork.CONST_WASERROR;    // return if error
-            _logger.LogDebug($"Deleting entity: {Id.ToString()}");
-            _unitOfWork.BeginTransaction();
+            _Logger.LogDebug($"Deleting  by id entity: {sourceId.ToString()}");
+            _AppUnitOfWork.BeginTransaction();
             try
             {
-                TEntity _entity = GetById(Id);
+                TEntity _entity = GetById(sourceId);
                 if (_entity != null)
                 {
-                    _context.Entry(_entity).State = EntityState.Deleted;
-                    _table.Remove(_entity);
-                    _deleted = _unitOfWork.Complete();  // Save();
+                    _Context.Entry(_entity).State = EntityState.Deleted;
+                    _Table.Remove(_entity);
+                    _deleted = _AppUnitOfWork.Complete();  // Save();
                 }
 
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Deleting Item: {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Deleting Item: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -149,26 +151,26 @@ namespace RainbowOF.Repositories.Common
 
             return _deleted;
         }
-        public async Task<int> DeleteByIdAsync(object Id)
+        public async Task<int> DeleteByIdAsync(object sourceId)
         {
             int _deleted = AppUnitOfWork.CONST_WASERROR;    // return if error
-            _logger.LogDebug($"Deleting entity (async): {Id.ToString()}");
-            _unitOfWork.BeginTransaction();
+            _Logger.LogDebug($"Deleting by id entity (async): {sourceId.ToString()}");
+            _AppUnitOfWork.BeginTransaction();
             try
             {
-                TEntity _entity = await GetByIdAsync(Id);
+                TEntity _entity = await GetByIdAsync(sourceId);
                 if (_entity != null)
                 {
-                    _context.Entry(_entity).State = EntityState.Deleted;
-                    _table.Remove(_entity);
-                    _deleted = await _unitOfWork.CompleteAsync();  // Save();
+                    _Context.Entry(_entity).State = EntityState.Deleted;
+                    _Table.Remove(_entity);
+                    _deleted = await _AppUnitOfWork.CompleteAsync();  // Save();
                 }
 
             }
             catch (Exception ex)
             {
-                _logger.LogError($"!!!Error Deleting entity (async): {ex.Message} - Inner Exception {ex.InnerException}");
-                _unitOfWork.RollbackTransaction();
+                _Logger.LogError($"!!!Error Deleting entity (async): {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.RollbackTransaction();
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -179,22 +181,22 @@ namespace RainbowOF.Repositories.Common
         public int DeleteBy(Expression<Func<TEntity, bool>> predicate)
         {
             int _deleted = AppUnitOfWork.CONST_WASERROR;    // return if error
-            _logger.LogDebug($"Deleting entity by: {predicate.ToString()}");
-            _unitOfWork.BeginTransaction();
+            _Logger.LogDebug($"Deleting entity by: {predicate.ToString()}");
+            _AppUnitOfWork.BeginTransaction();
             try
             {
-                var _entity = _table.Find(predicate);
+                var _entity = _Table.Find(predicate);
                 if (_entity != null)
                 {
-                    _context.Entry(_entity).State = EntityState.Deleted;
-                    _table.Remove(_entity);
-                    _deleted = _unitOfWork.Complete();  // Save();
+                    _Context.Entry(_entity).State = EntityState.Deleted;
+                    _Table.Remove(_entity);
+                    _deleted = _AppUnitOfWork.Complete();  // Save();
                 }
 
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Deleting By: {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Deleting By: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -204,22 +206,22 @@ namespace RainbowOF.Repositories.Common
         public async Task<int> DeleteByAsync(Expression<Func<TEntity, bool>> predicate)
         {
             int _deleted = AppUnitOfWork.CONST_WASERROR;    // return if error
-            _logger.LogDebug($"Deleting entity by (async): {predicate.ToString()}");
-            _unitOfWork.BeginTransaction();
+            _Logger.LogDebug($"Deleting entity by (async): {predicate.ToString()}");
+            _AppUnitOfWork.BeginTransaction();
             try
             {
-                var _entity = await _table.FindAsync(predicate);
+                var _entity = await _Table.FindAsync(predicate);
                 if (_entity != null)
                 {
-                    _context.Entry(_entity).State = EntityState.Deleted;
-                    _table.Remove(_entity);
-                    _deleted = await _unitOfWork.CompleteAsync();  // Save();
+                    _Context.Entry(_entity).State = EntityState.Deleted;
+                    _Table.Remove(_entity);
+                    _deleted = await _AppUnitOfWork.CompleteAsync();  // Save();
                 }
 
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Deleting By (async): {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Deleting By (async): {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -230,14 +232,14 @@ namespace RainbowOF.Repositories.Common
         public TEntity FindFirst()
         {
             TEntity _entity = null;
-            _logger.LogDebug($"Finding First entity of type: {typeof(TEntity)}");
+            _Logger.LogDebug($"Finding First entity of type: {typeof(TEntity)}");
             try
             {
-                _entity = _table.FirstOrDefault();
+                _entity = _Table.FirstOrDefault();
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Finding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Finding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -247,14 +249,14 @@ namespace RainbowOF.Repositories.Common
         public TEntity FindFirst(Expression<Func<TEntity, bool>> predicate)
         {
             TEntity _entity = null;
-            _logger.LogDebug($"Finding First {predicate.ToString()} entity of type: {typeof(TEntity)}");
+            _Logger.LogDebug($"Finding First {predicate.ToString()} entity of type: {typeof(TEntity)}");
             try
             {
-                _entity = _table.FirstOrDefault(predicate);
+                _entity = _Table.FirstOrDefault(predicate);
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Finding first predicate entity: {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Finding first predicate entity: {ex.Message} - Inner Exception {ex.InnerException}");
 
 #if DebugMode
                 throw;     // #Debug?
@@ -265,14 +267,14 @@ namespace RainbowOF.Repositories.Common
         public async Task<TEntity> FindFirstAsync()
         {
             TEntity _entity = null;
-            _logger.LogDebug($"Finding First entity of type: {typeof(TEntity)}");
+            _Logger.LogDebug($"Finding First entity of type: {typeof(TEntity)}");
             try
             {
-                _entity = await _table.FirstOrDefaultAsync();
+                _entity = await _Table.FirstOrDefaultAsync();
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Finding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Finding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -282,15 +284,15 @@ namespace RainbowOF.Repositories.Common
         public async Task<TEntity> FindFirstAsync(Expression<Func<TEntity, bool>> predicate)
         {
             TEntity _entity = null;
-            _logger.LogDebug($"Finding First {predicate.ToString()} entity of type: {typeof(TEntity)}");
+            _Logger.LogDebug($"Finding First {predicate.ToString()} entity of type: {typeof(TEntity)}");
             try
             {
-                _entity = await _table.FirstOrDefaultAsync(predicate);
+                _entity = await _Table.FirstOrDefaultAsync(predicate);
             }
             catch (Exception ex)
             {
                 string errorMessage = $"!!!Error Finding first predicate entity: {ex.Message} - Inner Exception {ex.InnerException}";
-                _unitOfWork.LogAndSetErrorMessage(errorMessage);
+                _AppUnitOfWork.LogAndSetErrorMessage(errorMessage);
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -299,14 +301,14 @@ namespace RainbowOF.Repositories.Common
         }
         public IEnumerable<TEntity> GetAll()
         {
-            _logger.LogDebug($"Getting all records in Table of type: {typeof(TEntity)}");
+            _Logger.LogDebug($"Getting all records in Table of type: {typeof(TEntity)}");
             try
             {
-                return _table.ToList();
+                return _Table.ToList();
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Getting all (async): {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all (async): {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -315,15 +317,15 @@ namespace RainbowOF.Repositories.Common
         }
         public async Task<IEnumerable<TEntity>> GetAllAsync()
         {
-            _logger.LogDebug($"Getting all records (async) in Table of type: {typeof(TEntity)}");
+            _Logger.LogDebug($"Getting all records (async) in Table of type: {typeof(TEntity)}");
             try
             {
-                var _result =  await _table.ToListAsync();
+                var _result =  await _Table.ToListAsync();
                 return _result;
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Getting all (async): {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all (async): {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -332,11 +334,11 @@ namespace RainbowOF.Repositories.Common
         }
         public async Task<IEnumerable<TEntity>> GetAllEagerAsync(params Expression<Func<TEntity, object>>[] properties)
         {
-            _logger.LogDebug($"Get By all eager loading (async) {properties.ToString()} from table of type: {typeof(TEntity)}");
+            _Logger.LogDebug($"Get By all eager loading (async) {properties.ToString()} from table of type: {typeof(TEntity)}");
             if (properties == null)
                 throw new ArgumentNullException(nameof(properties));
 
-            var query = _table as IQueryable<TEntity>; // _dbSet = dbContext.Set<TEntity>()
+            var query = _Table as IQueryable<TEntity>; // _dbSet = dbContext.Set<TEntity>()
 
             query = properties
                        .Aggregate(query, (current, property) => current.Include(property));
@@ -348,7 +350,7 @@ namespace RainbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error eager loading: {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error eager loading: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -357,11 +359,11 @@ namespace RainbowOF.Repositories.Common
         }
         public async Task<IEnumerable<TEntity>> GetPagedEagerAsync(int startPage, int currentPageSize, params Expression<Func<TEntity, object>>[] properties)
         {
-            _logger.LogDebug($"Get By all eager loading (async) {properties.ToString()} from table of type: {typeof(TEntity)}");
+            _Logger.LogDebug($"Get By all eager loading (async) {properties.ToString()} from table of type: {typeof(TEntity)}");
             if (properties == null)
                 throw new ArgumentNullException(nameof(properties));
 
-            var query = _table as IQueryable<TEntity>; // _dbSet = dbContext.Set<TEntity>()
+            var query = _Table as IQueryable<TEntity>; // _dbSet = dbContext.Set<TEntity>()
 
             query = properties
                        .Aggregate(query, (current, property) => current.Include(property));
@@ -373,7 +375,7 @@ namespace RainbowOF.Repositories.Common
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error eager loading: {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error eager loading: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -382,14 +384,14 @@ namespace RainbowOF.Repositories.Common
         }
         public IEnumerable<TEntity> GetBy(Expression<Func<TEntity, bool>> predicate)
         {
-            _logger.LogDebug($"Get By all {predicate.ToString()} from table of type: {typeof(TEntity)}");
+            _Logger.LogDebug($"Get By all {predicate.ToString()} from table of type: {typeof(TEntity)}");
             try
             {
-                return _table.Where(predicate).ToList();
+                return _Table.Where(predicate).ToList();
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Getting by: {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting by: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -399,15 +401,15 @@ namespace RainbowOF.Repositories.Common
         public async Task<IEnumerable<TEntity>> GetByAsync(Expression<Func<TEntity, bool>> predicate)
         {
             IEnumerable<TEntity> _Rows = null;
-            _logger.LogDebug($"Get By all (async) {predicate.ToString()} from table of type: {typeof(TEntity)}");
+            _Logger.LogDebug($"Get By all (async) {predicate.ToString()} from table of type: {typeof(TEntity)}");
             try
             {
-                _Rows = await _table.Where(predicate).ToListAsync();
-                _logger.LogDebug($"Get By all (async) table {nameof(_table)} returned: {_Rows.Count()} rows");
+                _Rows = await _Table.Where(predicate).ToListAsync();
+                _Logger.LogDebug($"Get By all (async) table {nameof(_Table)} returned: {_Rows.Count()} rows");
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Getting by (async): {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting by (async): {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -417,14 +419,14 @@ namespace RainbowOF.Repositories.Common
 
         public TEntity GetById(object Id)
         {
-            _logger.LogDebug($"Get By Id (async) {Id.ToString()} from table of type: {typeof(TEntity)}");
+            _Logger.LogDebug($"Get By Id (async) {Id.ToString()} from table of type: {typeof(TEntity)}");
             try
             {
-                return _table.Find(Id);
+                return _Table.Find(Id);
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Get by Id: {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Get by Id: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -433,14 +435,14 @@ namespace RainbowOF.Repositories.Common
         }
         public async Task<TEntity> GetByIdAsync(object Id)
         {
-            _logger.LogDebug($"Get By Id (async) {Id.ToString()} from table of type: {typeof(TEntity)}");
+            _Logger.LogDebug($"Get By Id (async) {Id.ToString()} from table of type: {typeof(TEntity)}");
             try
             {
-                return await _table.FindAsync(Id);
+                return await _Table.FindAsync(Id);
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Get by Id (async): {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Get by Id (async): {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -467,17 +469,17 @@ namespace RainbowOF.Repositories.Common
         public int Update(TEntity updatedEntity)
         {
             int _updated = AppUnitOfWork.CONST_WASERROR;   // -1 means error only returned if there is one
-            _logger.LogDebug($"Updating entity: {updatedEntity.ToString()}");
-            _unitOfWork.BeginTransaction();
+            _Logger.LogDebug($"Updating entity: {updatedEntity.ToString()}");
+            _AppUnitOfWork.BeginTransaction();
             try
             {
-                _context.Entry(updatedEntity).State = EntityState.Modified;
-                _table.Update(updatedEntity);
-                _updated = _unitOfWork.Complete();  // Save();
+                _Context.Entry(updatedEntity).State = EntityState.Modified;
+                _Table.Update(updatedEntity);
+                _updated = _AppUnitOfWork.Complete();  // Save();
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Updating Table: {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Updating Table: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -487,17 +489,17 @@ namespace RainbowOF.Repositories.Common
         public async Task<int> UpdateAsync(TEntity updatedEntity)
         {
             int _updated = AppUnitOfWork.CONST_WASERROR;   // -1 means error only returned if there is one
-            _logger.LogDebug($"Updating entity (async): {updatedEntity.ToString()}");
-            _unitOfWork.BeginTransaction();
+            _Logger.LogDebug($"Updating entity (async): {updatedEntity.ToString()}");
+            _AppUnitOfWork.BeginTransaction();
             try
             {
-                _context.Entry(updatedEntity).State = EntityState.Modified;
-                _table.Update(updatedEntity);
-                _updated = await _unitOfWork.CompleteAsync();  // Save();
+                _Context.Entry(updatedEntity).State = EntityState.Modified;
+                _Table.Update(updatedEntity);
+                _updated = await _AppUnitOfWork.CompleteAsync();  // Save();
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Updating Table (async): {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Updating Table (async): {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -508,17 +510,17 @@ namespace RainbowOF.Repositories.Common
         public async Task<int> UpdateRangeAsync(List<TEntity> updateEntities)
         {
             int _updated = AppUnitOfWork.CONST_WASERROR;   // -1 means error only returned if there is one
-            _logger.LogDebug($"Updating range entity (async): {updateEntities.ToString()}");
-            _unitOfWork.BeginTransaction();
+            _Logger.LogDebug($"Updating range entity (async): {updateEntities.ToString()}");
+            _AppUnitOfWork.BeginTransaction();
             try
             {
-                _context.Entry(updateEntities).State = EntityState.Modified;
-                _table.UpdateRange(updateEntities);
-                _updated = await _unitOfWork.CompleteAsync();  // Save();
+                _Context.Entry(updateEntities).State = EntityState.Modified;
+                _Table.UpdateRange(updateEntities);
+                _updated = await _AppUnitOfWork.CompleteAsync();  // Save();
             }
             catch (Exception ex)
             {
-                _unitOfWork.LogAndSetErrorMessage($"!!!Error Updating Table (async): {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Updating Table (async): {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif

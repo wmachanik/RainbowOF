@@ -19,9 +19,9 @@ namespace RainbowOF.Web.FrontEnd.Pages.Sys
         //bool collapse3Visible = false;
         protected ShowModalMessage ShowSavedStatus { get; set; }
         [Inject]
-        public IAppUnitOfWork _AppUnitOfWork { get; set; }
+        private IAppUnitOfWork _AppUnitOfWork { get; set; }
         [Inject]
-        public ILoggerManager _logger { get; set; }
+        private ILoggerManager _Logger { get; set; }
 
         protected override async Task OnInitializedAsync()
         {

@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RainbowOF.Data.SQL;
 
 namespace RainbowOF.Data.SQL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210615134851_AddAtribIdToVars")]
+    partial class AddAtribIdToVars
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -95,6 +97,9 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Property<Guid>("ItemAttributeLookupId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("ItemAttributeVarietyId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("ItemId")
                         .HasColumnType("uniqueidentifier");
 
@@ -135,9 +140,13 @@ namespace RainbowOF.Data.SQL.Migrations
 
                     b.HasIndex("ItemAttributeId");
 
-                    b.HasIndex("ItemAttributeVarietyLookupId");
+                    b.HasIndex("ItemAttributeVarietyLookupId")
+                        .IsUnique();
 
                     b.HasIndex("UoMId");
+
+                    b.HasIndex("ItemAttributeVarietyId", "ItemAttributeVarietyLookupId")
+                        .IsUnique();
 
                     b.ToTable("ItemAttributeVarieties");
                 });

@@ -28,9 +28,6 @@ namespace RainbowOF.Datsa.SQL.EntityConfigs.Items
             itemModelBuilder.HasMany(i => i.ItemAttributes)
                 .WithOne()
                 .OnDelete(DeleteBehavior.NoAction);
-            itemModelBuilder.HasMany(i => i.ItemCategories)
-                .WithOne()
-                .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }

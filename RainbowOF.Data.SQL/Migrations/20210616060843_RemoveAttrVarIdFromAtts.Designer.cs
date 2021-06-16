@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RainbowOF.Data.SQL;
 
 namespace RainbowOF.Data.SQL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210616060843_RemoveAttrVarIdFromAtts")]
+    partial class RemoveAttrVarIdFromAtts
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -135,7 +137,8 @@ namespace RainbowOF.Data.SQL.Migrations
 
                     b.HasIndex("ItemAttributeId");
 
-                    b.HasIndex("ItemAttributeVarietyLookupId");
+                    b.HasIndex("ItemAttributeVarietyLookupId")
+                        .IsUnique();
 
                     b.HasIndex("UoMId");
 

@@ -17,14 +17,14 @@ namespace RainbowOF.Repositories.Lookups
 {
     public class ItemAttributeVarietyLookupRepository : AppRepository<ItemAttributeVarietyLookup>, IItemAttributeVarietyLookupRepository
     {
-        private ApplicationDbContext _context = null;
-        private ILoggerManager _logger { get; set; }
-        private IAppUnitOfWork _appUnitOfWork { get; set; }
-        public ItemAttributeVarietyLookupRepository(ApplicationDbContext dbContext, ILoggerManager logger, IAppUnitOfWork appUnitOfWork) : base(dbContext, logger, appUnitOfWork)
+        private ApplicationDbContext _Context = null;
+        private ILoggerManager _Logger { get; set; }
+        private IAppUnitOfWork _AppUnitOfWork { get; set; }
+        public ItemAttributeVarietyLookupRepository(ApplicationDbContext sourceDbContext, ILoggerManager sourceLogger, IAppUnitOfWork sourceAppUnitOfWork) : base(sourceDbContext, sourceLogger, sourceAppUnitOfWork)
         {
-            _context = dbContext;
-            _logger = logger;
-            _appUnitOfWork = appUnitOfWork;
+            _Context = sourceDbContext;
+            _Logger = sourceLogger;
+            _AppUnitOfWork = sourceAppUnitOfWork;
         }
 
         List<OrderByParameter<ItemAttributeVarietyLookup>> GetOrderByExpressions(List<SortParam> currentSortParams)
@@ -125,11 +125,11 @@ namespace RainbowOF.Repositories.Lookups
         public async Task<DataGridItems<ItemAttributeVarietyLookup>> GetPagedDataEagerWithFilterAndOrderByAsync(DataGridParameters currentDataGridParameters, Guid sourceParentItemAttributeLookupId) // (int startPage, int currentPageSize)
         {
             DataGridItems<ItemAttributeVarietyLookup> _dataGridData = null;
-            DbSet<ItemAttributeVarietyLookup> _table = _context.Set<ItemAttributeVarietyLookup>();
+            DbSet<ItemAttributeVarietyLookup> _table = _Context.Set<ItemAttributeVarietyLookup>();
 
             try
             {
-                _logger.LogDebug($"Getting all records with eager loading of ItemAttributeVarietyLookup order by an filter Data Grid Parameters: {currentDataGridParameters.ToString()}");
+                _Logger.LogDebug($"Getting all records with eager loading of ItemAttributeVarietyLookup order by an filter Data Grid Parameters: {currentDataGridParameters.ToString()}");
                 // get a list of Order bys and filters
                 List<OrderByParameter<ItemAttributeVarietyLookup>> _orderByExpressions = GetOrderByExpressions(currentDataGridParameters.SortParams);
                 List<Expression<Func<ItemAttributeVarietyLookup, bool>>> _filterByExpressions = GetFilterByExpressions(currentDataGridParameters.FilterParams);
@@ -187,7 +187,7 @@ namespace RainbowOF.Repositories.Lookups
             }
             catch (Exception ex)
             {
-                _appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all records from ItemAttributeVarietyLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all records from ItemAttributeVarietyLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif

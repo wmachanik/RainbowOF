@@ -5,22 +5,22 @@ namespace RainbowOF.Tools
 {
     public class LoggerManager : ILoggerManager
     {
-        private static ILogger logger = LogManager.GetCurrentClassLogger();
+        private static ILogger _Logger = LogManager.GetCurrentClassLogger();
         public void LogDebug(string message)
         {
-            logger.Debug(message);
+            _Logger.Debug(message);
         }
         public void LogError(string message)
         {
-            logger.Error(message);
+            _Logger.Error(message);
         }
         public void LogInfo(string message)
         {
-            logger.Info(message);
+            _Logger.Info(message);
         }
         public void LogWarn(string message)
         {
-            logger.Warn(message);
+            _Logger.Warn(message);
         }
     }
 }

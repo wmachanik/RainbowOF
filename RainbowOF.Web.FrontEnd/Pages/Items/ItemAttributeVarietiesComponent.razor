@@ -173,7 +173,7 @@
                                         <br />
                                     }
                                     <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items.UoMSelecteListComponent PopUpRef="@_VarietiesGridSettings.PopUpRef" SourceUoMId="VarietyDataModels.Item.UoMId"
-                                                                                                                UoMIdChanged="@((v) => VarietyDataModels.CellValue = v)" />
+                                                                                                                UoMIdChangedEvent="@((v) => VarietyDataModels.CellValue = v)" />
                                 }
                             </EditTemplate>
                         </DataGridColumn>
@@ -184,6 +184,7 @@
                                     var selectedVarItem = (string)(VarietyDataModels?.CellValue ?? "n/a");
                                     <Select TValue="string" SelectedValue="@((string) (VarietyDataModels?.CellValue ?? "n/a"))" SelectedValueChanged="@((v)=> VarietyDataModels.CellValue = v)">
                                         <SelectItem TValue="string" Value="@selectedVarItem">@selectedVarItem</SelectItem>
+
 
                                         @foreach (var item in listOfSymbols)
                                         {

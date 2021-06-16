@@ -18,21 +18,21 @@ namespace RainbowOF.Repositories.System
         private IAppRepository<SysPrefs> _SysPrefsRepo;
         private IAppRepository<WooSettings> _WooSettingsRepo;
 
-        private ApplicationDbContext _context = null;
+        private ApplicationDbContext _Context = null;
         private DbSet<SysPrefs> _SysPrefsTable = null;
         private DbSet<WooSettings> _WooSettingsTable = null;
-        private ILoggerManager _logger { get; }
-        private IAppUnitOfWork _unitOfWork { get; set; }
-        public SysPrefsRepository(ApplicationDbContext dbContext, ILoggerManager logger, IAppUnitOfWork unitOfWork) :
+        private ILoggerManager _Logger { get; }
+        private IAppUnitOfWork _AppUnitOfWork { get; set; }
+        public SysPrefsRepository(ApplicationDbContext sourceDbContext, ILoggerManager sourceLogger, IAppUnitOfWork sourceAppUnitOfWork) :
             base() //(dbContext, logger, unitOfWork)
         {
-            _context = dbContext;
-            _SysPrefsTable = _context.Set<SysPrefs>();
-            _WooSettingsTable = _context.Set<WooSettings>();
-            _logger = logger;
-            _unitOfWork = unitOfWork;
-            _SysPrefsRepo = unitOfWork.Repository<SysPrefs>();
-            _WooSettingsRepo = unitOfWork.Repository<WooSettings>();
+            _Context = sourceDbContext;
+            _SysPrefsTable = _Context.Set<SysPrefs>();
+            _WooSettingsTable = _Context.Set<WooSettings>();
+            _Logger = sourceLogger;
+            _AppUnitOfWork = sourceAppUnitOfWork;
+            _SysPrefsRepo = sourceAppUnitOfWork.Repository<SysPrefs>();
+            _WooSettingsRepo = sourceAppUnitOfWork.Repository<WooSettings>();
         }
 
         public SysPrefsModel GetSysPrefs()

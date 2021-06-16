@@ -38,58 +38,58 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         // Retrieve data from Woo
         public async Task<List<ProductCategory>> GetWooCategoryData()
         {
-            WooAPISettings _WooAPISettings = new WooAPISettings(WooSettingsModel);
+            WooAPISettings _wooAPISettings = new WooAPISettings(AppWooSettings);
    
 
-            IWooProductCategory _WooProductCategory = new WooProductCategory(_WooAPISettings, Logger);
+            IWooProductCategory _WooProductCategory = new WooProductCategory(_wooAPISettings, _Logger);
             //List<ProductCategory> wooProductCategories = await _WooProductCategory.GetAllProductCategories();
             return await _WooProductCategory.GetAllProductCategoriesAsync();
             //return wooProductCategories;
         }
-        async Task<Guid> UpdateItemCategoryLookup(ProductCategory pPC, ItemCategoryLookup pItemCategoryLookup, List<WooItemWithParent> pAttribsWithParents)
+        async Task<Guid> UpdateItemCategoryLookup(ProductCategory updatedPC, ItemCategoryLookup updatedItemCategoryLookup, List<WooItemWithParent> sourceAttribsWithParents)
         {
-            IAppRepository<ItemCategoryLookup> _ItemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
+            IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
 
-            pItemCategoryLookup.CategoryName = pPC.name;
-            pItemCategoryLookup.UsedForPrediction = (pPC.parent == null) || (pPC.parent == 0);
+            updatedItemCategoryLookup.CategoryName = updatedPC.name;
+            updatedItemCategoryLookup.UsedForPrediction = (updatedPC.parent == null) || (updatedPC.parent == 0);
             // do not set parent Id here since it could cause database problems - if it is already null then it will be updated later.
             // pItemCategoryLookup.ParentCategoryId = Guid.Empty;   /// need to find the  ParentId if it exists - or need to say it does not exists so that we can look later?
-            if (pPC.parent > 0)
+            if (updatedPC.parent > 0)
             {
-                pAttribsWithParents.Add(new WooItemWithParent
+                sourceAttribsWithParents.Add(new WooItemWithParent
                 {
-                    ChildId = (int)pPC.id,
-                    ParentId = (int)pPC.parent
+                    ChildId = (int)updatedPC.id,
+                    ParentId = (int)updatedPC.parent
                 });
             }
-            pItemCategoryLookup.Notes = $"Updated Woo Category ID {pPC.id}";
-            bool _success = await _ItemCategoryLookupRepository.UpdateAsync(pItemCategoryLookup) != AppUnitOfWork.CONST_WASERROR;
-            return (_success) ? pItemCategoryLookup.ItemCategoryLookupId : Guid.Empty;
+            updatedItemCategoryLookup.Notes = $"Updated Woo Category ID {updatedPC.id}";
+            bool _success = await _itemCategoryLookupRepository.UpdateAsync(updatedItemCategoryLookup) != AppUnitOfWork.CONST_WASERROR;
+            return (_success) ? updatedItemCategoryLookup.ItemCategoryLookupId : Guid.Empty;
         }
-        public async Task<Guid> AddOrGetIDItemCategoryLookup(ProductCategory pPC, List<WooItemWithParent> pCategoriesWithParents)
+        public async Task<Guid> AddOrGetIDItemCategoryLookup(ProductCategory sourcePC, List<WooItemWithParent> sourceCategoriesWithParents)
         {
-            IAppRepository<ItemCategoryLookup> _ItemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
+            IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
 
-            ItemCategoryLookup _ItemCategoryLookup = await _ItemCategoryLookupRepository.FindFirstAsync(ic => ic.CategoryName == pPC.name);
-            if (_ItemCategoryLookup == null)
+            ItemCategoryLookup _itemCategoryLookup = await _itemCategoryLookupRepository.FindFirstAsync(ic => ic.CategoryName == sourcePC.name);
+            if (_itemCategoryLookup == null)
             {
                 ItemCategoryLookup _newItemCategoryLookup = new ItemCategoryLookup
                 {
-                    CategoryName = pPC.name,
+                    CategoryName = sourcePC.name,
                     //  Null;? ParentCategoryId = Guid.Empty,
-                    UsedForPrediction = (pPC.parent == null) || (pPC.parent == 0),
-                    Notes = $"Imported Woo Category ID {pPC.id}"
+                    UsedForPrediction = (sourcePC.parent == null) || (sourcePC.parent == 0),
+                    Notes = $"Imported Woo Category ID {sourcePC.id}"
                 };
-                if (pPC.parent > 0)
+                if (sourcePC.parent > 0)
                 {
-                    pCategoriesWithParents.Add(new WooItemWithParent
+                    sourceCategoriesWithParents.Add(new WooItemWithParent
                     {
-                        ChildId = (int)pPC.id,
-                        ParentId = (int)pPC.parent
+                        ChildId = (int)sourcePC.id,
+                        ParentId = (int)sourcePC.parent
                     });
                 }
 
-                await _ItemCategoryLookupRepository.AddAsync(_newItemCategoryLookup);
+                await _itemCategoryLookupRepository.AddAsync(_newItemCategoryLookup);
                 return _newItemCategoryLookup.ItemCategoryLookupId;
             }
             else
@@ -98,185 +98,185 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             }
         }
 
-        async Task<Guid> AddOrUpdateItemCategoryLookup(ProductCategory pPC, Guid pWooMappedItemCategoryLookupId, List<WooItemWithParent> pCategoriesWithParents)
+        async Task<Guid> AddOrUpdateItemCategoryLookup(ProductCategory sourcePC, Guid sourceWooMappedItemCategoryLookupId, List<WooItemWithParent> sourceCategoriesWithParents)
         {
-            Guid _ItemCategoryLookupId = Guid.Empty;
-            IAppRepository<ItemCategoryLookup> _ItemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
+            Guid _itemCategoryLookupId = Guid.Empty;
+            IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
             // check if the category exists
-            ItemCategoryLookup _ItemCategoryLookup = await _ItemCategoryLookupRepository.FindFirstAsync(ic => ic.ItemCategoryLookupId == pWooMappedItemCategoryLookupId);
-            if (_ItemCategoryLookup != null)
+            ItemCategoryLookup _itemCategoryLookup = await _itemCategoryLookupRepository.FindFirstAsync(ic => ic.ItemCategoryLookupId == sourceWooMappedItemCategoryLookupId);
+            if (_itemCategoryLookup != null)
             {
-                _ItemCategoryLookupId = await UpdateItemCategoryLookup(pPC, _ItemCategoryLookup, pCategoriesWithParents);
+                _itemCategoryLookupId = await UpdateItemCategoryLookup(sourcePC, _itemCategoryLookup, sourceCategoriesWithParents);
             }
             else
             {
-                _ItemCategoryLookupId = await AddOrGetIDItemCategoryLookup(pPC, pCategoriesWithParents);
+                _itemCategoryLookupId = await AddOrGetIDItemCategoryLookup(sourcePC, sourceCategoriesWithParents);
             }
-            return _ItemCategoryLookupId;
+            return _itemCategoryLookupId;
         }
-        async Task<Guid> UpdateProductCategory(ProductCategory pPC, WooCategoryMap pWooCategoryMap, List<WooItemWithParent> pCategoriesWithParents)
+        async Task<Guid> UpdateProductCategory(ProductCategory updatedPC, WooCategoryMap targetWooCategoryMap, List<WooItemWithParent> sourceCategoriesWithParents)
         {
-            Guid _ItemCategoryLookupId = Guid.Empty;
-            IAppRepository<WooCategoryMap> _WooCategoryMapRepository = _AppUnitOfWork.Repository<WooCategoryMap>();
+            Guid _itemCategoryLookupId = Guid.Empty;
+            IAppRepository<WooCategoryMap> _wooCategoryMapRepository = _AppUnitOfWork.Repository<WooCategoryMap>();
 
             // copy data across
-            pWooCategoryMap.WooCategoryName = pPC.name;
-            pWooCategoryMap.WooCategorySlug = pPC.slug;
-            pWooCategoryMap.WooCategoryParentId = (int) pPC.parent;
-            _ItemCategoryLookupId = await AddOrUpdateItemCategoryLookup(pPC, pWooCategoryMap.ItemCategoryLookupId, pCategoriesWithParents);
-            if (_ItemCategoryLookupId != Guid.Empty)
+            targetWooCategoryMap.WooCategoryName = updatedPC.name;
+            targetWooCategoryMap.WooCategorySlug = updatedPC.slug;
+            targetWooCategoryMap.WooCategoryParentId = (int) updatedPC.parent;
+            _itemCategoryLookupId = await AddOrUpdateItemCategoryLookup(updatedPC, targetWooCategoryMap.ItemCategoryLookupId, sourceCategoriesWithParents);
+            if (_itemCategoryLookupId != Guid.Empty)
             {
-                /// Now update the woo categorY using the _ItemCategoryLookupId returned.
-                if (await _WooCategoryMapRepository.UpdateAsync(pWooCategoryMap) == AppUnitOfWork.CONST_WASERROR)
+                /// Now update the woo categorY using the _itemCategoryLookupId returned.
+                if (await _wooCategoryMapRepository.UpdateAsync(targetWooCategoryMap) == AppUnitOfWork.CONST_WASERROR)
                 {
-                    // did not updated so set _ItemCategoryLookupId to ItemCategoryLookupID to Guid.Empty = error
-                    _ItemCategoryLookupId = Guid.Empty;
+                    // did not updated so set _itemCategoryLookupId to ItemCategoryLookupID to Guid.Empty = error
+                    _itemCategoryLookupId = Guid.Empty;
                 }
             }
-            return _ItemCategoryLookupId;
+            return _itemCategoryLookupId;
         }
-        async Task<Guid> AddProductCategory(ProductCategory pPC, List<WooItemWithParent> pCategoriesWithParents)
+        async Task<Guid> AddProductCategory(ProductCategory newPC, List<WooItemWithParent> newCategoriesWithParents)
         {
-            Guid _ItemCategoryLookupId = Guid.Empty;
-            IAppRepository<WooCategoryMap> _WooCategoryMapRepository = _AppUnitOfWork.Repository<WooCategoryMap>();
+            Guid _itemCategoryLookupId = Guid.Empty;
+            IAppRepository<WooCategoryMap> _wooCategoryMapRepository = _AppUnitOfWork.Repository<WooCategoryMap>();
 
             // Add Item Category if it does not exist
-            _ItemCategoryLookupId = await AddOrGetIDItemCategoryLookup(pPC, pCategoriesWithParents);
-            if (_ItemCategoryLookupId != Guid.Empty)
+            _itemCategoryLookupId = await AddOrGetIDItemCategoryLookup(newPC, newCategoriesWithParents);
+            if (_itemCategoryLookupId != Guid.Empty)
             {
-                WooCategoryMap _WooCategoryMap = new WooCategoryMap
+                WooCategoryMap _wooCategoryMap = new WooCategoryMap
                 {
-                    WooCategoryName = pPC.name,
-                    WooCategorySlug = pPC.slug,
-                    WooCategoryParentId = (int)pPC.parent,
-                    ItemCategoryLookupId = _ItemCategoryLookupId,
-                    WooCategoryId = (int)pPC.id
+                    WooCategoryName = newPC.name,
+                    WooCategorySlug = newPC.slug,
+                    WooCategoryParentId = (int)newPC.parent,
+                    ItemCategoryLookupId = _itemCategoryLookupId,
+                    WooCategoryId = (int)newPC.id
                 };
                 //else  was check if woomap was null
                 //{
-                //    _WooCategoryMap.WooCategoryName = pPC.name;
-                //    _WooCategoryMap.WooCategorySlug = pPC.slug;
-                //    _WooCategoryMap.WooCategoryParentId = pPC.parent;
-                //    _WooCategoryMap.ItemCategoryLookupId = _ItemCategoryLookupId;
-                //    _WooCategoryMap.WooCategoryId = (int)pPC.id;
+                //    _wooCategoryMap.WooCategoryName = pPC.name;
+                //    _wooCategoryMap.WooCategorySlug = pPC.slug;
+                //    _wooCategoryMap.WooCategoryParentId = pPC.parent;
+                //    _wooCategoryMap.ItemCategoryLookupId = _itemCategoryLookupId;
+                //    _wooCategoryMap.WooCategoryId = (int)pPC.id;
                 //}
-                if (await _WooCategoryMapRepository.AddAsync(_WooCategoryMap) == AppUnitOfWork.CONST_WASERROR)
+                if (await _wooCategoryMapRepository.AddAsync(_wooCategoryMap) == AppUnitOfWork.CONST_WASERROR)
                 {
-                    // did not add so set _ItemCategoryLookupId to ItemCategoryLookupID to Guid.Empty = error
-                    _ItemCategoryLookupId = Guid.Empty;
+                    // did not add so set _itemCategoryLookupId to ItemCategoryLookupID to Guid.Empty = error
+                    _itemCategoryLookupId = Guid.Empty;
                 }
             }
 
-            return _ItemCategoryLookupId;
+            return _itemCategoryLookupId;
         }
-        async Task<Guid> ImportAndMapCategoryData(ProductCategory pPC, List<WooItemWithParent> pCategoriesWithParents)
+        async Task<Guid> ImportAndMapCategoryData(ProductCategory sourcePC, List<WooItemWithParent> sourceCategoriesWithParents)
         {
-            Guid _ItemCategoryLookupId = Guid.Empty;
+            Guid _itemCategoryLookupId = Guid.Empty;
             // Get repository for each database we are accessing. ItemCategoryLookup. WooProductCategoryMap & WooSyncLog
-            IAppRepository<WooCategoryMap> _WooCategoryMapRepository = _AppUnitOfWork.Repository<WooCategoryMap>();
+            IAppRepository<WooCategoryMap> _wooCategoryMapRepository = _AppUnitOfWork.Repository<WooCategoryMap>();
 
             // Import the category and set sync data
             ///first check if it exists in the mapping, just in case there has been a name change
-            WooCategoryMap _WooCategoryMap = await _WooCategoryMapRepository.FindFirstAsync(wpc => wpc.WooCategoryId == pPC.id);
-            if (_WooCategoryMap != null)                  // the id exists so update
+            WooCategoryMap _wooCategoryMap = await _wooCategoryMapRepository.FindFirstAsync(wpc => wpc.WooCategoryId == sourcePC.id);
+            if (_wooCategoryMap != null)                  // the id exists so update
             {
-                _ItemCategoryLookupId = await UpdateProductCategory(pPC, _WooCategoryMap, pCategoriesWithParents);
-                _importCounters.TotalUpdated++;
+                _itemCategoryLookupId = await UpdateProductCategory(sourcePC, _wooCategoryMap, sourceCategoriesWithParents);
+                currImportCounters.TotalUpdated++;
             }
             else                  // the id does not exists so add
             {
-                _ItemCategoryLookupId = await AddProductCategory(pPC, pCategoriesWithParents);
-                _importCounters.TotalAdded++;
+                _itemCategoryLookupId = await AddProductCategory(sourcePC, sourceCategoriesWithParents);
+                currImportCounters.TotalAdded++;
             }
 
-            return _ItemCategoryLookupId;
+            return _itemCategoryLookupId;
         }
         // string
-        string ProductCatToString(ProductCategory pPC, Guid pImportedId)
+        string ProductCatToString(ProductCategory sourcePC, Guid importedId)
         {
-            return $"Product Category {pPC.name}, id: {pPC.id}, imported and Category Id is {pImportedId}";
+            return $"Product Category {sourcePC.name}, id: {sourcePC.id}, imported and Category Id is {importedId}";
         }
         /// <summary>
         /// Get Our Category Id using a Woo Category Id
         /// </summary>
-        /// <param name="pWooCategoryId">The Woo Category Id</param>
+        /// <param name="sourceWooCategoryId">The Woo Category Id</param>
         /// <returns></returns>
-        async Task<Guid> GetCategoryById(int pWooCategoryId)
+        async Task<Guid> GetCategoryById(int sourceWooCategoryId)
         {
-            // using hte category woo category mapping find the assocated ID
-            IAppRepository<WooCategoryMap> _WooCatrgoryMapRepository = _AppUnitOfWork.Repository<WooCategoryMap>();
+            // using the category woo category mapping find the associated ID
+            IAppRepository<WooCategoryMap> _wooCatrgoryMapRepository = _AppUnitOfWork.Repository<WooCategoryMap>();
 
-            WooCategoryMap _WooCategoryMap = await _WooCatrgoryMapRepository.FindFirstAsync(wc => wc.WooCategoryId == pWooCategoryId);
-            return (_WooCategoryMap == null) ? Guid.Empty : _WooCategoryMap.ItemCategoryLookupId;
+            WooCategoryMap _wooCategoryMap = await _wooCatrgoryMapRepository.FindFirstAsync(wc => wc.WooCategoryId == sourceWooCategoryId);
+            return (_wooCategoryMap == null) ? Guid.Empty : _wooCategoryMap.ItemCategoryLookupId;
 
         }
-        async Task<bool> SetParentCategory(Guid pChildWooCategoryId, Guid pParentWooCategoryId)
+        async Task<bool> SetParentCategory(Guid sourceChildWooCategoryId, Guid sourceParentWooCategoryId)
         {
             // using the GUIDs of the category id update the parent of that record
             bool _IsUpdated = false;
 
-            if ((pChildWooCategoryId != Guid.Empty) && (pParentWooCategoryId != Guid.Empty))
+            if ((sourceChildWooCategoryId != Guid.Empty) && (sourceParentWooCategoryId != Guid.Empty))
             {
-                IAppRepository<ItemCategoryLookup> _ItemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
+                IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
 
-                ItemCategoryLookup _ItemCategoryLookup = await _ItemCategoryLookupRepository.FindFirstAsync(ic => ic.ItemCategoryLookupId == pChildWooCategoryId);
-                if (_ItemCategoryLookup == null)
+                ItemCategoryLookup _itemCategoryLookup = await _itemCategoryLookupRepository.FindFirstAsync(ic => ic.ItemCategoryLookupId == sourceChildWooCategoryId);
+                if (_itemCategoryLookup == null)
                     _IsUpdated = false;
                 else
                 {     // found so update
-                    _ItemCategoryLookup.ParentCategoryId = pParentWooCategoryId;
-                    _IsUpdated = (await _ItemCategoryLookupRepository.UpdateAsync(_ItemCategoryLookup)) != AppUnitOfWork.CONST_WASERROR;
+                    _itemCategoryLookup.ParentCategoryId = sourceParentWooCategoryId;
+                    _IsUpdated = (await _itemCategoryLookupRepository.UpdateAsync(_itemCategoryLookup)) != AppUnitOfWork.CONST_WASERROR;
                 }
             }
             return _IsUpdated;
         }
 
-        async Task<bool> FindAndSetParentCategory(WooItemWithParent pCategoryWithParent)
+        async Task<bool> FindAndSetParentCategory(WooItemWithParent sourceCategoryWithParent)
         {
             ///Logic using the ids passed look for the linked attribute to the id then look for the ParentId  get the GUIDs of each and update the database
             // Get pAttributeWithAParent.ID GUID from ItemAttribute Table = ParentID
             // Get pAttributeWithAParent.AttrID GUID from ItemAttribute Table = ChildID
             // Set the  ItemAttribute.ParentID = ParentID for ItemsAttrib.ID = ChildID
-            Guid _AttribId = await GetCategoryById(pCategoryWithParent.ChildId);
-            Guid _ParentAttribId = await GetCategoryById(pCategoryWithParent.ParentId);
+            Guid _attribId = await GetCategoryById(sourceCategoryWithParent.ChildId);
+            Guid _parentAttribId = await GetCategoryById(sourceCategoryWithParent.ParentId);
 
-            bool _IsDone = await SetParentCategory(_AttribId, _ParentAttribId);
+            bool _IsDone = await SetParentCategory(_attribId, _parentAttribId);
 
-            await LogImport(pCategoryWithParent.ChildId, $"Setting of Parent of Child Category id: {pCategoryWithParent.ChildId} to Parent Id {pCategoryWithParent.ParentId} status: {_IsDone}", Models.WooSections.ProductCategories);
+            await LogImport(sourceCategoryWithParent.ChildId, $"Setting of Parent of Child Category id: {sourceCategoryWithParent.ChildId} to Parent Id {sourceCategoryWithParent.ParentId} status: {_IsDone}", Models.WooSections.ProductCategories);
             return _IsDone;
         }
 
         // cycle through categories and add to database if they do not exists
         // Store a WooReultsDate so we can filter the results later
         // log each category and what we do with t in the log and in the WooResults
-        public async Task<int> ImportCategoryData(List<ProductCategory> pWooProductCategories)
+        public async Task<int> ImportCategoryData(List<ProductCategory> sourceWooProductCategories)
         {
-            int _Imported = 0;
-            Guid _IdImported;
-            //            IAppRepository<ItemCategoryLookup> _ItemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
-            List<WooItemWithParent> CategoriessWithParents = new List<WooItemWithParent>();
+            int _numImported = 0;
+            Guid _importedId;
+            //            IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
+            List<WooItemWithParent> _categoriessWithParents = new List<WooItemWithParent>();
 
             //// Load the current itemCategoriers
             // cycle through categories and add to database if they do not exists
-            foreach (var pc in pWooProductCategories)
+            foreach (var pc in sourceWooProductCategories)
             {
-                ImportingThis = $"Importing Category ({_importCounters.TotalImported}/{_importCounters.MaxRecs}): {pc.name}";
+                ImportingThis = $"Importing Category ({currImportCounters.TotalImported}/{currImportCounters.MaxRecs}): {pc.name}";
                 // Import the categories that have count  > 0
                 if (pc.count > 0)
                 {
                     // set the values as per
-                    _IdImported = await ImportAndMapCategoryData(pc, CategoriessWithParents);
-                    _Imported++;
-                    await LogImport((int)pc.id, ProductCatToString(pc, _IdImported), Models.WooSections.ProductCategories);
+                    _importedId = await ImportAndMapCategoryData(pc, _categoriessWithParents);
+                    _numImported++;
+                    await LogImport((int)pc.id, ProductCatToString(pc, _importedId), Models.WooSections.ProductCategories);
                 }
                 if (_AppUnitOfWork.IsInErrorState())
                     return 0;
-                _importCounters.TotalImported++;
-                _importCounters.PercentOfRecsImported = _importCounters.CalcPercentage(_importCounters.TotalImported);
+                currImportCounters.TotalImported++;
+                currImportCounters.PercentOfRecsImported = currImportCounters.CalcPercentage(currImportCounters.TotalImported);
                 StateHasChanged();
             }
-            // Now we loop through all the Attribues that have parents and find them
-            foreach (var AttributeWithAParent in CategoriessWithParents)
+            // Now we loop through all the Attributes that have parents and find them
+            foreach (var AttributeWithAParent in _categoriessWithParents)
             {
                 if (!await FindAndSetParentCategory(AttributeWithAParent))
                 {
@@ -284,7 +284,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                         return 0;
                 }
             }
-            return _Imported;
+            return _numImported;
         }
         #endregion
 

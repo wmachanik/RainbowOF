@@ -16,16 +16,16 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
     public partial class WooImportItemsComponent // for CategoryImport so file name WooImportItemsComponentAttributeImport Partial
     {
         /// <summary>
-        /// All the atribute import stuff. Could we have generalised this?
+        /// All the attribute import stuff. Could we have generalised this?
         /// </summary>
         #region AttrbiuteStuff
 
         // Retrieve data from Woo
         public async Task<List<ProductAttribute>> GetWooAttributeData()
         {
-            WooAPISettings _WooAPISettings = new WooAPISettings(WooSettingsModel); 
+            WooAPISettings _WooAPISettings = new WooAPISettings(AppWooSettings); 
 
-            IWooProductAttribute _WooProductAttribute = new WooProductAttribute(_WooAPISettings, Logger);
+            IWooProductAttribute _WooProductAttribute = new WooProductAttribute(_WooAPISettings, _Logger);
             List<ProductAttribute> wooProductAttributes = await _WooProductAttribute.GetAllProductAttributes();
             return wooProductAttributes;
         }
@@ -119,12 +119,12 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             if (_WooAttributeMap != null)   // the id exists so update
             {
                 _ItemAttributeId = await UpdateProductAttribute(pPC, _WooAttributeMap);
-                _importCounters.TotalUpdated++;
+                currImportCounters.TotalUpdated++;
             }
             else      // the id does not exists so add
             {
                 _ItemAttributeId = await AddProductAttribute(pPC, _WooAttributeMap);
-                _importCounters.TotalAdded++;
+                currImportCounters.TotalAdded++;
             }
 
             return _ItemAttributeId;
@@ -139,20 +139,20 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         async Task<bool> ImportAttributeData(List<ProductAttribute> pWooProductAttributes)
         {
 
-            _importCounters.TotalImported = 0;
+            currImportCounters.TotalImported = 0;
             Guid _IdImported = Guid.Empty;
             // cycle through catagories and add to database if they do not exists
             foreach (var pa in pWooProductAttributes)
             {
-                ImportingThis = $"Importing Attribute ({_importCounters.TotalImported}/{_importCounters.MaxRecs}): {pa.name}";
+                ImportingThis = $"Importing Attribute ({currImportCounters.TotalImported}/{currImportCounters.MaxRecs}): {pa.name}";
                 // Import all Attributes since Woo does not signal if they are used we need to import all.
                 _IdImported = await ImportAndMapAttributeData(pa);
                 if (_IdImported == Guid.Empty)
                 {
                     return false;
                 }
-                _importCounters.TotalImported++;
-                _importCounters.PercentOfRecsImported = _importCounters.CalcPercentage(_importCounters.TotalImported);
+                currImportCounters.TotalImported++;
+                currImportCounters.PercentOfRecsImported = currImportCounters.CalcPercentage(currImportCounters.TotalImported);
                 StateHasChanged();
                 await LogImport((int)pa.id, ProductAttributeToString(pa, _IdImported), Models.WooSections.ProductAttributes);
             }

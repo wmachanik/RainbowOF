@@ -43,7 +43,7 @@ namespace RainbowOF.Repositories.Lookups
         {
             if (_WooParentAttributeId == -1)
             {
-                IAppRepository<WooProductAttributeMap> _wooAttributeMapRepository = _appUnitOfWork.Repository<WooProductAttributeMap>();
+                IAppRepository<WooProductAttributeMap> _wooAttributeMapRepository = _AppUnitOfWork.Repository<WooProductAttributeMap>();
                 WooProductAttributeMap wooProductAttributeMap = await _wooAttributeMapRepository.FindFirstAsync(wcm => wcm.ItemAttributeLookupId == _ParentItemAttributeLookupId);
                 if (wooProductAttributeMap != null)
                     _WooParentAttributeId = wooProductAttributeMap.WooProductAttributeId;
@@ -55,14 +55,14 @@ namespace RainbowOF.Repositories.Lookups
 
         public override async Task DeleteRowAsync(ItemAttributeVarietyLookupView deleteViewEntity)
         {
-            IAppRepository<ItemAttributeVarietyLookup> _ItemAttributeVarietyLookupRepository = _appUnitOfWork.Repository<ItemAttributeVarietyLookup>();
+            IAppRepository<ItemAttributeVarietyLookup> _itemAttributeVarietyLookupRepository = _AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
 
-            var _recsDelete = await _ItemAttributeVarietyLookupRepository.DeleteByIdAsync(deleteViewEntity.ItemAttributeVarietyLookupId);     //DeleteByAsync(iavl => iavl.ItemAttributeVarietyLookupId == SelectedItemAttributeVarietyLookup.ItemAttributeVarietyLookupId);
+            var _recsDelete = await _itemAttributeVarietyLookupRepository.DeleteByIdAsync(deleteViewEntity.ItemAttributeVarietyLookupId);     //DeleteByAsync(iavl => iavl.ItemAttributeVarietyLookupId == SelectedItemAttributeVarietyLookup.ItemAttributeVarietyLookupId);
 
             if (_recsDelete == AppUnitOfWork.CONST_WASERROR)
-                _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Attribute Variety: {deleteViewEntity.VarietyName} is no longer found, was it deleted?");
+                _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Attribute Variety: {deleteViewEntity.VarietyName} is no longer found, was it deleted?");
             else
-                _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Attribute Variety: {deleteViewEntity.VarietyName} was it deleted?");
+                _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Attribute Variety: {deleteViewEntity.VarietyName} was it deleted?");
         }
         async Task<int> UpdateWooProductAttributeTermMap(ItemAttributeVarietyLookupView updatedViewEntity)
         {
@@ -77,9 +77,9 @@ namespace RainbowOF.Repositories.Lookups
                 else
                 {
                     _updateWooProductAttributeTermMap.CanUpdate = (bool)updatedViewEntity.CanUpdateWooMap;
-                    IAppRepository<WooProductAttributeTermMap> WooProductAttributeTermRepository = _appUnitOfWork.Repository<WooProductAttributeTermMap>();
+                    IAppRepository<WooProductAttributeTermMap> WooProductAttributeTermRepository = _AppUnitOfWork.Repository<WooProductAttributeTermMap>();
                     _recsUpdated = await WooProductAttributeTermRepository.UpdateAsync(_updateWooProductAttributeTermMap);
-                    _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Attribute Variety: {updatedViewEntity.VarietyName} was updated.");
+                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Attribute Variety: {updatedViewEntity.VarietyName} was updated.");
                 }
             }
             else
@@ -87,7 +87,7 @@ namespace RainbowOF.Repositories.Lookups
                 // nothing was found, so this probably means they now want to add. We should had a Pop up to check
                 int _result = await AddWooItemAndMapAsync(GetItemFromView(updatedViewEntity));
                 if (_result != AppUnitOfWork.CONST_WASERROR)
-                    _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Attribute Variety {updatedViewEntity.VarietyName} has been added to woo?");
+                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Attribute Variety {updatedViewEntity.VarietyName} has been added to woo?");
             }
             return _recsUpdated;
         }
@@ -142,7 +142,7 @@ namespace RainbowOF.Repositories.Lookups
         /// <returns></returns>
         public override async Task<WooProductAttributeTermMap> GetWooMappedItemAsync(Guid mapWooEntityID)
         {
-            IAppRepository<WooProductAttributeTermMap> _wooAttributeVarietyMapRepository = _appUnitOfWork.Repository<WooProductAttributeTermMap>();
+            IAppRepository<WooProductAttributeTermMap> _wooAttributeVarietyMapRepository = _AppUnitOfWork.Repository<WooProductAttributeTermMap>();
 
             return await _wooAttributeVarietyMapRepository.FindFirstAsync(wcm => wcm.ItemAttributeVarietyLookupId == mapWooEntityID);
         }
@@ -153,25 +153,25 @@ namespace RainbowOF.Repositories.Lookups
         /// <returns></returns>
         public override async Task<List<WooProductAttributeTermMap>> GetWooMappedItemsAsync(List<Guid> mapWooEntityIDs)
         {
-            IAppRepository<WooProductAttributeTermMap> _WooProductAttributeTermMapRepository = _appUnitOfWork.Repository<WooProductAttributeTermMap>();
+            IAppRepository<WooProductAttributeTermMap> _wooProductAttributeTermMapRepository = _AppUnitOfWork.Repository<WooProductAttributeTermMap>();
 
-            var _WooMappedItems = await _WooProductAttributeTermMapRepository.GetByAsync(wam => mapWooEntityIDs.Contains(wam.ItemAttributeVarietyLookupId));   // ItemAttributeVarietyLookupId
+            var _WooMappedItems = await _wooProductAttributeTermMapRepository.GetByAsync(wam => mapWooEntityIDs.Contains(wam.ItemAttributeVarietyLookupId));   // ItemAttributeVarietyLookupId
             return _WooMappedItems.ToList();   
         }
         public override async Task<bool> IsDuplicate(ItemAttributeVarietyLookup targetEntity)
         {
             // check if does not exist in the list already (they edited it and it is the same name as another. Only a max of one should exists
-            IAppRepository<ItemAttributeVarietyLookup> _ItemAttributeVarietyLookupRepository = _appUnitOfWork.Repository<ItemAttributeVarietyLookup>();
-            var _exists = (await _ItemAttributeVarietyLookupRepository.GetByAsync(ml => ml.VarietyName == targetEntity.VarietyName)).ToList();
+            IAppRepository<ItemAttributeVarietyLookup> _itemAttributeVarietyLookupRepository = _AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
+            var _exists = (await _itemAttributeVarietyLookupRepository.GetByAsync(ml => ml.VarietyName == targetEntity.VarietyName)).ToList();
             return ((_exists != null) && (_exists.Count > 1));
         }
         public override async Task<List<ItemAttributeVarietyLookup>> GetPagedItemsAsync(DataGridParameters currentDataGridParameters)    //int startPage, int currentPageSize)
         {
-            IItemAttributeVarietyLookupRepository _ItemAttributeVarietyLookupRepository = _appUnitOfWork.itemAttributeVarietyLookupRepository();
+            IItemAttributeVarietyLookupRepository _itemAttributeVarietyLookupRepository = _AppUnitOfWork.itemAttributeVarietyLookupRepository();
             //_gridSettings.TotalItems = await _ItemAttributeVarietyLookupRepository.CountAsync();  // get the total number of items to use for paging.
-            DataGridItems<ItemAttributeVarietyLookup> _dataGridItems = await _ItemAttributeVarietyLookupRepository.GetPagedDataEagerWithFilterAndOrderByAsync(currentDataGridParameters, _ParentItemAttributeLookupId);
+            DataGridItems<ItemAttributeVarietyLookup> _dataGridItems = await _itemAttributeVarietyLookupRepository.GetPagedDataEagerWithFilterAndOrderByAsync(currentDataGridParameters, _ParentItemAttributeLookupId);
             List<ItemAttributeVarietyLookup> _ItemAttributeVarietyLookups = _dataGridItems.Entities.ToList();
-            _gridSettings.TotalItems = _dataGridItems.TotalRecordCount;
+            _GridSettings.TotalItems = _dataGridItems.TotalRecordCount;
 
 
             return _ItemAttributeVarietyLookups;
@@ -222,14 +222,14 @@ namespace RainbowOF.Repositories.Lookups
             // Get all related ids
             List<WooProductAttributeTermMap> WooProductAttributeTermMaps = await GetWooMappedItemsAsync(_ItemAttributeVarietyIds);
             // now get all the Units of Measure as a lazy load
-            List<Guid?> _ItemAttributeVarietyUomIds = _itemAttributeVarietyLookups.Where(it => (it.UoMId != null) && (it.UoMId != Guid.Empty)).Select(it => it.UoMId).Distinct().ToList();   // get all the ids selected should not return nulls
-            List<ItemUoM> itemUoMs = await GetItemUoMsAsync(_ItemAttributeVarietyUomIds); 
+            List<Guid?> _itemAttributeVarietyUomIds = _itemAttributeVarietyLookups.Where(it => (it.UoMId != null) && (it.UoMId != Guid.Empty)).Select(it => it.UoMId).Distinct().ToList();   // get all the ids selected should not return nulls
+            List<ItemUoM> itemUoMs = await GetItemUoMsAsync(_itemAttributeVarietyUomIds); 
 
             // Map Items to Woo AttributeVarietyMap
             foreach (var itemAttributeVariety in _itemAttributeVarietyLookups)
             {
                 //  map all the items across to the view then allocate extra woo stuff if exists.
-                WooProductAttributeTermMap _WooProductAttributeTermMap = WooProductAttributeTermMaps.Where(wam => wam.ItemAttributeVarietyLookupId == itemAttributeVariety.ItemAttributeVarietyLookupId).FirstOrDefault();    //  if retrieving / record await GetWooMappedItemAsync(itemCat.ItemAttributeVarietyLookupId);
+                WooProductAttributeTermMap _wooProductAttributeTermMap = WooProductAttributeTermMaps.Where(wam => wam.ItemAttributeVarietyLookupId == itemAttributeVariety.ItemAttributeVarietyLookupId).FirstOrDefault();    //  if retrieving / record await GetWooMappedItemAsync(itemCat.ItemAttributeVarietyLookupId);
 
                 _itemAttributeVarietyViewLookups.Add(new ItemAttributeVarietyLookupView
                 {
@@ -244,7 +244,7 @@ namespace RainbowOF.Repositories.Lookups
                     Notes = itemAttributeVariety.Notes,
                     UoM = (((itemAttributeVariety.UoMId ?? Guid.Empty) == Guid.Empty)) ? null 
                             : (itemUoMs == null) ? null : itemUoMs.Where(uid => uid.ItemUoMId == itemAttributeVariety.UoMId).FirstOrDefault(),   // apply the "lazy" load to the item
-                    CanUpdateWooMap = (_WooProductAttributeTermMap == null) ? null : _WooProductAttributeTermMap.CanUpdate
+                    CanUpdateWooMap = (_wooProductAttributeTermMap == null) ? null : _wooProductAttributeTermMap.CanUpdate
                 }) ;
             }
             return _itemAttributeVarietyViewLookups;
@@ -292,12 +292,12 @@ namespace RainbowOF.Repositories.Lookups
         public override async Task<int> UpdateItemAsync(ItemAttributeVarietyLookupView updateViewItem)
         {
             int _recsUpdted = 0;
-            IAppRepository<ItemAttributeVarietyLookup> _ItemAttributeVarietyLookupRepository = _appUnitOfWork.Repository<ItemAttributeVarietyLookup>();
+            IAppRepository<ItemAttributeVarietyLookup> _itemAttributeVarietyLookupRepository = _AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
             // first check it exists - it could have been deleted 
-            ItemAttributeVarietyLookup _CurrentItemAttributeVarietyLookup = await _ItemAttributeVarietyLookupRepository.GetByIdAsync(updateViewItem.ItemAttributeVarietyLookupId);
+            ItemAttributeVarietyLookup _CurrentItemAttributeVarietyLookup = await _itemAttributeVarietyLookupRepository.GetByIdAsync(updateViewItem.ItemAttributeVarietyLookupId);
             if (_CurrentItemAttributeVarietyLookup == null)
             {
-                _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"AttributeVariety: {updateViewItem.VarietyName} is no longer found, was it deleted?");
+                _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"AttributeVariety: {updateViewItem.VarietyName} is no longer found, was it deleted?");
                 return AppUnitOfWork.CONST_WASERROR;
             }
             else
@@ -309,46 +309,46 @@ namespace RainbowOF.Repositories.Lookups
                 _CurrentItemAttributeVarietyLookup.FGColour = updateViewItem.FGColour;
                 _CurrentItemAttributeVarietyLookup.SortOrder = updateViewItem.SortOrder;
                 _CurrentItemAttributeVarietyLookup.Notes = updateViewItem.Notes;
-                _recsUpdted = await _ItemAttributeVarietyLookupRepository.UpdateAsync(_CurrentItemAttributeVarietyLookup);
+                _recsUpdted = await _itemAttributeVarietyLookupRepository.UpdateAsync(_CurrentItemAttributeVarietyLookup);
                 if (_recsUpdted == AppUnitOfWork.CONST_WASERROR)
-                    _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{updateViewItem.VarietyName} - {_appUnitOfWork.GetErrorMessage()}", "Error updating Attribute Variety");
+                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{updateViewItem.VarietyName} - {_AppUnitOfWork.GetErrorMessage()}", "Error updating Attribute Variety");
                 if (await UpdateWooItemAndMapping(updateViewItem) == AppUnitOfWork.CONST_WASERROR)
-                    _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{updateViewItem.VarietyName} - {_appUnitOfWork.GetErrorMessage()}", "Error updating Attribute Variety Map");   // should we send a message here error = mapping not updated 
+                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{updateViewItem.VarietyName} - {_AppUnitOfWork.GetErrorMessage()}", "Error updating Attribute Variety Map");   // should we send a message here error = mapping not updated 
             }
             return _recsUpdted;
         }
         public override async Task InsertRowAsync(ItemAttributeVarietyLookupView newVeiwEntity)
         {
-            IAppRepository<ItemAttributeVarietyLookup> _ItemAttributeVarietyLookupRepository = _appUnitOfWork.Repository<ItemAttributeVarietyLookup>();
+            IAppRepository<ItemAttributeVarietyLookup> _itemAttributeVarietyLookupRepository = _AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
             // first check we do not already have a AttributeVariety like this.
-            if (await _ItemAttributeVarietyLookupRepository.FindFirstAsync(iavl => iavl.VarietyName == newVeiwEntity.VarietyName) == null)
+            if (await _itemAttributeVarietyLookupRepository.FindFirstAsync(iavl => iavl.VarietyName == newVeiwEntity.VarietyName) == null)
             {
                 ItemAttributeVarietyLookup _NewItemAttributeVarietyLookup = GetItemFromView(newVeiwEntity); // store this here since when it is added it will automatically update the id field
-                int _recsAdded = await _ItemAttributeVarietyLookupRepository.AddAsync(_NewItemAttributeVarietyLookup);
+                int _recsAdded = await _itemAttributeVarietyLookupRepository.AddAsync(_NewItemAttributeVarietyLookup);
                 if (_recsAdded != AppUnitOfWork.CONST_WASERROR)
                 {
-                    _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"{newVeiwEntity.VarietyName} - added", "Attribute Variety Added");
+                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"{newVeiwEntity.VarietyName} - added", "Attribute Variety Added");
                     if (newVeiwEntity.CanUpdateWooMap ?? false)
                     {
                         // they selected to update woo so add to Woo
                         if (await AddWooItemAndMapAsync(_NewItemAttributeVarietyLookup) == AppUnitOfWork.CONST_WASERROR)   // add if they select to update
-                            _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Error adding {newVeiwEntity.VarietyName} to Woo - {_appUnitOfWork.GetErrorMessage()}", "Error adding Woo Attribute Variety");
+                            _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Error adding {newVeiwEntity.VarietyName} to Woo - {_AppUnitOfWork.GetErrorMessage()}", "Error adding Woo Attribute Variety");
                         else
-                            _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"{newVeiwEntity.VarietyName} - added to Woo", "Woo Attribute Variety Added");
+                            _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"{newVeiwEntity.VarietyName} - added to Woo", "Woo Attribute Variety Added");
                     }
                 }
                 else
-                    _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{newVeiwEntity.VarietyName} - {_appUnitOfWork.GetErrorMessage()}", "Error adding Attribute Variety");
+                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{newVeiwEntity.VarietyName} - {_AppUnitOfWork.GetErrorMessage()}", "Error adding Attribute Variety");
             }
             else
-                _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{newVeiwEntity.VarietyName} already exists, so could not be added.");
+                _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{newVeiwEntity.VarietyName} already exists, so could not be added.");
             //-> done in parent       await LoadAllViewItemsAsync();   // reload the list so the latest item is displayed
         }
 
         public override async Task UpdateRowAsync(ItemAttributeVarietyLookupView updateVeiwEntity)
         {
             if (await IsDuplicate(updateVeiwEntity))
-                _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Attribute Variety Name: {updateVeiwEntity.VarietyName} - already exists, cannot be updated", "Exists already");
+                _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Attribute Variety Name: {updateVeiwEntity.VarietyName} - already exists, cannot be updated", "Exists already");
             else
             {
                 if (IsValid(updateVeiwEntity))
@@ -356,14 +356,14 @@ namespace RainbowOF.Repositories.Lookups
                     // update and check for errors 
                     if (await UpdateItemAsync(updateVeiwEntity) == AppUnitOfWork.CONST_WASERROR)
                     {
-                        _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Error updating Attribute Variety: {updateVeiwEntity.VarietyName} -  {_appUnitOfWork.GetErrorMessage()}", "Updating AttributeVariety Error");
+                        _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Error updating Attribute Variety: {updateVeiwEntity.VarietyName} -  {_AppUnitOfWork.GetErrorMessage()}", "Updating AttributeVariety Error");
                     }
                     else
-                        _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Attribute Variety: {updateVeiwEntity.VarietyName} was updated.");
+                        _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Attribute Variety: {updateVeiwEntity.VarietyName} was updated.");
                 }
                 else
                 {
-                    _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Attribute Variety Item {updateVeiwEntity.VarietyName} cannot be parent and child.", "Error updating");
+                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Attribute Variety Item {updateVeiwEntity.VarietyName} cannot be parent and child.", "Error updating");
                 }
             }
             //-> done in parent await LoadAllViewItemsAsync();   // reload the list so the latest item is displayed
@@ -372,24 +372,24 @@ namespace RainbowOF.Repositories.Lookups
         {
             int _recsUpdated = 0;
 
-            WooProductAttributeTermMap updateWooProductAttributeTermMap = await GetWooMappedItemAsync(updatedViewEntity.ItemAttributeVarietyLookupId);
-            if (updateWooProductAttributeTermMap != null)
+            WooProductAttributeTermMap _updateWooProductAttributeTermMap = await GetWooMappedItemAsync(updatedViewEntity.ItemAttributeVarietyLookupId);
+            if (_updateWooProductAttributeTermMap != null)
             {
-                if (updateWooProductAttributeTermMap.CanUpdate == updatedViewEntity.CanUpdateWooMap)
+                if (_updateWooProductAttributeTermMap.CanUpdate == updatedViewEntity.CanUpdateWooMap)
                 {
                     // not necessary to display message.
                     //    PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Warning, $"Woo AttributeVariety Map for AttributeVariety: {updatedViewEntity.VarietyName} has not changed, so was not updated?");
                 }
                 else
                 {
-                    updateWooProductAttributeTermMap.CanUpdate = (bool)updatedViewEntity.CanUpdateWooMap;
-                    IAppRepository<WooProductAttributeTermMap> WooProductAttributeTermMapRepository = _appUnitOfWork.Repository<WooProductAttributeTermMap>();
-                    _recsUpdated = await WooProductAttributeTermMapRepository.UpdateAsync(updateWooProductAttributeTermMap);
-                    _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Attribute Variety: {updatedViewEntity.VarietyName} was updated.");
+                    _updateWooProductAttributeTermMap.CanUpdate = (bool)updatedViewEntity.CanUpdateWooMap;
+                    IAppRepository<WooProductAttributeTermMap> WooProductAttributeTermMapRepository = _AppUnitOfWork.Repository<WooProductAttributeTermMap>();
+                    _recsUpdated = await WooProductAttributeTermMapRepository.UpdateAsync(_updateWooProductAttributeTermMap);
+                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Attribute Variety: {updatedViewEntity.VarietyName} was updated.");
                 }
             }
             else
-                _gridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Attribute Variety Map for AttributeVariety: {updatedViewEntity.VarietyName} is no longer found, was it deleted?");
+                _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Attribute Variety Map for AttributeVariety: {updatedViewEntity.VarietyName} is no longer found, was it deleted?");
 
             await LoadAllViewItemsAsync();
             return _recsUpdated;
@@ -400,33 +400,33 @@ namespace RainbowOF.Repositories.Lookups
             if (sourceWooEntityId == null)
                 return null;
 
-            IAppRepository<WooProductAttributeTermMap> _WooProductAttributeTermMapRepo = _appUnitOfWork.Repository<WooProductAttributeTermMap>();
-            WooProductAttributeTermMap _WooProductAttributeTermMap = await _WooProductAttributeTermMapRepo.FindFirstAsync(wam => wam.ItemAttributeVarietyLookupId == sourceWooEntityId);
-            return _WooProductAttributeTermMap;
+            IAppRepository<WooProductAttributeTermMap> _wooProductAttributeTermMapRepo = _AppUnitOfWork.Repository<WooProductAttributeTermMap>();
+            WooProductAttributeTermMap _wooProductAttributeTermMap = await _wooProductAttributeTermMapRepo.FindFirstAsync(wam => wam.ItemAttributeVarietyLookupId == sourceWooEntityId);
+            return _wooProductAttributeTermMap;
         }
         private async Task<int> DeleteWooAttributeVarietyLink(WooProductAttributeTermMap deleteWooProductAttributeTermMap)
         {
             int _result = 0;
-            IAppRepository<WooProductAttributeTermMap> _WooProductAttributeTermMapRepo = _appUnitOfWork.Repository<WooProductAttributeTermMap>();
+            IAppRepository<WooProductAttributeTermMap> _wooProductAttributeTermMapRepo = _AppUnitOfWork.Repository<WooProductAttributeTermMap>();
 
-            _result = await _WooProductAttributeTermMapRepo.DeleteByIdAsync(deleteWooProductAttributeTermMap.WooProductAttributeTermMapId);
+            _result = await _wooProductAttributeTermMapRepo.DeleteByIdAsync(deleteWooProductAttributeTermMap.WooProductAttributeTermMapId);
 
             return _result;
         }
         private async Task<IWooProductAttributeTerm> GetIWooProductAttributeTerm()
         {
             WooAPISettings _wooAPISettings = await GetWooAPISettingsAsync();
-            return new WooProductAttributeTerm(_wooAPISettings, _logger);
+            return new WooProductAttributeTerm(_wooAPISettings, _Logger);
         }
         private async Task<int> DeleteWooAttributeVariety(WooProductAttributeTermMap deleteWooProductAttributeTermMap)
         {
             int _result = AppUnitOfWork.CONST_WASERROR;  // if all goes well this will be change to the number of records returned
 
-            IWooProductAttributeTerm _WooProductAttributeTermRepository = await GetIWooProductAttributeTerm();
-            if (_WooProductAttributeTermRepository != null)
+            IWooProductAttributeTerm _wooProductAttributeTermRepository = await GetIWooProductAttributeTerm();
+            if (_wooProductAttributeTermRepository != null)
             {
                 int _parentAtributeId = await GetAttributeTermParentId();
-                string _TempWooCat = await _WooProductAttributeTermRepository.DeleteProductAttributeTermByIdAsync(deleteWooProductAttributeTermMap.WooProductAttributeTermId, _parentAtributeId );
+                string _TempWooCat = await _wooProductAttributeTermRepository.DeleteProductAttributeTermByIdAsync(deleteWooProductAttributeTermMap.WooProductAttributeTermId, _parentAtributeId );
                 _result = (String.IsNullOrEmpty(_TempWooCat)) ? AppUnitOfWork.CONST_WASERROR : 1;  // return the id
             }
             return _result;
@@ -441,24 +441,24 @@ namespace RainbowOF.Repositories.Lookups
         {
             int _result = AppUnitOfWork.CONST_WASERROR;
             // delete the woo AttributeVariety
-            WooProductAttributeTermMap _WooProductAttributeTermMap = await GetWooProductAttributeTermMapFromID(deleteWooEntityId);
-            if (_WooProductAttributeTermMap == null)
-                _gridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product AttributeVariety Id {deleteWooEntityId} was not found to have a Woo AttributeVariety Map.");
+            WooProductAttributeTermMap _wooProductAttributeTermMap = await GetWooProductAttributeTermMapFromID(deleteWooEntityId);
+            if (_wooProductAttributeTermMap == null)
+                _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product AttributeVariety Id {deleteWooEntityId} was not found to have a Woo AttributeVariety Map.");
             else
             {
                 if (deleteFromWoo)
                 {
-                    _result = await DeleteWooAttributeVariety(_WooProductAttributeTermMap); ///Delete the AttributeVariety in Woo
+                    _result = await DeleteWooAttributeVariety(_wooProductAttributeTermMap); ///Delete the AttributeVariety in Woo
                     if (_result == AppUnitOfWork.CONST_WASERROR)
-                        _gridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product Attribute Variety Id {_WooProductAttributeTermMap.WooProductAttributeTermId} was not deleted from Woo categories. Error {_appUnitOfWork.GetErrorMessage()}");
+                        _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product Attribute Variety Id {_wooProductAttributeTermMap.WooProductAttributeTermId} was not deleted from Woo categories. Error {_AppUnitOfWork.GetErrorMessage()}");
                     else
-                        _gridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Woo Product Attribute Variety Id {_WooProductAttributeTermMap.WooProductAttributeTermId} was deleted from Woo categories.");
+                        _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Woo Product Attribute Variety Id {_wooProductAttributeTermMap.WooProductAttributeTermId} was deleted from Woo categories.");
                 }
-                _result = await DeleteWooAttributeVarietyLink(_WooProductAttributeTermMap);   //Delete our link data, if there was an error should we?
+                _result = await DeleteWooAttributeVarietyLink(_wooProductAttributeTermMap);   //Delete our link data, if there was an error should we?
                 if (_result == AppUnitOfWork.CONST_WASERROR)
-                    _gridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product Attribute Variety Id {_WooProductAttributeTermMap.WooProductAttributeTermId} was not deleted from Woo linked categories. Error {_appUnitOfWork.GetErrorMessage()}");
+                    _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product Attribute Variety Id {_wooProductAttributeTermMap.WooProductAttributeTermId} was not deleted from Woo linked categories. Error {_AppUnitOfWork.GetErrorMessage()}");
                 else
-                    _gridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Woo Product Attribute Variety Id {_WooProductAttributeTermMap.WooProductAttributeTermId} was deleted from Woo linked categories.");
+                    _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Woo Product Attribute Variety Id {_wooProductAttributeTermMap.WooProductAttributeTermId} was deleted from Woo linked categories.");
             }
             return _result;
         }
@@ -476,26 +476,26 @@ namespace RainbowOF.Repositories.Lookups
         }
         private async Task<ProductAttributeTerm> AddItemToWooOnlySync(ItemAttributeVarietyLookup addEntity)
         {
-            IWooProductAttributeTerm _WooProductAttributeTermRepository = await GetIWooProductAttributeTerm();
-            if (_WooProductAttributeTermRepository == null)
+            IWooProductAttributeTerm _wooProductAttributeTermRepository = await GetIWooProductAttributeTerm();
+            if (_wooProductAttributeTermRepository == null)
                 return null;
 
-            ProductAttributeTerm _WooProductAttributeTerm = new ProductAttributeTerm
+            ProductAttributeTerm _wooProductAttributeTerm = new ProductAttributeTerm
             {
                 name = addEntity.VarietyName,
                 //                 order_by = ConvertToWooOrderBy(addEntity.OrderBy),
             };
             int _parentAttributeId = await GetAttributeTermParentId();
-            return await _WooProductAttributeTermRepository.AddProductAttributeTermAsync(_WooProductAttributeTerm, _parentAttributeId);  // should return a new version with ID
+            return await _wooProductAttributeTermRepository.AddProductAttributeTermAsync(_wooProductAttributeTerm, _parentAttributeId);  // should return a new version with ID
         }
 
         private async Task<int> MapOurItemToWooItemSync(ProductAttributeTerm newWooProductAttributeTerm, ItemAttributeVarietyLookup addViewEntity)
         {
             // create a map to the woo AttributeVariety maps using the id and the AttributeVariety
             //
-            IAppRepository<WooProductAttributeTermMap> _WooProductAttributeTermMapRepository = _appUnitOfWork.Repository<WooProductAttributeTermMap>();
+            IAppRepository<WooProductAttributeTermMap> _wooProductAttributeTermMapRepository = _AppUnitOfWork.Repository<WooProductAttributeTermMap>();
 
-            return await _WooProductAttributeTermMapRepository.AddAsync(new WooProductAttributeTermMap
+            return await _wooProductAttributeTermMapRepository.AddAsync(new WooProductAttributeTermMap
             {
                 ItemAttributeVarietyLookupId = addViewEntity.ItemAttributeVarietyLookupId,
                 WooProductAttributeTermId = Convert.ToInt32(newWooProductAttributeTerm.id),
@@ -504,11 +504,11 @@ namespace RainbowOF.Repositories.Lookups
         }
         //private async Task<ProductAttributeVariety> GetWooProductAttributeTermByName(string VarietyName)
         //{
-        //    IWooProductAttributeTerm _WooProductAttributeTermRepository = await GetIWooProductAttributeTerm();
-        //    if (_WooProductAttributeTermRepository == null)
+        //    IWooProductAttributeTerm _wooProductAttributeTermRepository = await GetIWooProductAttributeTerm();
+        //    if (_wooProductAttributeTermRepository == null)
         //        return null;
 
-        //    return _WooProductAttributeTermRepository.FindProductAttributeVarietyByName(VarietyName);
+        //    return _wooProductAttributeTermRepository.FindProductAttributeVarietyByName(VarietyName);
         //}
 
         /// <summary>
@@ -520,13 +520,13 @@ namespace RainbowOF.Repositories.Lookups
         {
             // check it the item exists in woo !!!!!!(we did not do this as there is no such call;, if so get is id and return, otherwise add it and get its id
 
-            //ProductAttributeVariety _WooProductAttributeTerm = await GetWooProductAttributeTermByName(addEntity.VarietyName);
-            //if (_WooProductAttributeTerm == null)
+            //ProductAttributeVariety _wooProductAttributeTerm = await GetWooProductAttributeTermByName(addEntity.VarietyName);
+            //if (_wooProductAttributeTerm == null)
             //{
-            ProductAttributeTerm _WooProductAttributeTerm = await AddItemToWooOnlySync(addEntity);
-            if (_WooProductAttributeTerm == null)
+            ProductAttributeTerm _wooProductAttributeTerm = await AddItemToWooOnlySync(addEntity);
+            if (_wooProductAttributeTerm == null)
                 return AppUnitOfWork.CONST_WASERROR;
-            return await MapOurItemToWooItemSync(_WooProductAttributeTerm, addEntity);
+            return await MapOurItemToWooItemSync(_wooProductAttributeTerm, addEntity);
             //}
             //else
             //    return AppUnitOfWork.CONST_WASERROR;
@@ -536,8 +536,8 @@ namespace RainbowOF.Repositories.Lookups
             int _result = 0;  /// null or not found
             if ((updateViewEntity.HasWooAttributeVarietyMap) && ((bool)(updateViewEntity.CanUpdateWooMap)))
             {
-                IWooProductAttributeTerm _WooProductAttributeTermRepository = await GetIWooProductAttributeTerm();
-                if (_WooProductAttributeTermRepository != null)                     //  - > if it does not exist then what?
+                IWooProductAttributeTerm _wooProductAttributeTermRepository = await GetIWooProductAttributeTerm();
+                if (_wooProductAttributeTermRepository != null)                     //  - > if it does not exist then what?
                 {
                     WooProductAttributeTermMap _updateWooMapEntity = await GetWooProductAttributeTermMapFromID(updateViewEntity.ItemAttributeVarietyLookupId);
                     if (_updateWooMapEntity == null)
@@ -548,19 +548,19 @@ namespace RainbowOF.Repositories.Lookups
                     else
                     {
                         int _parentAttributeId = await GetAttributeTermParentId();
-                        ProductAttributeTerm _WooProductAttributeTerm = await _WooProductAttributeTermRepository.GetProductAttributeTermByIdAsync(_updateWooMapEntity.WooProductAttributeTermId, _parentAttributeId);
-                        if (_WooProductAttributeTerm == null)
+                        ProductAttributeTerm _wooProductAttributeTerm = await _wooProductAttributeTermRepository.GetProductAttributeTermByIdAsync(_updateWooMapEntity.WooProductAttributeTermId, _parentAttributeId);
+                        if (_wooProductAttributeTerm == null)
                         {
                             return AppUnitOfWork.CONST_WASERROR;  /// oops what happened >?
                         }
                         else
                         {
                             // only update if different
-                            if (!_WooProductAttributeTerm.name.Equals(updateViewEntity.VarietyName)) //|| (!_WooProductAttributeTerm.order_by.Equals(updateViewEntity.OrderBy.ToString(), StringComparison.OrdinalIgnoreCase)))
+                            if (!_wooProductAttributeTerm.name.Equals(updateViewEntity.VarietyName)) //|| (!_wooProductAttributeTerm.order_by.Equals(updateViewEntity.OrderBy.ToString(), StringComparison.OrdinalIgnoreCase)))
                             {
-                                _WooProductAttributeTerm.name = updateViewEntity.VarietyName;  // only update if necessary
-                                                                                               //_WooProductAttributeTerm.order_by = ConvertToWooOrderBy(updateViewEntity.OrderBy);
-                                var _res = ((await _WooProductAttributeTermRepository.UpdateProductAttributeTermAsync(_WooProductAttributeTerm, _parentAttributeId)));
+                                _wooProductAttributeTerm.name = updateViewEntity.VarietyName;  // only update if necessary
+                                                                                               //_wooProductAttributeTerm.order_by = ConvertToWooOrderBy(updateViewEntity.OrderBy);
+                                var _res = ((await _wooProductAttributeTermRepository.UpdateProductAttributeTermAsync(_wooProductAttributeTerm, _parentAttributeId)));
                                 _result = ((_res == null) || (_res.id == null)) ? AppUnitOfWork.CONST_WASERROR : (int)_res.id; // if null there is an issue
                             }
                         }
@@ -578,9 +578,9 @@ namespace RainbowOF.Repositories.Lookups
         {
             int _result = await UpdateWooItemAsync(updateViewEntity);
             if (_result > 0)
-                _gridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Updated woo AttributeVariety {updateViewEntity.VarietyName}.");
+                _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Updated woo AttributeVariety {updateViewEntity.VarietyName}.");
             else if (_result == AppUnitOfWork.CONST_WASERROR)
-                _gridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo AttributeVariety {updateViewEntity.VarietyName} update failed.");
+                _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo AttributeVariety {updateViewEntity.VarietyName} update failed.");
 
             _result = await UpdateWooProductAttributeTermMap(updateViewEntity);
             return _result;
@@ -591,7 +591,7 @@ namespace RainbowOF.Repositories.Lookups
             if (linkedItemUoMIDs == null)
                 return null;
              
-            IAppRepository<ItemUoM> appRepository   = _appUnitOfWork.Repository<ItemUoM>();
+            IAppRepository<ItemUoM> appRepository   = _AppUnitOfWork.Repository<ItemUoM>();
 
             var _ItemUoMs = await appRepository.GetByAsync(iu =>  linkedItemUoMIDs.Contains(iu.ItemUoMId));   // ItemAttributeVarietyLookupId
             return _ItemUoMs.ToList();

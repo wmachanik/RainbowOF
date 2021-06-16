@@ -20,21 +20,20 @@ namespace RainbowOF.Repositories.Common
         public const int CONST_WASERROR = -1;
         public const int CONST_MAX_DETAIL_PAGES = 50;
         // generics
-        private ApplicationDbContext _context;
+        private ApplicationDbContext _Context;
         private IDbContextTransaction dbTransaction = null;
-        public ILoggerManager _logger { get; }
+        private ILoggerManager _Logger { get; }
         // Generics Repos
         private readonly Dictionary<Type, object> _repositories = new Dictionary<Type, object>();
         /// Custom Repos
-        private IItemRepository _itemRepository = null;
-        private ISysPrefsRepository _sysPrefsRepository = null;
-        private IWooSyncLogRepository _wooSyncLogRepository = null;
-        private IItemCategoryLookupRepository _itemCategoryLookupRepository = null;
-        private IItemAttributeLookupRepository _itemAttributeLookupRepository = null;
-        private IItemAttributeVarietyLookupRepository _itemAttributeVarietyLookupRepository = null;
+        private IItemRepository _ItemRepository = null;
+        private ISysPrefsRepository _SysPrefsRepository = null;
+        private IWooSyncLogRepository _WooSyncLogRepository = null;
+        private IItemCategoryLookupRepository _ItemCategoryLookupRepository = null;
+        private IItemAttributeLookupRepository _ItemAttributeLookupRepository = null;
+        private IItemAttributeVarietyLookupRepository _ItemAttributeVarietyLookupRepository = null;
         // Internal vars
-        private Dictionary<Guid, string> _listOfUoMSymbols;
-
+        private Dictionary<Guid, string> _ListOfUoMSymbols;
 
         // Unit of Work Error handling
         private string _ErrorMessage = String.Empty;
@@ -46,8 +45,8 @@ namespace RainbowOF.Repositories.Common
         }
         public AppUnitOfWork(ApplicationDbContext context, ILoggerManager logger)
         {
-            _context = context;
-            _logger = logger;
+            _Context = context;
+            _Logger = logger;
         }
         public IAppRepository<TEntity> Repository<TEntity>() where TEntity : class
         {
@@ -55,67 +54,67 @@ namespace RainbowOF.Repositories.Common
             {
                 return Repositories[typeof(TEntity)] as AppRepository<TEntity>;
             }
-            IAppRepository<TEntity> sourceRepo = new AppRepository<TEntity>(_context, _logger, this);
+            IAppRepository<TEntity> sourceRepo = new AppRepository<TEntity>(_Context, _Logger, this);
             Repositories.Add(typeof(TEntity), sourceRepo);
             return sourceRepo;
         }
         public IItemRepository itemRepository()
         {
-            if (_itemRepository == null)
-                _itemRepository = new ItemRepository(_context, _logger, this);
-            return _itemRepository;
+            if (_ItemRepository == null)
+                _ItemRepository = new ItemRepository(_Context, _Logger, this);
+            return _ItemRepository;
         }
         public ISysPrefsRepository sysPrefsRepository()
         {
-            if (_sysPrefsRepository == null)
-                _sysPrefsRepository = new SysPrefsRepository(_context, _logger, this);
-            return _sysPrefsRepository;
+            if (_SysPrefsRepository == null)
+                _SysPrefsRepository = new SysPrefsRepository(_Context, _Logger, this);
+            return _SysPrefsRepository;
         }
         public IWooSyncLogRepository wooSyncLogRepository()
         {
-            if (_wooSyncLogRepository == null)
-                _wooSyncLogRepository = new WooSyncLogRepository(_context, _logger, this);
-            return _wooSyncLogRepository;
+            if (_WooSyncLogRepository == null)
+                _WooSyncLogRepository = new WooSyncLogRepository(_Context, _Logger, this);
+            return _WooSyncLogRepository;
         }
         public IItemCategoryLookupRepository itemCategoryLookupRepository()
         {
-            if (_itemCategoryLookupRepository == null)
-                _itemCategoryLookupRepository = new ItemCategoryLookupRepository(_context, _logger, this);
-            return _itemCategoryLookupRepository;
+            if (_ItemCategoryLookupRepository == null)
+                _ItemCategoryLookupRepository = new ItemCategoryLookupRepository(_Context, _Logger, this);
+            return _ItemCategoryLookupRepository;
         }
         public IItemAttributeLookupRepository itemAttributeLookupRepository()
         {
-            if (_itemAttributeLookupRepository == null)
-                _itemAttributeLookupRepository = new ItemAttributeLookupRepository(_context, _logger, this);
-            return _itemAttributeLookupRepository;
+            if (_ItemAttributeLookupRepository == null)
+                _ItemAttributeLookupRepository = new ItemAttributeLookupRepository(_Context, _Logger, this);
+            return _ItemAttributeLookupRepository;
         }
         public IItemAttributeVarietyLookupRepository itemAttributeVarietyLookupRepository()
         {
-            if (_itemAttributeVarietyLookupRepository == null)
-                _itemAttributeVarietyLookupRepository = new ItemAttributeVarietyLookupRepository(_context, _logger, this);
-            return _itemAttributeVarietyLookupRepository;
+            if (_ItemAttributeVarietyLookupRepository == null)
+                _ItemAttributeVarietyLookupRepository = new ItemAttributeVarietyLookupRepository(_Context, _Logger, this);
+            return _ItemAttributeVarietyLookupRepository;
         }
         public Dictionary<Guid, string> GetListOfUoMSymbols(bool IsForceReload = false)
         {
             if (IsForceReload)
             {
-                _listOfUoMSymbols.Clear();
-                _listOfUoMSymbols = null; // would prefer to dispose it but cannot see how
+                _ListOfUoMSymbols.Clear();
+                _ListOfUoMSymbols = null; // would prefer to dispose it but cannot see how
             }
-            if (_listOfUoMSymbols == null)
+            if (_ListOfUoMSymbols == null)
             {
                 IAppRepository<ItemUoM> appRepository = this.Repository<ItemUoM>();
                 List<ItemUoM> _itemUoMs = appRepository.GetAll().ToList(); // (await _UoMRepository.GetAllAsync()).ToList();
-                _listOfUoMSymbols = new();
+                _ListOfUoMSymbols = new();
                 if (_itemUoMs != null)
                 {
                     foreach (var item in _itemUoMs)
                     {
-                        _listOfUoMSymbols.Add(item.ItemUoMId, item.UoMSymbol);
+                        _ListOfUoMSymbols.Add(item.ItemUoMId, item.UoMSymbol);
                     }
                 }
             }
-            return _listOfUoMSymbols;
+            return _ListOfUoMSymbols;
             }
 
 
@@ -123,15 +122,15 @@ namespace RainbowOF.Repositories.Common
         {
             ClearErrorMessage();  // assume an error has been cleared
             if (dbTransaction == null)    // should be null - if not should we not throw an error?
-                dbTransaction = _context.Database.BeginTransaction();
+                dbTransaction = _Context.Database.BeginTransaction();
         }
         public int Complete()
         {
             int recsCommited = CONST_WASERROR;   
             try
             {
-                _logger.LogDebug("Saving changes...");
-                recsCommited = _context.SaveChanges(true);
+                _Logger.LogDebug("Saving changes...");
+                recsCommited = _Context.SaveChanges(true);
                 if (dbTransaction != null)
                 {
                     dbTransaction.Commit();
@@ -150,8 +149,8 @@ namespace RainbowOF.Repositories.Common
             int recsCommited = CONST_WASERROR;   // -1 means error only returned if there is one
             try
             {
-                _logger.LogDebug("Saving changes (async).");
-                recsCommited = await _context.SaveChangesAsync(true);
+                _Logger.LogDebug("Saving changes (async).");
+                recsCommited = await _Context.SaveChangesAsync(true);
                 if (dbTransaction != null)
                 {
                     dbTransaction.Commit();
@@ -172,7 +171,7 @@ namespace RainbowOF.Repositories.Common
                 dbTransaction.Rollback();
                 dbTransaction.Dispose();
                 dbTransaction = null;
-                _context.Database.RollbackTransaction();  // not sure if this will correct the fact that the context is in error
+                _Context.Database.RollbackTransaction();  // not sure if this will correct the fact that the context is in error
                 //_context.Dispose();
                 //_context = new ApplicationDbContext();
             }
@@ -185,7 +184,7 @@ namespace RainbowOF.Repositories.Common
             {
                 if (disposing)
                 {
-                    _context.Dispose();
+                    _Context.Dispose();
                 }
             }
             this.disposed = true;
@@ -199,9 +198,9 @@ namespace RainbowOF.Repositories.Common
         { 
             return _ErrorMessage != string.Empty; 
         }
-        public void SetErrorMessage(string ErrorMessage)
+        public void SetErrorMessage(string sourceErrorMessage)
         {
-            _ErrorMessage = ErrorMessage;
+            _ErrorMessage = sourceErrorMessage;
         }
         public void ClearErrorMessage()
         {
@@ -211,10 +210,10 @@ namespace RainbowOF.Repositories.Common
         {
             return _ErrorMessage;
         }
-        public void LogAndSetErrorMessage(string ErrorMessage)
+        public void LogAndSetErrorMessage(string sourceErrorMessage)
         {
-            SetErrorMessage(ErrorMessage);
-            _logger.LogError(ErrorMessage);
+            SetErrorMessage(sourceErrorMessage);
+            _Logger.LogError(sourceErrorMessage);
             RollbackTransaction();
         }
 

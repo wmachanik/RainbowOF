@@ -30,10 +30,10 @@ namespace RainbowOF.Repositories.Common
         void RollbackTransaction();
         // "Error Messages"
         bool IsInErrorState();
-        void SetErrorMessage(string ErrorMessage);
+        void SetErrorMessage(string sourceErrorMessage);
         void ClearErrorMessage();
         string GetErrorMessage();
-        void LogAndSetErrorMessage(string ErrorMessage);
+        void LogAndSetErrorMessage(string sourceErrorMessage);
 
     }
 }

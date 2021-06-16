@@ -13,25 +13,25 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
     public partial class UoMSelecteListComponent : ComponentBase
     {
         [Inject]
-        IAppUnitOfWork _appUnitOfWork { get; set; }
+        IAppUnitOfWork _AppUnitOfWork { get; set; }
         [Parameter]
         public PopUpAndLogNotification PopUpRef { get; set; }
         [Parameter]
         public Guid? SourceUoMId { get; set; }
         [Parameter]
-        public EventCallback<Guid> UoMIdChanged { get; set; }
+        public EventCallback<Guid> UoMIdChangedEvent { get; set; }
 
-        private bool IsUoMTableChecked = false;
+//        private bool IsUoMTableChecked = false;
         private NewUoMComponent NewUoMComponentRef;
-        private Guid SelectedUoMId;
-        private Dictionary<Guid, string> ListOfUoMSymbols = null;
+        private Guid _SelectedUoMId;
+        private Dictionary<Guid, string> _ListOfUoMSymbols = null;
 
 
         protected override async Task OnInitializedAsync()
         {
-            SelectedUoMId = ((SourceUoMId ?? Guid.Empty) == Guid.Empty) ? Guid.Empty : (Guid)SourceUoMId;  // store in a local var to keep state until modal closed. If not Select list changes to original value
-            if (ListOfUoMSymbols == null)
-                ListOfUoMSymbols = await Task.Run(() => _appUnitOfWork.GetListOfUoMSymbols());
+            _SelectedUoMId = ((SourceUoMId ?? Guid.Empty) == Guid.Empty) ? Guid.Empty : (Guid)SourceUoMId;  // store in a local var to keep state until modal closed. If not Select list changes to original value
+            if (_ListOfUoMSymbols == null)
+                _ListOfUoMSymbols = await Task.Run(() => _AppUnitOfWork.GetListOfUoMSymbols());
         }
         //private async Task<Dictionary<Guid, string>> LoadUoMsFromData()
         //{
@@ -62,16 +62,16 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         //}
         private async Task ReloadUoMList()
         {
-            if (ListOfUoMSymbols != null) ListOfUoMSymbols.Clear();
-            var _result = await Task.Run(() => _appUnitOfWork.GetListOfUoMSymbols(true));
-            ListOfUoMSymbols = _result;
+            if (_ListOfUoMSymbols != null) _ListOfUoMSymbols.Clear();
+            var _result = await Task.Run(() => _AppUnitOfWork.GetListOfUoMSymbols(true));
+            _ListOfUoMSymbols = _result;
             StateHasChanged();
         }
         protected async Task OnUoMIdChanged(Guid newUoMId)
         {
             // if they want to add a new one then do so, otherwise change it and send the value back to the parent component   
-            SelectedUoMId = newUoMId;
-            await UoMIdChanged.InvokeAsync(newUoMId);
+            _SelectedUoMId = newUoMId;
+            await UoMIdChangedEvent.InvokeAsync(newUoMId);
         }
 
     }

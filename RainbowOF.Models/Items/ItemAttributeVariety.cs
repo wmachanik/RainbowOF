@@ -18,7 +18,7 @@ namespace RainbowOF.Models.Items
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid ItemAttributeVarietyId { get; set; }
-        public Guid ItemId { get; set; }
+        public Guid ItemAttributeId { get; set; }   /// this is the parent attribute which links to the item
         public Guid ItemAttributeVarietyLookupId { get; set; }
         [DefaultValue(false)]
         public bool IsDefault { get; set; }

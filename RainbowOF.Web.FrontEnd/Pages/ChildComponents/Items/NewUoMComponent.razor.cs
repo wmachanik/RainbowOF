@@ -13,23 +13,23 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
     public partial class NewUoMComponent : ComponentBase
     {
         [Inject]
-        IAppUnitOfWork _appUnitOfWork { get; set; }
+        IAppUnitOfWork _AppUnitOfWork { get; set; }
         [Parameter]
         public PopUpAndLogNotification PopUpRef { get; set; }
         [Parameter]
-        public EventCallback<bool> UoMAdded { get; set; }
+        public EventCallback<bool> UoMAddedEvent { get; set; }
 
         private Modal NewUoMModalRef;
 
         public ItemUoM _NewItemUoM = new();
-        private Dictionary<Guid, string> ListOfUoMSymbols = null;
+        private Dictionary<Guid, string> _ListOfUoMSymbols = null;
 
 
         protected override async Task OnInitializedAsync()
         {
             //SelectedUoMId = ((SourceUoMId ?? Guid.Empty) == Guid.Empty) ? Guid.Empty : (Guid)SourceUoMId;  // store in a local var to keep state until modal closed. If not Select list changes to original value
-            if (ListOfUoMSymbols == null)
-                ListOfUoMSymbols = await Task.Run(() => _appUnitOfWork.GetListOfUoMSymbols());
+            if (_ListOfUoMSymbols == null)
+                _ListOfUoMSymbols = await Task.Run(() => _AppUnitOfWork.GetListOfUoMSymbols());
         }
 
         public void ShowModal()
@@ -42,11 +42,11 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
             NewUoMModalRef.Show();
         }
 
-        private async Task HideModal(bool SaveClicked)
+        private async Task HideModal(bool IsSaveClicked)
         {
-            if (SaveClicked)
+            if (IsSaveClicked)
             {
-                IAppRepository<ItemUoM> appRepository = _appUnitOfWork.Repository<ItemUoM>();
+                IAppRepository<ItemUoM> appRepository = _AppUnitOfWork.Repository<ItemUoM>();
                 if (appRepository != null)
                 {
                     int _result = await appRepository.AddAsync(_NewItemUoM);
@@ -57,7 +57,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
                 }
             }
             NewUoMModalRef.Hide();
-            await UoMAdded.InvokeAsync(SaveClicked);   // tell the parent if we saved or not -> We could change SavedClicked if there was an error.
+            await UoMAddedEvent.InvokeAsync(IsSaveClicked);   // tell the parent if we saved or not -> We could change SavedClicked if there was an error.
         }
 
     }

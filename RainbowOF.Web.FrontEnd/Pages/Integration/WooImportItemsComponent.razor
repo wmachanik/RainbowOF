@@ -13,37 +13,39 @@
     </Blazorise.CardTitle>
 
     <Blazorise.CardBody>
-        @if (IsImporting() && (_importCounters.MaxRecs > 0))
+        @if (IsImporting() && (currImportCounters.MaxRecs > 0))
         {
             <Blazorise.Progress Margin="Margin.Is3.FromBottom" Size="Size.Medium">
-                <Blazorise.ProgressBar Background="Background.Info" Max="_importCounters.MaxRecs" Animated="true" Min="0" Value="_importCounters.PercentOfRecsImported" Striped="true">@_importCounters.PercentOfRecsImported%</Blazorise.ProgressBar>
+                <Blazorise.ProgressBar Background="Background.Info" Max="currImportCounters.MaxRecs" Animated="true" Min="0" Value="currImportCounters.PercentOfRecsImported" Striped="true">@currImportCounters.PercentOfRecsImported%</Blazorise.ProgressBar>
             </Blazorise.Progress>
         }
     </Blazorise.CardBody>
     <Blazorise.CardFooter Padding="Padding.IsAuto">
         <Blazorise.Row Margin="Margin.Is1">
             <Blazorise.Column ColumnSize="ColumnSize.IsThird">
-                <Blazorise.Button Loading="_IsCatImportBusy" Class="btn btn-outline-primary" Margin="Margin.Is1" Padding="Padding.Is1"
+                <Blazorise.Button Loading="IsCatImportBusy" Class="btn btn-outline-primary" Margin="Margin.Is1" Padding="Padding.Is1"
                                   @onclick="@ImportCategories_Click" Type="ButtonType.Button">Import Categories</Blazorise.Button>
-                <Blazorise.Button Loading="_IsAttribImportBusy" Class="btn btn-outline-primary" Margin="Margin.Is1" Padding="Padding.Is1"
+                <Blazorise.Button Loading="IsAttribImportBusy" Class="btn btn-outline-primary" Margin="Margin.Is1" Padding="Padding.Is1"
                                   @onclick="@ImportAttrib_Click" Type="ButtonType.Button">Import Attributes</Blazorise.Button>
-                <Blazorise.Button Loading="_IsAttribTermImportBusy" Class="btn btn-outline-primary" Margin="Margin.Is1" Padding="Padding.Is1"
+                <Blazorise.Button Loading="IsAttribTermImportBusy" Class="btn btn-outline-primary" Margin="Margin.Is1" Padding="Padding.Is1"
                                   @onclick="@ImportAttribTerm_Click" Type="ButtonType.Button">Import Attribute Terms</Blazorise.Button>
             </Blazorise.Column>
-            <Blazorise.Column Class="text-center" >
-                <Blazorise.Button Loading="_IsItemImportBusy" Class="btn btn-outline-primary" Margin="Margin.Is1" Padding="Padding.Is1"
+            <Blazorise.Column Class="text-center">
+                <Blazorise.Button Loading="IsItemImportBusy" Class="btn btn-outline-primary" Margin="Margin.Is1" Padding="Padding.Is1"
                                   @onclick="@ImportItems_Click" Type="ButtonType.Button">Import Woo Products</Blazorise.Button>
             </Blazorise.Column>
-            <Blazorise.Column Class="text-center" >
-                <Blazorise.Button Loading="_IsItemImportBusy" Class="btn-outline-secondary" Margin="Margin.Is1" Padding="Padding.Is1"
+            <Blazorise.Column Class="text-center">
+                <Blazorise.Button Loading="IsCustomerImportBusy" Class="btn-outline-secondary" Margin="Margin.Is1" Padding="Padding.Is1"
                                   Type="ButtonType.Button">Import Woo Customers</Blazorise.Button>
             </Blazorise.Column>
-            <Blazorise.Column Class="text-center" >
+            <Blazorise.Column Class="text-center">
                 <Blazorise.Button Class="btn btn-info" Margin="Margin.Is1" Type="ButtonType.Button" Padding="Padding.Is1" @onclick="@NavigateToLog">See Log</Blazorise.Button>
             </Blazorise.Column>
         </Blazorise.Row>
     </Blazorise.CardFooter>
-    <RainbowOF.Components.Modals.ShowModalMessage @ref="ShowModalStatus" ModalMessage="Woo Categories Imported" ModalTitle="Woo Categories Import" />
 </Blazorise.Card>
 
+<RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage="Import Message" NotificationTitle="" @ref="@componentPopUpRef" />
+
+@*<RainbowOF.Components.Modals.ShowModalMessage @ref="componentShowModalStatus" ModalMessage="Woo Categories Imported" ModalTitle="Woo Categories Import" />*@
 

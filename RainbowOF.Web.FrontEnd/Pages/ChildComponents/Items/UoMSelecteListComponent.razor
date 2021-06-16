@@ -11,11 +11,11 @@
 <Fields>
     <Field Style="display: inline-flex">
         @{
-            if ((ListOfUoMSymbols != null) && (ListOfUoMSymbols.Count > 0))
+            if ((_ListOfUoMSymbols != null) && (_ListOfUoMSymbols.Count > 0))
             {
-            <Select TValue="Guid" SelectedValue="@SelectedUoMId" SelectedValueChanged="@((v) => OnUoMIdChanged(v))">
+            <Select TValue="Guid" SelectedValue="@_SelectedUoMId" SelectedValueChanged="@((v) => OnUoMIdChanged(v))">
                 <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
-                @foreach (var item in ListOfUoMSymbols)
+                @foreach (var item in _ListOfUoMSymbols)
                 {
                 <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
                 }
@@ -27,7 +27,7 @@
                 <Icon IconStyle="IconStyle.Solid" Name="IconName.Add"></Icon>
             </Tooltip>
         </Button>
-        <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items.NewUoMComponent @ref="@NewUoMComponentRef" PopUpRef="PopUpRef" UoMAdded="@((r) => ReloadUoMList())" />
+        <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items.NewUoMComponent @ref="@NewUoMComponentRef" PopUpRef="PopUpRef" UoMAddedEvent="@((r) => ReloadUoMList())" />
     </Field>
 </Fields>
 

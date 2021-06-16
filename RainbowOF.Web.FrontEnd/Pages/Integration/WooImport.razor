@@ -2,7 +2,7 @@
 
 <h3>Woo Import</h3>
 
-@if (WooSettingsModel == null)
+@if (modelWooSettings == null)
 {
     <div class="spinner-border m-5" role="status">
         <span class="sr-only">Loading...</span>
@@ -16,7 +16,7 @@ else
         <Blazorise.Badge Class="alert-info">Preferences Saved...</Blazorise.Badge>
     }
 
-    <EditForm Model="@WooSettingsModel" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
+    <EditForm Model="@modelWooSettings" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
         <DataAnnotationsValidator />
         <Blazorise.ValidationSummary />
 
@@ -34,7 +34,7 @@ else
                     </Blazorise.Heading>
                 </Blazorise.CollapseHeader>
                 <Blazorise.CollapseBody>
-                    <WooPreferencesComponent WooSettingsModel="WooSettingsModel" Logger="_logger" />
+                    <WooPreferencesComponent WooSettingsModel="modelWooSettings" Logger="_Logger" />
                     <hr />
                     <div class="form-group row justify-content-center">
                         <div class=" col-md-6justify-content-center">
@@ -42,7 +42,7 @@ else
                             <button class="btn btn-outline-secondary" type="button">Return</button>
                         </div>
                     </div>
-                    <div class="small text-right">@WooSettingsModel.WooSettingsId</div>
+                    <div class="small text-right">@modelWooSettings.WooSettingsId</div>
                 </Blazorise.CollapseBody>
             </Blazorise.Collapse>
             <Blazorise.Collapse Visible="collapseWooCategoriesImport">
@@ -58,20 +58,16 @@ else
                     </Blazorise.Heading>
                 </Blazorise.CollapseHeader>
                 <Blazorise.CollapseBody>
-                    <WooImportItemsComponent WooSettingsModel="WooSettingsModel" Logger="_logger" />
+                    <WooImportItemsComponent AppWooSettings="modelWooSettings"  />
                 </Blazorise.CollapseBody>
             </Blazorise.Collapse>
         </Blazorise.Accordion>
-
-
-
-
     </EditForm>
 }
 <!--------
 
 
-    Need to add the logic of the import here, the Items view is "done" as is the log, so perhap do an items imprt as per the design - need to look at the packaging settings.
+    Need to add the logic of the import here, the Items view is "done" as is the log, so perhaps do an items import as per the design - need to look at the packaging settings.
 
 
 

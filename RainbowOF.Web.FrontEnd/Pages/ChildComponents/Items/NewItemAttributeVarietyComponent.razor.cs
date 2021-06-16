@@ -14,7 +14,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
     public partial class NewItemAttributeVarietyComponent : ComponentBase
     {
         [Inject]
-        IAppUnitOfWork _appUnitOfWork { get; set; }
+        IAppUnitOfWork _AppUnitOfWork { get; set; }
         [Parameter]
         public PopUpAndLogNotification PopUpRef { get; set; }
         [Parameter]
@@ -24,7 +24,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
 
         public ItemAttributeVarietyLookupView _NewItemAttributeVarietyLookupView = new ItemAttributeVarietyLookupView();
 
-        public void ShowModal(Guid parentItemAttributeId) // (ModalSize modalSize, int? maxHeight = null, bool centered = false)
+        public void ShowModal(Guid parentItemAttributeId)
         {
             _NewItemAttributeVarietyLookupView.ItemAttributeLookupId = parentItemAttributeId;
 
@@ -43,10 +43,10 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         {
             if (SaveClicked)
             {
-                IAppRepository<ItemAttributeVarietyLookup> appRepository = _appUnitOfWork.Repository<ItemAttributeVarietyLookup>();
-                if (appRepository != null)
+                IAppRepository<ItemAttributeVarietyLookup> _appRepository = _AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
+                if (_appRepository != null)
                 {
-                    int _result = await appRepository.AddAsync(_NewItemAttributeVarietyLookupView);
+                    int _result = await _appRepository.AddAsync(_NewItemAttributeVarietyLookupView);
                     if (_result == AppUnitOfWork.CONST_WASERROR)
                         PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Error adding new attribute variety: {_NewItemAttributeVarietyLookupView.VarietyName}");
                     else

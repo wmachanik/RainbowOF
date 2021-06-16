@@ -14,18 +14,18 @@ namespace RainbowOF.Repositories.Logs
     public class WooSyncLogRepository : AppRepository<WooSyncLog>, IWooSyncLogRepository
     {
 
-        private ApplicationDbContext _context = null;
-        private ILoggerManager _logger { get; set; }
-        private IAppUnitOfWork _appUnitOfWork { get; set; }
-        public WooSyncLogRepository(ApplicationDbContext dbContext, ILoggerManager logger, IAppUnitOfWork appUnitOfWork) : base (dbContext, logger, appUnitOfWork)
+        private ApplicationDbContext _Context = null;
+        private ILoggerManager _Logger { get; set; }
+        private IAppUnitOfWork _AppUnitOfWork { get; set; }
+        public WooSyncLogRepository(ApplicationDbContext sourceContext, ILoggerManager sourceLogger, IAppUnitOfWork sourceAppUnitOfWork) : base (sourceContext, sourceLogger, sourceAppUnitOfWork)
         {
-            _context = dbContext;
-            _logger = logger;
-            _appUnitOfWork = appUnitOfWork;
+            _Context = sourceContext;
+            _Logger = sourceLogger;
+            _AppUnitOfWork = sourceAppUnitOfWork;
         }
         public async Task<List<DateTime>> GetDistinctLogDates()
         {
-            return await _context.WooSyncLogs.Select(wsl => wsl.WooSyncDateTime).Distinct().OrderByDescending(dt=>dt).ToListAsync();
+            return await _Context.WooSyncLogs.Select(wsl => wsl.WooSyncDateTime).Distinct().OrderByDescending(dt=>dt).ToListAsync();
         }
     }
 }

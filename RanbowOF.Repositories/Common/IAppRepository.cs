@@ -1,4 +1,5 @@
-﻿using RainbowOF.Models.Lookups;
+﻿using RainbowOF.Data.SQL;
+using RainbowOF.Models.Lookups;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,8 @@ namespace RainbowOF.Repositories.Common
 {
     public interface IAppRepository<TEntity> where TEntity : class
     {
+        ApplicationDbContext GetAppDbContext();
+
         Task<int> CountAsync();
         TEntity GetById(object Id);
         Task<TEntity> GetByIdAsync(object Id);
@@ -26,8 +29,8 @@ namespace RainbowOF.Repositories.Common
         int Add(TEntity newEntity);
         Task<int> AddAsync(TEntity newEntity);
         Task<int> AddRangeAsync(List<TEntity> newEntities);
-        int DeleteById(object Id);
-        Task<int> DeleteByIdAsync(object Id);
+        int DeleteById(object sourceId);
+        Task<int> DeleteByIdAsync(object sourceId);
         int DeleteBy(Expression<Func<TEntity, bool>> predicate);
         Task<int> DeleteByAsync(Expression<Func<TEntity, bool>> predicate);
         int Update(TEntity updatedEntity);

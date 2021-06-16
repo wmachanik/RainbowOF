@@ -13,6 +13,7 @@ namespace RainbowOF.Woo.REST.Repositories
     public class WooProduct : IWooProduct
     {
         private readonly IWooBase _Woo;
+
         #region Initialisation Stuff
         public WooProduct(WooAPISettings wooAPISettings, ILoggerManager logger)
         {

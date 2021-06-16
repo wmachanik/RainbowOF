@@ -27,12 +27,12 @@
             <Field>
                 <FieldLabel>UoM Base</FieldLabel>
                 @{
-                    if ((ListOfUoMSymbols != null) && (ListOfUoMSymbols.Count > 0))
+                    if ((_ListOfUoMSymbols != null) && (_ListOfUoMSymbols.Count > 0))
                     {
                         {
                             <Select TValue="Guid" SelectedValue="@(_NewItemUoM.BaseUoMId == null ? Guid.Empty : (Guid)_NewItemUoM.BaseUoMId)" SelectedValueChanged="@((v) => _NewItemUoM.BaseUoMId = v)">
                                 <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
-                                @foreach (var item in ListOfUoMSymbols)
+                                @foreach (var item in _ListOfUoMSymbols)
                                 {
                                     <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
                                 }

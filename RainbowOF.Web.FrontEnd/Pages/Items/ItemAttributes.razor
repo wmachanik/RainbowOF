@@ -28,7 +28,7 @@
                             Custom Search
                         </FieldLabel>
                         <FieldBody Style="width:80%">
-                            <TextEdit @bind-Text="@_gridSettings.CustomFilterValue" @onkeyup="HandleCustomerSearchOnKeyUp" />
+                            <TextEdit @bind-Text="@_GridSettings.CustomFilterValue" @onkeyup="HandleCustomerSearchOnKeyUp" />
                         </FieldBody>
                     </Field>
                 </Fields>
@@ -49,7 +49,7 @@
                             <Tooltip Text="Select a Bulk Action to do on selected rows">
                                 <Select TValue="BulkAction" SelectedValue="SelectedBulkAction" SelectedValueChanged="@((v) => SelectedBulkAction = v)" style="max-width:12em">
                                     <SelectItem Value="BulkAction.none">none</SelectItem>
-                                    @{ if (_gridSettings.WooIsActive)
+                                    @{ if (_GridSettings.WooIsActive)
                                         {
                                             <SelectItem Value="BulkAction.AllowWooSync">Allow Woo Sync</SelectItem>
                                             <SelectItem Value="BulkAction.DisallowWooSync">Disallow Woo Sync</SelectItem>
@@ -67,7 +67,7 @@
                     </Field>
                     <Field Style="display: inline-block;" Margin="Margin.Is1">
                         <FieldBody>
-                            <Blazorise.Check TValue="bool" Checked="@(_gridSettings.IsNarrow)" CheckedChanged="@((v) => _gridSettings.IsNarrow = v)">Narrow Grid?</Blazorise.Check>
+                            <Blazorise.Check TValue="bool" Checked="@(_GridSettings.IsNarrow)" CheckedChanged="@((v) => _GridSettings.IsNarrow = v)">Narrow Grid?</Blazorise.Check>
                         </FieldBody>
                     </Field>
                     <Field Margin="Margin.Is1" JustifyContent="JustifyContent.End">
@@ -88,10 +88,10 @@
                           Hoverable="true"
                           Responsive="true"
                           EditMode="DataGridEditMode.Popup"
-                          PageSize="@_gridSettings.PageSize" ShowPager="true"
+                          PageSize="@_GridSettings.PageSize" ShowPager="true"
                           PageSizes="@(new int[] { 5, 10, 15, 25, 50, 100 })"
                           ShowPageSizes="true" PagerPosition="DataGridPagerPosition.TopAndBottom"
-                          TotalItems="_gridSettings.TotalItems"
+                          TotalItems="_GridSettings.TotalItems"
                           Bordered="true"
                           NewItemDefaultSetter="@OnItemAttributeLookupNewItemDefaultSetter"
                           SelectionMode="DataGridSelectionMode.Multiple"
@@ -102,13 +102,13 @@
                           RowUpdated="@OnRowUpdating"
                           RowRemoving="@OnRowRemoving"
                           RowRemoved="@OnRowRemoved"
-                          Narrow="@_gridSettings.IsNarrow" Filterable="@_gridSettings.IsFilterable"
+                          Narrow="@_GridSettings.IsNarrow" Filterable="@_GridSettings.IsFilterable"
                           UseInternalEditing="true"
                           ValidationsSummaryLabel="Error validating data. Following error occurs..."
                           ShowValidationsSummary="true"
                           ShowValidationFeedback="true"
-                          CurrentPage="_gridSettings.CurrentPage"
-                          PageChanged="(e) => _gridSettings.CurrentPage = e.Page"
+                          CurrentPage="_GridSettings.CurrentPage"
+                          PageChanged="(e) => _GridSettings.CurrentPage = e.Page"
                           Padding="Padding.Is0">
                     <EmptyTemplate>
                         @{
@@ -178,7 +178,7 @@
                                     var attribItem = (context as ItemAttributeLookupView);
                                     @if ((attribItem.ItemAttributeVarietyLookups == null) || (attribItem.ItemAttributeVarietyLookups.Count == 0))   // no variety exists so ask if they want to add one
                                     {
-                                        <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items.NewItemAttributeVarietyComponent @ref="@NewAttributeVariety" PopUpRef="_gridSettings.PopUpRef" AddItemToWoo="_gridSettings.WooIsActive" />
+                                        <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items.NewItemAttributeVarietyComponent @ref="@NewAttributeVariety" PopUpRef="_GridSettings.PopUpRef" AddItemToWoo="_GridSettings.WooIsActive" />
                                         <Button Color="Color.Primary" Clicked="@(() => NewAttributeVariety.ShowModal(attribItem.ItemAttributeLookupId))">
                                             Add Variety
                                         </Button>
@@ -229,10 +229,10 @@
                                 }
                             </EditTemplate>
                         </DataGridColumn>
-                        <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.CanUpdateWooMap)" Caption="Woo Linked" Sortable="false" Filterable="false" Editable="@(_gridSettings.WooIsActive)">
+                        <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.CanUpdateWooMap)" Caption="Woo Linked" Sortable="false" Filterable="false" Editable="@(_GridSettings.WooIsActive)">
                             <DisplayTemplate>
                                 @{
-                                    if (_gridSettings.WooIsActive)
+                                    if (_GridSettings.WooIsActive)
                                     {
                                         var wooItem = (context as ItemAttributeLookupView);
                                         @((wooItem.CanUpdateWooMap == null) ? "n/a" : ((bool)wooItem.CanUpdateWooMap ? "yes" : "no"));
@@ -245,9 +245,9 @@
                             </DisplayTemplate>
                             <EditTemplate>
                                 @{
-                                    @if (_gridSettings.WooIsActive)
+                                    @if (_GridSettings.WooIsActive)
                                     {
-                                        <Tooltip Text="Is this Attribute synchronised with Woo Categories?">
+                                        <Tooltip Text="Is this Attribute synchronised with Woo Attributes?">
                                             @if (context.CellValue == null)
                                             {
                                                 <Blazorise.Check TValue="bool" Class="" Checked="@((context.CellValue==null) ? false : (bool) context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)"> Add To Woo</Blazorise.Check>
@@ -289,8 +289,8 @@
                                     </Button>
                                 </Tooltip>
                                 <Tooltip Text="Filter by Column" Style="z-index:99" Placement="Placement.Left">
-                                    <Button Color="Color.Info" Clicked="@(()=>_gridSettings.IsFilterable= !_gridSettings.IsFilterable)">
-                                        <Icon Name="@((_gridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" />
+                                    <Button Color="Color.Info" Clicked="@(()=>_GridSettings.IsFilterable= !_GridSettings.IsFilterable)">
+                                        <Icon Name="@((_GridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" />
                                     </Button>
                                 </Tooltip>
                             </NewCommandTemplate>
@@ -361,8 +361,8 @@
                             </Column>
                             <Column ColumnSize="ColumnSize.IsAuto">
                                 @{
-                                    string IconColor = _gridSettings.WooIsActive ? "green" : "red";
-                                    <Icon Name="@( _gridSettings.WooIsActive ? IconName.CheckCircle : IconName.MinusCircle)"
+                                    string IconColor = _GridSettings.WooIsActive ? "green" : "red";
+                                    <Icon Name="@( _GridSettings.WooIsActive ? IconName.CheckCircle : IconName.MinusCircle)"
                                           Style="@($"color: { IconColor}; display: inline - flex")" />
 
                                 }
@@ -379,13 +379,13 @@
 </Row>
 
 
-<RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage=" Attribute Message" NotificationTitle="" @ref="@_gridSettings.PopUpRef" />
+<RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage=" Attribute Message" NotificationTitle="" @ref="@_GridSettings.PopUpRef" />
 
-<RainbowOF.Components.Modals.ConfirmModal @ref="_gridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_Click" />
+<RainbowOF.Components.Modals.ConfirmModal @ref="_GridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_Click" />
 
-<RainbowOF.Components.Modals.ConfirmModal @ref="_gridSettings.DeleteWooItemConfirmation" ConfirmationClicked="ConfirmDeleteWooItem_Click" />
+<RainbowOF.Components.Modals.ConfirmModal @ref="_GridSettings.DeleteWooItemConfirmation" ConfirmationClicked="ConfirmDeleteWooItem_Click" />
 
-<RainbowOF.Components.Modals.ConfirmModalWithOption @ref="_gridSettings.DeleteConfirmation"
+<RainbowOF.Components.Modals.ConfirmModalWithOption @ref="_GridSettings.DeleteConfirmation"
                                                     ConfirmationClicked="ConfirmDelete_Click"
                                                     ConfirmationMessage=@($"Are you sure you want to delete ?")
                                                     ConfirmButtonText="Delete"

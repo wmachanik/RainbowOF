@@ -30,22 +30,21 @@ namespace RainbowOF.Models.Items
         public int SortOrder { get; set; }
         [Column(TypeName = "decimal(18,4)")]
         public decimal BasePrice { get; set; }
-
+        // stock stuff
+        public bool ManageStock { get; set; }
+        public int QtyInStock { get; set; }
+        // management stuff
         [Timestamp]
         public byte[] RowVersion { get; set; }
-
+        // Related tables
         [ForeignKey("ParentItemId")]
         public virtual Item ParentItem { get; set; }
         [ForeignKey("ReplacementItemId")]
         public virtual Item ReplacementItem { get; set; }
-
         [ForeignKey("ItemId")]
         public virtual List<ItemCategory> ItemCategories { get; set; }
         [ForeignKey("ItemId")]
         public virtual List<ItemAttribute> ItemAttributes { get; set; }
-        [ForeignKey("ItemId")]
-        public virtual List<ItemAttributeVariety> ItemAttributeVarieties { get; set; }
-
 
         // may need these later
         //        public int? MerchantId { get; set; }
@@ -74,6 +73,10 @@ namespace RainbowOF.Models.Items
         //public VATTaxType VATTaxType { get; set; }
         //[ForeignKey("ItemId")]
         //public IEnumerable<ItemPrice> ItemPrices { get; set; }
+        // old design
+        //[ForeignKey("ItemId")]
+        //public virtual List<ItemAttributeVariety> ItemAttributeVarieties { get; set; }
+        
     }
 
-}
+ }
