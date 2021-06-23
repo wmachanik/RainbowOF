@@ -26,7 +26,7 @@ namespace RainbowOF.Repositories.Lookups
                                                                          where TWooMapEntity : class
     {
         Task<WooAPISettings> GetWooAPISettingsAsync();
-        Task<bool> WooIsActive(ApplicationState currentApplicationState); 
+        Task<bool> WooIsActiveAsync(ApplicationState currentApplicationState); 
         void PushSelectedItems(List<TEntityView> currentSelectedItems);
         List<TEntityView> PopSelectedItems(List<TEntityView> modelViewItems);
         Task<List<TWooMapEntity>> GetWooMappedItemsAsync(List<Guid> mapWooEntityID);
@@ -35,7 +35,7 @@ namespace RainbowOF.Repositories.Lookups
         Task InsertRowAsync(TEntityView newVeiwEntity);
         TEntityView NewItemDefaultSetter(TEntityView newViewEntity);
         Task<int> UpdateWooMappingAsync(TEntityView updateViewEntity);
-        Task<bool> IsDuplicate(TEntity checkEntity);
+        Task<bool> IsDuplicateAsync(TEntity checkEntity);
         bool IsValid(TEntity checkEntity);
         TEntity GetItemFromView(TEntityView fromVeiwEntity);
         Task DeleteRowAsync(TEntityView deleteViewEntity);
@@ -43,7 +43,7 @@ namespace RainbowOF.Repositories.Lookups
         Task<int> DeleteWooItemAsync(Guid deleteWooEntityId, bool deleteFromWoo);
         Task<int> AddWooItemAndMapAsync(TEntity addEntity);
         Task<int> UpdateWooItemAsync(TEntityView updateViewEntity);
-        Task<int> UpdateWooItemAndMapping(TEntityView updateViewEntity);
+        Task<int> UpdateWooItemAndMappingAsync(TEntityView updateViewEntity);
         Task<int> UpdateItemAsync(TEntityView updateItem);
         Task UpdateRowAsync(TEntityView updateViewEntity);
     }

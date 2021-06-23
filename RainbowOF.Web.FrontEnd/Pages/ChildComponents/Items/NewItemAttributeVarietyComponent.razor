@@ -21,11 +21,11 @@
         <ModalBody>
             <Field>
                 <FieldLabel>Variety Name</FieldLabel>
-                <TextEdit Autofocus="true" Text="@_NewItemAttributeVarietyLookupView.VarietyName" Placeholder="Enter variety name..." />
+                <TextEdit Autofocus="true" Text="@_NewItemAttributeVarietyLookupView.VarietyName" TextChanged="((vn) => _NewItemAttributeVarietyLookupView.VarietyName = vn)" Placeholder="Enter variety name..." />
             </Field>
             <Field>
                 <FieldLabel>UoM</FieldLabel>
-                <UoMSelecteListComponent PopUpRef="PopUpRef" SourceUoMId="_NewItemAttributeVarietyLookupView.UoMId" UoMIdChangedEvent="@((v) => _NewItemAttributeVarietyLookupView.UoMId = v)"></UoMSelecteListComponent>
+                <UoMSelecteListComponent PopUpRef="PopUpRef" SourceUoMId="_NewItemAttributeVarietyLookupView.UoMId" UoMIdChangedEvent="@((u) => _NewItemAttributeVarietyLookupView.UoMId = u)"></UoMSelecteListComponent>
             </Field>
             <Field>
                 <FieldLabel>Sort Order</FieldLabel>
@@ -33,11 +33,11 @@
             </Field>
             <Field>
                 <FieldLabel>Add To Woo</FieldLabel>
-                <Blazorise.Check Checked="@_NewItemAttributeVarietyLookupView.CanUpdateWooMap"></Blazorise.Check>
+                <Blazorise.Check TValue="bool" Checked="@(_NewItemAttributeVarietyLookupView.CanUpdateWooMap?? false)" CheckedChanged="((cv) => _NewItemAttributeVarietyLookupView.CanUpdateWooMap = cv)" ></Blazorise.Check>
             </Field>
             <Field>
                 <FieldLabel>Notes</FieldLabel>
-                <TextEdit Text="@_NewItemAttributeVarietyLookupView.Notes" Placeholder="Any notes..." />
+                <TextEdit Text="@_NewItemAttributeVarietyLookupView.Notes" TextChanged="((nv) => _NewItemAttributeVarietyLookupView.Notes = nv)" Placeholder="Any notes..." />
             </Field>
         </ModalBody>
         <ModalFooter>

@@ -22,6 +22,7 @@ namespace RainbowOF.Repositories.Common
         public IItemAttributeLookupRepository itemAttributeLookupRepository();
         public IItemAttributeVarietyLookupRepository itemAttributeVarietyLookupRepository();
         // Variables that load from the database, used mainly to prevent reloading.
+        public bool DBTransactionIsStillRunning();
         public Dictionary<Guid, string> GetListOfUoMSymbols(bool IsForceReload = false);
         // Centralised Context Handling
         void BeginTransaction();

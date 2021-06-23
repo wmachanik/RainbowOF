@@ -131,7 +131,7 @@ namespace RainbowOF.Repositories.Lookups
             return await _wooCategoryMapRepository.FindFirstAsync(wcm => wcm.ItemCategoryLookupId == mapWooEntityID);
         }
 
-        public override async Task<bool> IsDuplicate(ItemCategoryLookup targetEntity)
+        public override async Task<bool> IsDuplicateAsync(ItemCategoryLookup targetEntity)
         {
             // check if does not exist in the list already (they edited it and it is the same name as another. Only a max of one should exists
             IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
@@ -293,7 +293,7 @@ namespace RainbowOF.Repositories.Lookups
                 _recsUpdted = await _itemCategoryLookupRepository.UpdateAsync(_currentItemCategoryLookup);
                 if (_recsUpdted == AppUnitOfWork.CONST_WASERROR)
                     _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{updateViewItem.CategoryName} - {_AppUnitOfWork.GetErrorMessage()}", "Error updating Category");
-                if (await UpdateWooItemAndMapping(updateViewItem) == AppUnitOfWork.CONST_WASERROR)
+                if (await UpdateWooItemAndMappingAsync(updateViewItem) == AppUnitOfWork.CONST_WASERROR)
                     _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{updateViewItem.CategoryName} - {_AppUnitOfWork.GetErrorMessage()}", "Error updating Category Map");   // should we send a message here error = mapping not updated 
 
             }
@@ -329,7 +329,7 @@ namespace RainbowOF.Repositories.Lookups
 
         public override async Task UpdateRowAsync(ItemCategoryLookupView updateVeiwEntity)
         {
-            if (await IsDuplicate(updateVeiwEntity))
+            if (await IsDuplicateAsync(updateVeiwEntity))
                 _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Category Name: {updateVeiwEntity.CategoryName} - already exists, cannot be updated", "Exists already");
             else
             {
@@ -556,7 +556,7 @@ namespace RainbowOF.Repositories.Lookups
         /// </summary>
         /// <param name="updateViewEntity">The Entity that is being updated</param>
         /// <returns>null if nothing changed or the new WooCategopryMap</returns>
-        public override async Task<int> UpdateWooItemAndMapping(ItemCategoryLookupView updateViewEntity)
+        public override async Task<int> UpdateWooItemAndMappingAsync(ItemCategoryLookupView updateViewEntity)
         {
             int _result = await UpdateWooItemAsync(updateViewEntity);
             if (_result > 0)

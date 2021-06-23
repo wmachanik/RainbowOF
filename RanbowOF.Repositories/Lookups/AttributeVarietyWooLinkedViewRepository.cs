@@ -57,7 +57,9 @@ namespace RainbowOF.Repositories.Lookups
         {
             IAppRepository<ItemAttributeVarietyLookup> _itemAttributeVarietyLookupRepository = _AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
 
-            var _recsDelete = await _itemAttributeVarietyLookupRepository.DeleteByIdAsync(deleteViewEntity.ItemAttributeVarietyLookupId);     //DeleteByAsync(iavl => iavl.ItemAttributeVarietyLookupId == SelectedItemAttributeVarietyLookup.ItemAttributeVarietyLookupId);
+            //var ignore = await Task.Run(() => deleteViewEntity.BGColour);   // rubbish code so we don't do Async - Async Delete causing issues.
+            //var _recsDelete = _itemAttributeVarietyLookupRepository.DeleteById(deleteViewEntity.ItemAttributeVarietyLookupId);   // await   DeleteByIdAsync(deleteViewEntity.ItemAttributeVarietyLookupId);     //DeleteByAsync(iavl => iavl.ItemAttributeVarietyLookupId == SelectedItemAttributeVarietyLookup.ItemAttributeVarietyLookupId);
+            var _recsDelete = await _itemAttributeVarietyLookupRepository.DeleteByIdAsync(deleteViewEntity.ItemAttributeVarietyLookupId);   // await   DeleteByIdAsync(deleteViewEntity.ItemAttributeVarietyLookupId);     //DeleteByAsync(iavl => iavl.ItemAttributeVarietyLookupId == SelectedItemAttributeVarietyLookup.ItemAttributeVarietyLookupId);
 
             if (_recsDelete == AppUnitOfWork.CONST_WASERROR)
                 _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Attribute Variety: {deleteViewEntity.VarietyName} is no longer found, was it deleted?");
@@ -158,7 +160,7 @@ namespace RainbowOF.Repositories.Lookups
             var _WooMappedItems = await _wooProductAttributeTermMapRepository.GetByAsync(wam => mapWooEntityIDs.Contains(wam.ItemAttributeVarietyLookupId));   // ItemAttributeVarietyLookupId
             return _WooMappedItems.ToList();   
         }
-        public override async Task<bool> IsDuplicate(ItemAttributeVarietyLookup targetEntity)
+        public override async Task<bool> IsDuplicateAsync(ItemAttributeVarietyLookup targetEntity)
         {
             // check if does not exist in the list already (they edited it and it is the same name as another. Only a max of one should exists
             IAppRepository<ItemAttributeVarietyLookup> _itemAttributeVarietyLookupRepository = _AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
@@ -213,8 +215,14 @@ namespace RainbowOF.Repositories.Lookups
             }
             return _dataGridParameters;
         }
+        bool _TaskIsBusy = false;
         public override async Task<List<ItemAttributeVarietyLookupView>> LoadViewItemsPaginatedAsync(DataGridParameters currentDataGridParameters)
         {
+            if (_TaskIsBusy)
+                return null;
+
+            _TaskIsBusy = true;
+
             List<ItemAttributeVarietyLookup> _itemAttributeVarietyLookups = await GetPagedItemsAsync(currentDataGridParameters);
             List<ItemAttributeVarietyLookupView> _itemAttributeVarietyViewLookups = new List<ItemAttributeVarietyLookupView>();
             // Get a list of all the AttributeVariety maps that exists
@@ -243,10 +251,11 @@ namespace RainbowOF.Repositories.Lookups
                     UoMId = itemAttributeVariety.UoMId,
                     Notes = itemAttributeVariety.Notes,
                     UoM = (((itemAttributeVariety.UoMId ?? Guid.Empty) == Guid.Empty)) ? null 
-                            : (itemUoMs == null) ? null : itemUoMs.Where(uid => uid.ItemUoMId == itemAttributeVariety.UoMId).FirstOrDefault(),   // apply the "lazy" load to the item
-                    CanUpdateWooMap = (_wooProductAttributeTermMap == null) ? null : _wooProductAttributeTermMap.CanUpdate
+                            : itemUoMs?.Where(uid => uid.ItemUoMId == itemAttributeVariety.UoMId).FirstOrDefault(),   // apply the "lazy" load to the item   /// : (itemUoMs == null) ? null : itemUoMs.Where(uid => uid.ItemUoMId == itemAttributeVariety.UoMId).FirstOrDefault(),
+                    CanUpdateWooMap = _wooProductAttributeTermMap?.CanUpdate //  (_wooProductAttributeTermMap == null) ? null : _wooProductAttributeTermMap.CanUpdate
                 }) ;
             }
+            _TaskIsBusy = false;
             return _itemAttributeVarietyViewLookups;
         }
         public override bool IsValid(ItemAttributeVarietyLookup checkEntity)
@@ -312,7 +321,7 @@ namespace RainbowOF.Repositories.Lookups
                 _recsUpdted = await _itemAttributeVarietyLookupRepository.UpdateAsync(_CurrentItemAttributeVarietyLookup);
                 if (_recsUpdted == AppUnitOfWork.CONST_WASERROR)
                     _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{updateViewItem.VarietyName} - {_AppUnitOfWork.GetErrorMessage()}", "Error updating Attribute Variety");
-                if (await UpdateWooItemAndMapping(updateViewItem) == AppUnitOfWork.CONST_WASERROR)
+                if (await UpdateWooItemAndMappingAsync(updateViewItem) == AppUnitOfWork.CONST_WASERROR)
                     _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{updateViewItem.VarietyName} - {_AppUnitOfWork.GetErrorMessage()}", "Error updating Attribute Variety Map");   // should we send a message here error = mapping not updated 
             }
             return _recsUpdted;
@@ -347,7 +356,7 @@ namespace RainbowOF.Repositories.Lookups
 
         public override async Task UpdateRowAsync(ItemAttributeVarietyLookupView updateVeiwEntity)
         {
-            if (await IsDuplicate(updateVeiwEntity))
+            if (await IsDuplicateAsync(updateVeiwEntity))
                 _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Attribute Variety Name: {updateVeiwEntity.VarietyName} - already exists, cannot be updated", "Exists already");
             else
             {
@@ -574,7 +583,7 @@ namespace RainbowOF.Repositories.Lookups
         /// </summary>
         /// <param name="updateViewEntity">The Entity that is being updated</param>
         /// <returns>null if nothing changed or the new WooCategopryMap</returns>
-        public override async Task<int> UpdateWooItemAndMapping(ItemAttributeVarietyLookupView updateViewEntity)
+        public override async Task<int> UpdateWooItemAndMappingAsync(ItemAttributeVarietyLookupView updateViewEntity)
         {
             int _result = await UpdateWooItemAsync(updateViewEntity);
             if (_result > 0)
@@ -588,7 +597,7 @@ namespace RainbowOF.Repositories.Lookups
 
         public async Task<List<ItemUoM>> GetItemUoMsAsync(List<Guid?> linkedItemUoMIDs)
         {
-            if (linkedItemUoMIDs == null)
+            if ((linkedItemUoMIDs == null) || (linkedItemUoMIDs.Count == 0))
                 return null;
              
             IAppRepository<ItemUoM> appRepository   = _AppUnitOfWork.Repository<ItemUoM>();

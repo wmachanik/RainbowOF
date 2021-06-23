@@ -18,7 +18,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
     public partial class WooImportItemsComponent // for CategoryImport so file name WooImportItemsComponentProductsImport Partial
     {
         /// <summary>
-        /// All the attribute term import stuff. Attributes Terms in Woo are Attributed Varieties to us. Could we have generalised this for ezch item import with an object?
+        /// All the attribute term import stuff. Attributes Terms in Woo are Attributed Varieties to us. Could we have generalised this for each item import with an object?
         /// </summary>
         #region AttrbiuteStuff
 
@@ -31,6 +31,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             List<Product> wooProducts = OnlyItemsInStock ?
                 await _wooProduct.GetAllProductsInStock() :
                 await _wooProduct.GetAllProducts();
+
 
             // unique check not needed 
             //  var _wooProducts = wooProducts.GroupBy(wp => wp.id).Select(wp => wp.FirstOrDefault()); // wooProducts that are distinct;
@@ -48,8 +49,10 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             currItem.IsEnabled = true;
             currItem.ItemDetail = _StringTools.Truncate(_StringTools.StripHTML(sourceWooProd.short_description), 250);   // max length is 255
             currItem.ItemAbbreviatedName = _StringTools.MakeAbbriviation(sourceWooProd.name);
-            currItem.SortOrder = Convert.ToInt32(sourceWooProd.menu_order);  //  (currWooProd.menu_order == null) ? 50 : (int)currWooProd.menu_order;
-            currItem.BasePrice = Convert.ToDecimal(sourceWooProd.price); // (currWooProd.price == null) ? 0 :(decimal)currWooProd.price;
+            currItem.SortOrder = Convert.ToInt32(sourceWooProd.menu_order?? 0);  //  (currWooProd.menu_order == null) ? 50 : (int)currWooProd.menu_order;
+            currItem.BasePrice = Convert.ToDecimal(sourceWooProd.price == null ? 0.0 : sourceWooProd.price); // (currWooProd.price == null) ? 0 :(decimal)currWooProd.price;
+            currItem.ManageStock = Convert.ToBoolean(sourceWooProd.manage_stock?? false);
+            currItem.QtyInStock = Convert.ToInt32(sourceWooProd.stock_quantity?? 0);
 
             if ((sourceWooProd.parent_id != null) && (sourceWooProd.parent_id > 0))
                 currWooProductsWithParents.Add(new WooItemWithParent

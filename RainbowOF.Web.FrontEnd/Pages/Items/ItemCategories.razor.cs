@@ -59,12 +59,12 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             //await LoadData();
             await InvokeAsync(StateHasChanged);
         }
-        private async Task SetLoadStatus(string statusString)
+        private async Task SetLoadStatusAsync(string statusString)
         {
             _Status = statusString;
             await InvokeAsync(StateHasChanged);
         }
-        public async Task LoadData()
+        public async Task LoadDataAsync()
         {
             await HandleReadDataAsync(new DataGridReadDataEventArgs<ItemCategoryLookupView>(_GridSettings.CurrentPage, _GridSettings.PageSize, null, System.Threading.CancellationToken.None));
         }
@@ -86,13 +86,13 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
                     _GridSettings.PageSize = inputDataGridReadData.PageSize;
  //                  await Reload();
                 }
-                await SetLoadStatus("Checking Woo status & loading categories");
+                await SetLoadStatusAsync("Checking Woo status & loading categories");
                 try
                 {
-                    await SetLoadStatus("Checking Woo status");
-                    _GridSettings.WooIsActive = await _CategoryWooLinkedViewRepository.WooIsActive(_AppState);
-                    await SetLoadStatus("Loading categories");
-                    await LoadItemCategoryLookupList(_dataGridParameters); // inputDataGridReadData.Page - 1, inputDataGridReadData.PageSize, inputDataGridReadData.Columns);
+                    await SetLoadStatusAsync("Checking Woo status");
+                    _GridSettings.WooIsActive = await _CategoryWooLinkedViewRepository.WooIsActiveAsync(_AppState);
+                    await SetLoadStatusAsync("Loading categories");
+                    await LoadItemCategoryLookupListAsync(_dataGridParameters); // inputDataGridReadData.Page - 1, inputDataGridReadData.PageSize, inputDataGridReadData.Columns);
                 }
                 catch (Exception ex)
                 {
@@ -131,7 +131,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             IsLoading = false;
         }
 
-        private async Task LoadItemCategoryLookupList(DataGridParameters currentDataGridParameters) //int startPage, int currentPageSize, IEnumerable<DataGridColumnInfo> currentDataGridColumnInfos)
+        private async Task LoadItemCategoryLookupListAsync(DataGridParameters currentDataGridParameters) //int startPage, int currentPageSize, IEnumerable<DataGridColumnInfo> currentDataGridColumnInfos)
         {
             // store old select items list
             try
@@ -304,7 +304,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             // await LoadItemCategoryLookupList();   // reload the list so the latest item is displayed
         }
 
-        async Task Reload()
+        async Task ReloadAsync()
         {
             _GridSettings.CurrentPage = 1;
             //return 

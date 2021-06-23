@@ -67,6 +67,13 @@
                     <Field Style="display: inline-block;" Margin="Margin.Is1">
                         <FieldBody>
                             <Blazorise.Check TValue="bool" Checked="@(_GridSettings.IsNarrow)" CheckedChanged="@((v) => _GridSettings.IsNarrow = v)">Narrow Grid?</Blazorise.Check>
+                            <Blazorise.Check TValue="bool" Checked="@ShowItemDetail" CheckedChanged="@((v) => ShowItemDetail = v)">Show Item Detail?</Blazorise.Check>
+                        </FieldBody>
+                    </Field>
+                    <Field Style="display: inline-block;" Margin="Margin.Is1">
+                        <FieldBody>
+                            <Blazorise.Check TValue="bool" Checked="@ShowReplaceItem" CheckedChanged="@((v) => ShowReplaceItem = v)">Show Replacement</Blazorise.Check>
+                            <Blazorise.Check TValue="bool" Checked="@ShowWooLinked" CheckedChanged="@((v) => ShowWooLinked = v)">Show Is Woo Linked?</Blazorise.Check>
                         </FieldBody>
                     </Field>
                     <Field Margin="Margin.Is1" JustifyContent="JustifyContent.End">
@@ -187,7 +194,7 @@
                             </FilterTemplate>
                         </DataGridColumn>
                         <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ItemDetail)" Caption="Item Detail" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,100}"
-                                        HeaderCellClass="desktop-only" CellClass="@((item)=>"desktop-only")">
+                                        HeaderCellClass="desktop-only" CellClass="@((item)=>"desktop-only")" Displayable="ShowItemDetail">
                         </DataGridColumn>
                         <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ItemCategories)" Caption="Item Categories" Sortable="true" Editable="true" Filterable="true"
                                         HeaderCellClass="desktop-only" CellClass="@((item)=>"desktop-only")">
@@ -203,9 +210,9 @@
                                                 @(i < (rowCategories.Count - 1) ? ", " : ". ");
                                             }
                                             @*@if (attribItem.ItemAttributeVarietyLookups.Count == RainbowOF.Repositories.Common.AppUnitOfWork.CONST_MAX_DETAIL_PAGES)   //we  are at max so assume only max loaded
-                                                   {
-                                                   <Blazorise.Badge Color="Color.Info">Click to see all...</Blazorise.Badge>
-                                                }*@
+                               {
+                               <Blazorise.Badge Color="Color.Info">Click to see all...</Blazorise.Badge>
+                            }*@
                                         </span>
                                     }
                                 }
@@ -245,19 +252,19 @@
                             </DisplayTemplate>
                         </DataGridColumn>
                         <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ReplacementItemId)" Caption="Replace By" Sortable="true" Editable="true" Filterable="true"
-                                        HeaderCellClass="desktop-only" CellClass="@((item)=>"desktop-only")">
+                                        HeaderCellClass="desktop-only" CellClass="@((item)=>"desktop-only")" Displayable="ShowReplaceItem">
                             <EditTemplate>
                                 <Select TValue="Guid" SelectedValue="@(context.CellValue == null ? Guid.Empty : (Guid)context.CellValue)" SelectedValueChanged="@((v) => context.CellValue = v)">
                                     <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
                                     <SelectItem TValue="Guid" Value="@Guid.NewGuid()">---New parent---</SelectItem>
                                     @*@foreach (var item in listOfItems)
-                                        {
-                                            // only add parents that are not this item
-                                            if (catItem.ItemCategoryLookupId != item.Key)
-                                            {
-                                                <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
-                                            }
-                                        }*@
+                    {
+                        // only add parents that are not this item
+                        if (catItem.ItemCategoryLookupId != item.Key)
+                        {
+                            <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
+                        }
+                    }*@
                                 </Select>
                             </EditTemplate>
                         </DataGridColumn>
@@ -268,23 +275,27 @@
                                     <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
                                     <SelectItem TValue="Guid" Value="@Guid.NewGuid()">---New parent---</SelectItem>
                                     @*@foreach (var item in listOfParents)
-                                        {
-                                            // only add parents that are not this item
-                                            if (catItem.ItemCategoryLookupId != item.Key)
-                                            {
-                                                <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
-                                            }
-                                        }*@
+                    {
+                        // only add parents that are not this item
+                        if (catItem.ItemCategoryLookupId != item.Key)
+                        {
+                            <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
+                        }
+                    }*@
                                 </Select>
                             </EditTemplate>
                         </DataGridColumn>
                         <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ItemAbbreviatedName)" Caption="Abrv" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,10}">
                         </DataGridColumn>
-                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.SortOrder)" Caption="Sort Order" Sortable="true" Editable="true" Filterable="true" ValidationPattern="\d">
-                        </DataGridColumn>
                         <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.BasePrice)" Caption="Base Price" Sortable="true" Editable="true" Filterable="true" DisplayFormat="{0:F}">
                         </DataGridColumn>
-                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.CanUpdateWooMap)" Caption="Woo Linked" Sortable="false" Filterable="false" Editable="@(_GridSettings.WooIsActive)">
+                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ManageStock)" Caption="MngStk" Sortable="true" Editable="true" Filterable="true" >
+                        </DataGridColumn>
+                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.QtyInStock)" Caption="Stock Qty" Sortable="true" Editable="true" Filterable="true" DisplayFormat="{0:F}">
+                        </DataGridColumn>
+                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.SortOrder)" Caption="Sort Order" Sortable="true" Editable="true" Filterable="true" ValidationPattern="\d">
+                        </DataGridColumn>
+                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.CanUpdateWooMap)" Caption="Woo Linked" Sortable="false" Filterable="false" Editable="@(_GridSettings.WooIsActive)" Displayable="ShowWooLinked">
                             <DisplayTemplate>
                                 @{
                                     if (_GridSettings.WooIsActive)

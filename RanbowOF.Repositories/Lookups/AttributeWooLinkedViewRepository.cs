@@ -123,7 +123,7 @@ namespace RainbowOF.Repositories.Lookups
             var _WooMappedItems = await _wooProductAttributeMapRepository.GetByAsync(wam => mapWooEntityIDs.Contains(wam.ItemAttributeLookupId));   // ItemAttributeLookupId
             return _WooMappedItems.ToList();   //  (await _wooProductAttributeMapRepository.GetByAsync(wam => mapWooEntityIDs.Contains(wam.ItemAttributeLookupId)));
         }
-        public override async Task<bool> IsDuplicate(ItemAttributeLookup targetEntity)
+        public override async Task<bool> IsDuplicateAsync(ItemAttributeLookup targetEntity)
         {
             // check if does not exist in the list already (they edited it and it is the same name as another. Only a max of one should exists
             IAppRepository<ItemAttributeLookup> _itemAttributeLookupRepository = _AppUnitOfWork.Repository<ItemAttributeLookup>();
@@ -255,7 +255,7 @@ namespace RainbowOF.Repositories.Lookups
                 _recsUpdted = await _itemAttributeLookupRepository.UpdateAsync(_CurrentItemAttributeLookup);
                 if (_recsUpdted == AppUnitOfWork.CONST_WASERROR)
                     _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{updateViewItem.AttributeName} - {_AppUnitOfWork.GetErrorMessage()}", "Error updating Attribute");
-                if (await UpdateWooItemAndMapping(updateViewItem) == AppUnitOfWork.CONST_WASERROR)
+                if (await UpdateWooItemAndMappingAsync(updateViewItem) == AppUnitOfWork.CONST_WASERROR)
                     _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{updateViewItem.AttributeName} - {_AppUnitOfWork.GetErrorMessage()}", "Error updating Attribute Map");   // should we send a message here error = mapping not updated 
 
             }
@@ -291,7 +291,7 @@ namespace RainbowOF.Repositories.Lookups
 
         public override async Task UpdateRowAsync(ItemAttributeLookupView updateVeiwEntity)
         {
-            if (await IsDuplicate(updateVeiwEntity))
+            if (await IsDuplicateAsync(updateVeiwEntity))
                 _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Attribute Name: {updateVeiwEntity.AttributeName} - already exists, cannot be updated", "Exists already");
             else
             {
@@ -539,7 +539,7 @@ namespace RainbowOF.Repositories.Lookups
         /// </summary>
         /// <param name="updateViewEntity">The Entity that is being updated</param>
         /// <returns>null if nothing changed or the new WooCategopryMap</returns>
-        public override async Task<int> UpdateWooItemAndMapping(ItemAttributeLookupView updateViewEntity)
+        public override async Task<int> UpdateWooItemAndMappingAsync(ItemAttributeLookupView updateViewEntity)
         {
             int _result = await UpdateWooItemAsync(updateViewEntity);
             if (_result > 0)

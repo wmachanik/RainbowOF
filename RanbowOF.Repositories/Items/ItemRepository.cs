@@ -131,6 +131,8 @@ namespace RainbowOF.Repositories.Items
             try
             {
                 _Logger.LogDebug($"Getting all records with eager loading of Item order by an filter Data Grid Parameters: {currentDataGridParameters.ToString()}");
+                if (_AppUnitOfWork.DBTransactionIsStillRunning())
+                    _Logger.LogDebug("Second transaction started before current transaction completed!");
                 // get a list of Order bys and filters
                 List<OrderByParameter<Item>> _orderByExpressions = GetOrderByExpressions(currentDataGridParameters.SortParams);
                 List<Expression<Func<Item, bool>>> _filterByExpressions = GetFilterByExpressions(currentDataGridParameters.FilterParams);

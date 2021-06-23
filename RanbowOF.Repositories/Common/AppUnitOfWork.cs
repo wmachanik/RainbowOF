@@ -104,7 +104,7 @@ namespace RainbowOF.Repositories.Common
             if (_ListOfUoMSymbols == null)
             {
                 IAppRepository<ItemUoM> appRepository = this.Repository<ItemUoM>();
-                List<ItemUoM> _itemUoMs = appRepository.GetAll().ToList(); // (await _UoMRepository.GetAllAsync()).ToList();
+                var _itemUoMs = appRepository.GetAll(); // (await _UoMRepository.GetAllAsync()).ToList();
                 _ListOfUoMSymbols = new();
                 if (_itemUoMs != null)
                 {
@@ -115,18 +115,22 @@ namespace RainbowOF.Repositories.Common
                 }
             }
             return _ListOfUoMSymbols;
-            }
-
-
+        }
+        public bool DBTransactionIsStillRunning()
+        {
+            return dbTransaction != null;
+        }
         public void BeginTransaction()
         {
             ClearErrorMessage();  // assume an error has been cleared
             if (dbTransaction == null)    // should be null - if not should we not throw an error?
                 dbTransaction = _Context.Database.BeginTransaction();
+            else
+                _Logger.LogDebug("Second transaction started before current transaction completed!"); 
         }
         public int Complete()
         {
-            int recsCommited = CONST_WASERROR;   
+            int recsCommited = CONST_WASERROR;
             try
             {
                 _Logger.LogDebug("Saving changes...");
@@ -149,8 +153,8 @@ namespace RainbowOF.Repositories.Common
             int recsCommited = CONST_WASERROR;   // -1 means error only returned if there is one
             try
             {
-                _Logger.LogDebug("Saving changes (async).");
-                recsCommited = await _Context.SaveChangesAsync(true);
+                _Logger.LogDebug("Committing changes (async).");
+               recsCommited = await _Context.SaveChangesAsync(true);
                 if (dbTransaction != null)
                 {
                     dbTransaction.Commit();
@@ -195,8 +199,8 @@ namespace RainbowOF.Repositories.Common
             GC.SuppressFinalize(this);
         }
         public bool IsInErrorState()
-        { 
-            return _ErrorMessage != string.Empty; 
+        {
+            return _ErrorMessage != string.Empty;
         }
         public void SetErrorMessage(string sourceErrorMessage)
         {

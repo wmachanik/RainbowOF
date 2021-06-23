@@ -130,12 +130,15 @@ namespace RainbowOF.Repositories.Lookups
             try
             {
                 _Logger.LogDebug($"Getting all records with eager loading of ItemAttributeVarietyLookup order by an filter Data Grid Parameters: {currentDataGridParameters.ToString()}");
+                if (_AppUnitOfWork.DBTransactionIsStillRunning())
+                    _Logger.LogDebug("Second transaction started before current transaction completed!");
+
                 // get a list of Order bys and filters
                 List<OrderByParameter<ItemAttributeVarietyLookup>> _orderByExpressions = GetOrderByExpressions(currentDataGridParameters.SortParams);
                 List<Expression<Func<ItemAttributeVarietyLookup, bool>>> _filterByExpressions = GetFilterByExpressions(currentDataGridParameters.FilterParams);
 
                 // start with a basic Linq Query. No Eager loading getting weird issues which I cannot solve.
-                IQueryable<ItemAttributeVarietyLookup> _query = _table.Where(iavl => iavl.ItemAttributeLookupId == sourceParentItemAttributeLookupId); //.Include(iavl=>iavl.UoM) ;  -> this seems to cause problems withj building the query, perhaps it must come last 
+                IQueryable<ItemAttributeVarietyLookup> _query = _table.Where(iavl => iavl.ItemAttributeLookupId == sourceParentItemAttributeLookupId); //.Include(iavl=>iavl.UoM) ;  -> this seems to cause problems with building the query, perhaps it must come last 
                 if ((_orderByExpressions != null) && (_orderByExpressions.Count > 0))
                 {
                     // add order bys

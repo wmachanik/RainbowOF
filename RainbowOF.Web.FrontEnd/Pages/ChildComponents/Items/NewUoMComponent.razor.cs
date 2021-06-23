@@ -29,7 +29,8 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         {
             //SelectedUoMId = ((SourceUoMId ?? Guid.Empty) == Guid.Empty) ? Guid.Empty : (Guid)SourceUoMId;  // store in a local var to keep state until modal closed. If not Select list changes to original value
             if (_ListOfUoMSymbols == null)
-                _ListOfUoMSymbols = await Task.Run(() => _AppUnitOfWork.GetListOfUoMSymbols());
+                _ListOfUoMSymbols =  _AppUnitOfWork.GetListOfUoMSymbols();
+            await InvokeAsync(StateHasChanged);
         }
 
         public void ShowModal()

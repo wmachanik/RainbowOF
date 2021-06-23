@@ -69,31 +69,34 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
                 return;
             IsLoading = true;
             // 
-            if (!inputDataGridReadData.CancellationToken.IsCancellationRequested)
+            try
             {
-                DataGridParameters _dataGridParameters = _AttributeWooLinkedViewRepository.GetDataGridCurrent(inputDataGridReadData, _GridSettings.CustomFilterValue);
-                if (_GridSettings.PageSize != inputDataGridReadData.PageSize)
-                { /// page sized changed so jump back to original page
-                    _GridSettings.CurrentPage = _dataGridParameters.CurrentPage = 1;  // force this
-                    _GridSettings.PageSize = inputDataGridReadData.PageSize;
-                    //                  await Reload();
-                }
-                await SetLoadStatus("Checking Woo status & loading Attributes");
-                try
+                if (!inputDataGridReadData.CancellationToken.IsCancellationRequested)
                 {
+                    DataGridParameters _dataGridParameters = _AttributeWooLinkedViewRepository.GetDataGridCurrent(inputDataGridReadData, _GridSettings.CustomFilterValue);
+                    if (_GridSettings.PageSize != inputDataGridReadData.PageSize)
+                    { /// page sized changed so jump back to original page
+                        _GridSettings.CurrentPage = _dataGridParameters.CurrentPage = 1;  // force this
+                        _GridSettings.PageSize = inputDataGridReadData.PageSize;
+                        //                  await Reload();
+                    }
+                    await SetLoadStatus("Checking Woo status & loading Attributes");
                     await SetLoadStatus("Checking Woo status");
-                    _GridSettings.WooIsActive = await _AttributeWooLinkedViewRepository.WooIsActive(_AppState);
+                    _GridSettings.WooIsActive = await _AttributeWooLinkedViewRepository.WooIsActiveAsync(_AppState);
                     await SetLoadStatus("Loading Attributes");
-                    await LoadItemAttributeLookupList(_dataGridParameters); 
+                    await LoadItemAttributeLookupList(_dataGridParameters);
+                    _Status = string.Empty;
                 }
-                catch (Exception ex)
-                {
-                    _Logger.LogError($"Error running async tasks: {ex.Message}");
-                    throw;
-                }
-                _Status = string.Empty;
             }
-            IsLoading = false;
+            catch (Exception ex)
+            {
+                _Logger.LogError($"Error running async tasks: {ex.Message}");
+                throw;
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
 
         private async Task LoadItemAttributeLookupList(DataGridParameters currentDataGridParameters) 
@@ -179,15 +182,18 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         }
         async Task ConfirmDeleteWooItem_Click(bool confirmClicked)
         {
+            IsLoading = true;
             // they want to delete the item to Woo 
             await _AttributeWooLinkedViewRepository.DeleteWooItemAsync(SelectedItemAttributeLookup.ItemAttributeLookupId, confirmClicked);
             //  regardless of how we got here they wanted to delete the original Attribute so delete it now, but only after Woo delete if they wanted it deleted.
             await _AttributeWooLinkedViewRepository.DeleteRowAsync(SelectedItemAttributeLookup);
+            IsLoading = false;
             await _DataGrid.Reload();
         }
         //protected async Task
         async Task ConfirmDelete_Click(ConfirmModalWithOption.ConfirmResults confirmationOption)
         {
+            IsLoading = true;
             if ((confirmationOption == ConfirmModalWithOption.ConfirmResults.confirm) || (confirmationOption == ConfirmModalWithOption.ConfirmResults.confirmWithOption))
             {
                 // if there is a WooAttribute and we have to delete it, then delete that first.
@@ -197,6 +203,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
                     await _AttributeWooLinkedViewRepository.DeleteRowAsync(SelectedItemAttributeLookup);
 
             }
+            IsLoading = false;
             await _DataGrid.Reload();
         }
         public async Task OnRowRemoved(ItemAttributeLookupView modelItem)
@@ -238,7 +245,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Info, $"Bulk Action applied to {done} items and not applied to {failed} items.");
             await _DataGrid.Reload();
         }
-        async Task Reload()
+        async Task ReloadAsync()
         {
             _GridSettings.CurrentPage = 1;
             await _DataGrid.Reload();

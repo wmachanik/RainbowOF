@@ -30,6 +30,9 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
 
         public bool GroupButtonEnabled = true;
         private bool IsLoading = false;
+        private bool ShowItemDetail = false;
+        private bool ShowReplaceItem = false;
+        private bool ShowWooLinked = true;
         private string _Status = "";
         DataGrid<ItemView> _DataGrid;
 
@@ -81,7 +84,8 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
                 try
                 {
                     await SetLoadStatus("Checking Woo status");
-                    _GridSettings.WooIsActive = await _ItemWooLinkedViewRepository.WooIsActive(_AppState);
+                    _GridSettings.WooIsActive = await _ItemWooLinkedViewRepository.WooIsActiveAsync(_AppState);
+                    ShowWooLinked = ShowWooLinked && _GridSettings.WooIsActive;  // show woo link is selected and woo is active.
                     await SetLoadStatus("Loading Attributes");
                     await LoadItemList(_dataGridParameters);
                 }

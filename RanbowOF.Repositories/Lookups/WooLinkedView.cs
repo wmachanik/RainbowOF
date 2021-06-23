@@ -40,7 +40,7 @@ namespace RainbowOF.Repositories.Lookups
             return new WooAPISettings(_wooSettings);
         }
 
-        public virtual async Task<bool> WooIsActive(ApplicationState currentApplicatioonState)
+        public virtual async Task<bool> WooIsActiveAsync(ApplicationState currentApplicatioonState)
         {
             if (!currentApplicatioonState.HaveCheckState)
             {
@@ -122,7 +122,7 @@ namespace RainbowOF.Repositories.Lookups
             throw new NotImplementedException();
         }
 
-        public virtual Task<bool> IsDuplicate(TEntity checkEntity)
+        public virtual Task<bool> IsDuplicateAsync(TEntity checkEntity)
         {
             _Logger.LogError($"IsDuplicate for Entity: {checkEntity.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
@@ -170,7 +170,7 @@ namespace RainbowOF.Repositories.Lookups
             throw new NotImplementedException();
         }
 
-        public virtual Task<int> UpdateWooItemAndMapping(TEntityView updateViewEntity)
+        public virtual Task<int> UpdateWooItemAndMappingAsync(TEntityView updateViewEntity)
         {
             _Logger.LogError($"UpdateWooItemAndMapping for Entity: {updateViewEntity.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();

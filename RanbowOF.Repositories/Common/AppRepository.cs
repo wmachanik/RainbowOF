@@ -231,8 +231,12 @@ namespace RainbowOF.Repositories.Common
 
         public TEntity FindFirst()
         {
+
             TEntity _entity = null;
             _Logger.LogDebug($"Finding First entity of type: {typeof(TEntity)}");
+
+            if (_AppUnitOfWork.DBTransactionIsStillRunning())
+                _Logger.LogDebug("Second transaction started before current transaction completed!");
             try
             {
                 _entity = _Table.FirstOrDefault();
@@ -250,6 +254,8 @@ namespace RainbowOF.Repositories.Common
         {
             TEntity _entity = null;
             _Logger.LogDebug($"Finding First {predicate.ToString()} entity of type: {typeof(TEntity)}");
+            if (_AppUnitOfWork.DBTransactionIsStillRunning())
+                _Logger.LogDebug("Second transaction started before current transaction completed!");
             try
             {
                 _entity = _Table.FirstOrDefault(predicate);
@@ -268,6 +274,8 @@ namespace RainbowOF.Repositories.Common
         {
             TEntity _entity = null;
             _Logger.LogDebug($"Finding First entity of type: {typeof(TEntity)}");
+            if (_AppUnitOfWork.DBTransactionIsStillRunning())
+                _Logger.LogDebug("Second transaction started before current transaction completed!");
             try
             {
                 _entity = await _Table.FirstOrDefaultAsync();
@@ -285,6 +293,8 @@ namespace RainbowOF.Repositories.Common
         {
             TEntity _entity = null;
             _Logger.LogDebug($"Finding First {predicate.ToString()} entity of type: {typeof(TEntity)}");
+            if (_AppUnitOfWork.DBTransactionIsStillRunning())
+                _Logger.LogDebug("Second transaction started before current transaction completed!");
             try
             {
                 _entity = await _Table.FirstOrDefaultAsync(predicate);
@@ -302,6 +312,8 @@ namespace RainbowOF.Repositories.Common
         public IEnumerable<TEntity> GetAll()
         {
             _Logger.LogDebug($"Getting all records in Table of type: {typeof(TEntity)}");
+            if (_AppUnitOfWork.DBTransactionIsStillRunning())
+                _Logger.LogDebug("Second transaction started before current transaction completed!");
             try
             {
                 return _Table.ToList();
@@ -318,6 +330,8 @@ namespace RainbowOF.Repositories.Common
         public async Task<IEnumerable<TEntity>> GetAllAsync()
         {
             _Logger.LogDebug($"Getting all records (async) in Table of type: {typeof(TEntity)}");
+            if (_AppUnitOfWork.DBTransactionIsStillRunning())
+                _Logger.LogDebug("Second transaction started before current transaction completed!");
             try
             {
                 var _result =  await _Table.ToListAsync();
@@ -335,6 +349,8 @@ namespace RainbowOF.Repositories.Common
         public async Task<IEnumerable<TEntity>> GetAllEagerAsync(params Expression<Func<TEntity, object>>[] properties)
         {
             _Logger.LogDebug($"Get By all eager loading (async) {properties.ToString()} from table of type: {typeof(TEntity)}");
+            if (_AppUnitOfWork.DBTransactionIsStillRunning())
+                _Logger.LogDebug("Second transaction started before current transaction completed!");
             if (properties == null)
                 throw new ArgumentNullException(nameof(properties));
 
@@ -360,6 +376,8 @@ namespace RainbowOF.Repositories.Common
         public async Task<IEnumerable<TEntity>> GetPagedEagerAsync(int startPage, int currentPageSize, params Expression<Func<TEntity, object>>[] properties)
         {
             _Logger.LogDebug($"Get By all eager loading (async) {properties.ToString()} from table of type: {typeof(TEntity)}");
+            if (_AppUnitOfWork.DBTransactionIsStillRunning())
+                _Logger.LogDebug("Second transaction started before current transaction completed!");
             if (properties == null)
                 throw new ArgumentNullException(nameof(properties));
 
@@ -385,6 +403,8 @@ namespace RainbowOF.Repositories.Common
         public IEnumerable<TEntity> GetBy(Expression<Func<TEntity, bool>> predicate)
         {
             _Logger.LogDebug($"Get By all {predicate.ToString()} from table of type: {typeof(TEntity)}");
+            if (_AppUnitOfWork.DBTransactionIsStillRunning())
+                _Logger.LogDebug("Second transaction started before current transaction completed!");
             try
             {
                 return _Table.Where(predicate).ToList();
@@ -402,6 +422,8 @@ namespace RainbowOF.Repositories.Common
         {
             IEnumerable<TEntity> _Rows = null;
             _Logger.LogDebug($"Get By all (async) {predicate.ToString()} from table of type: {typeof(TEntity)}");
+            if (_AppUnitOfWork.DBTransactionIsStillRunning())
+                _Logger.LogDebug("Second transaction started before current transaction completed!");
             try
             {
                 _Rows = await _Table.Where(predicate).ToListAsync();
@@ -420,6 +442,8 @@ namespace RainbowOF.Repositories.Common
         public TEntity GetById(object Id)
         {
             _Logger.LogDebug($"Get By Id (async) {Id.ToString()} from table of type: {typeof(TEntity)}");
+            if (_AppUnitOfWork.DBTransactionIsStillRunning())
+                _Logger.LogDebug("Second transaction started before current transaction completed!");
             try
             {
                 return _Table.Find(Id);
@@ -436,6 +460,8 @@ namespace RainbowOF.Repositories.Common
         public async Task<TEntity> GetByIdAsync(object Id)
         {
             _Logger.LogDebug($"Get By Id (async) {Id.ToString()} from table of type: {typeof(TEntity)}");
+            if (_AppUnitOfWork.DBTransactionIsStillRunning())
+                _Logger.LogDebug("Second transaction started before current transaction completed!");
             try
             {
                 return await _Table.FindAsync(Id);
