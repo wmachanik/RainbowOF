@@ -34,6 +34,7 @@ namespace RainbowOF.Data.SQL
         public virtual DbSet<ItemCategory> ItemCategories { get; set; }
         public virtual DbSet<ItemAttribute> ItemAttributes { get; set; }
         public virtual DbSet<ItemAttributeVariety> ItemAttributeVarieties { get; set; }
+        public virtual DbSet<ItemImage> ItemImages { get; set; }
         public virtual DbSet<ItemUoM> ItemUoMs { get; set; }
 
         //public DbSet<ItemUnit> ItemUnits { get; set; }

@@ -168,6 +168,22 @@
                         </DataGridColumn>
                         <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.SKU)" Caption="SKU" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,100}">
                         </DataGridColumn>
+                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ItemImages)" Caption="Image" Sortable="false" Editable="false" Filterable="false">
+                            <DisplayTemplate>
+                                @{
+                                    var rowItem = (context as ItemView);
+                                    if ((rowItem.ItemImages != null) && (rowItem.ItemImages.Count > 0))
+                                    {
+                                        var _itemImage = rowItem.ItemImages[0];
+                                        <Image Source="@_itemImage.ImageURL" style="width: 80px" Text="@_itemImage.Alt" />
+                                    }
+                                    else
+                                    {
+                                        <span>no image</span>
+                                    }
+                                }
+                            </DisplayTemplate>
+                        </DataGridColumn>
                         <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.IsEnabled)" Caption="Enabled?" Sortable="true" Editable="true">
                             <DisplayTemplate>
                                 @{
@@ -210,9 +226,9 @@
                                                 @(i < (rowCategories.Count - 1) ? ", " : ". ");
                                             }
                                             @*@if (attribItem.ItemAttributeVarietyLookups.Count == RainbowOF.Repositories.Common.AppUnitOfWork.CONST_MAX_DETAIL_PAGES)   //we  are at max so assume only max loaded
-                               {
-                               <Blazorise.Badge Color="Color.Info">Click to see all...</Blazorise.Badge>
-                            }*@
+                                                   {
+                                                   <Blazorise.Badge Color="Color.Info">Click to see all...</Blazorise.Badge>
+                                                }*@
                                         </span>
                                     }
                                 }
@@ -258,13 +274,13 @@
                                     <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
                                     <SelectItem TValue="Guid" Value="@Guid.NewGuid()">---New parent---</SelectItem>
                                     @*@foreach (var item in listOfItems)
-                    {
-                        // only add parents that are not this item
-                        if (catItem.ItemCategoryLookupId != item.Key)
-                        {
-                            <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
-                        }
-                    }*@
+                                        {
+                                            // only add parents that are not this item
+                                            if (catItem.ItemCategoryLookupId != item.Key)
+                                            {
+                                                <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
+                                            }
+                                        }*@
                                 </Select>
                             </EditTemplate>
                         </DataGridColumn>
@@ -275,13 +291,13 @@
                                     <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
                                     <SelectItem TValue="Guid" Value="@Guid.NewGuid()">---New parent---</SelectItem>
                                     @*@foreach (var item in listOfParents)
-                    {
-                        // only add parents that are not this item
-                        if (catItem.ItemCategoryLookupId != item.Key)
-                        {
-                            <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
-                        }
-                    }*@
+                                        {
+                                            // only add parents that are not this item
+                                            if (catItem.ItemCategoryLookupId != item.Key)
+                                            {
+                                                <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
+                                            }
+                                        }*@
                                 </Select>
                             </EditTemplate>
                         </DataGridColumn>
@@ -289,7 +305,7 @@
                         </DataGridColumn>
                         <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.BasePrice)" Caption="Base Price" Sortable="true" Editable="true" Filterable="true" DisplayFormat="{0:F}">
                         </DataGridColumn>
-                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ManageStock)" Caption="MngStk" Sortable="true" Editable="true" Filterable="true" >
+                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ManageStock)" Caption="MngStk" Sortable="true" Editable="true" Filterable="true">
                         </DataGridColumn>
                         <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.QtyInStock)" Caption="Stock Qty" Sortable="true" Editable="true" Filterable="true" DisplayFormat="{0:F}">
                         </DataGridColumn>

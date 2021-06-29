@@ -9,9 +9,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
+namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
 {
-    public partial class NewItemAttributeVarietyComponent : ComponentBase
+    public partial class NewItemAttributeVarietyLookupComponent : ComponentBase
     {
         [Inject]
         IAppUnitOfWork _AppUnitOfWork { get; set; }
@@ -20,9 +20,9 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         [Parameter]
         public bool AddItemToWoo { get; set; } = false;
 
-        private Modal NewAttributeVarietieModalRef;
+        private Modal NewAttributeVarietyModalRef;
 
-        public ItemAttributeVarietyLookupView _NewItemAttributeVarietyLookupView = new ItemAttributeVarietyLookupView();
+        public ItemAttributeVarietyLookupView _NewItemAttributeVarietyLookupView = new ();
 
         public void ShowModal(Guid parentItemAttributeId)
         {
@@ -36,7 +36,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
             _NewItemAttributeVarietyLookupView.BGColour = String.Empty;
             _NewItemAttributeVarietyLookupView.Symbol = String.Empty; 
             _NewItemAttributeVarietyLookupView.CanUpdateWooMap = AddItemToWoo ? true : null;  // if they want to add woo then do so here
-            NewAttributeVarietieModalRef.Show();
+            NewAttributeVarietyModalRef.Show();
         }
 
         private async Task HideModal(bool SaveClicked)
@@ -53,7 +53,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
                         PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Attribute variety: {_NewItemAttributeVarietyLookupView.VarietyName} added.");
                 }
             }
-            NewAttributeVarietieModalRef.Hide();
+            NewAttributeVarietyModalRef.Hide();
         }
     }
 }

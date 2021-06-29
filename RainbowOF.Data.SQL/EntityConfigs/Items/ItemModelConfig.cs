@@ -24,10 +24,13 @@ namespace RainbowOF.Datsa.SQL.EntityConfigs.Items
             // list mappings
             itemModelBuilder.HasMany(i => i.ItemCategories)
                 .WithOne()
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.ClientCascade);
             itemModelBuilder.HasMany(i => i.ItemAttributes)
                 .WithOne()
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.ClientCascade);
+            itemModelBuilder.HasMany(i => i.ItemImages)
+                .WithOne()
+                .OnDelete(DeleteBehavior.ClientCascade);
         }
     }
 }

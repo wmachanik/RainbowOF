@@ -46,6 +46,8 @@ namespace RainbowOF.Models.Items
         [ForeignKey("ItemId")]
         public virtual List<ItemAttribute> ItemAttributes { get; set; }
 
+        [ForeignKey("ItemId")]
+        public virtual List<ItemImage> ItemImages { get; set; }
         // may need these later
         //        public int? MerchantId { get; set; }
         //        [DisplayName("Qty/unit")]
@@ -76,7 +78,7 @@ namespace RainbowOF.Models.Items
         // old design
         //[ForeignKey("ItemId")]
         //public virtual List<ItemAttributeVariety> ItemAttributeVarieties { get; set; }
-        
+
     }
 
- }
+}

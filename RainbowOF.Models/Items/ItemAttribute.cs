@@ -17,7 +17,7 @@ namespace RainbowOF.Models.Items
         public Guid ItemAttributeId { get; set; }
         public Guid ItemId { get; set; }
         public Guid ItemAttributeLookupId { get; set; }
-        public bool IsUsedForVariableType { get; set; }
+        public bool IsUsedForItemVariety { get; set; }
         [ForeignKey("ItemAttributeLookupId")]
         public ItemAttributeLookup ItemAttributeDetail { get; set; }
         [ForeignKey("ItemAttributeId")]

@@ -62,7 +62,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         {
             Guid _ItemAttributeId = Guid.Empty;
             IAppRepository<ItemAttributeLookup> _ItemAttributeRepository = _AppUnitOfWork.Repository<ItemAttributeLookup>();
-            // check if the Attribute existgs
+            // check if the Attribute exists
             ItemAttributeLookup _ItemAttribute = await _ItemAttributeRepository.FindFirstAsync(ic => ic.ItemAttributeLookupId == pWooMappedItemAttributeId);
             if (_ItemAttribute != null)
             {
@@ -96,7 +96,8 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                 pWooAttributeMap = new WooProductAttributeMap
                 {
                     WooProductAttributeId = (int)pPA.id,
-                    ItemAttributeLookupId = _ItemAttributeId
+                    ItemAttributeLookupId = _ItemAttributeId,
+                    CanUpdate = true
                 };
             }
             else
@@ -110,20 +111,21 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         async Task<Guid> ImportAndMapAttributeData(ProductAttribute pPC)
         {
             Guid _ItemAttributeId = Guid.Empty;
-            // Get repostiory for each database we are accessing. ItemAttribute. WooProductAttributeMap & WooSyncLog
+            // Get repository for each database we are accessing. ItemAttribute. WooProductAttributeMap & WooSyncLog
             IAppRepository<WooProductAttributeMap> _WooAttributeMapRepository = _AppUnitOfWork.Repository<WooProductAttributeMap>();
 
             // Import the Attribute and set sync data
-            ///first check if it exists in the mapping, just incase there has been a name change
-            WooProductAttributeMap _WooAttributeMap = await _WooAttributeMapRepository.FindFirstAsync(wa => wa.WooProductAttributeId == pPC.id);
-            if (_WooAttributeMap != null)   // the id exists so update
+            ///first check if it exists in the mapping, just in case there has been a name change
+            WooProductAttributeMap _wooAttributeMap = await _WooAttributeMapRepository.FindFirstAsync(wa => wa.WooProductAttributeId == pPC.id);
+            if (_wooAttributeMap != null)   // the id exists so update
             {
-                _ItemAttributeId = await UpdateProductAttribute(pPC, _WooAttributeMap);
+                if (_wooAttributeMap.CanUpdate)
+                    _ItemAttributeId = await UpdateProductAttribute(pPC, _wooAttributeMap);
                 currImportCounters.TotalUpdated++;
             }
             else      // the id does not exists so add
             {
-                _ItemAttributeId = await AddProductAttribute(pPC, _WooAttributeMap);
+                _ItemAttributeId = await AddProductAttribute(pPC, _wooAttributeMap);
                 currImportCounters.TotalAdded++;
             }
 
@@ -134,14 +136,14 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         {
             return $"Product Attribute {pPA.name}, id: {pPA.id}, imported and Attribute Id is {pImportedId}";
         }
-        // 1. Cycle through catagories and add to database if they do not exists - storing a WooReultsDate so we can filter the results later - ?
+        // 1. Cycle through attributes and add to database if they do not exists - storing a WooReultsDate so we can filter the results later - ?
         // 3. Log each Attribute and what we do with t in the log and in the WooResults
         async Task<bool> ImportAttributeData(List<ProductAttribute> pWooProductAttributes)
         {
 
             currImportCounters.TotalImported = 0;
             Guid _IdImported = Guid.Empty;
-            // cycle through catagories and add to database if they do not exists
+            // cycle through attributes and add to database if they do not exists
             foreach (var pa in pWooProductAttributes)
             {
                 ImportingThis = $"Importing Attribute ({currImportCounters.TotalImported}/{currImportCounters.MaxRecs}): {pa.name}";
@@ -156,7 +158,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                 StateHasChanged();
                 await LogImport((int)pa.id, ProductAttributeToString(pa, _IdImported), Models.WooSections.ProductAttributes);
             }
-            return true; // if we get here no errors occured
+            return true; // if we get here no errors occurred
         }
 
         #endregion

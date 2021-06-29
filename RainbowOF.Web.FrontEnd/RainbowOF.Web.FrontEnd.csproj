@@ -25,6 +25,7 @@
     <Content Remove="Pages\Items\ItemAttributeVarieties_Old.razor" />
     <Content Remove="Pages\Items\ItemCategories-blazority.razor" />
     <Content Remove="Pages\Items\Items - Old.razor" />
+    <Content Remove="Pages\Test-attributes.razor" />
   </ItemGroup>
 
   <ItemGroup>
@@ -63,6 +64,7 @@
   <ItemGroup>
     <Folder Include="Data\" />
     <Folder Include="log\" />
+    <Folder Include="Pages\ChildComponents\Items\" />
   </ItemGroup>
 
     <!-- blazorise stufff 

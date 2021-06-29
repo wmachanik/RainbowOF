@@ -8,9 +8,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
+namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
 {
-    public partial class UoMSelecteListComponent : ComponentBase
+    public partial class UoMLookupSelectListComponent : ComponentBase
     {
         [Inject]
         IAppUnitOfWork _AppUnitOfWork { get; set; }
@@ -22,7 +22,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         public EventCallback<Guid> UoMIdChangedEvent { get; set; }
 
 //        private bool IsUoMTableChecked = false;
-        private NewUoMComponent NewUoMComponentRef;
+        private NewUoMLookupComponent NewUoMComponentRef;
         private Guid _SelectedUoMId;
         private Dictionary<Guid, string> _ListOfUoMSymbols = null;
 

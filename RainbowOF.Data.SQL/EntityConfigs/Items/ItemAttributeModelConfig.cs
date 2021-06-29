@@ -18,7 +18,7 @@ namespace RainbowOF.Data.SQL.EntityConfigs.Items
                 .OnDelete(DeleteBehavior.NoAction);
             itemAttributeModelBuilder.HasMany(aia => aia.ItemAttributeVarieties)
                 .WithOne()
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.ClientCascade);
             //itemAttributeModelBuilder.HasIndex(i => i.SKU)
             //    
         }

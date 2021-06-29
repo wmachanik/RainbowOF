@@ -8,9 +8,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
+namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
 {
-    public partial class NewUoMComponent : ComponentBase
+    public partial class NewUoMLookupComponent : ComponentBase
     {
         [Inject]
         IAppUnitOfWork _AppUnitOfWork { get; set; }

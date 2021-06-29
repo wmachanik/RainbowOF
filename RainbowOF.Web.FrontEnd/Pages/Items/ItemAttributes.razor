@@ -178,7 +178,7 @@
                                     var attribItem = (context as ItemAttributeLookupView);
                                     @if ((attribItem.ItemAttributeVarietyLookups == null) || (attribItem.ItemAttributeVarietyLookups.Count == 0))   // no variety exists so ask if they want to add one
                                     {
-                                        <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items.NewItemAttributeVarietyComponent @ref="@NewAttributeVariety" PopUpRef="_GridSettings.PopUpRef" AddItemToWoo="_GridSettings.WooIsActive" />
+                                        <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups.NewItemAttributeVarietyLookupComponent @ref="@NewAttributeVariety" PopUpRef="_GridSettings.PopUpRef" AddItemToWoo="_GridSettings.WooIsActive" />
                                         <Button Color="Color.Primary" Clicked="@(() => NewAttributeVariety.ShowModal(attribItem.ItemAttributeLookupId))">
                                             Add Variety
                                         </Button>
@@ -334,7 +334,7 @@
                     <DetailRowTemplate>
                         @{
                             var thisAttribParentId = (context as ItemAttributeLookupView).ItemAttributeLookupId;
-                            <ItemAttributeVarietiesComponent ParentItemAttributeLookupId="thisAttribParentId" IsSubGrid="true" />
+                            <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups.ItemAttributeVarietiesLookupComponent ParentItemAttributeLookupId="thisAttribParentId" IsSubGrid="true" />
                         }
                     </DetailRowTemplate>
                     <PopupTitleTemplate>

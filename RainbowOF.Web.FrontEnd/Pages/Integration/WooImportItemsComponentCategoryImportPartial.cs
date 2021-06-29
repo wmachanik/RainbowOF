@@ -118,7 +118,6 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         {
             Guid _itemCategoryLookupId = Guid.Empty;
             IAppRepository<WooCategoryMap> _wooCategoryMapRepository = _AppUnitOfWork.Repository<WooCategoryMap>();
-
             // copy data across
             targetWooCategoryMap.WooCategoryName = updatedPC.name;
             targetWooCategoryMap.WooCategorySlug = updatedPC.slug;
@@ -150,7 +149,8 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                     WooCategorySlug = newPC.slug,
                     WooCategoryParentId = (int)newPC.parent,
                     ItemCategoryLookupId = _itemCategoryLookupId,
-                    WooCategoryId = (int)newPC.id
+                    WooCategoryId = (int)newPC.id,
+                    CanUpdate = true
                 };
                 //else  was check if woomap was null
                 //{
@@ -180,7 +180,8 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             WooCategoryMap _wooCategoryMap = await _wooCategoryMapRepository.FindFirstAsync(wpc => wpc.WooCategoryId == sourcePC.id);
             if (_wooCategoryMap != null)                  // the id exists so update
             {
-                _itemCategoryLookupId = await UpdateProductCategory(sourcePC, _wooCategoryMap, sourceCategoriesWithParents);
+                if (_wooCategoryMap.CanUpdate)
+                  _itemCategoryLookupId = await UpdateProductCategory(sourcePC, _wooCategoryMap, sourceCategoriesWithParents);
                 currImportCounters.TotalUpdated++;
             }
             else                  // the id does not exists so add

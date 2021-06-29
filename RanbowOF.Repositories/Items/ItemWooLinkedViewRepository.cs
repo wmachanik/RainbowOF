@@ -198,7 +198,7 @@ namespace RainbowOF.Repositories.Items
                     ReplacementItem = entity.ReplacementItem,
                     ItemCategories = entity.ItemCategories,
                     ItemAttributes = entity.ItemAttributes,
-                    //ItemAttributeVarieties = entity.ItemAttributeVarieties,
+                    ItemImages = entity.ItemImages,
                     SortOrder = entity.SortOrder,
                     BasePrice = entity.BasePrice,
                     ManageStock = entity.ManageStock,

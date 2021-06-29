@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RainbowOF.Data.SQL;
 
 namespace RainbowOF.Data.SQL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210624094752_AddImageSettingsToItem")]
+    partial class AddImageSettingsToItem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -626,7 +628,7 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.HasOne("RainbowOF.Models.Items.Item", null)
                         .WithMany("ItemAttributes")
                         .HasForeignKey("ItemId")
-                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("ItemAttributeDetail");
@@ -637,7 +639,7 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.HasOne("RainbowOF.Models.Items.ItemAttribute", null)
                         .WithMany("ItemAttributeVarieties")
                         .HasForeignKey("ItemAttributeId")
-                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("RainbowOF.Models.Lookups.ItemAttributeVarietyLookup", "ItemAttributeVarietyLookupDetail")
@@ -667,7 +669,7 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.HasOne("RainbowOF.Models.Items.Item", null)
                         .WithMany("ItemCategories")
                         .HasForeignKey("ItemId")
-                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("ItemCategoryDetail");
@@ -678,7 +680,7 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.HasOne("RainbowOF.Models.Items.Item", null)
                         .WithMany("ItemImages")
                         .HasForeignKey("ItemId")
-                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 

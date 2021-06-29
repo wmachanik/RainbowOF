@@ -147,7 +147,8 @@ namespace RainbowOF.Repositories.Items
                         .ThenInclude(itmAtts => itmAtts.ItemAttributeVarieties)
                         .ThenInclude(itmAttVars => itmAttVars.ItemAttributeVarietyLookupDetail)
                     .Include(itm => itm.ItemAttributes)
-                        .ThenInclude(itmAtts => itmAtts.ItemAttributeDetail);
+                        .ThenInclude(itmAtts => itmAtts.ItemAttributeDetail)
+                    .Include(itm => itm.ItemImages);
                 //now add the order by expressions
                 if ((_orderByExpressions != null) && (_orderByExpressions.Count > 0))
                 {
@@ -227,6 +228,7 @@ namespace RainbowOF.Repositories.Items
                     .Include(itm => itm.ItemAttributes)
                         .ThenInclude(itmAtts => itmAtts.ItemAttributeVarieties)
                         .ThenInclude(itmAttVars => itmAttVars.ItemAttributeVarietyLookupDetail)
+                    .Include(itm => itm.ItemImages)
                     .FirstOrDefaultAsync(predicate);
             }
             catch (Exception ex)
@@ -241,8 +243,7 @@ namespace RainbowOF.Repositories.Items
 
         public async Task<Item> FindFirstItemBySKU(string sourceSKU)
         {
-            return await FindFirstAsync(i => i.SKU == sourceSKU);
-            
+            return await FindFirstAsync(i => i.SKU == sourceSKU);            
         }
 
         public async Task<int> AddItem(Item newItem)

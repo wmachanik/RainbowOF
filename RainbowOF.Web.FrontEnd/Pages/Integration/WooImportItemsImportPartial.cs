@@ -53,6 +53,31 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             currItem.BasePrice = Convert.ToDecimal(sourceWooProd.price == null ? 0.0 : sourceWooProd.price); // (currWooProd.price == null) ? 0 :(decimal)currWooProd.price;
             currItem.ManageStock = Convert.ToBoolean(sourceWooProd.manage_stock?? false);
             currItem.QtyInStock = Convert.ToInt32(sourceWooProd.stock_quantity?? 0);
+            // copy the image data across
+            if ((sourceWooProd.images != null) && (sourceWooProd.images.Count > 0))
+            {
+                if (currItem.ItemImages == null)
+                    currItem.ItemImages = new();
+                // only add if it does not exist
+                bool isPrimaryImage = true;
+                foreach (var srcImg in sourceWooProd.images)
+                {
+                    if (!currItem.ItemImages.Exists(tgtImg => tgtImg.ImageURL == srcImg.src))
+                    {
+                        // add this url and associated item as it does not exist
+                        currItem.ItemImages.Add(new ItemImage
+                        {
+                            IsPrimary = isPrimaryImage,
+                            Name = srcImg.name,
+                            Alt = srcImg.alt,
+                            ImageURL = srcImg.src,
+                            ItemId = currItem.ItemId,     ///?? is this correct?
+                        }
+                        );
+                    }
+                    isPrimaryImage = false;  // the first one is assumed to be the primary image
+                }
+            }
 
             if ((sourceWooProd.parent_id != null) && (sourceWooProd.parent_id > 0))
                 currWooProductsWithParents.Add(new WooItemWithParent
@@ -135,7 +160,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                 {
                     // this attribute exists so just update it
                     ItemAttribute _itemAttribute = currItem.ItemAttributes.Find(ic => ic.ItemAttributeLookupId == _wooProductAttributeMap.ItemAttributeLookupId);
-                    _itemAttribute.IsUsedForVariableType = prodAttrib.variation == null ? false : (bool)prodAttrib.variation;  // the only thing that we can really update
+                    _itemAttribute.IsUsedForItemVariety = prodAttrib.variation == null ? false : (bool)prodAttrib.variation;  // the only thing that we can really update
                 }
                 else
                 {
@@ -144,7 +169,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                     // create a new attribute and update the ItemDetails. Do not change Item Id as then EF core knows it is a new record.
                     currItem.ItemAttributes.Add(new ItemAttribute
                     {
-                        IsUsedForVariableType = prodAttrib.variation == null ? false : (bool)prodAttrib.variation,
+                        IsUsedForItemVariety = prodAttrib.variation == null ? false : (bool)prodAttrib.variation,
                         ItemAttributeLookupId = _wooProductAttributeMap.ItemAttributeLookupId,
                     });
                 }

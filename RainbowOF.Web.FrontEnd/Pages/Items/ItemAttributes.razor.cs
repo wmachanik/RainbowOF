@@ -11,7 +11,7 @@ using RainbowOF.Tools;
 using RainbowOF.Tools.Services;
 using RainbowOF.ViewModels.Common;
 using RainbowOF.ViewModels.Lookups;
-using RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items;
+using RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,8 +28,6 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         // variables / Models
         public List<ItemAttributeLookupView> dataModels = null;
         public ItemAttributeLookupView seletectedItem = null;
-        //public const string disabledStr = "N";
-        //public const string enabledStr = "Y";
 
         public bool GroupButtonEnabled = true;
         private bool IsLoading = false;
@@ -255,9 +253,9 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         // ------------------------------------
         // All the Attribute Variety stuff
         // ------------------------------------
-        private NewItemAttributeVarietyComponent NewAttributeVariety;
+        private NewItemAttributeVarietyLookupComponent NewAttributeVariety;
 
-//            Modal NewAttributeVarietieModalRef;
+//            Modal NewAttributeVarietyModalRef;
         //        Deprecated
         // ------------------------------------
         //bool OnCustomFilter(ItemAttributeLookupView model)

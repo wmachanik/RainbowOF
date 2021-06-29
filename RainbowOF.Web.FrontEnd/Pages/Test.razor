@@ -1,7 +1,8 @@
 ﻿@page "/Test"
 @using RainbowOF.Repositories.Common
-@using RainbowOF.Models.Items
+@using RainbowOF.Models.Lookups
 @using Microsoft.EntityFrameworkCore
+
 <Row>
     <Column>
         <Card Margin="Margin.Is4.OnY">
@@ -10,68 +11,86 @@
             </CardHeader>
             <CardBody>
                 <Fields>
-                    @*<Field>
-                            <FieldLabel>
-                                <Tooltip Text="Tool tip">
-                                    <Icon Name="IconName.QuestionCircle" />
-                                </Tooltip>
-                            </FieldLabel>
-                            <FieldBody>
-                                <Check @bind-Checked="@editable">Check Box</Check>
-                            </FieldBody>
-                        </Field>*@
                     <Field>
                         <FieldLabel>
-                            Items:
+                            Categories: (loaded: @(ParentItemCategories == null ? 0 : ParentItemCategories.Count ))
                         </FieldLabel>
                         <FieldBody>
-                            @if (itemsList == null)
-                            {
-                                <Badge Color="Color.Secondary" Class="alert-info">Loading...</Badge>
-                            }
-                            else
-                            {
-                                <table>
-                                    <tr>
-                                        <th>Item</th>
-                                        <th>Attributes</th>
-                                    </tr>
-                                    @foreach (var entity in itemsList)
+                            <DataGrid TItem="ItemCategoryLookup" Data="@ParentItemCategories"  
+                                      Striped="true"
+                                      Hoverable="true"
+                                      Responsive="true"
+                                      Bordered="true"
+                                      @bind-SelectedRow="@seletectedItemCategory"
+                                      DetailRowTrigger="@((item)=>((item.ItemCategoryLookupId == seletectedItemCategory?.ItemCategoryLookupId)))"
+                                      Padding="Padding.Is0">
+                                <EmptyTemplate>
+                                    @if (ParentItemCategories == null)
                                     {
-                                        <tr>
-                                            <td>@entity.ItemName</td>
-                                            <td>
-                                                @if (entity.ItemAttributes == null)
+                                    <span>...</span>
+                                    }
+                                </EmptyTemplate>
+                                <LoadingTemplate>
+                                    <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                                        <Column>
+                                            <span class="alert-info">Loading...</span>
+                                        </Column>
+                                    </Row>
+                                </LoadingTemplate>
+                                <DataGridColumns>
+                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.CategoryName)" TextAlignment="TextAlignment.Center">
+                                        <DisplayTemplate>
+                                            Cat:
+                                            <bold>@context.CategoryName</bold>
+                                        </DisplayTemplate>
+                                    </DataGridColumn>
+                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.UsedForPrediction)" TextAlignment="TextAlignment.Center">
+                                    </DataGridColumn>
+                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.Notes)" TextAlignment="TextAlignment.Center">
+                                    </DataGridColumn>
+                                </DataGridColumns>
+                                <DetailRowTemplate>
+                                    @{
+                                        var ParentId = (context as ItemCategoryLookup).ItemCategoryLookupId;
+
+                                        var ChildData = GetChildItems(ParentId).Result;
+
+                                        <DataGrid TItem="ItemCategoryLookup" Data="@ChildData"
+                                                  Sortable="true" Editable="false"
+                                                  Striped="true"
+                                                  Hoverable="true"
+                                                  Responsive="true"
+                                                  EditMode="DataGridEditMode.Popup"
+                                                  TotalItems="ChildData.Count"
+                                                  Bordered="true"
+                                                  UseInternalEditing="true"
+                                                  Padding="Padding.Is0">
+                                            <EmptyTemplate>
+                                                @if (ChildData == null)
                                                 {
-                                                    <Badge Color="Color.Warning" Class="alert-warning">No Attributes!</Badge>
+                                                    <span>...</span>
                                                 }
-                                                else
-                                                {
-                                                    @foreach (var attr in entity.ItemAttributes)
-                                                    {
-                                                        @($"{attr.ItemAttributeDetail.AttributeName}: ")
-                                                        {
-                                                            <span class="text-wrap">
-                                                                [@if (attr.ItemAttributeVarieties == null)
-                                                                {
-                                                                    @($"none")
-                                                                }
-                                                                else
-                                                                    @for (int j = 0; j < attr.ItemAttributeVarieties.Count; j++) // (var attVar in rowAttributes[i].ItemAttributeVarieties)
-                                                                    {
-                                                                        @($"{attr.ItemAttributeVarieties[j].ItemAttributeVarietyLookupDetail.VarietyName}")
-                                                                        @(j < (attr.ItemAttributeVarieties.Count - 1) ? ", " : "");
-                                                                    }]
-                                                            </span>
-                                                        }
-                                                    }
-                                                }
-                                            </td>
-                                        </tr>
+                                            </EmptyTemplate>
+                                            <LoadingTemplate>
+                                                <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                                                    <Column>
+                                                        <span class="alert-info">Loading...</span>
+                                                    </Column>
+                                                </Row>
+                                            </LoadingTemplate>
+                                            <DataGridColumns>
+                                                <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.CategoryName)" TextAlignment="TextAlignment.Center" Context="ChildData">
+                                                </DataGridColumn>
+                                                <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.UsedForPrediction)" TextAlignment="TextAlignment.Center" Context="ChildData">
+                                                </DataGridColumn>
+                                                <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.Notes)" TextAlignment="TextAlignment.Center" Context="ChildData">
+                                                </DataGridColumn>
+                                            </DataGridColumns>
+                                        </DataGrid>
 
                                     }
-                                </table>
-                            }
+                                </DetailRowTemplate>
+                            </DataGrid>
                         </FieldBody>
                     </Field>
                     <!--<Field>
@@ -104,7 +123,10 @@
 {
     bool editable = true;
     string customText = string.Empty;
-    List<Item> itemsList;
+
+    List<ItemCategoryLookup> ParentItemCategories;
+
+    ItemCategoryLookup seletectedItemCategory;
 
     [Inject]
     IAppUnitOfWork _appUnitOfWork { get; set; }
@@ -113,21 +135,41 @@
     {
         base.OnInitialized();
 
-        var repo = _appUnitOfWork.itemRepository();
-        var itemTable = repo.GetAppDbContext();
+        var repo = _appUnitOfWork.itemCategoryLookupRepository();
 
-        //var query = itemTable as IQueryable<Item>;
+        var _context = repo.GetAppDbContext();
 
-        itemsList = await itemTable.Items
-            .Include(itm => itm.ItemAttributes)
-                .ThenInclude(itmAttr => itmAttr.ItemAttributeDetail)
-            .Include(itm => itm.ItemAttributes)
-                        .ThenInclude(itmAtts => itmAtts.ItemAttributeVarieties)
-                        .ThenInclude(itmAttVars => itmAttVars.ItemAttributeVarietyLookupDetail)
-            .ToListAsync();
+        var _task = _context.ItemCategoriesLookup.Where(icl => icl.ParentCategoryId == null);
 
-        //itemsList = (await repo.GetAllEagerAsync((itm => itm.ItemAttributes))).ToList();
+        ParentItemCategories = (await _task.ToListAsync());
 
 
+//!!! why can we not call async? do we need to have a custom async call?
+        await InvokeAsync(StateHasChanged);
+
+        //var itemTable = repo.GetAppDbContext();
+
+        ////var query = itemTable as IQueryable<Item>;
+
+        //itemsList = await itemTable.Items
+        //    .Include(itm => itm.ItemAttributes)
+        //        .ThenInclude(itmAttr => itmAttr.ItemAttributeDetail)
+        //    .Include(itm => itm.ItemAttributes)
+        //                .ThenInclude(itmAtts => itmAtts.ItemAttributeVarieties)
+        //                .ThenInclude(itmAttVars => itmAttVars.ItemAttributeVarietyLookupDetail)
+        //    .ToListAsync();
+
+        ////itemsList = (await repo.GetAllEagerAsync((itm => itm.ItemAttributes))).ToList();
+    }
+
+    async Task<List<ItemCategoryLookup>> GetChildItems(Guid soruceParentId)
+    {
+        List<ItemCategoryLookup> childenCategoryLookups = null;
+
+        var repo = _appUnitOfWork.itemCategoryLookupRepository();
+
+        childenCategoryLookups = (await repo.GetAllEagerAsync(icl => icl.ParentCategoryId.Equals(soruceParentId))).ToList();
+
+        return childenCategoryLookups;
     }
 }

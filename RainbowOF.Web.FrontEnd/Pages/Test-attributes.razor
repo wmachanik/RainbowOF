@@ -1,0 +1,133 @@
+﻿@page "/Test"
+@using RainbowOF.Repositories.Common
+@using RainbowOF.Models.Items
+@using Microsoft.EntityFrameworkCore
+<Row>
+    <Column>
+        <Card Margin="Margin.Is4.OnY">
+            <CardHeader>
+                <CardTitle>Tests</CardTitle>
+            </CardHeader>
+            <CardBody>
+                <Fields>
+                    @*<Field>
+                            <FieldLabel>
+                                <Tooltip Text="Tool tip">
+                                    <Icon Name="IconName.QuestionCircle" />
+                                </Tooltip>
+                            </FieldLabel>
+                            <FieldBody>
+                                <Check @bind-Checked="@editable">Check Box</Check>
+                            </FieldBody>
+                        </Field>*@
+                    <Field>
+                        <FieldLabel>
+                            Items:
+                        </FieldLabel>
+                        <FieldBody>
+                            @if (itemsList == null)
+                            {
+                                <Badge Color="Color.Secondary" Class="alert-info">Loading...</Badge>
+                            }
+                            else
+                            {
+                                <table>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th>Attributes</th>
+                                    </tr>
+                                    @foreach (var entity in itemsList)
+                                    {
+                                        <tr>
+                                            <td>@entity.ItemName</td>
+                                            <td>
+                                                @if (entity.ItemAttributes == null)
+                                                {
+                                                    <Badge Color="Color.Warning" Class="alert-warning">No Attributes!</Badge>
+                                                }
+                                                else
+                                                {
+                                                    @foreach (var attr in entity.ItemAttributes)
+                                                    {
+                                                        @($"{attr.ItemAttributeDetail.AttributeName}: ")
+                                                        {
+                                                            <span class="text-wrap">
+                                                                [@if (attr.ItemAttributeVarieties == null)
+                                                                {
+                                                                    @($"none")
+                                                                }
+                                                                else
+                                                                    @for (int j = 0; j < attr.ItemAttributeVarieties.Count; j++) // (var attVar in rowAttributes[i].ItemAttributeVarieties)
+                                                                    {
+                                                                        @($"{attr.ItemAttributeVarieties[j].ItemAttributeVarietyLookupDetail.VarietyName}")
+                                                                        @(j < (attr.ItemAttributeVarieties.Count - 1) ? ", " : "");
+                                                                    }]
+                                                            </span>
+                                                        }
+                                                    }
+                                                }
+                                            </td>
+                                        </tr>
+
+                                    }
+                                </table>
+                            }
+                        </FieldBody>
+                    </Field>
+                    <!--<Field>
+                        <FieldLabel>
+                            Selection mode
+                        </FieldLabel>
+                        <FieldBody>-->
+                    @*<Select @bind-SelectedValue="@selectionMode">
+                            <SelectItem Value="@DataGridSelectionMode.Single">Single</SelectItem>
+                            <SelectItem Value="@DataGridSelectionMode.Multiple">Multiple</SelectItem>
+                        </Select>*@
+                    <!--</FieldBody>
+                    </Field>
+                    <Field>
+                        <FieldLabel>
+                            Custom Text
+                        </FieldLabel>
+                        <FieldBody>
+                            <TextEdit @bind-Text="@customText" />
+                        </FieldBody>
+                    </Field>-->
+                </Fields>
+            </CardBody>
+        </Card>
+    </Column>
+</Row>
+
+
+@code
+{
+    bool editable = true;
+    string customText = string.Empty;
+    List<Item> itemsList;
+
+    [Inject]
+    IAppUnitOfWork _appUnitOfWork { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+
+        var repo = _appUnitOfWork.itemRepository();
+        var itemTable = repo.GetAppDbContext();
+
+        //var query = itemTable as IQueryable<Item>;
+
+        itemsList = await itemTable.Items
+            .Include(itm => itm.ItemAttributes)
+                .ThenInclude(itmAttr => itmAttr.ItemAttributeDetail)
+            .Include(itm => itm.ItemAttributes)
+                        .ThenInclude(itmAtts => itmAtts.ItemAttributeVarieties)
+                        .ThenInclude(itmAttVars => itmAttVars.ItemAttributeVarietyLookupDetail)
+            .ToListAsync();
+
+        //itemsList = (await repo.GetAllEagerAsync((itm => itm.ItemAttributes))).ToList();
+
+
+    }
+}

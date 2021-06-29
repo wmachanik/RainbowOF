@@ -9,7 +9,7 @@
         IAppUnitOfWork _appUnitOfWork
     -------------------------------------------------------------
 *@
-<Modal @ref="NewAttributeVarietieModalRef">
+<Modal @ref="NewAttributeVarietyModalRef">
     <ModalContent Size="Blazorise.ModalSize.Default" Centered="true">
         <ModalHeader>
             <ModalTitle>
@@ -25,7 +25,7 @@
             </Field>
             <Field>
                 <FieldLabel>UoM</FieldLabel>
-                <UoMSelecteListComponent PopUpRef="PopUpRef" SourceUoMId="_NewItemAttributeVarietyLookupView.UoMId" UoMIdChangedEvent="@((u) => _NewItemAttributeVarietyLookupView.UoMId = u)"></UoMSelecteListComponent>
+                <UoMLookupSelectListComponent PopUpRef="PopUpRef" SourceUoMId="_NewItemAttributeVarietyLookupView.UoMId" UoMIdChangedEvent="@((u) => _NewItemAttributeVarietyLookupView.UoMId = u)"></UoMLookupSelectListComponent>
             </Field>
             <Field>
                 <FieldLabel>Sort Order</FieldLabel>

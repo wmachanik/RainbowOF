@@ -2,6 +2,7 @@
 using RainbowOF.Models.Lookups;
 using RainbowOF.Repositories.Common;
 using RainbowOF.ViewModels.Lookups;
+using RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
     public partial class ItemAttributeVarieties : ComponentBase
     {
         public Guid AttributeParentId = Guid.Empty;
-        public ItemAttributeVarietiesComponent _VarietiesComponent;
+        public ItemAttributeVarietiesLookupComponent _VarietiesComponent;
 
         public Dictionary<Guid, string> _ItemAttributes = null;
         [Inject]

@@ -10,7 +10,7 @@ using RainbowOF.Tools;
 using RainbowOF.Tools.Services;
 using RainbowOF.ViewModels.Common;
 using RainbowOF.ViewModels.Items;
-using RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items;
+using RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups;
 using System;
 using System.Collections.Generic;
 using System.Linq;

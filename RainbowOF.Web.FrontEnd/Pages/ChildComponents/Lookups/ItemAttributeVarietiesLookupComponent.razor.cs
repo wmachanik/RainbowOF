@@ -11,15 +11,15 @@ using RainbowOF.Tools;
 using RainbowOF.Tools.Services;
 using RainbowOF.ViewModels.Common;
 using RainbowOF.ViewModels.Lookups;
-using RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items;
+using RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace RainbowOF.Web.FrontEnd.Pages.Items
+namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
 {
-    public partial class ItemAttributeVarietiesComponent : ComponentBase
+    public partial class ItemAttributeVarietiesLookupComponent : ComponentBase
     {
         // Interface Stuff
         public GridSettings _VarietiesGridSettings = new();
@@ -28,8 +28,6 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         // variables / Models
         public List<ItemAttributeVarietyLookupView> VarietyDataModels = null;
         public ItemAttributeVarietyLookupView seletectedVarietyItem = null;
-        //public const string disabledStr = "N";
-        //public const string enabledStr = "Y";
 
         public bool GroupButtonEnabled = true;
         private bool IsLoading = false;
