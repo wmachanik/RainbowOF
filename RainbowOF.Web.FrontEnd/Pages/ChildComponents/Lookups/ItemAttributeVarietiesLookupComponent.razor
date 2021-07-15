@@ -268,13 +268,13 @@
                                 }
                             </EditTemplate>
                         </DataGridColumn>
-                        <DataGridColumn TItem="ItemAttributeVarietyLookupView" Field="@nameof(ItemAttributeLookupView.CanUpdateWooMap)" Context="VarietyDataModels" Caption="Woo Linked" Sortable="false" Filterable="false" Editable="@(_VarietiesGridSettings.WooIsActive)">
+                        <DataGridColumn TItem="ItemAttributeVarietyLookupView" Field="@nameof(ItemAttributeLookupView.CanUpdateECommerceMap)" Context="VarietyDataModels" Caption="Woo Linked" Sortable="false" Filterable="false" Editable="@(_VarietiesGridSettings.WooIsActive)">
                             <DisplayTemplate>
                                 @{
                                     if (_VarietiesGridSettings.WooIsActive)
                                     {
                                         var wooItem = (VarietyDataModels as ItemAttributeVarietyLookupView);
-                                        @((wooItem.CanUpdateWooMap == null) ? "n/a" : ((bool)wooItem.CanUpdateWooMap ? "yes" : "no"));
+                                        @((wooItem.CanUpdateECommerceMap == null) ? "n/a" : ((bool)wooItem.CanUpdateECommerceMap ? "yes" : "no"));
                                     }
                                     else
                                     {
@@ -380,7 +380,7 @@
             </Field>
             @*<Field>
                 <FieldLabel>Add To Woo</FieldLabel>
-                <Blazorise.Check Checked="@_NewItemAttributeVarietyLookupView.CanUpdateWooMap"></Blazorise.Check>
+                <Blazorise.Check Checked="@_NewItemAttributeVarietyLookupView.CanUpdateECommerceMap"></Blazorise.Check>
             </Field>*@
             <Field>
                 <FieldLabel>Notes</FieldLabel>

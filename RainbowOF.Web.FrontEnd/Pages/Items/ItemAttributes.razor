@@ -229,13 +229,13 @@
                                 }
                             </EditTemplate>
                         </DataGridColumn>
-                        <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.CanUpdateWooMap)" Caption="Woo Linked" Sortable="false" Filterable="false" Editable="@(_GridSettings.WooIsActive)">
+                        <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.CanUpdateECommerceMap)" Caption="Woo Linked" Sortable="false" Filterable="false" Editable="@(_GridSettings.WooIsActive)">
                             <DisplayTemplate>
                                 @{
                                     if (_GridSettings.WooIsActive)
                                     {
                                         var wooItem = (context as ItemAttributeLookupView);
-                                        @((wooItem.CanUpdateWooMap == null) ? "n/a" : ((bool)wooItem.CanUpdateWooMap ? "yes" : "no"));
+                                        @((wooItem.CanUpdateECommerceMap == null) ? "n/a" : ((bool)wooItem.CanUpdateECommerceMap ? "yes" : "no"));
                                     }
                                     else
                                     {

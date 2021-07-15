@@ -1,0 +1,459 @@
+﻿@page "/itemedit/{id}"
+@using RainbowOF.Models.Items
+@using RainbowOF.Models.Lookups
+
+<h2>Item Edit</h2>
+
+@if (ItemEditting == null)
+{
+    <Badge Class="alert-info" Pill="true">Loading item...</Badge>
+}
+else
+{
+    <Validations Mode="ValidationMode.Manual" Model="@ItemEditting">
+        <Row>
+            <Column ColumnSize="ColumnSize.IsFull.OnMobile.IsHalf.OnTablet">
+                <Card Margin="Margin.Is4.OnY">
+                    <CardHeader>
+                        <CardTitle>@ItemEditting.ItemName Details</CardTitle>
+                    </CardHeader>
+                    <CardBody>
+                        <Validation>
+                            <Field Horizontal="true">
+                                <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">SKU</FieldLabel>
+                                <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
+                                    <TextEdit Placeholder="Item Stock Id number" @bind-Text="@ItemEditting.SKU">
+                                        <Feedback>
+                                            <ValidationError />
+                                        </Feedback>
+                                    </TextEdit>
+                                </FieldBody>
+                            </Field>
+                        </Validation>
+                        <Validation>
+                            <Field Horizontal="true">
+                                <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Item</FieldLabel>
+                                <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
+                                    <TextEdit Placeholder="Item name" @bind-Text="@ItemEditting.ItemName">
+                                        <Feedback>
+                                            <ValidationError />
+                                        </Feedback>
+                                    </TextEdit>
+                                </FieldBody>
+                            </Field>
+                        </Validation>
+                        <Validation>
+                            <Field Horizontal="true">
+                                <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Item Enabled</FieldLabel>
+                                <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
+                                    <Check @bind-Checked="@ItemEditting.IsEnabled">
+                                        <ChildContent>
+                                            Enabled?
+                                        </ChildContent>
+                                        <Feedback>
+                                            <ValidationError />
+                                        </Feedback>
+                                    </Check>
+                                </FieldBody>
+                            </Field>
+                        </Validation>
+                        <Validation>
+                            <Field Horizontal="true">
+                                <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Item Details</FieldLabel>
+                                <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
+                                    <RichTextEdit @ref="richTextEditRef" Style="border: 1px solid" Theme="RichTextEditTheme.Snow" PlaceHolder="Item Detail" ContentChanged="OnContentChanged">
+                                        <Editor>
+                                            @((MarkupString)ItemEditting.ItemDetail)
+                                        </Editor>
+                                        <Toolbar>
+                                            <RichTextEditToolbarGroup>
+                                                <RichTextEditToolbarButton Action="RichTextEditAction.Bold" />
+                                                <RichTextEditToolbarButton Action="RichTextEditAction.Italic" />
+                                                <RichTextEditToolbarButton Action="RichTextEditAction.Underline" />
+                                                <RichTextEditToolbarButton Action="RichTextEditAction.Strike" />
+                                            </RichTextEditToolbarGroup>
+                                            <RichTextEditToolbarGroup>
+                                                <RichTextEditToolbarSelect Action="RichTextEditAction.Size">
+                                                    <RichTextEditToolbarSelectItem Value="small" />
+                                                    <RichTextEditToolbarSelectItem Selected="true" />
+                                                    <RichTextEditToolbarSelectItem Value="large" />
+                                                    <RichTextEditToolbarSelectItem Value="huge">Very Big</RichTextEditToolbarSelectItem>
+                                                </RichTextEditToolbarSelect>
+                                            </RichTextEditToolbarGroup>
+                                            <RichTextEditToolbarGroup>
+                                                <RichTextEditToolbarButton Action="RichTextEditAction.List" Value="ordered" />
+                                                <RichTextEditToolbarButton Action="RichTextEditAction.List" Value="bullet" />
+                                            </RichTextEditToolbarGroup>
+                                            <RichTextEditToolbarGroup>
+                                                <RichTextEditToolbarButton Action="RichTextEditAction.Blockquote" />
+                                                <RichTextEditToolbarButton Action="RichTextEditAction.CodeBlock" />
+                                            </RichTextEditToolbarGroup>
+                                            <RichTextEditToolbarGroup>
+                                                <RichTextEditToolbarButton Action="RichTextEditAction.Script" Value="sub" />
+                                                <RichTextEditToolbarButton Action="RichTextEditAction.Script" Value="super" />
+                                            </RichTextEditToolbarGroup>
+                                            <RichTextEditToolbarGroup>
+                                                <RichTextEditToolbarSelect Action="RichTextEditAction.Color" />
+                                                <RichTextEditToolbarSelect Action="RichTextEditAction.Background" />
+                                            </RichTextEditToolbarGroup>
+                                            <RichTextEditToolbarGroup>
+                                                <RichTextEditToolbarButton Action="RichTextEditAction.Link" />
+                                                <RichTextEditToolbarButton Action="RichTextEditAction.Clean" />
+                                            </RichTextEditToolbarGroup>
+                                            @*<RichTextEditToolbarGroup Float="Float.Right">
+                                                    <Button Class="btn-icon" Size="Size.ExtraSmall" onClick="window.open('https://www.quilljs.com/','quilljs')"><Icon Name="IconName.InfoCircle" /></Button>
+                                                    <Button Class="btn-icon" Size="Size.ExtraSmall" Clicked="@OnSave"><Icon Name="IconName.Save" /></Button>
+                                                </RichTextEditToolbarGroup>*@
+                                        </Toolbar>
+
+                                    </RichTextEdit>
+                                    @*<MemoEdit Placeholder="Item Details" @bind-Text="@ItemEditting.ItemDetail" Rows="4">
+                                            <Feedback>
+                                                <ValidationError />
+                                            </Feedback>
+                                        </MemoEdit>*@
+                                </FieldBody>
+                            </Field>
+                        </Validation>
+                        <Validation>
+                            <Field Horizontal="true">
+                                <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Item Abrv</FieldLabel>
+                                <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
+                                    <TextEdit Placeholder="Item Abreviation use for order fulfilment" @bind-Text="@ItemEditting.ItemAbbreviatedName">
+                                        <Feedback>
+                                            <ValidationError />
+                                        </Feedback>
+                                    </TextEdit>
+                                </FieldBody>
+                            </Field>
+                        </Validation>
+                        <Validation>
+                            <Field Horizontal="true">
+                                <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Sort Order</FieldLabel>
+                                <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
+                                    <NumericEdit TValue="int" Placeholder="Item sort order" @bind-Text="@ItemEditting.SortOrder">
+                                        <Feedback>
+                                            <ValidationError />
+                                        </Feedback>
+                                    </NumericEdit>
+                                </FieldBody>
+                            </Field>
+                        </Validation>
+                        <Validation>
+                            <Field Horizontal="true">
+                                <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Sync with Woo</FieldLabel>
+                                <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
+                                    <Check @bind-Checked="@ItemEditting.CanUpdateECommerceMap">
+                                        <ChildContent>
+                                            Sync with Woo?
+                                        </ChildContent>
+                                        <Feedback>
+                                            <ValidationError />
+                                        </Feedback>
+                                    </Check>
+                                </FieldBody>
+                            </Field>
+                        </Validation>
+                        <Validation>
+                            <Field Horizontal="true">
+                                <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Base Price</FieldLabel>
+                                <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
+                                    <NumericEdit TValue="decimal" Placeholder="Item's Base Price (standard price)" @bind-Text="@ItemEditting.BasePrice">
+                                        @*Pattern="{0:F}">*@
+                                        <Feedback>
+                                            <ValidationError />
+                                        </Feedback>
+                                    </NumericEdit>
+                                </FieldBody>
+                            </Field>
+                        </Validation>
+                        <Validation>
+                            <Field Horizontal="true">
+                                <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Manage Stock</FieldLabel>
+                                <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
+                                    <Check @bind-Checked="@ItemEditting.ManageStock">
+                                        <ChildContent>
+                                            Manage Stock?
+                                        </ChildContent>
+                                        <Feedback>
+                                            <ValidationError />
+                                        </Feedback>
+                                    </Check>
+                                </FieldBody>
+                            </Field>
+                        </Validation>
+                        <Validation>
+                            <Field Horizontal="true">
+                                <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Qty in Stock</FieldLabel>
+                                <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
+                                    <NumericEdit TValue="int" Placeholder="Qty of item in stock" @bind-Text="@ItemEditting.QtyInStock">
+                                        <Feedback>
+                                            <ValidationError />
+                                        </Feedback>
+                                    </NumericEdit>
+                                </FieldBody>
+                            </Field>
+                        </Validation>
+                    </CardBody>
+                </Card>
+            </Column>
+            <Column ColumnSize="ColumnSize.IsFull.OnMobile.IsHalf.OnTablet">
+                <Card Margin="Margin.Is4.OnY">
+                    <CardHeader>
+                        <CardTitle>More...</CardTitle>
+                    </CardHeader>
+                    <CardBody>
+                        <Blazorise.Accordion>
+                            <Blazorise.Collapse Visible="@collapseItemDetailsVisible">
+                                <Blazorise.CollapseHeader>
+                                    <Blazorise.Heading Size="Blazorise.HeadingSize.Is1" Margin="Blazorise.Margin.Is1">
+                                        <Blazorise.Button Clicked="@(()=>collapseItemDetailsVisible = !collapseItemDetailsVisible)">
+                                            Item Details &nbsp;&nbsp;
+                                            <Icon IconStyle="IconStyle.Solid" Name="@(collapseItemDetailsVisible ? IconName.AngleDown : IconName.AngleUp )" Padding="Padding.Is2.FromLeft" Float="Float.Right" />
+                                        </Blazorise.Button>
+                                    </Blazorise.Heading>
+                                </Blazorise.CollapseHeader>
+                                <Blazorise.CollapseBody>
+                                    <Validation>
+                                        <Field Horizontal="true">
+                                            <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Primary Category</FieldLabel>
+                                            <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
+                                                <Select TValue="Guid" SelectedValue="@(ItemEditting.PrimaryItemCategoryLookupId == null ? Guid.Empty : (Guid)ItemEditting.PrimaryItemCategoryLookupId)"
+                                                        SelectedValueChanged="@((v) => ItemEditting.PrimaryItemCategoryLookupId = v)">
+                                                    <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
+                                                    @*@foreach (var item in _ListOfUoMSymbols)
+                                                        {
+                                                            <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
+                                                        }*@
+                                                </Select>
+                                            </FieldBody>
+                                        </Field>
+                                    </Validation>
+                                    <Validation>
+                                        <Field Horizontal="true">
+                                            <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Parent Item</FieldLabel>
+                                            <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
+                                                <Select TValue="Guid" SelectedValue="@(ItemEditting.ParentItemId == null ? Guid.Empty : (Guid)ItemEditting.ParentItemId)"
+                                                        SelectedValueChanged="@((v) => ItemEditting.ParentItemId = v)">
+                                                    <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
+                                                    @*@foreach (var item in _ListOfUoMSymbols)
+                                                        {
+                                                            <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
+                                                        }*@
+                                                </Select>
+                                            </FieldBody>
+                                        </Field>
+                                    </Validation>
+                                    <Validation>
+                                        <Field Horizontal="true">
+                                            <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Replacement Item</FieldLabel>
+                                            <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
+                                                <Select TValue="Guid" SelectedValue="@(ItemEditting.ReplacementItemId == null ? Guid.Empty : (Guid)ItemEditting.ReplacementItemId)"
+                                                        SelectedValueChanged="@((v) => ItemEditting.ReplacementItemId = v)">
+                                                    <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
+                                                    @*@foreach (var item in _ListOfUoMSymbols)
+                                                        {
+                                                            <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
+                                                        }*@
+                                                </Select>
+                                            </FieldBody>
+                                        </Field>
+                                    </Validation>
+                                </Blazorise.CollapseBody>
+                            </Blazorise.Collapse>
+                            <Blazorise.Collapse Visible="@collapseCategoriesVisible">
+                                <Blazorise.CollapseHeader>
+                                    <Blazorise.Heading Size="Blazorise.HeadingSize.Is1" Margin="Blazorise.Margin.Is1">
+                                        <Blazorise.Button Clicked="@(()=>collapseCategoriesVisible = !collapseCategoriesVisible)">
+                                            Item Categories &nbsp;&nbsp;
+                                            <Icon IconStyle="IconStyle.Solid" Name="@(collapseCategoriesVisible ? IconName.AngleDown : IconName.AngleUp )" Padding="Padding.Is2.FromLeft" Float="Float.Right" />
+                                        </Blazorise.Button>
+                                    </Blazorise.Heading>
+                                </Blazorise.CollapseHeader>
+                                <Blazorise.CollapseBody>
+                                    <Field Horizontal="true" JustifyContent="JustifyContent.Start">
+                                        <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
+                                            <div class="overflow-auto" style="max-height: 160px">
+                                                <Repeater Items="@categoryNodes">
+                                                    <Check @bind-Checked="@context.IsChecked">@context.CategoryName</Check>
+                                                </Repeater>
+                                            </div>
+                                        </FieldBody>
+                                    </Field>
+                                    <Field Horizontal="true" JustifyContent="JustifyContent.Start">
+                                        <FieldLabel ColumnSize="ColumnSize.Is6">
+                                            <Buttons>
+                                                <Button Color="Color.Primary">Add</Button>  @*Clicked="@(() => Show model to add)"*@
+                                                <Button Color="Color.Warning" Disabled="@(categoryNodes.Count == 0)">Remove</Button>  @*Clicked="@(() => categoryNodes.Remove(categoryNodes.FindFirstOrDefault(cn => !cn.IsChecked )))*@
+                                            </Buttons>
+                                        </FieldLabel>
+                                    </Field>
+                                </Blazorise.CollapseBody>
+                            </Blazorise.Collapse>
+                        </Blazorise.Accordion>
+                    </CardBody>
+                </Card>
+            </Column>
+        </Row>
+        <Row>
+            <Column ColumnSize="ColumnSize.IsFull">
+                <Blazorise.Accordion>
+                    <Blazorise.Collapse Visible="@collapseAttributesVisible" Margin="Margin.Is0">
+                        <Blazorise.CollapseHeader>
+                            <Blazorise.Heading Size="Blazorise.HeadingSize.Is1" Margin="Blazorise.Margin.Is1">
+                                <Blazorise.Button Clicked="@(()=>collapseAttributesVisible = !collapseAttributesVisible)">
+                                    Item Attributes &nbsp;&nbsp;
+                                    <span style="margin-right: auto">
+                                        <Icon IconStyle="IconStyle.Solid" Name="@(collapseAttributesVisible ? IconName.AngleDown : IconName.AngleUp )" Padding="Padding.Is2.FromLeft" Float="Float.Right" />
+                                    </span>
+                                </Blazorise.Button>
+                            </Blazorise.Heading>
+                        </Blazorise.CollapseHeader>
+                        <Blazorise.CollapseBody>
+                            <Card Margin="Margin.Is0" Class="overflow-auto">
+                                <CardBody>
+                                    <table class="table table-striped table-hover table-borderless table-sm table-responsive">
+                                        <tbody>
+                                            <Repeater Items="@ItemEditting.ItemAttributes">
+                                                <tr>
+                                                    <th style="width:auto">
+                                                        @context.ItemAttributeDetail.AttributeName
+                                                    </th>
+                                                    <td style="width:auto">
+                                                        @if (context.ItemAttributeDetail.ItemAttributeVarietyLookups != null)
+                                                        {
+                                                            <ul>
+                                                                @foreach (var att in context.ItemAttributeDetail.ItemAttributeVarietyLookups)
+                                                                {
+                                                                    <li>@att.VarietyName</li>
+                                                                }
+                                                            </ul>
+                                                        }
+                                                    </td>
+                                                    <td style="width:auto">
+                                                        @if (context.IsUsedForItemVariety)
+                                                        {<Badge Color="Color.Info">Used for variations</Badge>}
+                                                        else
+                                                        {<span>&nbsp;</span>}
+                                                    </td>
+                                                </tr>
+                                            </Repeater>
+                                        </tbody>
+                                    </table>
+                                </CardBody>
+                                <CardFooter>
+                                    <Row>
+                                        <Column>
+                                            <Button Color="Color.Secondary">Add Attributes</Button>
+                                        </Column>
+                                        <Column>
+                                            <Button Color="Color.Warning">Remove Attributes</Button>
+                                        </Column>
+                                    </Row>
+                                </CardFooter>
+                            </Card>
+                        </Blazorise.CollapseBody>
+                    </Blazorise.Collapse>
+                </Blazorise.Accordion>
+            </Column>
+        </Row>
+        <Row>
+            <Column ColumnSize="ColumnSize.IsFull">
+                <Card Margin="Margin.Is4.OnY">
+                    <CardHeader>
+                        <CardTitle>Item Children</CardTitle>
+                    </CardHeader>
+                    <CardBody>
+                        <DataGrid TItem="Item" Data="@childItems"
+                                  Sortable="true" Editable="true"
+                                  Striped="true"
+                                  Hoverable="true"
+                                  Responsive="true"
+                                  EditMode="DataGridEditMode.Popup"
+                                  PageSize="5" ShowPager="true"
+                                  PageSizes="@(new int[] { 5, 10, 15, 25, 50, 100 })"
+                                  ShowPageSizes="true" PagerPosition="DataGridPagerPosition.TopAndBottom"
+                                  TotalItems="childItems.Count"
+                                  Bordered="true"
+                                  Narrow="true" Filterable="true"
+                                  UseInternalEditing="true"
+                                  ValidationsSummaryLabel="Error validating data. Following error occurs..."
+                                  ShowValidationsSummary="true"
+                                  ShowValidationFeedback="true"
+                                  Padding="Padding.Is0">
+                            <EmptyTemplate>
+                                @{
+                                    if (childItems == null)
+                                    {
+                                        //if (@IsLoading)
+                                        //{
+                                        <Blazorise.Badge Color="Color.Primary">Loading...</Blazorise.Badge>
+                                        @*}
+                                            else
+                                            {
+                                                <Blazorise.Badge Color="Color.Warning">No attributes found, please add one.</Blazorise.Badge>
+                                            }*@
+                                    }
+                                }
+                            </EmptyTemplate>
+                            <LoadingTemplate>
+                                <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                                    <Column>
+                                        <span class="alert-info">Loading</span>
+                                    </Column>
+                                </Row>
+                            </LoadingTemplate>
+                            <DataGridColumns>
+                                <DataGridColumn TItem="Item" Field="@nameof(Item.ItemName)" Caption="Item Name" Sortable="true" Editable="true" ValidationPattern="^\S.{2,100}">
+                                </DataGridColumn>
+                                <DataGridColumn TItem="Item" Field="@nameof(Item.SKU)" Caption="SKU" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,100}">
+                                </DataGridColumn>
+                                <DataGridColumn TItem="Item" Field="@nameof(Item.IsEnabled)" Caption="Enabled?" Sortable="true" Editable="true">
+                                    <DisplayTemplate>
+                                        @{
+                                            var rowItem = (context as Item);
+                                            @(rowItem.IsEnabled ? "yes" : "no");
+                                        }
+                                    </DisplayTemplate>
+                                    <EditTemplate>
+                                        <Tooltip Text="Is this item enabled?">
+                                            @{
+                                                <Blazorise.Check TValue="bool" Checked="@((bool)context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)">Is Enabled</Blazorise.Check>
+                                            }
+                                        </Tooltip>
+                                    </EditTemplate>
+                                    @*<FilterTemplate>
+                                            @{
+                                                <Select TValue="string" SelectedValue="@(string.IsNullOrEmpty(context.SearchValue) ? String.Empty : (context.SearchValue) )"
+                                                        SelectedValueChanged="@((e) => context.TriggerFilterChange(string.IsNullOrEmpty(e) ? "" : e.ToString()))">
+                                                    <SelectItem Value="@String.Empty">none</SelectItem>
+                                                    <SelectItem Value="@($"enabled")">enabled</SelectItem>
+                                                    <SelectItem Value="@($"disabled")">disabled</SelectItem>
+                                                </Select>
+                                            }
+                                        </FilterTemplate>*@
+                                </DataGridColumn>
+                                <DataGridColumn TItem="Item" Field="@nameof(Item.ItemAbbreviatedName)" Caption="Abrv" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,10}">
+                                </DataGridColumn>
+                            </DataGridColumns>
+                        </DataGrid>
+                    </CardBody>
+                </Card>
+            </Column>
+            <Column ColumnSize="ColumnSize.IsFull.OnMobile.IsHalf.OnTablet">
+            </Column>
+        </Row>
+        <Row>
+            <Column>
+                <FieldBody ColumnSize="ColumnSize.Is10.Is2.WithOffset">
+                    <Button Color="Color.Primary">Submit</Button>
+                </FieldBody>
+            </Column>
+        </Row>
+
+    </Validations>
+
+
+}
+
+

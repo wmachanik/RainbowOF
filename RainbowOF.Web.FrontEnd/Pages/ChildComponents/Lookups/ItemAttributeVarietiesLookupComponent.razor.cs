@@ -1,4 +1,5 @@
-﻿using Blazorise;
+﻿using AutoMapper;
+using Blazorise;
 using Blazorise.DataGrid;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -43,7 +44,8 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
         public ILoggerManager _Logger { get; set; }
         [Inject]
         IAppUnitOfWork _AppUnitOfWork { get; set; }
-
+        [Inject]
+        public IMapper _Mapper { get; set; }
 
         [Parameter]
         public Guid ParentItemAttributeLookupId { get; set; } = Guid.Empty;
@@ -71,7 +73,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
             if (ParentItemAttributeLookupId != Guid.Empty)
             {
                 _VarietiesGridSettings.PageSize = StartingPageSize;
-                _AttributeVarietyWooLinkedViewRepository = new AttributeVarietyWooLinkedViewRepository(_Logger, _AppUnitOfWork, _VarietiesGridSettings, ParentItemAttributeLookupId);
+                _AttributeVarietyWooLinkedViewRepository = new AttributeVarietyWooLinkedViewRepository(_Logger, _AppUnitOfWork, _VarietiesGridSettings, _Mapper, ParentItemAttributeLookupId);
                 //await LoadData();
             }
             await InvokeAsync(StateHasChanged);
@@ -204,7 +206,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
             // set the Selected Item Attribute for use later
             SelectedItemAttributeVarietyLookup = modelItem.Item;
             var deleteItem = modelItem;
-            _VarietiesGridSettings.DeleteConfirmation.ShowModal("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.VarietyName}?", SelectedItemAttributeVarietyLookup.HasWooAttributeVarietyMap);  //,"Delete","Cancel"); - passed in on init
+            _VarietiesGridSettings.DeleteConfirmation.ShowModal("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.VarietyName}?", SelectedItemAttributeVarietyLookup.HasECommerceAttributeVarietyMap);  //,"Delete","Cancel"); - passed in on init
         }
         //
         async Task ConfirmVarietyAddWooItem_Click(bool confirmClicked)

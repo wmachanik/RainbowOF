@@ -24,5 +24,23 @@ namespace RainbowOF.Models.Lookups
 
         [ForeignKey("ParentCategoryId")]
         public ItemCategoryLookup ParentCategory { get; set; }
+        // excluding this because cannot figure out how to get it to work should be LEFT JOIN [ItemCategoriesLookup] AS [i0] ON [i].[ItemCategoryLookupId] = [i0].[ParentCategoryId]
+        //[ForeignKey("ItemCategoryLookupId")]
+        //public List<ItemCategoryLookup> ChildItemCategories { get; set; }
+
+        //-> if we wanted the data base to do the work[DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        // -> if we implement this then the case of HasGeneratedSql is  CASE WHEN ParentCategoryId IS NULL THEN (CategoryName) ELSE (SELET FullCategoryName + '->' + CategoryName from ItemCategoriesLookup where ParentCategoryId=ItemCategoryLookupId) END AS fullName
+        [NotMapped]    ///-> we want to do the work.
+        public string FullCategoryName => (ParentCategory == null) ? CategoryName : ParentCategory.FullCategoryName + "—>" + CategoryName;
+        //{
+        //    get
+        //    {
+        //        return (ParentCategory == null)? CategoryName: ParentCategory.FullCategoryName + "—>" + CategoryName;
+        //    }
+        //    private set { }
+        //}
+        [NotMapped]    ///-> we want to do the work.
+        public string CategoryIndent=> (ParentCategory == null) ? string.Empty : ParentCategory.CategoryIndent+ " —";
+
     }
 }

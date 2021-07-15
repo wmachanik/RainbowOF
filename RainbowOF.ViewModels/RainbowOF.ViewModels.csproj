@@ -6,6 +6,16 @@
         <!--- <TargetFramework>netcoreapp3.1</TargetFramework> -->
     </PropertyGroup>
 
+
+    <ItemGroup>
+      <Compile Remove="Lookups\ECommerceOption.cs" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.1" />
+    </ItemGroup>
+
     <ItemGroup>
         <ProjectReference Include="..\RainbowOF.Components\RainbowOF.Components.csproj" />
         <ProjectReference Include="..\RainbowOF.Models\RainbowOF.Models.csproj" />

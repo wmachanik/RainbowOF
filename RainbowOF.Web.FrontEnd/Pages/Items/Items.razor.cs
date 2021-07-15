@@ -1,4 +1,5 @@
-﻿using Blazorise;
+﻿using AutoMapper;
+using Blazorise;
 using Blazorise.DataGrid;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -46,10 +47,12 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         ApplicationState _AppState { get; set; }
         [Inject]
         public ILoggerManager _Logger { get; set; }
+        [Inject]
+        public IMapper _Mapper { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
-            _ItemWooLinkedViewRepository = new ItemWooLinkedViewRepository(_Logger, _AppUnitOfWork, _GridSettings);
+            _ItemWooLinkedViewRepository = new ItemWooLinkedViewRepository(_Logger, _AppUnitOfWork, _GridSettings, _Mapper);
             //await LoadData();
             await InvokeAsync(StateHasChanged);
         }
@@ -157,7 +160,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             // set the Selected Item Attribute for use later
             SelectedItemRow = modelItem.Item;
             var deleteItem = modelItem;
-            _GridSettings.DeleteConfirmation.ShowModal("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.ItemName}?", SelectedItemRow.HasWooAttributeMap);  //,"Delete","Cancel"); - passed in on init
+            _GridSettings.DeleteConfirmation.ShowModal("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.ItemName}?", SelectedItemRow.HasECommerceAttributeMap);  //,"Delete","Cancel"); - passed in on init
         }
         //
         async Task ConfirmAddWooItem_Click(bool confirmClick)

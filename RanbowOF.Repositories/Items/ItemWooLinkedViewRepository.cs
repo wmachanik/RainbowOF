@@ -1,4 +1,6 @@
-﻿using Blazorise.DataGrid;
+﻿using AutoMapper;
+using Blazorise.DataGrid;
+using Microsoft.AspNetCore.Components;
 using RainbowOF.Components.Modals;
 using RainbowOF.Models.Items;
 using RainbowOF.Models.Lookups;
@@ -22,7 +24,10 @@ namespace RainbowOF.Repositories.Items
 {
     public class ItemWooLinkedViewRepository : WooLinkedView<Item, ItemView, WooProductMap>, IItemWooLinkedView
     {
-        public ItemWooLinkedViewRepository(ILoggerManager soureLogger, IAppUnitOfWork sourceAppUnitOfWork, GridSettings sourceGridSettings) : base(soureLogger, sourceAppUnitOfWork, sourceGridSettings)
+        public ItemWooLinkedViewRepository(ILoggerManager sourceLogger,
+                                           IAppUnitOfWork sourceAppUnitOfWork,
+                                           GridSettings sourceGridSettings,
+                                           IMapper sourceMapper) : base(sourceLogger, sourceAppUnitOfWork, sourceGridSettings, sourceMapper)
         {
             //_logger = logger;
             //_appUnitOfWork = appUnitOfWork;
@@ -47,12 +52,12 @@ namespace RainbowOF.Repositories.Items
             WooProductMap _updateWooProductMap = await GetWooMappedItemAsync(updatedViewEntity.ItemId);
             if (_updateWooProductMap != null)
             {
-                if (_updateWooProductMap.CanUpdate == updatedViewEntity.CanUpdateWooMap)
+                if (_updateWooProductMap.CanUpdate == updatedViewEntity.CanUpdateECommerceMap)
                 {
                 }
                 else
                 {
-                    _updateWooProductMap.CanUpdate = (bool)updatedViewEntity.CanUpdateWooMap;
+                    _updateWooProductMap.CanUpdate = (bool)updatedViewEntity.CanUpdateECommerceMap;
                     IAppRepository<WooProductMap> WooProductRepository = _AppUnitOfWork.Repository<WooProductMap>();
                     _recsUpdated = await WooProductRepository.UpdateAsync(_updateWooProductMap);
                     _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Item: {updatedViewEntity.ItemName} was updated.");
@@ -71,9 +76,9 @@ namespace RainbowOF.Repositories.Items
         public override async Task<int> DoGroupActionAsync(ItemView toVeiwEntity, BulkAction selectedAction)
         {
             if (selectedAction == BulkAction.AllowWooSync)
-                toVeiwEntity.CanUpdateWooMap = true;
+                toVeiwEntity.CanUpdateECommerceMap = true;
             else if (selectedAction == BulkAction.DisallowWooSync)
-                toVeiwEntity.CanUpdateWooMap = false;
+                toVeiwEntity.CanUpdateECommerceMap = false;
             return await UpdateWooProductMap(toVeiwEntity);
         }
 
@@ -183,6 +188,12 @@ namespace RainbowOF.Repositories.Items
                 //  map all the items across to the view then allocate extra woo stuff if exists.
                 WooProductMap _wooProductMap = WooProductMaps.Where(wam => wam.ItemId == entity.ItemId).FirstOrDefault();    //  if retrieving / record await GetWooMappedItemAsync(itemCat.ItemId);
 
+                ItemView _itemView = new();
+                 _Mapper.Map(entity, _itemView);
+                _itemView.CanUpdateECommerceMap = (_wooProductMap == null) ? null : _wooProductMap.CanUpdate;
+                _itemViewLookups.Add(_itemView);
+
+                /*
                 _itemViewLookups.Add(new ItemView
                 {
                     ItemId = entity.ItemId,
@@ -204,7 +215,8 @@ namespace RainbowOF.Repositories.Items
                     ManageStock = entity.ManageStock,
                     QtyInStock = entity.QtyInStock,
                     CanUpdateWooMap = (_wooProductMap == null) ? null : _wooProductMap.CanUpdate
-                }); ;
+                }); 
+                */
             }
             return _itemViewLookups;
         }
@@ -225,7 +237,7 @@ namespace RainbowOF.Repositories.Items
             newViewEntity.ItemAbbreviatedName = "Itm!";
             newViewEntity.SortOrder = 0;
             newViewEntity.BasePrice = decimal.Zero;
-            newViewEntity.CanUpdateWooMap = null;
+            newViewEntity.CanUpdateECommerceMap = null;
             return newViewEntity;
         }
 
@@ -262,16 +274,16 @@ namespace RainbowOF.Repositories.Items
             }
             else
             {
-                _CurrentItem.ItemName = updateViewItem.ItemName;
-                _CurrentItem.ItemName = updateViewItem.ItemName;
-                _CurrentItem.SKU = updateViewItem.SKU;
-                _CurrentItem.IsEnabled = updateViewItem.IsEnabled;
-                _CurrentItem.ItemDetail = updateViewItem.ItemDetail;
+                _Mapper.Map(updateViewItem, _CurrentItem);
+                //_CurrentItem.ItemName = updateViewItem.ItemName;
+                //_CurrentItem.SKU = updateViewItem.SKU;
+                //_CurrentItem.IsEnabled = updateViewItem.IsEnabled;
+                //_CurrentItem.ItemDetail = updateViewItem.ItemDetail;
                 _CurrentItem.PrimaryItemCategoryLookupId = ((updateViewItem.PrimaryItemCategoryLookupId ?? Guid.Empty) == Guid.Empty) ? null : (Guid)updateViewItem.PrimaryItemCategoryLookupId;
                 _CurrentItem.ReplacementItemId = ((updateViewItem.ReplacementItemId ?? Guid.Empty) == Guid.Empty) ? null : (Guid)updateViewItem.ReplacementItemId;
-                _CurrentItem.ItemAbbreviatedName = updateViewItem.ItemAbbreviatedName;
-                _CurrentItem.SortOrder = updateViewItem.SortOrder;
-                _CurrentItem.BasePrice = updateViewItem.BasePrice;
+                //_CurrentItem.ItemAbbreviatedName = updateViewItem.ItemAbbreviatedName;
+                //_CurrentItem.SortOrder = updateViewItem.SortOrder;
+                //_CurrentItem.BasePrice = updateViewItem.BasePrice;
                 _CurrentItem.ParentItemId = ((updateViewItem.ParentItemId ?? Guid.Empty) == Guid.Empty) ? null : (Guid)updateViewItem.ParentItemId;
                 ////????? Lists and other lazy loads?
 
@@ -295,7 +307,7 @@ namespace RainbowOF.Repositories.Items
                 if (_recsAdded != AppUnitOfWork.CONST_WASERROR)
                 {
                     _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"{newVeiwEntity.ItemName} - added", "Attribute Added");
-                    if (newVeiwEntity.CanUpdateWooMap ?? false)
+                    if (newVeiwEntity.CanUpdateECommerceMap ?? false)
                     {
                         // they selected to update woo so add to Woo
                         if (await AddWooItemAndMapAsync(_NewItem) == AppUnitOfWork.CONST_WASERROR)   // add if they select to update
@@ -342,14 +354,14 @@ namespace RainbowOF.Repositories.Items
             WooProductMap updateWooProductMap = await GetWooMappedItemAsync(updatedViewEntity.ItemId);
             if (updateWooProductMap != null)
             {
-                if (updateWooProductMap.CanUpdate == updatedViewEntity.CanUpdateWooMap)
+                if (updateWooProductMap.CanUpdate == updatedViewEntity.CanUpdateECommerceMap)
                 {
                     // not necessary to display message.
                     //    PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Warning, $"Woo Attribute Map for Attribute: {updatedViewEntity.ItemName} has not changed, so was not updated?");
                 }
                 else
                 {
-                    updateWooProductMap.CanUpdate = (bool)updatedViewEntity.CanUpdateWooMap;
+                    updateWooProductMap.CanUpdate = (bool)updatedViewEntity.CanUpdateECommerceMap;
                     IAppRepository<WooProductMap> WooProductMapRepository = _AppUnitOfWork.Repository<WooProductMap>();
                     _recsUpdated = await WooProductMapRepository.UpdateAsync(updateWooProductMap);
                     _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Item: {updatedViewEntity.ItemName} was updated.");
@@ -499,7 +511,7 @@ namespace RainbowOF.Repositories.Items
         public override async Task<int> UpdateWooItemAsync(ItemView updateViewEntity)
         {
             int _result = 0;  /// null or not found
-            if ((updateViewEntity.HasWooAttributeMap) && ((bool)(updateViewEntity.CanUpdateWooMap)))
+            if ((updateViewEntity.HasECommerceAttributeMap) && ((bool)(updateViewEntity.CanUpdateECommerceMap)))
             {
                 IWooProduct _wooProductRepository = await GetIWooProduct();
                 if (_wooProductRepository != null)                     //  - > if it does not exist then what?

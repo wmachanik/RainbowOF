@@ -35,7 +35,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
             _NewItemAttributeVarietyLookupView.FGColour = String.Empty;
             _NewItemAttributeVarietyLookupView.BGColour = String.Empty;
             _NewItemAttributeVarietyLookupView.Symbol = String.Empty; 
-            _NewItemAttributeVarietyLookupView.CanUpdateWooMap = AddItemToWoo ? true : null;  // if they want to add woo then do so here
+            _NewItemAttributeVarietyLookupView.CanUpdateECommerceMap = AddItemToWoo ? true : null;  // if they want to add woo then do so here
             NewAttributeVarietyModalRef.Show();
         }
 

@@ -7,12 +7,13 @@ using Microsoft.Extensions.Hosting;
 using RainbowOF.Data.SQL;
 using RainbowOF.Tools;
 using RainbowOF.Repositories.Common;
-// other usings~
 using Blazorise;
 using Blazorise.Bootstrap;
 using Blazorise.Icons.FontAwesome;
 using Blazored.Toast;
 using RainbowOF.Tools.Services;
+using RainbowOF.ViewModels;
+using Blazorise.RichTextEdit;
 
 namespace RainbowOF.Web.FrontEnd
 {
@@ -32,13 +33,22 @@ namespace RainbowOF.Web.FrontEnd
             services.AddRazorPages();
             services.AddServerSideBlazor();
 
+            /// Blazorise stuff
             services.AddBlazorise(options =>
                   {
                       options.ChangeTextOnKeyPress = true; // optional
                   })
                   .AddBootstrapProviders()
                   .AddFontAwesomeIcons();
+            services.AddBlazoriseRichTextEdit(options =>
+            {
+                options.UseShowTheme = true;
+                options.UseBubbleTheme = true;
+            });
+            // Auto mapper stuff
+            services.AddAutoMapper(typeof(ViewMappingProfile));
 
+            // DBContext Stuff
             services.AddDbContext<ApplicationDbContext>(options =>
             {
                 options.UseSqlServer(Configuration.GetConnectionString("SQLConnection"));

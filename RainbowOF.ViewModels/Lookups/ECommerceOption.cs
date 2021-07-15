@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
-using RainbowOF.Models.Lookups;
-using RainbowOF.Models.Woo;
+using System.Threading.Tasks;
 
 namespace RainbowOF.ViewModels.Lookups
 {
-    public class ItemCategoryLookupView : ItemCategoryLookup
+    public class ECommerceOption
     {
-        // inherits all the item Category Lookup values the ItemCategoryId used for reference
         public bool? CanUpdateECommerceMap { get; set; }
-        public bool HasECommerceCategoryMap
+        public bool HasECommerceAttributeMap
         {
             get { return (CanUpdateECommerceMap != null); }
         }

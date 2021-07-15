@@ -12,4 +12,8 @@
     <Compile Remove="System\Party.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.1" />
+  </ItemGroup>
+
 </Project>

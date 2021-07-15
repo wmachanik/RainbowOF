@@ -19,7 +19,7 @@ namespace RainbowOF.Models.Items
         [DefaultValue(true)]
         [DisplayName("Is Enabled?")]
         public bool IsEnabled { get; set; }
-        [StringLength(255)]
+        [StringLength(500)]    /// need to increase to allow more from Woo
         public string ItemDetail { get; set; }
         public Guid? PrimaryItemCategoryLookupId { get; set; }
         [DefaultValue(0)]

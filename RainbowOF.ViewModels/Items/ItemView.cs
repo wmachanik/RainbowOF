@@ -12,10 +12,10 @@ namespace RainbowOF.ViewModels.Items
     public class ItemView : Item
     {
         // inherits all the item Attribute Lookup values the ItemAttributeId used for reference
-        public bool? CanUpdateWooMap { get; set; }
-        public bool HasWooAttributeMap
+        public bool? CanUpdateECommerceMap { get; set; }
+        public bool HasECommerceAttributeMap
         {
-            get { return (CanUpdateWooMap != null); }
+            get { return (CanUpdateECommerceMap != null); }
         }
     }
 }

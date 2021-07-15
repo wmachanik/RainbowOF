@@ -146,7 +146,7 @@ namespace RainbowOF.Repositories.Lookups
 
                 }
                 else   // default sort
-                    _query = _query.OrderBy(icl => icl.ParentCategoryId)
+                    _query = _query.OrderBy(icl => icl.ParentCategory.CategoryName)
                                 .ThenBy(icl => icl.CategoryName);
 
                 // This is functionally comes from

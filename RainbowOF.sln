@@ -24,6 +24,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RainbowOF.ViewModels", "Rai
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RainbowOF.Components", "RainbowOF.Components\RainbowOF.Components.csproj", "{D1F14055-BE29-4039-859F-6694E284F42F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{2D4DF1C7-3BF8-4BB6-BC32-4794711737D8}"
+	ProjectSection(SolutionItems) = preProject
+		RainbowOFDesignAndDocumentation.docx = RainbowOFDesignAndDocumentation.docx
+		ReadMe.Txt = ReadMe.Txt
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

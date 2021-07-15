@@ -1,18 +1,22 @@
-﻿@*
-    -------------------------------------------------------------
+﻿@*  -------------------------------------------------------------------------------------------------------
      Main page to display Items
 
      Uses:
-         IAppUnitOfWork _appUnitOfWork
-         ApplicationState _appState
-         ILoggerManager _logger
-    -------------------------------------------------------------
+         IAppUnitOfWork
+         ApplicationState 
+         ILoggerManager 
+         NavigationManager
+
+     Notes:
+      Displays a grid o items, but since to edit an item is quite complex moves to another page to do that . However the edit templates are left in just inc ase we want to offer a mini edit later
+    -------------------------------------------------------------------------------------------------------
 *@
 @page "/Items"
 @using Blazorise.DataGrid
 @using RainbowOF.Models.Items
-@using RainbowOF.ViewModels.Items;
+@using RainbowOF.ViewModels.Items
 @using RainbowOF.ViewModels.Common
+
 
 <Row Style="z-index: 0" Margin="Margin.Is0">
     <Column>
@@ -158,7 +162,7 @@
                     <DataGridColumns>
                         <DataGridMultiSelectColumn TItem="ItemView" Caption="[X]" Sortable="false" TextAlignment="TextAlignment.Center" Width="1em">
                         </DataGridMultiSelectColumn>
-                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ItemName)" Context="dataModels" Caption="Name" Sortable="true" Editable="true" ValidationPattern="^\S.{2,100}">
+                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ItemName)" Context="dataModels" Caption="Item Name" Sortable="true" Editable="true" ValidationPattern="^\S.{2,100}">
                             <DisplayTemplate Context="dataModels">
                                 @{
                                     var rowItem = (dataModels as ItemView);
@@ -168,7 +172,8 @@
                         </DataGridColumn>
                         <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.SKU)" Caption="SKU" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,100}">
                         </DataGridColumn>
-                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ItemImages)" Caption="Image" Sortable="false" Editable="false" Filterable="false">
+                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ItemImages)" Caption="Image" Sortable="false" Editable="false" Filterable="false"
+                                        HeaderCellClass="desktop-only" CellClass="@((item)=>"desktop-only")">
                             <DisplayTemplate>
                                 @{
                                     var rowItem = (context as ItemView);
@@ -284,12 +289,13 @@
                                 </Select>
                             </EditTemplate>
                         </DataGridColumn>
-                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ParentItemId)" Caption="Parent" Sortable="true" Editable="true" Filterable="true"
+
+                        <!--<DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ParentItemId)" Caption="Parent" Sortable="true" Editable="true" Filterable="true"
                                         HeaderCellClass="desktop-only" CellClass="@((item)=>"desktop-only")">
                             <EditTemplate>
                                 <Select TValue="Guid" SelectedValue="@(context.CellValue == null ? Guid.Empty : (Guid)context.CellValue)" SelectedValueChanged="@((v) => context.CellValue = v)">
                                     <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
-                                    <SelectItem TValue="Guid" Value="@Guid.NewGuid()">---New parent---</SelectItem>
+                                    <SelectItem TValue="Guid" Value="@Guid.NewGuid()">---New parent---</SelectItem>-->
                                     @*@foreach (var item in listOfParents)
                                         {
                                             // only add parents that are not this item
@@ -298,26 +304,29 @@
                                                 <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
                                             }
                                         }*@
-                                </Select>
+                                <!--</Select>
                             </EditTemplate>
-                        </DataGridColumn>
+                        </DataGridColumn>-->
                         <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ItemAbbreviatedName)" Caption="Abrv" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,10}">
                         </DataGridColumn>
                         <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.BasePrice)" Caption="Base Price" Sortable="true" Editable="true" Filterable="true" DisplayFormat="{0:F}">
                         </DataGridColumn>
-                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ManageStock)" Caption="MngStk" Sortable="true" Editable="true" Filterable="true">
+                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ManageStock)" Caption="MngStk" Sortable="true" Editable="true" Filterable="true"
+                                        HeaderCellClass="desktop-only" CellClass="@((item)=>"desktop-only")">
                         </DataGridColumn>
-                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.QtyInStock)" Caption="Stock Qty" Sortable="true" Editable="true" Filterable="true" DisplayFormat="{0:F}">
+                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.QtyInStock)" Caption="Stock Qty" Sortable="true" Editable="true" Filterable="true" DisplayFormat="{0:N}" ValidationPattern="\[0-9]+"
+                                        HeaderCellClass="desktop-only" CellClass="@((item)=>"desktop-only")">
                         </DataGridColumn>
-                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.SortOrder)" Caption="Sort Order" Sortable="true" Editable="true" Filterable="true" ValidationPattern="\d">
+                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.SortOrder)" Caption="Sort Order" Sortable="true" Editable="true" Filterable="true" DisplayFormat="{0:N}" ValidationPattern="\[0-9]+">
                         </DataGridColumn>
-                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.CanUpdateWooMap)" Caption="Woo Linked" Sortable="false" Filterable="false" Editable="@(_GridSettings.WooIsActive)" Displayable="ShowWooLinked">
+                        <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.CanUpdateECommerceMap)" Caption="Woo Linked" Sortable="false" Filterable="false" Editable="@(_GridSettings.WooIsActive)" Displayable="ShowWooLinked"
+                                        HeaderCellClass="desktop-only" CellClass="@((item)=>"desktop-only")">
                             <DisplayTemplate>
                                 @{
                                     if (_GridSettings.WooIsActive)
                                     {
                                         var wooItem = (context as ItemView);
-                                        @((wooItem.CanUpdateWooMap == null) ? "n/a" : ((bool)wooItem.CanUpdateWooMap ? "yes" : "no"));
+                                        @((wooItem.CanUpdateECommerceMap == null) ? "n/a" : ((bool)wooItem.CanUpdateECommerceMap ? "yes" : "no"));
                                     }
                                     else
                                     {
@@ -365,8 +374,8 @@
                             <EditCommandTemplate>
                                 @{
                                     var rowItem = context.Item;
-                                    <Tooltip Text="@($"Edit Item {rowItem.ItemId}")">
-                                        <Button Color="Color.Primary" Clicked="@context.Clicked">
+                                    <Tooltip Text="@($"Edit Item {rowItem.ItemName}")">
+                                        <Button Color="Color.Primary" Clicked="@(()=>currentNavigationManager.NavigateTo($"itemedit/{rowItem.ItemId}"))">
                                             <Icon Name="IconName.Edit" />
                                         </Button>
                                     </Tooltip>
@@ -464,6 +473,11 @@
                                                     ShowConfirmOption="true"
                                                     CancelButtonText="Cancel" />
 
+
+@code{
+    [Inject] private NavigationManager currentNavigationManager { get; set; }
+
+}
 
 @*<Row>
         <Column>

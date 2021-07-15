@@ -1,0 +1,256 @@
+﻿@page "/Test"
+@using RainbowOF.Repositories.Common
+@using RainbowOF.Models.Lookups
+@using Microsoft.EntityFrameworkCore
+
+
+@*<RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups.ItemCategoriesLookupComponent SourceParentCategoryId="null" CanUseAsync="true" />*@
+
+
+<Row>
+    <Column>
+        <Card Margin="Margin.Is4.OnY">
+            <CardHeader>
+                <CardTitle>Tests</CardTitle>
+            </CardHeader>
+            <CardBody>
+                <Fields>
+                    <Field>
+                        <FieldLabel>
+                            Categories: (loaded: @(ParentItemCategories == null ? 0 : ParentItemCategories.Count ))
+                        </FieldLabel>
+                        <FieldBody>
+                            <DataGrid TItem="ItemCategoryLookup" Data="@ParentItemCategories"
+                                      Striped="true"
+                                      Hoverable="true"
+                                      Responsive="true"
+                                      Editable="true"
+                                      EditMode="DataGridEditMode.Popup"
+                                      Bordered="true"
+                                      @bind-SelectedRow="@seletectedItemCategory"
+                                      DetailRowTrigger="@((item)=>((item.ItemCategoryLookupId == seletectedItemCategory?.ItemCategoryLookupId)))"
+                                      Padding="Padding.Is0">
+                                <EmptyTemplate>
+                                    @if (ParentItemCategories == null)
+                                    {
+                                        <span>None...</span>
+                                    }
+                                </EmptyTemplate>
+                                <LoadingTemplate>
+                                    <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                                        <Column>
+                                            <span class="alert-info">Loading...</span>
+                                        </Column>
+                                    </Row>
+                                </LoadingTemplate>
+                                <DataGridColumns>
+                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.CategoryName)" TextAlignment="TextAlignment.Left">
+                                        <DisplayTemplate>
+                                            Cat:
+                                            <bold>@context.CategoryName</bold>
+                                        </DisplayTemplate>
+                                    </DataGridColumn>
+                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.UsedForPrediction)" TextAlignment="TextAlignment.Left">
+                                    </DataGridColumn>
+                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.Notes)" TextAlignment="TextAlignment.Left">
+                                    </DataGridColumn>
+                                </DataGridColumns>
+                                <DetailRowTemplate>
+                                    @{
+                                        var ParentCat = (context as ItemCategoryLookup);
+
+                                        var childData = GetChildItems(ParentCat.ItemCategoryLookupId, false).Result;
+                                        if (childData == null)
+                                        {
+                                            <Badge Color="Color.Primary" Pill="true">@ParentCat.CategoryName has not children</Badge>
+                                        }
+                                        else
+                                        {
+                                            <DataGrid TItem="ItemCategoryLookup" Data="@childData"
+                                                      Sortable="true" Editable="false"
+                                                      Striped="true"
+                                                      Hoverable="true"
+                                                      Responsive="true"
+                                                      EditMode="DataGridEditMode.Popup"
+                                                      TotalItems="childData.Count"
+                                                      PageSize="25"
+                                      @bind-SelectedRow="@seletectedChildItemCategory"
+                                                      DetailRowTrigger="@((childItem)=>((childItem.ItemCategoryLookupId == seletectedChildItemCategory?.ItemCategoryLookupId)))"
+                                                      Bordered="true"
+                                                      UseInternalEditing="true"
+                                                      Padding="Padding.Is0">
+                                                <EmptyTemplate>
+                                                    @if (childData == null)
+                                                    {
+                                                        <span>None...</span>
+                                                    }
+                                                </EmptyTemplate>
+                                                <LoadingTemplate>
+                                                    <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                                                        <Column>
+                                                            <span class="alert-info">Loading...</span>
+                                                        </Column>
+                                                    </Row>
+                                                </LoadingTemplate>
+                                                <DataGridColumns>
+                                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.CategoryName)" TextAlignment="TextAlignment.Left" Context="childData">
+                                                    </DataGridColumn>
+                                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.UsedForPrediction)" TextAlignment="TextAlignment.Left" Context="childData">
+                                                    </DataGridColumn>
+                                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.Notes)" TextAlignment="TextAlignment.Left" Context="childData">
+                                                    </DataGridColumn>
+                                                </DataGridColumns>
+                                                <DetailRowTemplate Context="childData">
+                                                    @{
+                                                        var ParentCat = (childData as ItemCategoryLookup);
+
+                                                        var subChildData = GetChildItems(ParentCat.ItemCategoryLookupId, false).Result;
+                                                        if ((subChildData == null) || (subChildData.Count == 0))
+                                                        {
+                                                            <Badge Color="Color.Primary" Pill="true">@ParentCat.CategoryName has not children</Badge>
+                                                        }
+                                                        else
+                                                        {
+                                                            <DataGrid TItem="ItemCategoryLookup" Data="@subChildData"
+                                                                      Sortable="true" Editable="false"
+                                                                      Striped="true"
+                                                                      Hoverable="true"
+                                                                      Responsive="true"
+                                                                      EditMode="DataGridEditMode.Popup"
+                                                                      TotalItems="subChildData.Count"
+                                                                      DetailRowTrigger="@((childItem)=>((childItem.ItemCategoryLookupId == seletectedItemCategory?.ItemCategoryLookupId)))"
+                                                                      Bordered="true"
+                                                                      UseInternalEditing="true"
+                                                                      Padding="Padding.Is0">
+                                                                <EmptyTemplate>
+                                                                    @if (childData == null)
+                                                                    {
+                                                                        <span>None...</span>
+                                                                    }
+                                                                </EmptyTemplate>
+                                                                <LoadingTemplate>
+                                                                    <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                                                                        <Column>
+                                                                            <span class="alert-info">Loading...</span>
+                                                                        </Column>
+                                                                    </Row>
+                                                                </LoadingTemplate>
+                                                                <DataGridColumns>
+                                                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.CategoryName)" TextAlignment="TextAlignment.Left" Context="subChildData">
+                                                                    </DataGridColumn>
+                                                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.UsedForPrediction)" TextAlignment="TextAlignment.Left" Context="subChildData">
+                                                                    </DataGridColumn>
+                                                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.Notes)" TextAlignment="TextAlignment.Left" Context="subChildData">
+                                                                    </DataGridColumn>
+                                                                </DataGridColumns>
+                                                            </DataGrid>
+                                                        }
+                                                    }
+                                                </DetailRowTemplate>
+                                            </DataGrid>
+                                        }
+                                    }
+                                </DetailRowTemplate>
+                            </DataGrid>
+                        </FieldBody>
+                    </Field>
+                    <!--<Field>
+                        <FieldLabel>
+                            Selection mode
+                        </FieldLabel>
+                        <FieldBody>  -->
+@*<Select @bind-SelectedValue="@selectionMode">
+        <SelectItem Value="@DataGridSelectionMode.Single">Single</SelectItem>
+        <SelectItem Value="@DataGridSelectionMode.Multiple">Multiple</SelectItem>
+    </Select>*@ 
+                </Fields>
+            </CardBody>
+        </Card>
+    </Column>
+</Row>
+
+<div class="alert-info">
+    Number of times the database is called: @countEntry
+    <br />
+    <Button Color="Color.Primary" Clicked="@(()=>countEntry = 0)">Reset</Button>
+
+</div>
+
+-->
+
+@code
+{
+    bool editable = true;
+    string customText = string.Empty;
+    int countEntry = 0;
+    bool IsBusy = false;
+
+    List<ItemCategoryLookup> ParentItemCategories;
+
+    ItemCategoryLookup seletectedItemCategory;
+    ItemCategoryLookup seletectedChildItemCategory;
+
+    [Inject]
+    IAppUnitOfWork _appUnitOfWork { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+
+        //var repo = _appUnitOfWork.itemCategoryLookupRepository();
+
+        //var _context = repo.GetAppDbContext();
+
+        //var _table = _context.ItemCategoriesLookup;
+
+        //var _task = _table
+        //    .Include(icl => icl.ChildCategories)
+        //    .Where(icl => icl.ParentCategoryId == null);
+
+        ParentItemCategories = await GetChildItems(null);
+
+
+        //!!! why can we not call async? do we need to have a custom async call?
+        await InvokeAsync(StateHasChanged);
+
+        //var itemTable = repo.GetAppDbContext();
+
+        ////var query = itemTable as IQueryable<Item>;
+
+        //itemsList = await itemTable.Items
+        //    .Include(itm => itm.ItemAttributes)
+        //        .ThenInclude(itmAttr => itmAttr.ItemAttributeDetail)
+        //    .Include(itm => itm.ItemAttributes)
+        //                .ThenInclude(itmAtts => itmAtts.ItemAttributeVarieties)
+        //                .ThenInclude(itmAttVars => itmAttVars.ItemAttributeVarietyLookupDetail)
+        //    .ToListAsync();
+
+        ////itemsList = (await repo.GetAllEagerAsync((itm => itm.ItemAttributes))).ToList();
+    }
+
+    async Task<List<ItemCategoryLookup>> GetChildItems(Guid? soruceParentId, bool IsAsyncCall = true)
+    {
+        if (IsBusy) return null;
+        IsBusy = true;
+        //        List<ItemCategoryLookup> childenCategoryLookups = null;
+        countEntry++;
+        var repo = _appUnitOfWork.itemCategoryLookupRepository();
+
+        //var _context = repo.GetAppDbContext();
+        //var _table = _context.ItemCategoriesLookup;
+
+        //var _task = _table
+        //    .Where(icl => icl.ParentCategoryId == soruceParentId);
+
+        List<ItemCategoryLookup> itemCategories = null;
+
+        if (IsAsyncCall)
+            itemCategories = (await repo.GetByAsync(icl => icl.ParentCategoryId == soruceParentId)).ToList();
+        else
+            itemCategories = repo.GetBy(icl => icl.ParentCategoryId == soruceParentId).ToList();
+        //await InvokeAsync(StateHasChanged);
+
+        IsBusy = false;
+        return itemCategories;
+    }
+}

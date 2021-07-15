@@ -1,4 +1,5 @@
-﻿using Blazorise.DataGrid;
+﻿using AutoMapper;
+using Blazorise.DataGrid;
 using RainbowOF.Models.System;
 using RainbowOF.Repositories.Common;
 using RainbowOF.Tools;
@@ -19,15 +20,21 @@ namespace RainbowOF.Repositories.Lookups
         where TEntityView : class
         where TWooMapEntity : class
     {
-
         public ILoggerManager _Logger { get; set; }
         public IAppUnitOfWork _AppUnitOfWork { get; set; }
         public GridSettings _GridSettings { get; set; }
-        public WooLinkedView(ILoggerManager sourceLogger, IAppUnitOfWork sourceAppUnitOfWork, GridSettings sourceGridSettings)
+        public IMapper _Mapper;
+
+
+        public WooLinkedView(ILoggerManager sourceLogger, 
+                                IAppUnitOfWork sourceAppUnitOfWork, 
+                                GridSettings sourceGridSettings,
+                                IMapper sourceMapper)
         {
             _Logger = sourceLogger;
             _AppUnitOfWork = sourceAppUnitOfWork;
             _GridSettings = sourceGridSettings;
+            _Mapper = sourceMapper;
         }
 
         public async Task<WooAPISettings> GetWooAPISettingsAsync()

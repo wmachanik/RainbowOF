@@ -1,4 +1,5 @@
-﻿using Blazorise.DataGrid;
+﻿using AutoMapper;
+using Blazorise.DataGrid;
 using RainbowOF.Components.Modals;
 using RainbowOF.Models.Items;
 using RainbowOF.Models.Lookups;
@@ -23,7 +24,11 @@ namespace RainbowOF.Repositories.Lookups
     {
         private Guid _ParentItemAttributeLookupId = Guid.Empty;
         private int _WooParentAttributeId = -1;
-        public AttributeVarietyWooLinkedViewRepository(ILoggerManager logger, IAppUnitOfWork appUnitOfWork, GridSettings gridSettings, Guid sourceParentItemAttributeLookupId) : base (logger, appUnitOfWork, gridSettings)
+        public AttributeVarietyWooLinkedViewRepository(ILoggerManager logger,
+                                                       IAppUnitOfWork sourceAppUnitOfWork,
+                                                       GridSettings sourceGridSettings,
+                                                       IMapper sourceMapper,
+                                                       Guid sourceParentItemAttributeLookupId) : base (logger, sourceAppUnitOfWork, sourceGridSettings, sourceMapper)
         {
             _ParentItemAttributeLookupId = sourceParentItemAttributeLookupId;
         }
@@ -73,12 +78,12 @@ namespace RainbowOF.Repositories.Lookups
             WooProductAttributeTermMap _updateWooProductAttributeTermMap = await GetWooMappedItemAsync(updatedViewEntity.ItemAttributeVarietyLookupId);
             if (_updateWooProductAttributeTermMap != null)
             {
-                if (_updateWooProductAttributeTermMap.CanUpdate == updatedViewEntity.CanUpdateWooMap)
+                if (_updateWooProductAttributeTermMap.CanUpdate == updatedViewEntity.CanUpdateECommerceMap)
                 {
                 }
                 else
                 {
-                    _updateWooProductAttributeTermMap.CanUpdate = (bool)updatedViewEntity.CanUpdateWooMap;
+                    _updateWooProductAttributeTermMap.CanUpdate = (bool)updatedViewEntity.CanUpdateECommerceMap;
                     IAppRepository<WooProductAttributeTermMap> WooProductAttributeTermRepository = _AppUnitOfWork.Repository<WooProductAttributeTermMap>();
                     _recsUpdated = await WooProductAttributeTermRepository.UpdateAsync(_updateWooProductAttributeTermMap);
                     _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Attribute Variety: {updatedViewEntity.VarietyName} was updated.");
@@ -96,9 +101,9 @@ namespace RainbowOF.Repositories.Lookups
         public override async Task<int> DoGroupActionAsync(ItemAttributeVarietyLookupView toVeiwEntity, BulkAction selectedAction)
         {
             if (selectedAction == BulkAction.AllowWooSync)
-                toVeiwEntity.CanUpdateWooMap = true;
+                toVeiwEntity.CanUpdateECommerceMap = true;
             else if (selectedAction == BulkAction.DisallowWooSync)
-                toVeiwEntity.CanUpdateWooMap = false;
+                toVeiwEntity.CanUpdateECommerceMap = false;
             return await UpdateWooProductAttributeTermMap(toVeiwEntity);
         }
         //public override async Task<List<ItemAttributeVarietyLookup>> GetAllItemsAsync()
@@ -238,22 +243,28 @@ namespace RainbowOF.Repositories.Lookups
             {
                 //  map all the items across to the view then allocate extra woo stuff if exists.
                 WooProductAttributeTermMap _wooProductAttributeTermMap = WooProductAttributeTermMaps.Where(wam => wam.ItemAttributeVarietyLookupId == itemAttributeVariety.ItemAttributeVarietyLookupId).FirstOrDefault();    //  if retrieving / record await GetWooMappedItemAsync(itemCat.ItemAttributeVarietyLookupId);
+                ItemAttributeVarietyLookupView _itemAttributeVarietyLookupView = new();
+                _Mapper.Map(itemAttributeVariety, _itemAttributeVarietyLookupView);
+                _itemAttributeVarietyLookupView.UoM = (((itemAttributeVariety.UoMId ?? Guid.Empty) == Guid.Empty)) ? null
+                        : itemUoMs?.Where(uid => uid.ItemUoMId == itemAttributeVariety.UoMId).FirstOrDefault();   // apply the "lazy" load to the item   /// : (itemUoMs == null) ? null : itemUoMs.Where(uid => uid.ItemUoMId == itemAttributeVariety.UoMId).FirstOrDefault(),
+                _itemAttributeVarietyLookupView.CanUpdateECommerceMap = _wooProductAttributeTermMap?.CanUpdate;
+                _itemAttributeVarietyViewLookups.Add(_itemAttributeVarietyLookupView);
 
-                _itemAttributeVarietyViewLookups.Add(new ItemAttributeVarietyLookupView
-                {
-                    ItemAttributeVarietyLookupId = itemAttributeVariety.ItemAttributeVarietyLookupId,
-                    ItemAttributeLookupId = itemAttributeVariety.ItemAttributeLookupId,
-                    VarietyName = itemAttributeVariety.VarietyName,
-                    Symbol = itemAttributeVariety.Symbol,
-                    SortOrder = itemAttributeVariety.SortOrder,
-                    BGColour = itemAttributeVariety.BGColour,
-                    FGColour = itemAttributeVariety.FGColour,
-                    UoMId = itemAttributeVariety.UoMId,
-                    Notes = itemAttributeVariety.Notes,
-                    UoM = (((itemAttributeVariety.UoMId ?? Guid.Empty) == Guid.Empty)) ? null 
-                            : itemUoMs?.Where(uid => uid.ItemUoMId == itemAttributeVariety.UoMId).FirstOrDefault(),   // apply the "lazy" load to the item   /// : (itemUoMs == null) ? null : itemUoMs.Where(uid => uid.ItemUoMId == itemAttributeVariety.UoMId).FirstOrDefault(),
-                    CanUpdateWooMap = _wooProductAttributeTermMap?.CanUpdate //  (_wooProductAttributeTermMap == null) ? null : _wooProductAttributeTermMap.CanUpdate
-                }) ;
+                //_itemAttributeVarietyViewLookups.Add(new ItemAttributeVarietyLookupView
+                //{
+                //    ItemAttributeVarietyLookupId = itemAttributeVariety.ItemAttributeVarietyLookupId,
+                //    ItemAttributeLookupId = itemAttributeVariety.ItemAttributeLookupId,
+                //    VarietyName = itemAttributeVariety.VarietyName,
+                //    Symbol = itemAttributeVariety.Symbol,
+                //    SortOrder = itemAttributeVariety.SortOrder,
+                //    BGColour = itemAttributeVariety.BGColour,
+                //    FGColour = itemAttributeVariety.FGColour,
+                //    UoMId = itemAttributeVariety.UoMId,
+                //    Notes = itemAttributeVariety.Notes,
+                //    UoM = (((itemAttributeVariety.UoMId ?? Guid.Empty) == Guid.Empty)) ? null 
+                //            : itemUoMs?.Where(uid => uid.ItemUoMId == itemAttributeVariety.UoMId).FirstOrDefault(),   // apply the "lazy" load to the item   /// : (itemUoMs == null) ? null : itemUoMs.Where(uid => uid.ItemUoMId == itemAttributeVariety.UoMId).FirstOrDefault(),
+                //    CanUpdateWooMap = _wooProductAttributeTermMap?.CanUpdate //  (_wooProductAttributeTermMap == null) ? null : _wooProductAttributeTermMap.CanUpdate
+                //}) ;
             }
             _TaskIsBusy = false;
             return _itemAttributeVarietyViewLookups;
@@ -275,7 +286,7 @@ namespace RainbowOF.Repositories.Lookups
             newViewEntity.FGColour = string.Empty;
             newViewEntity.SortOrder = 0;
             newViewEntity.Notes = $"Added {DateTime.Now.Date}";
-            newViewEntity.CanUpdateWooMap = null;
+            newViewEntity.CanUpdateECommerceMap = null;
             return newViewEntity;
         }
 
@@ -337,7 +348,7 @@ namespace RainbowOF.Repositories.Lookups
                 if (_recsAdded != AppUnitOfWork.CONST_WASERROR)
                 {
                     _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"{newVeiwEntity.VarietyName} - added", "Attribute Variety Added");
-                    if (newVeiwEntity.CanUpdateWooMap ?? false)
+                    if (newVeiwEntity.CanUpdateECommerceMap ?? false)
                     {
                         // they selected to update woo so add to Woo
                         if (await AddWooItemAndMapAsync(_NewItemAttributeVarietyLookup) == AppUnitOfWork.CONST_WASERROR)   // add if they select to update
@@ -384,14 +395,14 @@ namespace RainbowOF.Repositories.Lookups
             WooProductAttributeTermMap _updateWooProductAttributeTermMap = await GetWooMappedItemAsync(updatedViewEntity.ItemAttributeVarietyLookupId);
             if (_updateWooProductAttributeTermMap != null)
             {
-                if (_updateWooProductAttributeTermMap.CanUpdate == updatedViewEntity.CanUpdateWooMap)
+                if (_updateWooProductAttributeTermMap.CanUpdate == updatedViewEntity.CanUpdateECommerceMap)
                 {
                     // not necessary to display message.
                     //    PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Warning, $"Woo AttributeVariety Map for AttributeVariety: {updatedViewEntity.VarietyName} has not changed, so was not updated?");
                 }
                 else
                 {
-                    _updateWooProductAttributeTermMap.CanUpdate = (bool)updatedViewEntity.CanUpdateWooMap;
+                    _updateWooProductAttributeTermMap.CanUpdate = (bool)updatedViewEntity.CanUpdateECommerceMap;
                     IAppRepository<WooProductAttributeTermMap> WooProductAttributeTermMapRepository = _AppUnitOfWork.Repository<WooProductAttributeTermMap>();
                     _recsUpdated = await WooProductAttributeTermMapRepository.UpdateAsync(_updateWooProductAttributeTermMap);
                     _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Attribute Variety: {updatedViewEntity.VarietyName} was updated.");
@@ -543,7 +554,7 @@ namespace RainbowOF.Repositories.Lookups
         public override async Task<int> UpdateWooItemAsync(ItemAttributeVarietyLookupView updateViewEntity)
         {
             int _result = 0;  /// null or not found
-            if ((updateViewEntity.HasWooAttributeVarietyMap) && ((bool)(updateViewEntity.CanUpdateWooMap)))
+            if ((updateViewEntity.HasECommerceAttributeVarietyMap) && ((bool)(updateViewEntity.CanUpdateECommerceMap)))
             {
                 IWooProductAttributeTerm _wooProductAttributeTermRepository = await GetIWooProductAttributeTerm();
                 if (_wooProductAttributeTermRepository != null)                     //  - > if it does not exist then what?

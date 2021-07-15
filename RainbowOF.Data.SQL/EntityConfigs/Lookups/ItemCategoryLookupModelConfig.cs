@@ -11,11 +11,17 @@ namespace RainbowOF.Data.SQL.EntityConfigs.Lookups
     {
         public void Configure(EntityTypeBuilder<ItemCategoryLookup> ItemCategoryLookupModelBuilder)
         {
-            ItemCategoryLookupModelBuilder.HasIndex(ic => ic.CategoryName)
+            ItemCategoryLookupModelBuilder.HasIndex(icl => icl.CategoryName)
                 .IsUnique();
-            ItemCategoryLookupModelBuilder.HasOne(ic => ic.ParentCategory)
+            ItemCategoryLookupModelBuilder.HasOne(icl => icl.ParentCategory)
                 .WithMany()
                 .OnDelete(DeleteBehavior.NoAction);
+            //ItemCategoryLookupModelBuilder.Property(nameof(ItemCategoryLookup.FullCategoryName))
+            //    .HasComputedColumnSql("");
+                //ItemCategoryLookupModelBuilder.HasMany
+            //    .HasMany(icl => icl.ChildItemCategories)
+            //    .WithOne(icp => icp.ParentCategoryId)
+            //    .OnDelete(DeleteBehavior.ClientCascade);
             //ItemCategoryLookupModelBuilder.HasIndex(i => i.SKU)
             //    
         }

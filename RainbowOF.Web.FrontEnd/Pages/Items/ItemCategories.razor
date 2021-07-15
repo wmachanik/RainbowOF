@@ -143,7 +143,7 @@
                                         }
                                         else
                                         {
-                                            <span>@catItem.CategoryName</span>
+                                            <span>@catItem.CategoryIndent @catItem.CategoryName</span>
                                         }
                                         @*</NavLink>*@
                                     }
@@ -155,7 +155,7 @@
                                 @{
                                     var catItem = (context as ItemCategoryLookupView);
 
-                                    @((catItem.ParentCategory == null) ? "n/a" : catItem.ParentCategory.CategoryName);
+                                    @((catItem.ParentCategory == null) ? "n/a" : catItem.ParentCategory.FullCategoryName);
                                 }
                             </DisplayTemplate>
                             <EditTemplate>
@@ -163,7 +163,7 @@
                                     var listOfParents = GetListOfParentCategories();
                                     var catItem = (context.Item as ItemCategoryLookupView);
 
-                                    if (listOfParents.Count > 0)
+                                    if ((listOfParents != null) && (listOfParents.Count > 0))
                                     {
                                         <Select TValue="Guid" SelectedValue="@(context.CellValue == null ? Guid.Empty : (Guid)context.CellValue)" SelectedValueChanged="@((v) => context.CellValue = v)">
                                             <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
@@ -207,14 +207,14 @@
                                 }
                             </FilterTemplate>
                         </DataGridColumn>
-                        <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.CanUpdateWooMap)" Caption="Woo Linked" Sortable="false" Filterable="false" Editable="@(_GridSettings.WooIsActive)">
+                        <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.CanUpdateECommerceMap)" Caption="Woo Linked" Sortable="false" Filterable="false" Editable="@(_GridSettings.WooIsActive)">
                             <DisplayTemplate>
                                 @{
                                     if (_GridSettings.WooIsActive)
                                     {
                                         var wooItem = (context as ItemCategoryLookupView);
 
-                                        @( (wooItem.CanUpdateWooMap == null) ? "n/a" : ((bool)wooItem.CanUpdateWooMap ? "yes"  : "no" )) ;
+                                        @( (wooItem.CanUpdateECommerceMap == null) ? "n/a" : ((bool)wooItem.CanUpdateECommerceMap ? "yes"  : "no" )) ;
                                     }
                                     else
                                     {

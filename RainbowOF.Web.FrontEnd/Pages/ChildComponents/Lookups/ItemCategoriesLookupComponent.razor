@@ -1,5 +1,54 @@
-﻿<h3>ItemCategoriesLookupComponent</h3>
+﻿@using RainbowOF.Models.Lookups
 
-@code {
+@if ((ModelItemCategoryLookups == null) || (ModelItemCategoryLookups.Count == 0))
+{
+    <Badge Color="Color.Primary" Pill="true">Category has no children</Badge>
+}
+else
+{
+    <DataGrid TItem="ItemCategoryLookup" Data="@ModelItemCategoryLookups"
+              Sortable="true" Editable="false"
+              Striped="true"
+              Hoverable="true"
+              Responsive="true"
+              EditMode="DataGridEditMode.Popup"
+              TotalItems="ModelItemCategoryLookups.Count"
+              PageSize="25"
+              @bind-SelectedRow="@SeletectedItemCategoryLookup"
+              DetailRowTrigger="@((catItem)=>((catItem.ItemCategoryLookupId == SeletectedItemCategoryLookup?.ItemCategoryLookupId)))"
+              Bordered="true"
+              UseInternalEditing="true"
+              Padding="Padding.Is0">
+        <EmptyTemplate>
+            @if (ModelItemCategoryLookups == null)
+            {
+                <span>None...</span>
+            }
+        </EmptyTemplate>
+        <LoadingTemplate>
+            <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                <Column>
+                    <span class="alert-info">Loading...</span>
+                </Column>
+            </Row>
+        </LoadingTemplate>
+        <DataGridColumns>
+            <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.CategoryName)" TextAlignment="TextAlignment.Left" Context="childData">
+            </DataGridColumn>
+            <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.UsedForPrediction)" TextAlignment="TextAlignment.Left" Context="childData">
+            </DataGridColumn>
+            <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.Notes)" TextAlignment="TextAlignment.Left" Context="childData">
+            </DataGridColumn>
+        </DataGridColumns>
+        <DetailRowTemplate>
+            @{
+                var ParentCat = (context as ItemCategoryLookup);
+                var ParentCatId = ParentCat.ParentCategoryId;
 
+
+                <ItemCategoriesLookupComponent SourceParentCategoryId="@ParentCatId" CanUseAsync="false" />
+
+            }
+        </DetailRowTemplate>
+    </DataGrid>
 }

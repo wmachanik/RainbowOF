@@ -1,4 +1,5 @@
-﻿using Blazorise.DataGrid;
+﻿using AutoMapper;
+using Blazorise.DataGrid;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using RainbowOF.Components.Modals;
@@ -47,15 +48,17 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
 
         public List<ItemCategoryLookupView> SelectedItemCategoryLookups;
         [Inject]
-        IAppUnitOfWork _AppUnitOfWork { get; set; }
+        private IAppUnitOfWork _AppUnitOfWork { get; set; }
         [Inject]
-        ApplicationState _AppState { get; set; }
+        private ApplicationState _AppState { get; set; }
         [Inject]
         public ILoggerManager _Logger { get; set; }
+        [Inject]
+        public IMapper _Mapper { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
-            _CategoryWooLinkedViewRepository = new CategoryWooLinkedViewRepository(_Logger, _AppUnitOfWork, _GridSettings);
+            _CategoryWooLinkedViewRepository = new CategoryWooLinkedViewRepository(_Logger, _AppUnitOfWork, _GridSettings, _Mapper);
             //await LoadData();
             await InvokeAsync(StateHasChanged);
         }
@@ -82,9 +85,9 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
                 DataGridParameters _dataGridParameters = _CategoryWooLinkedViewRepository.GetDataGridCurrent(inputDataGridReadData, _GridSettings.CustomFilterValue);
                 if (_GridSettings.PageSize != inputDataGridReadData.PageSize)
                 { /// page sized changed so jump back to original page
-                   _GridSettings.CurrentPage = _dataGridParameters.CurrentPage = 1;  // force this
+                    _GridSettings.CurrentPage = _dataGridParameters.CurrentPage = 1;  // force this
                     _GridSettings.PageSize = inputDataGridReadData.PageSize;
- //                  await Reload();
+                    //                  await Reload();
                 }
                 await SetLoadStatusAsync("Checking Woo status & loading categories");
                 try
@@ -222,7 +225,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             // set the Selected Item Category for use later
             SelectedItemCategoryLookup = modelItem.Item;
             var deleteItem = modelItem;
-            _GridSettings.DeleteConfirmation.ShowModal("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.CategoryName}?", SelectedItemCategoryLookup.HasWooCategoryMap);  //,"Delete","Cancel"); - passed in on init
+            _GridSettings.DeleteConfirmation.ShowModal("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.CategoryName}?", SelectedItemCategoryLookup.HasECommerceCategoryMap);  //,"Delete","Cancel"); - passed in on init
         }
         //
         async Task ConfirmAddWooItem_Click(bool confirm)
@@ -267,21 +270,28 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             //    dataModels.Remove( model );
             //}
         }
-
+        Dictionary<Guid, string> _ListOfParents = null;
         public Dictionary<Guid, string> GetListOfParentCategories()
         {
-            Dictionary<Guid, string> _ListOfParents = new Dictionary<Guid, string>();
-            foreach (var model in dataModels)
+            if (_ListOfParents == null)
             {
-                if (model.ParentCategoryId == null)
+                _ListOfParents = new Dictionary<Guid, string>();
+                IItemCategoryLookupRepository _itemCategoryLookupRepository = _AppUnitOfWork.itemCategoryLookupRepository();
+                List<ItemCategoryLookup> _itemCategoryLookups = _itemCategoryLookupRepository.GetAll()
+                    .OrderBy(icl => icl.FullCategoryName)
+                    .ToList();
+                foreach (var model in _itemCategoryLookups)
                 {
-                    _ListOfParents.Add(model.ItemCategoryLookupId, model.CategoryName);
+                    //if (model.ParentCategoryId == null)
+                    //{
+                    _ListOfParents.Add(model.ItemCategoryLookupId, model.FullCategoryName);
+                    //}
                 }
             }
             return _ListOfParents;
         }
 
-     
+
         async Task DoGroupAction()
         {
             //if (SelectedBulkAction == BulkAction.none)
