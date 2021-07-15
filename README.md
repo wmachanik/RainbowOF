@@ -10,7 +10,7 @@ Designed to pull data from Woo, or import from a legacy system it handles the or
 
 Main Web Project is RainboeOf.Web.FrontEnd
 
-SQ Server:
+SQL Server:
 ------------------
 The project uses a SQLConnection string set in appsettings.json. Once you have updated the string to point to the correct SQL instance in the appsettings.json. The do an add-migration
 to build the database using EF Core code first. The project to do the migrations in is RainbowOF.Data.SQL. Currently the migrations are stored there, so you will need to delete them
