@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Blazorise.DataGrid;
+using Blazorise.Extensions;
 using RainbowOF.Components.Modals;
 using RainbowOF.Models.Lookups;
 using RainbowOF.Models.System;
@@ -158,24 +159,24 @@ namespace RainbowOF.Repositories.Lookups
             {
                 foreach (var col in inputDataGridReadData.Columns)
                 {
-                    if (col.Direction != Blazorise.SortDirection.None)
+                    if (col.SortDirection != Blazorise.SortDirection.None)
                     {
                         if (_dataGridParameters.SortParams == null)
                             _dataGridParameters.SortParams = new List<SortParam>();
                         _dataGridParameters.SortParams.Add(new SortParam
                         {
                             FieldName = col.Field,
-                            Direction = col.Direction
+                            Direction = col.SortDirection
                         });
                     }
-                    if (!string.IsNullOrEmpty(col.SearchValue))
+                    if (!string.IsNullOrEmpty((string)col.SearchValue))
                     {
                         if (_dataGridParameters.FilterParams == null)
                             _dataGridParameters.FilterParams = new List<FilterParam>();
                         _dataGridParameters.FilterParams.Add(new FilterParam
                         {
                             FieldName = col.Field,
-                            FilterBy = col.SearchValue
+                            FilterBy = (string)col.SearchValue
                         });
                     }
                 }

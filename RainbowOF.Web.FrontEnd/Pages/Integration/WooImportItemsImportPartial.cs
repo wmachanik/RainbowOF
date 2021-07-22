@@ -53,6 +53,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             currItem.BasePrice = Convert.ToDecimal(sourceWooProd.price == null ? 0.0 : sourceWooProd.price); // (currWooProd.price == null) ? 0 :(decimal)currWooProd.price;
             currItem.ManageStock = Convert.ToBoolean(sourceWooProd.manage_stock?? false);
             currItem.QtyInStock = Convert.ToInt32(sourceWooProd.stock_quantity?? 0);
+            currItem.ItemType = ConvertWooTypeToItemType((sourceWooProd._virtual?? false) ? "virtual" : sourceWooProd.type);
             // copy the image data across
             if ((sourceWooProd.images != null) && (sourceWooProd.images.Count > 0))
             {
@@ -64,7 +65,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                 {
                     if (!currItem.ItemImages.Exists(tgtImg => tgtImg.ImageURL == srcImg.src))
                     {
-                        // add this url and associated item as it does not exist
+                        // add this URL and associated item as it does not exist
                         currItem.ItemImages.Add(new ItemImage
                         {
                             IsPrimary = isPrimaryImage,
@@ -79,7 +80,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                 }
             }
 
-            if ((sourceWooProd.parent_id != null) && (sourceWooProd.parent_id > 0))
+            if ((sourceWooProd.parent_id != null) && (sourceWooProd.parent_id > 0))     ////// not sure this is ever executed and if it is not sure how the data is getting back, since it is all async
                 currWooProductsWithParents.Add(new WooItemWithParent
                 {
                     ChildId = (int)sourceWooProd.id,
@@ -87,6 +88,29 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                 });
             return currItem;
         }
+        /// <summary>
+        /// Change string simple, grouped, external and variable. to the ItemType we use
+        /// </summary>
+        /// <param name="sourceWooProductType">the string to convert from</param>
+        /// <returns>ItemType</returns>
+        private ItemTypes ConvertWooTypeToItemType(string sourceWooProductType)
+        {
+
+            switch (sourceWooProductType)
+            {
+                case "grouped":
+                    return ItemTypes.Collection;
+                case "external":
+                    return ItemTypes.URL;
+                case "variable":
+                    return ItemTypes.Variable;
+                case "virtual":
+                    return ItemTypes.VirtualItem;
+                default:    // all others are simple
+                    return ItemTypes.Simple;
+            }
+        }
+
         /// <summary>
         /// Using the item sent assign the categories that the WooProduct has. Remember that we do not affect ItemId since the EF core 
         /// </summary>
@@ -248,13 +272,24 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                 /// once we get here we have a new ID for the ItemID so we can continue
                 _item = await AssignWooProductCategory(_item, currWooProd);    // adding the item but not the linked items
                 _item = await AssignWooProductAttrbiutes(_item, currWooProd);
+                if (_item.ItemType.Equals(ItemTypes.Variable))
+                {
+                    foreach (var item in currWooProd.variations)
+                    {
+                        ////
+                        /// - add item varieties 
+                        /// 
+                    }
+                }
                 IItemRepository _itemRepo = _AppUnitOfWork.itemRepository();
-                if (await _itemRepo.AddItem(_item) == 0)
+                if (await _itemRepo.AddItem(_item) <= 0)
                 {
                     _item.ItemId = Guid.Empty;
                 }
+                return _item.ItemId;
             }
-            return _item.ItemId;
+            else
+                return Guid.Empty;
         }
         /// <summary>
         /// Update an item that has been found in the WooPoduct link

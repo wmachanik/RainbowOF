@@ -35,7 +35,6 @@ namespace RainbowOF.Data.SQL
         public virtual DbSet<ItemAttribute> ItemAttributes { get; set; }
         public virtual DbSet<ItemAttributeVariety> ItemAttributeVarieties { get; set; }
         public virtual DbSet<ItemImage> ItemImages { get; set; }
-        public virtual DbSet<ItemUoM> ItemUoMs { get; set; }
 
         //public DbSet<ItemUnit> ItemUnits { get; set; }
         //public DbSet<Packaging> Packagings { get; set; }
@@ -45,9 +44,10 @@ namespace RainbowOF.Data.SQL
         #endregion
 
         #region Lookup stuff
-        public virtual DbSet<ItemCategoryLookup> ItemCategoriesLookup { get; set; }
-        public virtual DbSet<ItemAttributeLookup> ItemAttributesLookup { get; set; }
-        public virtual DbSet<ItemAttributeVarietyLookup> ItemAttributeVarietiesLookup { get; set; }
+        public virtual DbSet<ItemCategoryLookup> ItemCategoriesLookups { get; set; }
+        public virtual DbSet<ItemAttributeLookup> ItemAttributesLookups { get; set; }
+        public virtual DbSet<ItemAttributeVarietyLookup> ItemAttributeVarietiesLookups { get; set; }
+        public virtual DbSet<ItemUoMLookup> ItemUoMLookups { get; set; }
         #endregion
 
         #region WooStuff
@@ -82,19 +82,19 @@ namespace RainbowOF.Data.SQL
             modelBuilder.ApplyConfiguration<ItemAttribute>(new ItemAttributeModelConfig());
             modelBuilder.Entity<ItemAttributeVariety>().ToTable(nameof(ItemAttributeVarieties));
             modelBuilder.ApplyConfiguration<ItemAttributeVariety>(new ItemAttributeVarietyModelConfig());
-            modelBuilder.Entity<ItemUoM>().ToTable(nameof(ItemUoMs));
-            modelBuilder.ApplyConfiguration<ItemUoM>(new ItemUoMMappingConfig());
             //modelBuilder.Entity<ItemGroup>().ToTable(nameof(ItemGroups));
             //modelBuilder.ApplyConfiguration<ItemGroup>(new ItemGroupModelConfig());
             ////modelBuilder.Entity<UsedItemGroup>().ToTable(nameof(UsedItemGroups));
             #endregion
             #region Lookups
-            modelBuilder.Entity<ItemCategoryLookup>().ToTable(nameof(ItemCategoriesLookup));
+            modelBuilder.Entity<ItemCategoryLookup>().ToTable(nameof(ItemCategoriesLookups));
             modelBuilder.ApplyConfiguration<ItemCategoryLookup>(new ItemCategoryLookupModelConfig());
-            modelBuilder.Entity<ItemAttributeLookup>().ToTable(nameof(ItemAttributesLookup));
+            modelBuilder.Entity<ItemAttributeLookup>().ToTable(nameof(ItemAttributesLookups));
             modelBuilder.ApplyConfiguration<ItemAttributeLookup>(new ItemAttributeLookupModelConfig());
-            modelBuilder.Entity<ItemAttributeVarietyLookup>().ToTable(nameof(ItemAttributeVarietiesLookup));
+            modelBuilder.Entity<ItemAttributeVarietyLookup>().ToTable(nameof(ItemAttributeVarietiesLookups));
             modelBuilder.ApplyConfiguration<ItemAttributeVarietyLookup>(new ItemAttributeVarietyLookupModelConfig());
+            modelBuilder.Entity<ItemUoMLookup>().ToTable(nameof(ItemUoMLookups));
+            modelBuilder.ApplyConfiguration<ItemUoMLookup>(new ItemUoMMappingConfig());
             #endregion
 
             #region WooStuff

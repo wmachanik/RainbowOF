@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Components;
 using RainbowOF.Components.Modals;
 using RainbowOF.Models.Items;
+using RainbowOF.Models.Lookups;
 using RainbowOF.Repositories.Common;
 using System;
 using System.Collections.Generic;
@@ -21,7 +22,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
 
         private Modal NewUoMModalRef;
 
-        public ItemUoM _NewItemUoM = new();
+        public ItemUoMLookup _NewItemUoM = new();
         private Dictionary<Guid, string> _ListOfUoMSymbols = null;
 
 
@@ -47,7 +48,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
         {
             if (IsSaveClicked)
             {
-                IAppRepository<ItemUoM> appRepository = _AppUnitOfWork.Repository<ItemUoM>();
+                IAppRepository<ItemUoMLookup> appRepository = _AppUnitOfWork.Repository<ItemUoMLookup>();
                 if (appRepository != null)
                 {
                     int _result = await appRepository.AddAsync(_NewItemUoM);

@@ -63,7 +63,7 @@
                         </FieldBody>
                         <FieldBody>
                             &nbsp;&nbsp;&nbsp;&nbsp;
-                            <Tooltip Text="Perform group actions on Attributes" Placement="Placement.Right">
+                            <Tooltip Text="Perform group actions on Attributes" Placement="TooltipPlacement.Right">
                                 <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Disabled="((SelectedBulkAction == BulkAction.none) || (SelectedItemRows == null) || (SelectedItemRows?.Count == 0))" Clicked="DoGroupAction">Group Action(s)</Blazorise.Button>
                             </Tooltip>
                         </FieldBody>
@@ -82,7 +82,7 @@
                     </Field>
                     <Field Margin="Margin.Is1" JustifyContent="JustifyContent.End">
                         <FieldBody>
-                            <Tooltip Text="Refresh/reload Items" Placement="Placement.Left">
+                            <Tooltip Text="Refresh/reload Items" Placement="TooltipPlacement.Left">
                                 <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Clicked="Reload"><Icon Name="IconName.Sync" /></Blazorise.Button>
                             </Tooltip>
                         </FieldBody>
@@ -205,7 +205,7 @@
                             </EditTemplate>
                             <FilterTemplate>
                                 @{
-                                    <Select TValue="string" SelectedValue="@(string.IsNullOrEmpty(context.SearchValue) ? String.Empty : (context.SearchValue) )"
+                                    <Select TValue="string" SelectedValue="@(string.IsNullOrEmpty((string)context.SearchValue) ? String.Empty : (string)(context.SearchValue) )"
                                             SelectedValueChanged="@((e) => context.TriggerFilterChange(string.IsNullOrEmpty(e) ? "" : e.ToString()))">
                                         <SelectItem Value="@String.Empty">none</SelectItem>
                                         <SelectItem Value="@($"enabled")">enabled</SelectItem>
@@ -360,12 +360,12 @@
                         </DataGridColumn>
                         <DataGridCommandColumn TItem="ItemView" Width="6.5em">
                             <NewCommandTemplate>
-                                <Tooltip Text="New Item" Style="z-index:99" Placement="Placement.Bottom">
+                                <Tooltip Text="New Item" Style="z-index:99" Placement="TooltipPlacement.Bottom">
                                     <Button Color="Color.Success" Clicked="@context.Clicked">
                                         <Icon Name="IconName.Add" />
                                     </Button>
                                 </Tooltip>
-                                <Tooltip Text="Filter by Column" Style="z-index:99" Placement="Placement.Left">
+                                <Tooltip Text="Filter by Column" Style="z-index:99" Placement="TooltipPlacement.Left">
                                     <Button Color="Color.Info" Clicked="@(()=>_GridSettings.IsFilterable= !_GridSettings.IsFilterable)">
                                         <Icon Name="@((_GridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" />
                                     </Button>
@@ -403,7 +403,7 @@
                                 </Tooltip>
                             </CancelCommandTemplate>
                             <ClearFilterCommandTemplate>
-                                <Tooltip Text="Clear Filter" Style="z-index:99" Placement="Placement.Left">
+                                <Tooltip Text="Clear Filter" Style="z-index:99" Placement="TooltipPlacement.Left">
                                     <Button Color="Color.Info" Outline="true" Clicked="@context.Clicked">
                                         <Icon Name="IconName.Clear" />
                                     </Button>
@@ -435,7 +435,7 @@
                     <Column ColumnSize="ColumnSize.IsAuto">
                         <Row>
                             <Column ColumnSize="ColumnSize.IsAuto">
-                                <Tooltip Text="Current Woo Status" Placement="Placement.Right">
+                                <Tooltip Text="Current Woo Status" Placement="TooltipPlacement.Right">
                                     Woo link:
                                 </Tooltip>
                             </Column>

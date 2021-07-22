@@ -1,12 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using RainbowOF.Models.Items;
+using RainbowOF.Models.Lookups;
 
 namespace RainbowOF.Datsa.SQL.EntityConfigs.Items
 {
-    internal class ItemUoMMappingConfig : IEntityTypeConfiguration<ItemUoM>
+    internal class ItemUoMMappingConfig : IEntityTypeConfiguration<ItemUoMLookup>
     {
-        public void Configure(EntityTypeBuilder<ItemUoM> itemUoMModelBuilder)
+        public void Configure(EntityTypeBuilder<ItemUoMLookup> itemUoMModelBuilder)
         {
             itemUoMModelBuilder.HasIndex(iu => iu.UoMName)
                 .IsUnique();

@@ -107,11 +107,6 @@ else
                                         </Toolbar>
 
                                     </RichTextEdit>
-                                    @*<MemoEdit Placeholder="Item Details" @bind-Text="@ItemEditting.ItemDetail" Rows="4">
-                                            <Feedback>
-                                                <ValidationError />
-                                            </Feedback>
-                                        </MemoEdit>*@
                                 </FieldBody>
                             </Field>
                         </Validation>
@@ -136,6 +131,20 @@ else
                                             <ValidationError />
                                         </Feedback>
                                     </NumericEdit>
+                                </FieldBody>
+                            </Field>
+                        </Validation>
+                        <Validation>
+                            <Field Horizontal="true">
+                                <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Item Type</FieldLabel>
+                                <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
+                                    <Select TValue="ItemTypes" SelectedValue="@ItemEditting.ItemType"
+                                            SelectedValueChanged="@((v) => ItemEditting.ItemType = v)">
+                                        @foreach (var itemtypeoption in Enum.GetValues(typeof(ItemTypes)))
+                                        {
+                                            <SelectItem TValue="ItemTypes" Value="@((ItemTypes)itemtypeoption)">@itemtypeoption</SelectItem>
+                                        }
+                                    </Select>
                                 </FieldBody>
                             </Field>
                         </Validation>
@@ -256,6 +265,18 @@ else
                                                             <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
                                                         }*@
                                                 </Select>
+                                            </FieldBody>
+                                        </Field>
+                                    </Validation>
+                                    <Validation>
+                                        <Field Horizontal="true">
+                                            <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Notes</FieldLabel>
+                                            <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
+                                                <MemoEdit Placeholder="Item notes" @bind-Text="@ItemEditting.Notes" Rows="3">
+                                                    <Feedback>
+                                                        <ValidationError />
+                                                    </Feedback>
+                                                </MemoEdit>
                                             </FieldBody>
                                         </Field>
                                     </Validation>
@@ -446,7 +467,10 @@ else
         <Row>
             <Column>
                 <FieldBody ColumnSize="ColumnSize.Is10.Is2.WithOffset">
-                    <Button Color="Color.Primary">Submit</Button>
+                    <Button Color="Color.Primary"><Icon Name="IconName.Save" /> Save</Button>
+                    <Tooltip Text="Resynchronise with E-commerce platforms">
+                        <Button Color="Color.Info"><Icon Name="IconName.Sync" /> Re-sync</Button>
+                    </Tooltip>
                 </FieldBody>
             </Column>
         </Row>

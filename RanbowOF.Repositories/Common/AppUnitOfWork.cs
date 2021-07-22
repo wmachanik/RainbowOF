@@ -11,6 +11,7 @@ using RainbowOF.Repositories.Items;
 using RainbowOF.Repositories.Lookups;
 using RainbowOF.Models.Items;
 using System.Linq;
+using RainbowOF.Models.Lookups;
 
 namespace RainbowOF.Repositories.Common
 {
@@ -103,14 +104,14 @@ namespace RainbowOF.Repositories.Common
             }
             if (_ListOfUoMSymbols == null)
             {
-                IAppRepository<ItemUoM> appRepository = this.Repository<ItemUoM>();
+                IAppRepository<ItemUoMLookup> appRepository = this.Repository<ItemUoMLookup>();
                 var _itemUoMs = appRepository.GetAll(); // (await _UoMRepository.GetAllAsync()).ToList();
                 _ListOfUoMSymbols = new();
                 if (_itemUoMs != null)
                 {
                     foreach (var item in _itemUoMs)
                     {
-                        _ListOfUoMSymbols.Add(item.ItemUoMId, item.UoMSymbol);
+                        _ListOfUoMSymbols.Add(item.ItemUoMLookupId, item.UoMSymbol);
                     }
                 }
             }

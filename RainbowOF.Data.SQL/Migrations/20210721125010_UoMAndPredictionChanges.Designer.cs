@@ -10,15 +10,15 @@ using RainbowOF.Data.SQL;
 namespace RainbowOF.Data.SQL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20210615104658_RemoveItemIdFromAttribVars")]
-    partial class RemoveItemIdFromAttribVars
+    [Migration("20210721125010_UoMAndPredictionChanges")]
+    partial class UoMAndPredictionChanges
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("ProductVersion", "5.0.6")
+                .HasAnnotation("ProductVersion", "5.0.8")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
             modelBuilder.Entity("RainbowOF.Models.Items.Item", b =>
@@ -38,16 +38,22 @@ namespace RainbowOF.Data.SQL.Migrations
                         .HasColumnType("nvarchar(10)");
 
                     b.Property<string>("ItemDetail")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("ItemName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int>("ItemType")
+                        .HasColumnType("int");
+
                     b.Property<bool>("ManageStock")
                         .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("ParentItemId")
                         .HasColumnType("uniqueidentifier");
@@ -91,13 +97,10 @@ namespace RainbowOF.Data.SQL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool>("IsUsedForVariableType")
+                    b.Property<bool>("IsUsedForItemVariety")
                         .HasColumnType("bit");
 
                     b.Property<Guid>("ItemAttributeLookupId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ItemAttributeVarietyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("ItemId")
@@ -105,12 +108,12 @@ namespace RainbowOF.Data.SQL.Migrations
 
                     b.HasKey("ItemAttributeId");
 
+                    b.HasIndex("ItemAttributeId")
+                        .IsUnique();
+
                     b.HasIndex("ItemAttributeLookupId");
 
                     b.HasIndex("ItemId");
-
-                    b.HasIndex("ItemAttributeId", "ItemId")
-                        .IsUnique();
 
                     b.ToTable("ItemAttributes");
                 });
@@ -124,6 +127,9 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Property<bool>("IsDefault")
                         .HasColumnType("bit");
 
+                    b.Property<Guid>("ItemAttributeId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("ItemAttributeVarietyLookupId")
                         .HasColumnType("uniqueidentifier");
 
@@ -135,8 +141,9 @@ namespace RainbowOF.Data.SQL.Migrations
 
                     b.HasKey("ItemAttributeVarietyId");
 
-                    b.HasIndex("ItemAttributeVarietyLookupId")
-                        .IsUnique();
+                    b.HasIndex("ItemAttributeId");
+
+                    b.HasIndex("ItemAttributeVarietyLookupId");
 
                     b.HasIndex("UoMId");
 
@@ -167,41 +174,35 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.ToTable("ItemCategories");
                 });
 
-            modelBuilder.Entity("RainbowOF.Models.Items.ItemUoMLookup", b =>
+            modelBuilder.Entity("RainbowOF.Models.Items.ItemImage", b =>
                 {
-                    b.Property<Guid>("ItemUoMId")
+                    b.Property<Guid>("ItemImageId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<double>("BaseConversationFactor")
-                        .HasColumnType("float");
-
-                    b.Property<Guid?>("BaseUoMId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("RoundTo")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UoMName")
-                        .IsRequired()
+                    b.Property<string>("Alt")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("UoMSymbol")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
+                    b.Property<string>("ImageURL")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
-                    b.HasKey("ItemUoMId");
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("bit");
 
-                    b.HasIndex("BaseUoMId")
-                        .IsUnique()
-                        .HasFilter("[BaseUoMId] IS NOT NULL");
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.HasIndex("UoMName")
-                        .IsUnique();
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.ToTable("ItemUoMs");
+                    b.HasKey("ItemImageId");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("ItemImages");
                 });
 
             modelBuilder.Entity("RainbowOF.Models.Logs.WooSyncLog", b =>
@@ -258,7 +259,7 @@ namespace RainbowOF.Data.SQL.Migrations
 
                     b.HasIndex("OrderBy", "AttributeName");
 
-                    b.ToTable("ItemAttributesLookup");
+                    b.ToTable("ItemAttributesLookups");
                 });
 
             modelBuilder.Entity("RainbowOF.Models.Lookups.ItemAttributeVarietyLookup", b =>
@@ -308,7 +309,7 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.HasIndex("VarietyName", "ItemAttributeLookupId")
                         .IsUnique();
 
-                    b.ToTable("ItemAttributeVarietiesLookup");
+                    b.ToTable("ItemAttributeVarietiesLookups");
                 });
 
             modelBuilder.Entity("RainbowOF.Models.Lookups.ItemCategoryLookup", b =>
@@ -333,6 +334,9 @@ namespace RainbowOF.Data.SQL.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<Guid?>("UoMBaseId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("UsedForPrediction")
                         .HasColumnType("bit");
 
@@ -343,7 +347,46 @@ namespace RainbowOF.Data.SQL.Migrations
 
                     b.HasIndex("ParentCategoryId");
 
-                    b.ToTable("ItemCategoriesLookup");
+                    b.HasIndex("UoMBaseId");
+
+                    b.ToTable("ItemCategoriesLookups");
+                });
+
+            modelBuilder.Entity("RainbowOF.Models.Lookups.ItemUoMLookup", b =>
+                {
+                    b.Property<Guid>("ItemUoMLookupId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("BaseConversationFactor")
+                        .HasColumnType("float");
+
+                    b.Property<Guid?>("BaseUoMId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("RoundTo")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UoMName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("UoMSymbol")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.HasKey("ItemUoMLookupId");
+
+                    b.HasIndex("BaseUoMId")
+                        .IsUnique()
+                        .HasFilter("[BaseUoMId] IS NOT NULL");
+
+                    b.HasIndex("UoMName")
+                        .IsUnique();
+
+                    b.ToTable("ItemUoMLookups");
                 });
 
             modelBuilder.Entity("RainbowOF.Models.System.ClosureDate", b =>
@@ -596,7 +639,7 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.HasOne("RainbowOF.Models.Items.Item", null)
                         .WithMany("ItemAttributes")
                         .HasForeignKey("ItemId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
 
                     b.Navigation("ItemAttributeDetail");
@@ -606,8 +649,8 @@ namespace RainbowOF.Data.SQL.Migrations
                 {
                     b.HasOne("RainbowOF.Models.Items.ItemAttribute", null)
                         .WithMany("ItemAttributeVarieties")
-                        .HasForeignKey("ItemAttributeVarietyId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .HasForeignKey("ItemAttributeId")
+                        .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
 
                     b.HasOne("RainbowOF.Models.Lookups.ItemAttributeVarietyLookup", "ItemAttributeVarietyLookupDetail")
@@ -616,7 +659,7 @@ namespace RainbowOF.Data.SQL.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("RainbowOF.Models.Items.ItemUoMLookup", "UoM")
+                    b.HasOne("RainbowOF.Models.Lookups.ItemUoMLookup", "UoM")
                         .WithMany()
                         .HasForeignKey("UoMId")
                         .OnDelete(DeleteBehavior.SetNull);
@@ -637,20 +680,19 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.HasOne("RainbowOF.Models.Items.Item", null)
                         .WithMany("ItemCategories")
                         .HasForeignKey("ItemId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
 
                     b.Navigation("ItemCategoryDetail");
                 });
 
-            modelBuilder.Entity("RainbowOF.Models.Items.ItemUoMLookup", b =>
+            modelBuilder.Entity("RainbowOF.Models.Items.ItemImage", b =>
                 {
-                    b.HasOne("RainbowOF.Models.Items.ItemUoMLookup", "BaseUoM")
-                        .WithOne()
-                        .HasForeignKey("RainbowOF.Models.Items.ItemUoMLookup", "BaseUoMId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
-                    b.Navigation("BaseUoM");
+                    b.HasOne("RainbowOF.Models.Items.Item", null)
+                        .WithMany("ItemImages")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("RainbowOF.Models.Lookups.ItemAttributeVarietyLookup", b =>
@@ -669,7 +711,23 @@ namespace RainbowOF.Data.SQL.Migrations
                         .HasForeignKey("ParentCategoryId")
                         .OnDelete(DeleteBehavior.NoAction);
 
+                    b.HasOne("RainbowOF.Models.Lookups.ItemUoMLookup", "CategoryUoMBase")
+                        .WithMany()
+                        .HasForeignKey("UoMBaseId");
+
+                    b.Navigation("CategoryUoMBase");
+
                     b.Navigation("ParentCategory");
+                });
+
+            modelBuilder.Entity("RainbowOF.Models.Lookups.ItemUoMLookup", b =>
+                {
+                    b.HasOne("RainbowOF.Models.Lookups.ItemUoMLookup", "BaseUoM")
+                        .WithOne()
+                        .HasForeignKey("RainbowOF.Models.Lookups.ItemUoMLookup", "BaseUoMId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("BaseUoM");
                 });
 
             modelBuilder.Entity("RainbowOF.Models.Woo.WooCategoryMap", b =>
@@ -688,6 +746,8 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Navigation("ItemAttributes");
 
                     b.Navigation("ItemCategories");
+
+                    b.Navigation("ItemImages");
                 });
 
             modelBuilder.Entity("RainbowOF.Models.Items.ItemAttribute", b =>

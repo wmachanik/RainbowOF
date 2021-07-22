@@ -61,10 +61,10 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             _Status = statusString;
             await InvokeAsync(StateHasChanged);
         }
-        public async Task LoadData()
-        {
-            await HandleReadDataAsync(new DataGridReadDataEventArgs<ItemView>(_GridSettings.CurrentPage, _GridSettings.PageSize, null, System.Threading.CancellationToken.None));
-        }
+        //public async Task LoadData()
+        //{
+        //    //await HandleReadDataAsync(new DataGridReadDataEventArgs<ItemView> (_GridSettings.CurrentPage, _GridSettings.PageSize, null, System.Threading.CancellationToken.None));
+        //}
 
         public async Task HandleReadDataAsync(DataGridReadDataEventArgs<ItemView> inputDataGridReadData)
         {

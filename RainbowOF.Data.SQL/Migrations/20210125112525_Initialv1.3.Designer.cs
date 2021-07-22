@@ -163,7 +163,7 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.ToTable("ItemCategories");
                 });
 
-            modelBuilder.Entity("RainbowOF.Models.Items.ItemUoM", b =>
+            modelBuilder.Entity("RainbowOF.Models.Items.ItemUoMLookup", b =>
                 {
                     b.Property<Guid>("ItemUoMId")
                         .ValueGeneratedOnAdd()
@@ -581,12 +581,12 @@ namespace RainbowOF.Data.SQL.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("RainbowOF.Models.Items.ItemUoM", "ItemUoM")
+                    b.HasOne("RainbowOF.Models.Items.ItemUoMLookup", "ItemUoMLookup")
                         .WithMany()
                         .HasForeignKey("ItemUoMId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("ItemUoM");
+                    b.Navigation("ItemUoMLookup");
                 });
 
             modelBuilder.Entity("RainbowOF.Models.Items.ItemCategory", b =>
@@ -598,11 +598,11 @@ namespace RainbowOF.Data.SQL.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("RainbowOF.Models.Items.ItemUoM", b =>
+            modelBuilder.Entity("RainbowOF.Models.Items.ItemUoMLookup", b =>
                 {
-                    b.HasOne("RainbowOF.Models.Items.ItemUoM", "BaseUoM")
+                    b.HasOne("RainbowOF.Models.Items.ItemUoMLookup", "BaseUoM")
                         .WithOne()
-                        .HasForeignKey("RainbowOF.Models.Items.ItemUoM", "BaseUoMId")
+                        .HasForeignKey("RainbowOF.Models.Items.ItemUoMLookup", "BaseUoMId")
                         .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("BaseUoM");

@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
-namespace RainbowOF.Models.Items
+namespace RainbowOF.Models.Lookups
 {
     /// <summary>
     /// ItemVariableUoM
@@ -18,10 +18,10 @@ namespace RainbowOF.Models.Items
     //  BaseConversationFactor  Double      If not a base what is the conversion to base
     //  RoundTo                 Int         Number of decimal to round to(default 4)
     /// </summary>
-    public class ItemUoM
+    public class ItemUoMLookup
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public Guid ItemUoMId { get; set; }   
+        public Guid ItemUoMLookupId { get; set; }   
         [Required]
         [StringLength(100)]
         [DisplayName("UoM Name")]
@@ -39,7 +39,7 @@ namespace RainbowOF.Models.Items
         [DefaultValue(4)]
         public int RoundTo { get; set; }
         [ForeignKey("BaseUoMId")]
-        public virtual ItemUoM BaseUoM { get; set; }
+        public virtual ItemUoMLookup BaseUoM { get; set; }
 
         //[Timestamp]
         //public byte[] RowVersion { get; set; }

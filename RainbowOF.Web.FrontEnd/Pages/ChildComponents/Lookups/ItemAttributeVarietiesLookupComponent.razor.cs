@@ -83,10 +83,10 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
             _Status = statusString;
             await InvokeAsync(StateHasChanged);
         }
-        public async Task LoadData()
-        {
-            await HandleReadDataAsync(new DataGridReadDataEventArgs<ItemAttributeVarietyLookupView>(_VarietiesGridSettings.CurrentPage, _VarietiesGridSettings.PageSize, null, System.Threading.CancellationToken.None));
-        }
+        //public async Task LoadData()
+        //{
+        //  //  await HandleReadDataAsync(new DataGridReadDataEventArgs<ItemAttributeVarietyLookupView>(_VarietiesGridSettings.CurrentPage, _VarietiesGridSettings.PageSize, null, System.Threading.CancellationToken.None));
+        //}
 
         public async Task HandleReadDataAsync(DataGridReadDataEventArgs<ItemAttributeVarietyLookupView> inputDataGridReadData)
         {

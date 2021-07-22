@@ -33,7 +33,7 @@ namespace RainbowOF.Models.Lookups
         [ForeignKey("ItemAttributeLookupId")]
         public ItemAttributeLookup ItemAttributeLookup;
         [ForeignKey("UoMId")]
-        public ItemUoM UoM;
+        public ItemUoMLookup UoM;
 
         public const string CONST_NULL_COLOUR = "#00000000";
     };

@@ -44,7 +44,7 @@
                         </FieldBody>
                         <FieldBody>
                             &nbsp;&nbsp;&nbsp;&nbsp;
-                            <Tooltip Text="Perform group actions on Attributes" Placement="Placement.Right">
+                            <Tooltip Text="Perform group actions on Attributes" Placement="TooltipPlacement.Right">
                                 <Blazorise.Button Type="ButtonType.Button" Outline="@IsSubGrid" Color="Color.Info" Disabled="((SelectedBulkAction == BulkAction.none) || (SelectedItemAttributeVarietyLookups == null) || (SelectedItemAttributeVarietyLookups?.Count == 0))" Clicked="DoGroupAction">Group Action(s)</Blazorise.Button>
                             </Tooltip>
                         </FieldBody>
@@ -56,7 +56,7 @@
                     </Field>
                     <Field Margin="Margin.Is1" JustifyContent="JustifyContent.End">
                         <FieldBody>
-                            <Tooltip Text="Refresh/reload Attributes" Placement="Placement.Left">
+                            <Tooltip Text="Refresh/reload Attributes" Placement="TooltipPlacement.Left">
                                 <Blazorise.Button Type="ButtonType.Button" Outline="@IsSubGrid" Color="Color.Info" Clicked="ReloadAsync"><Icon Name="IconName.Sync" /></Blazorise.Button>
                             </Tooltip>
                         </FieldBody>
@@ -318,7 +318,7 @@
                     <Column ColumnSize="ColumnSize.IsAuto">
                         <Row>
                             <Column ColumnSize="ColumnSize.IsAuto">
-                                <Tooltip Text="Current Woo Status" Placement="Placement.Right">
+                                <Tooltip Text="Current Woo Status" Placement="TooltipPlacement.Right">
                                     Woo link:
                                 </Tooltip>
                             </Column>

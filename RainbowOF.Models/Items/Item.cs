@@ -6,6 +6,17 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RainbowOF.Models.Items
 {
+    public enum ItemTypes
+    { 
+        Simple, 
+        Variable, 
+        GroupByType, 
+        Service, 
+        Collection, 
+        URL, 
+        VirtualItem, 
+        Other
+    }
     public class Item
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -33,6 +44,10 @@ namespace RainbowOF.Models.Items
         // stock stuff
         public bool ManageStock { get; set; }
         public int QtyInStock { get; set; }
+        // control stuff
+        public ItemTypes ItemType { get; set; }
+        // MISC stuff
+        public string Notes { get; set; }
         // management stuff
         [Timestamp]
         public byte[] RowVersion { get; set; }
@@ -48,6 +63,7 @@ namespace RainbowOF.Models.Items
 
         [ForeignKey("ItemId")]
         public virtual List<ItemImage> ItemImages { get; set; }
+
         // may need these later
         //        public int? MerchantId { get; set; }
         //        [DisplayName("Qty/unit")]
@@ -71,7 +87,6 @@ namespace RainbowOF.Models.Items
         //        public DateTime CreatedAt { get; set; }
         //public Merchant Merchant { get; set; }
         //public ItemUnit ItemUnit { get; set; }
-
         //public VATTaxType VATTaxType { get; set; }
         //[ForeignKey("ItemId")]
         //public IEnumerable<ItemPrice> ItemPrices { get; set; }

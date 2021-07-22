@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Blazorise.DataGrid;
+using Blazorise.Extensions;
 using RainbowOF.Components.Modals;
 using RainbowOF.Models.Items;
 using RainbowOF.Models.Lookups;
@@ -196,24 +197,24 @@ namespace RainbowOF.Repositories.Lookups
             {
                 foreach (var col in inputDataGridReadData.Columns)
                 {
-                    if (col.Direction != Blazorise.SortDirection.None)
+                    if (col.SortDirection != Blazorise.SortDirection.None)
                     {
                         if (_dataGridParameters.SortParams == null)
                             _dataGridParameters.SortParams = new List<SortParam>();
                         _dataGridParameters.SortParams.Add(new SortParam
                         {
                             FieldName = col.Field,
-                            Direction = col.Direction
+                            Direction = col.SortDirection
                         });
                     }
-                    if (!string.IsNullOrEmpty(col.SearchValue))
+                    if (!string.IsNullOrEmpty((string)col.SearchValue)) // changed this in v 4
                     {
                         if (_dataGridParameters.FilterParams == null)
                             _dataGridParameters.FilterParams = new List<FilterParam>();
                         _dataGridParameters.FilterParams.Add(new FilterParam
                         {
                             FieldName = col.Field,
-                            FilterBy = col.SearchValue
+                            FilterBy = (string)col.SearchValue
                         });
                     }
                 }
@@ -236,7 +237,7 @@ namespace RainbowOF.Repositories.Lookups
             List<WooProductAttributeTermMap> WooProductAttributeTermMaps = await GetWooMappedItemsAsync(_ItemAttributeVarietyIds);
             // now get all the Units of Measure as a lazy load
             List<Guid?> _itemAttributeVarietyUomIds = _itemAttributeVarietyLookups.Where(it => (it.UoMId != null) && (it.UoMId != Guid.Empty)).Select(it => it.UoMId).Distinct().ToList();   // get all the ids selected should not return nulls
-            List<ItemUoM> itemUoMs = await GetItemUoMsAsync(_itemAttributeVarietyUomIds); 
+            List<ItemUoMLookup> itemUoMs = await GetItemUoMsAsync(_itemAttributeVarietyUomIds); 
 
             // Map Items to Woo AttributeVarietyMap
             foreach (var itemAttributeVariety in _itemAttributeVarietyLookups)
@@ -246,7 +247,7 @@ namespace RainbowOF.Repositories.Lookups
                 ItemAttributeVarietyLookupView _itemAttributeVarietyLookupView = new();
                 _Mapper.Map(itemAttributeVariety, _itemAttributeVarietyLookupView);
                 _itemAttributeVarietyLookupView.UoM = (((itemAttributeVariety.UoMId ?? Guid.Empty) == Guid.Empty)) ? null
-                        : itemUoMs?.Where(uid => uid.ItemUoMId == itemAttributeVariety.UoMId).FirstOrDefault();   // apply the "lazy" load to the item   /// : (itemUoMs == null) ? null : itemUoMs.Where(uid => uid.ItemUoMId == itemAttributeVariety.UoMId).FirstOrDefault(),
+                        : itemUoMs?.Where(uid => uid.ItemUoMLookupId == itemAttributeVariety.UoMId).FirstOrDefault();   // apply the "lazy" load to the item   /// : (itemUoMs == null) ? null : itemUoMs.Where(uid => uid.ItemUoMId == itemAttributeVariety.UoMId).FirstOrDefault(),
                 _itemAttributeVarietyLookupView.CanUpdateECommerceMap = _wooProductAttributeTermMap?.CanUpdate;
                 _itemAttributeVarietyViewLookups.Add(_itemAttributeVarietyLookupView);
 
@@ -606,14 +607,14 @@ namespace RainbowOF.Repositories.Lookups
             return _result;
         }
 
-        public async Task<List<ItemUoM>> GetItemUoMsAsync(List<Guid?> linkedItemUoMIDs)
+        public async Task<List<ItemUoMLookup>> GetItemUoMsAsync(List<Guid?> linkedItemUoMIDs)
         {
             if ((linkedItemUoMIDs == null) || (linkedItemUoMIDs.Count == 0))
                 return null;
              
-            IAppRepository<ItemUoM> appRepository   = _AppUnitOfWork.Repository<ItemUoM>();
+            IAppRepository<ItemUoMLookup> appRepository   = _AppUnitOfWork.Repository<ItemUoMLookup>();
 
-            var _ItemUoMs = await appRepository.GetByAsync(iu =>  linkedItemUoMIDs.Contains(iu.ItemUoMId));   // ItemAttributeVarietyLookupId
+            var _ItemUoMs = await appRepository.GetByAsync(iu =>  linkedItemUoMIDs.Contains(iu.ItemUoMLookupId));   // ItemAttributeVarietyLookupId
             return _ItemUoMs.ToList();
         }
     }
