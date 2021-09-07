@@ -251,21 +251,7 @@ namespace RainbowOF.Repositories.Lookups
                 _itemAttributeVarietyLookupView.CanUpdateECommerceMap = _wooProductAttributeTermMap?.CanUpdate;
                 _itemAttributeVarietyViewLookups.Add(_itemAttributeVarietyLookupView);
 
-                //_itemAttributeVarietyViewLookups.Add(new ItemAttributeVarietyLookupView
-                //{
-                //    ItemAttributeVarietyLookupId = itemAttributeVariety.ItemAttributeVarietyLookupId,
-                //    ItemAttributeLookupId = itemAttributeVariety.ItemAttributeLookupId,
-                //    VarietyName = itemAttributeVariety.VarietyName,
-                //    Symbol = itemAttributeVariety.Symbol,
-                //    SortOrder = itemAttributeVariety.SortOrder,
-                //    BGColour = itemAttributeVariety.BGColour,
-                //    FGColour = itemAttributeVariety.FGColour,
-                //    UoMId = itemAttributeVariety.UoMId,
-                //    Notes = itemAttributeVariety.Notes,
-                //    UoM = (((itemAttributeVariety.UoMId ?? Guid.Empty) == Guid.Empty)) ? null 
-                //            : itemUoMs?.Where(uid => uid.ItemUoMId == itemAttributeVariety.UoMId).FirstOrDefault(),   // apply the "lazy" load to the item   /// : (itemUoMs == null) ? null : itemUoMs.Where(uid => uid.ItemUoMId == itemAttributeVariety.UoMId).FirstOrDefault(),
-                //    CanUpdateWooMap = _wooProductAttributeTermMap?.CanUpdate //  (_wooProductAttributeTermMap == null) ? null : _wooProductAttributeTermMap.CanUpdate
-                //}) ;
+          
             }
             _TaskIsBusy = false;
             return _itemAttributeVarietyViewLookups;

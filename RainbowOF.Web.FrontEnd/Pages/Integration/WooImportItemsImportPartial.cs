@@ -12,6 +12,7 @@ using RainbowOF.Models.Lookups;
 using RainbowOF.FrontEnd.Models.Classes;
 using RainbowOF.Tools;
 using RainbowOF.Repositories.Items;
+using RainbowOF.Integration.Repositories.Woo;
 
 namespace RainbowOF.Web.FrontEnd.Pages.Integration
 {
@@ -49,11 +50,11 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             currItem.IsEnabled = true;
             currItem.ItemDetail = _StringTools.Truncate(_StringTools.StripHTML(sourceWooProd.short_description), 250);   // max length is 255
             currItem.ItemAbbreviatedName = _StringTools.MakeAbbriviation(sourceWooProd.name);
-            currItem.SortOrder = Convert.ToInt32(sourceWooProd.menu_order?? 0);  //  (currWooProd.menu_order == null) ? 50 : (int)currWooProd.menu_order;
+            currItem.SortOrder = Convert.ToInt32(sourceWooProd.menu_order ?? 0);  //  (currWooProd.menu_order == null) ? 50 : (int)currWooProd.menu_order;
             currItem.BasePrice = Convert.ToDecimal(sourceWooProd.price == null ? 0.0 : sourceWooProd.price); // (currWooProd.price == null) ? 0 :(decimal)currWooProd.price;
-            currItem.ManageStock = Convert.ToBoolean(sourceWooProd.manage_stock?? false);
-            currItem.QtyInStock = Convert.ToInt32(sourceWooProd.stock_quantity?? 0);
-            currItem.ItemType = ConvertWooTypeToItemType((sourceWooProd._virtual?? false) ? "virtual" : sourceWooProd.type);
+            currItem.ManageStock = Convert.ToBoolean(sourceWooProd.manage_stock ?? false);
+            currItem.QtyInStock = Convert.ToInt32(sourceWooProd.stock_quantity ?? 0);
+            currItem.ItemType = ConvertWooTypeToItemType((sourceWooProd._virtual ?? false) ? "virtual" : sourceWooProd.type);
             // copy the image data across
             if ((sourceWooProd.images != null) && (sourceWooProd.images.Count > 0))
             {
@@ -83,8 +84,8 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             if ((sourceWooProd.parent_id != null) && (sourceWooProd.parent_id > 0))     ////// not sure this is ever executed and if it is not sure how the data is getting back, since it is all async
                 currWooProductsWithParents.Add(new WooItemWithParent
                 {
-                    ChildId = (int)sourceWooProd.id,
-                    ParentId = (int)sourceWooProd.parent_id
+                    ChildId = (uint)sourceWooProd.id,
+                    ParentId = (uint)sourceWooProd.parent_id
                 });
             return currItem;
         }
@@ -122,13 +123,15 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             bool _isCatUpdate = currItem.ItemCategories != null;
             if (currItem != null)
             {
+                WooImportProductCategories _wooImportProductCategories = new WooImportProductCategories(_AppUnitOfWork, _Logger, AppWooSettings);
+
                 // if we get here then we have an item and it has an id
                 IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepo = _AppUnitOfWork.Repository<ItemCategoryLookup>();
                 ItemCategoryLookup _itemCategoryLookup = null;
                 bool _SetPrimary = true;
                 foreach (var cat in currWooProd.categories)
                 {
-                    Guid CategoryId = await GetCategoryById((int)cat.id);
+                    Guid CategoryId = await _wooImportProductCategories.GetWooMappedEntityIdById((uint)cat.id);
                     _itemCategoryLookup = await _itemCategoryLookupRepo.FindFirstAsync(ic => ic.ItemCategoryLookupId == CategoryId);
                     if (_itemCategoryLookup != null)
                     {
@@ -165,16 +168,16 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                 // loop through all the attributes and see if the are used for variations and add all the terms a variations
                 foreach (var attrib in currWooProd.attributes)
                 {
-                    currItem = await AddOrUpdateItemsAttributes(currItem, attrib, _isAttribUpdate);   
+                    currItem = await AddOrUpdateItemsAttributes(currItem, attrib, _isAttribUpdate);
                 }
             }
             return currItem;   // return the currItem after we have manipulated it.
         }
 
-        async Task<Item> AddOrUpdateItemsAttributes(Item currItem, ProductAttributeLine prodAttrib, bool HasAttributes) 
+        async Task<Item> AddOrUpdateItemsAttributes(Item currItem, ProductAttributeLine prodAttrib, bool HasAttributes)
         {
             // if we get here then we have an item and it has an id
-//            IAppRepository<ItemAttributeLookup> _itemAttributeLookupRepo = _AppUnitOfWork.Repository<ItemAttributeLookup>();
+            //            IAppRepository<ItemAttributeLookup> _itemAttributeLookupRepo = _AppUnitOfWork.Repository<ItemAttributeLookup>();
             IAppRepository<WooProductAttributeMap> _wooProductAttributeMapRepo = _AppUnitOfWork.Repository<WooProductAttributeMap>();
             // check if this is an update or an add for categories and attributes
             WooProductAttributeMap _wooProductAttributeMap = await _wooProductAttributeMapRepo.FindFirstAsync(wpa => wpa.WooProductAttributeId == prodAttrib.id);
@@ -225,14 +228,14 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                         return currItem; // this should never occur  
 
                     // does this attribute have this variety, if so update otherwise add
-                    if ((_itemAttribute.ItemAttributeVarieties !=null) && (_itemAttribute.ItemAttributeVarieties.Exists(iav => iav.ItemAttributeVarietyLookupId == _itemAttributeVarietyLookup.ItemAttributeVarietyLookupId)))
+                    if ((_itemAttribute.ItemAttributeVarieties != null) && (_itemAttribute.ItemAttributeVarieties.Exists(iav => iav.ItemAttributeVarietyLookupId == _itemAttributeVarietyLookup.ItemAttributeVarietyLookupId)))
                     {
                         // this attribute variety / term exists so just update it. Do stuff here if we need - so far nada
                         //make sure this matches
                         ItemAttributeVariety _itemAttributeVariety = _itemAttribute.ItemAttributeVarieties.FirstOrDefault(iav => iav.ItemAttributeVarietyLookupId == _itemAttributeVarietyLookup.ItemAttributeVarietyLookupId);
                         ///-> can this be null? It should never be
                         // copy the whole item across just in case there have been changes
-                        _itemAttributeVariety.ItemAttributeVarietyLookupDetail = _itemAttributeVarietyLookup;   
+                        _itemAttributeVariety.ItemAttributeVarietyLookupDetail = _itemAttributeVarietyLookup;
                         _itemAttributeVariety.ItemAttributeId = _itemAttribute.ItemAttributeId;
                     }
                     else
@@ -250,7 +253,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                             UoMId = _itemAttributeVarietyLookup.UoMId,
                             UoM = _itemAttributeVarietyLookup.UoM,
                             UoMQtyPerItem = 1.0
-                        }); 
+                        });
                     }
                 }
             }
@@ -282,7 +285,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                     }
                 }
                 IItemRepository _itemRepo = _AppUnitOfWork.itemRepository();
-                if (await _itemRepo.AddItem(_item) <= 0)
+                if (await _itemRepo.AddItemAsync(_item) <= 0)
                 {
                     _item.ItemId = Guid.Empty;
                 }
@@ -343,9 +346,12 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             // We have found a mapping between the woo Product and our Product id so update the Attribute table just in case.
             Guid _itemId = Guid.Empty;
             Guid _itemProductId = Guid.Empty;
+
+            ////----> body i AddOrUpdateEntity
+
             IItemRepository _itemRepository = _AppUnitOfWork.itemRepository();
             // check if the Prod based on mapped id
-            Item _item = await _itemRepository.FindFirstEagerLoadingItemAsync(i => i.ItemId == currWooProductMap.ItemId); 
+            Item _item = await _itemRepository.FindFirstEagerLoadingItemAsync(i => i.ItemId == currWooProductMap.ItemId);
             /// Now update the woo Product using the _ItemProductId returned.
             if (_item != null)
             {    // we found the Item Id so update that Id
@@ -421,13 +427,13 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             return _itemProductId;
         }
         // Get the Variety's Parent id using the WooMapping, if is not found then return Empty
-        async Task<Guid> GetItemId(int currWooProductId)
+        async Task<Guid> GetItemId(uint currWooProductId)
         {
             IAppRepository<WooProductMap> _wooProductMapRepo = _AppUnitOfWork.Repository<WooProductMap>();
-
             WooProductMap _wooProductMap = await _wooProductMapRepo.FindFirstAsync(wpa => wpa.WooProductId == currWooProductId);
             return (_wooProductMap == null) ? Guid.Empty : _wooProductMap.ItemId;
         }
+
         async Task<bool> FindAndSetParentProduct(WooItemWithParent currWooProductWithAParent)
         {
             ///Logic using the ids passed look for the linked attribute to the id then look for the ParentId  get the Guids of each and update the database
@@ -437,10 +443,16 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             Guid _attribId = await GetItemId(currWooProductWithAParent.ChildId);
             Guid _parentAttribId = await GetItemId(currWooProductWithAParent.ParentId);
 
-            bool _isDone = await SetParentCategory(_attribId, _parentAttribId);
+            bool _isDone = await SetParentProduct(_attribId, _parentAttribId);
 
-            await LogImport(currWooProductWithAParent.ChildId, $"Setting of Parent of Child Item id: {currWooProductWithAParent.ChildId} to Parent Id {currWooProductWithAParent.ParentId} status: {_isDone}", Models.WooSections.ProductCategories);
+            await LogImport((int)currWooProductWithAParent.ChildId, $"Setting of Parent of Child Item id: {currWooProductWithAParent.ChildId} to Parent Id {currWooProductWithAParent.ParentId} status: {_isDone}", Models.WooSections.ProductCategories);
             return _isDone;
+        }
+
+        private Task<bool> SetParentProduct(Guid attribId, Guid parentAttribId)
+        {
+            ////-> not done
+            throw new NotImplementedException();
         }
 
         string ProductToString(Product currWooProd, Guid importedId)
@@ -473,17 +485,19 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                 _Imported++;
                 await LogImport((int)wooProd.id, ProductToString(wooProd, _importedId), Models.WooSections.Products);
                 currImportCounters.TotalImported++;
-                currImportCounters.PercentOfRecsImported = currImportCounters.CalcPercentage(currImportCounters.TotalImported);
+                currImportCounters.CalcAndSetPercentage(currImportCounters.TotalImported);
                 StateHasChanged();
             }
             // Now we loop through all the Attributes that have parents and find them
             foreach (var ProductWithAParent in _productsWithParents)
             {
-                if (!await FindAndSetParentProduct(ProductWithAParent))
-                {
-                    if (_AppUnitOfWork.IsInErrorState())   // was there an error that was database related?
-                        return AppUnitOfWork.CONST_WASERROR;
-                }
+                bool _isDone = await FindAndSetParentProduct(ProductWithAParent);
+
+                await LogImport((int)ProductWithAParent.ChildId,
+                    $"Setting of Parent of Child Item id: {ProductWithAParent.ChildId} to Parent Id {ProductWithAParent.ParentId} " +
+                    $"status: {_isDone}", Models.WooSections.ProductCategories);
+                if (_AppUnitOfWork.IsInErrorState())   // was there an error that was database related?
+                    return AppUnitOfWork.CONST_WASERROR;
             }
             return _Imported;
         }

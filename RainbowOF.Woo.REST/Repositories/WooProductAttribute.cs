@@ -34,12 +34,12 @@ namespace RainbowOF.Woo.REST.Repositories
             }
             return _WooProductAttributes;
         }
-        public async Task<List<ProductAttribute>> GetAllProductAttributes()
+        public async Task<List<ProductAttribute>> GetAllProductAttributesAsync()
         {
             return await GetAll(null);
         }
 
-        public async Task<bool> CheckProductAttributeLink()
+        public async Task<bool> CheckProductAttributeLinkAsync()
         {
             RestAPI _RestAPI = _Woo.GetJSONRestAPI;
             int count = 0;
@@ -57,12 +57,12 @@ namespace RainbowOF.Woo.REST.Repositories
             return count > 0;
         }
 
-        public async Task<List<ProductAttribute>> GetProductAttributesOfType(string pProductAttributeType)
+        public async Task<List<ProductAttribute>> GetProductAttributesOfTypeAsync(string pProductAttributeType)
         {
             return await GetAll(new Dictionary<string, string>() { { "type", pProductAttributeType } });
         }
 
-        public async Task<int> GetProductAttributeCount()
+        public async Task<int> GetProductAttributeCountAsync()
         {
             int _count = 0;
             RestAPI _RestAPI = _Woo.GetRootRestAPI;

@@ -238,21 +238,21 @@ else
                                             </FieldBody>
                                         </Field>
                                     </Validation>
-                                    <Validation>
+                                    <!--<Validation>
                                         <Field Horizontal="true">
                                             <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Parent Item</FieldLabel>
                                             <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
                                                 <Select TValue="Guid" SelectedValue="@(ItemEditting.ParentItemId == null ? Guid.Empty : (Guid)ItemEditting.ParentItemId)"
                                                         SelectedValueChanged="@((v) => ItemEditting.ParentItemId = v)">
-                                                    <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
+                                                    <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>-->
                                                     @*@foreach (var item in _ListOfUoMSymbols)
                                                         {
                                                             <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
                                                         }*@
-                                                </Select>
+                                                <!--</Select>
                                             </FieldBody>
                                         </Field>
-                                    </Validation>
+                                    </Validation>-->
                                     <Validation>
                                         <Field Horizontal="true">
                                             <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Replacement Item</FieldLabel>
@@ -385,7 +385,7 @@ else
                         <CardTitle>Item Children</CardTitle>
                     </CardHeader>
                     <CardBody>
-                        <DataGrid TItem="Item" Data="@childItems"
+                        <DataGrid TItem="ItemVariant" Data="@childItems"
                                   Sortable="true" Editable="true"
                                   Striped="true"
                                   Hoverable="true"
@@ -425,14 +425,14 @@ else
                                 </Row>
                             </LoadingTemplate>
                             <DataGridColumns>
-                                <DataGridColumn TItem="Item" Field="@nameof(Item.ItemName)" Caption="Item Name" Sortable="true" Editable="true" ValidationPattern="^\S.{2,100}">
+                                <DataGridColumn TItem="ItemVariant" Field="@nameof(ItemVariant.ItemVariantName)" Caption="Item Name" Sortable="true" Editable="true" ValidationPattern="^\S.{2,100}">
                                 </DataGridColumn>
-                                <DataGridColumn TItem="Item" Field="@nameof(Item.SKU)" Caption="SKU" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,100}">
+                                <DataGridColumn TItem="ItemVariant" Field="@nameof(ItemVariant.SKU)" Caption="SKU" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,100}">
                                 </DataGridColumn>
-                                <DataGridColumn TItem="Item" Field="@nameof(Item.IsEnabled)" Caption="Enabled?" Sortable="true" Editable="true">
+                                <DataGridColumn TItem="ItemVariant" Field="@nameof(ItemVariant.IsEnabled)" Caption="Enabled?" Sortable="true" Editable="true">
                                     <DisplayTemplate>
                                         @{
-                                            var rowItem = (context as Item);
+                                            var rowItem = (context as ItemVariant);
                                             @(rowItem.IsEnabled ? "yes" : "no");
                                         }
                                     </DisplayTemplate>
@@ -454,7 +454,7 @@ else
                                             }
                                         </FilterTemplate>*@
                                 </DataGridColumn>
-                                <DataGridColumn TItem="Item" Field="@nameof(Item.ItemAbbreviatedName)" Caption="Abrv" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,10}">
+                                <DataGridColumn TItem="ItemVariant" Field="@nameof(ItemVariant.ItemVariantAbbreviation)" Caption="Abrv" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,10}">
                                 </DataGridColumn>
                             </DataGridColumns>
                         </DataGrid>

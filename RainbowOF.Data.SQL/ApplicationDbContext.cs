@@ -35,6 +35,7 @@ namespace RainbowOF.Data.SQL
         public virtual DbSet<ItemAttribute> ItemAttributes { get; set; }
         public virtual DbSet<ItemAttributeVariety> ItemAttributeVarieties { get; set; }
         public virtual DbSet<ItemImage> ItemImages { get; set; }
+        public virtual DbSet<ItemVariant> ItemVariants { get; set; }
 
         //public DbSet<ItemUnit> ItemUnits { get; set; }
         //public DbSet<Packaging> Packagings { get; set; }
@@ -57,6 +58,7 @@ namespace RainbowOF.Data.SQL
         public virtual DbSet<WooProductAttributeMap> WooProductAttributeMappings { get; set; }
         public virtual DbSet<WooProductAttributeTermMap> WooProductAttributeTermMappings { get; set; }
         public virtual DbSet<WooProductMap> WooProductMaps { get; set; }
+        public virtual DbSet<WooProductVariantMap> WooProductVariantMaps { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -82,6 +84,8 @@ namespace RainbowOF.Data.SQL
             modelBuilder.ApplyConfiguration<ItemAttribute>(new ItemAttributeModelConfig());
             modelBuilder.Entity<ItemAttributeVariety>().ToTable(nameof(ItemAttributeVarieties));
             modelBuilder.ApplyConfiguration<ItemAttributeVariety>(new ItemAttributeVarietyModelConfig());
+            modelBuilder.Entity<ItemVariant>().ToTable(nameof(ItemVariants));
+            modelBuilder.ApplyConfiguration<ItemVariant>(new ItemVariantModelConfig());
             //modelBuilder.Entity<ItemGroup>().ToTable(nameof(ItemGroups));
             //modelBuilder.ApplyConfiguration<ItemGroup>(new ItemGroupModelConfig());
             ////modelBuilder.Entity<UsedItemGroup>().ToTable(nameof(UsedItemGroups));
@@ -106,6 +110,7 @@ namespace RainbowOF.Data.SQL
             modelBuilder.Entity<WooProductAttributeTermMap>().ToTable(nameof(WooProductAttributeTermMappings));
             modelBuilder.ApplyConfiguration<WooProductAttributeTermMap>(new WooProductAttributeTermMappingModelConfig());
             modelBuilder.Entity<WooProductMap>().ToTable(nameof(WooProductMaps));
+            modelBuilder.Entity<WooProductVariantMap>().ToTable(nameof(WooProductVariantMaps));
             #endregion
         }
     }

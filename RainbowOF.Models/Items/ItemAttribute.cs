@@ -22,6 +22,5 @@ namespace RainbowOF.Models.Items
         public ItemAttributeLookup ItemAttributeDetail { get; set; }
         [ForeignKey("ItemAttributeId")]
         public List<ItemAttributeVariety> ItemAttributeVarieties { get; set; }
-
     }
 }

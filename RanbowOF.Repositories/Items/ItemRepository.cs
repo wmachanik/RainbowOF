@@ -139,7 +139,7 @@ namespace RainbowOF.Repositories.Items
                 // start with a basic Linq Query with Eager loading
                 // do eager loading since we are working with paging, so load parent, replacement, categories, attributes and attribute varieties
                 IQueryable<Item> _query = _table
-                    .Include(itm => itm.ParentItem)
+//                    .Include(itm => itm.ParentItem)  --> variant
                     .Include(itm => itm.ReplacementItem)
                     .Include(itm => itm.ItemCategories)
                         .ThenInclude(cats => cats.ItemCategoryDetail)
@@ -219,7 +219,6 @@ namespace RainbowOF.Repositories.Items
             {
                 _Logger.LogDebug($"Finding first eager loading - whole item using predicate: {predicate.ToString()}");
                 _item = await _table
-                    .Include(itm => itm.ParentItem)
                     .Include(itm => itm.ReplacementItem)
                     .Include(itm => itm.ItemCategories)
                         .ThenInclude(itmCat => itmCat.ItemCategoryDetail)
@@ -230,6 +229,10 @@ namespace RainbowOF.Repositories.Items
                         .ThenInclude(itmAttVars => itmAttVars.ItemAttributeVarietyLookupDetail)
                     .Include(itm => itm.ItemImages)
                     .FirstOrDefaultAsync(predicate);
+
+                /// -> do we include variants
+                    ///.Include(itm => itm.ParentItem)
+
             }
             catch (Exception ex)
             {
@@ -241,16 +244,16 @@ namespace RainbowOF.Repositories.Items
             return _item;
         }
 
-        public async Task<Item> FindFirstItemBySKU(string sourceSKU)
+        public async Task<Item> FindFirstItemBySKUAsync(string sourceSKU)
         {
             return await FindFirstAsync(i => i.SKU == sourceSKU);            
         }
 
-        public async Task<int> AddItem(Item newItem)
+        public async Task<int> AddItemAsync(Item newItem)
         {
             if (!String.IsNullOrEmpty(newItem.SKU))
             {
-                if (await FindFirstItemBySKU(newItem.SKU) != null)
+                if (await FindFirstItemBySKUAsync(newItem.SKU) != null)
                 {
                     _AppUnitOfWork.LogAndSetErrorMessage($"ERROR adding Item:  {newItem.ToString()} - duplicate SKU found in database");
                     return AppUnitOfWork.CONST_WASERROR;

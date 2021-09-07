@@ -13,12 +13,12 @@ namespace RainbowOF.Models.Woo
     {
         public int WooCategoryMapId { get; set; }
         [Required]
-        public int WooCategoryId { get; set; }
+        public uint WooCategoryId { get; set; }
         [StringLength(255, MinimumLength = 1)]
         public string WooCategoryName { get; set; }
         [StringLength(255, MinimumLength = 1)]
         public string WooCategorySlug { get; set; }
-        public int? WooCategoryParentId { get; set; }
+        public uint? WooCategoryParentId { get; set; }
         // what it  links to on this side.
         [DefaultValue(true)]
         [DisplayName("Can Update?")]

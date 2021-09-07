@@ -25,11 +25,11 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
         protected override async Task OnInitializedAsync()
         {
             base.OnInitialized();
-            ModelItemCategoryLookups = await GetItemCategoryLookups(SourceParentCategoryId, CanUseAsync);
+            ModelItemCategoryLookups = await GetItemCategoryLookupsAsync(SourceParentCategoryId, CanUseAsync);
 //            await InvokeAsync(StateHasChanged);
         }
 
-        async Task<List<ItemCategoryLookup>> GetItemCategoryLookups(Guid? sourceParentId, bool IsAsyncCall = true)
+        async Task<List<ItemCategoryLookup>> GetItemCategoryLookupsAsync(Guid? sourceParentId, bool IsAsyncCall = true)
         {
             if (IsBusy) return null;
             IsBusy = true;

@@ -28,17 +28,17 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         IAppUnitOfWork _AppUnitOfWork { get; set; }
         protected override async Task OnInitializedAsync()
         {
-            await LoadWooSyncLog();
+            await LoadWooSyncLogAsync();
         }
 
-        private async Task<List<DateTime>> GetAllUniqueLogDates()
+        private async Task<List<DateTime>> GetAllUniqueLogDatesAsync()
         {
             IWooSyncLogRepository _WooSyncLogRepository = _AppUnitOfWork.wooSyncLogRepository();
 
             return await _WooSyncLogRepository.GetDistinctLogDates();
         }
 
-        private async Task<List<WooSyncLog>> GetSyncLogRowsByDate(DateTime selectedDateTimeInLog)
+        private async Task<List<WooSyncLog>> GetSyncLogRowsByDateAsync(DateTime selectedDateTimeInLog)
         {
             IWooSyncLogRepository _WooSyncLogRepository = _AppUnitOfWork.wooSyncLogRepository();
 
@@ -46,7 +46,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         }
 
 
-        private async Task LoadWooSyncLog()
+        private async Task LoadWooSyncLogAsync()
         {
             StateHasChanged();
             ////////
@@ -54,11 +54,11 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             /// Then we want to return only those records that are from that date
             /// We need to reselect each time the DDL is changed
             ///
-            DatesInLog = await GetAllUniqueLogDates();   /// gets unique dates and sorts descending
+            DatesInLog = await GetAllUniqueLogDatesAsync();   /// gets unique dates and sorts descending
             if (DatesInLog != null)
             {
                 IndexSelectedDateTimeInLog = 0;
-                WooSyncLogRows = await GetSyncLogRowsByDate(DatesInLog[0]);
+                WooSyncLogRows = await GetSyncLogRowsByDateAsync(DatesInLog[0]);
             }
 
             // need to rather add paging this thing is gonna get large
@@ -82,12 +82,12 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             // || model.WooSyncDateTime?.Contains(customFilterValue, StringComparison.OrdinalIgnoreCase) == true;
         }
 
-        public async Task OnLogDateChanged(ChangeEventArgs e)
+        public async Task OnLogDateChangedAsync(ChangeEventArgs e)
         {
             string _SelectedIndexStr = (string)e.Value;
             int _SelectedIndex = int.Parse(_SelectedIndexStr);   // position in the list
             IndexSelectedDateTimeInLog = _SelectedIndex; //  DatesInLog.FindIndex(0, dt => dt.Date == DatesInLog[_SelectedDate]);
-            WooSyncLogRows = await GetSyncLogRowsByDate(DatesInLog[_SelectedIndex]);
+            WooSyncLogRows = await GetSyncLogRowsByDateAsync(DatesInLog[_SelectedIndex]);
             StateHasChanged();
         }
     }

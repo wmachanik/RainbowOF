@@ -44,7 +44,7 @@ namespace RainbowOF.Woo.REST.Repositories
                 _wcObject = value;
             }
         }
-        public async Task<List<ProductAttributeTerm>> GetAttributeTermsByAtttribute(ProductAttribute pProductAttribute)
+        public async Task<List<ProductAttributeTerm>> GetAttributeTermsByAtttributeAsync(uint parentProductAttributeId)
         {
             RestAPI _RestAPI = _Woo.GetJSONRestAPI;
 
@@ -61,7 +61,7 @@ namespace RainbowOF.Woo.REST.Repositories
                 while (_GetMore)
                 {
                     _ProductAttributeTermParams["page"] = _Page.ToString();
-                    List<ProductAttributeTerm> TwentyProductAttributeTerms = await _WC.Attribute.Terms.GetAll(pProductAttribute.id, _ProductAttributeTermParams);
+                    List<ProductAttributeTerm> TwentyProductAttributeTerms = await _WC.Attribute.Terms.GetAll(parentProductAttributeId, _ProductAttributeTermParams);
 
                     if (TwentyProductAttributeTerms.Count > 0)
                     {

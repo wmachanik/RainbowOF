@@ -50,7 +50,7 @@ namespace RainbowOF.Woo.REST.Repositories
             }
         }
 
-        private async Task<List<ProductCategory>> GetAll(Dictionary<string, string> ProductCategoryParams)
+        private async Task<List<ProductCategory>> GetAllAsync(Dictionary<string, string> ProductCategoryParams)
         {
             //            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
 
@@ -92,7 +92,7 @@ namespace RainbowOF.Woo.REST.Repositories
         }
         public async Task<List<ProductCategory>> GetAllProductCategoriesAsync()
         {
-            return await GetAll(null);
+            return await GetAllAsync(null);
         }
 
         public async Task<bool> CheckProductCategoryLinkAsync()
@@ -117,7 +117,7 @@ namespace RainbowOF.Woo.REST.Repositories
 
         public async Task<List<ProductCategory>> GetProductCategoriesOfTypeAsync(string pProductCategoryType)
         {
-            return await GetAll(new Dictionary<string, string>() { { "type", pProductCategoryType } });
+            return await GetAllAsync(new Dictionary<string, string>() { { "type", pProductCategoryType } });
         }
 
         public async Task<int> GetProductCategoryCountAsync()
@@ -145,14 +145,14 @@ namespace RainbowOF.Woo.REST.Repositories
             return _count;
 
         }
-        public async Task<ProductCategory> GetProductCategoryByIdAsync(int deleteWooEntityId)
+        public async Task<ProductCategory> GetProductCategoryByIdAsync(uint deleteWooEntityId)
         {
             RestAPI _RestAPI = _Woo.GetJSONRestAPI;
             ProductCategory _productCategory = null;
             try
             {
                 WCObject _WC = new WCObject(_RestAPI);
-                _productCategory = await _WC.Category.Get(deleteWooEntityId);
+                _productCategory = await _WC.Category.Get((int)deleteWooEntityId);
             }
             catch (Exception ex)
             {
@@ -179,14 +179,14 @@ namespace RainbowOF.Woo.REST.Repositories
         //    return _productCategory;
         //}
 
-        public async Task<ProductCategory> DeleteProductCategoryByIdAsync(int deleteWooProductCategoryId)
+        public async Task<ProductCategory> DeleteProductCategoryByIdAsync(uint deleteWooProductCategoryId)
         {
             ProductCategory _ProductCategory = null;
             WCObject _WC = GetWCObject;
             try
             {
                 // looks like it may need a force parameter, is this a good thing?
-                _ProductCategory = await _WC.Category.Delete(deleteWooProductCategoryId, true);   // force = true
+                _ProductCategory = await _WC.Category.Delete((int)deleteWooProductCategoryId, true);   // force = true
             }
             catch (Exception ex)
             {

@@ -42,7 +42,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Sys
             //int _count = await Task.Run(() => _WooProducts.GetProductCount());    //CheckProductLink())
             //WooStatus = ((_count > 0) ? $"Success - product count: {_count}" : "Failed");
 
-            bool _success = await Task.Run(() => _WooProducts.CheckProductLink());   // GetProductCount());    //
+            bool _success = await Task.Run(() => _WooProducts.CheckProductLinkAsync());   // GetProductCount());    //
             WooStatus = (_success ? $"Success" : "Failed");
 
             Waiting = false;

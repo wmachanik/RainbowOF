@@ -495,10 +495,10 @@ namespace RainbowOF.Repositories.Lookups
             return await _wooCategoryMapRepository.AddAsync(new WooCategoryMap
             {
                 ItemCategoryLookupId = addViewEntity.ItemCategoryLookupId,
-                WooCategoryId = (int)newWooProductCategory.id,
+                WooCategoryId = (uint) newWooProductCategory.id,
                 WooCategoryName = addViewEntity.CategoryName,
                 CanUpdate = true,
-                WooCategoryParentId = (int)newWooProductCategory.parent
+                WooCategoryParentId = (uint) newWooProductCategory.parent
             });
         }
 
@@ -553,11 +553,11 @@ namespace RainbowOF.Repositories.Lookups
                         {
                             // get id of parent
                             WooCategoryMap _ParentWooCategoryMap = await GetWooCategoryMapFromID(updateViewEntity.ParentCategoryId);
-                            int _newParentId = (_ParentWooCategoryMap == null) ? 0 : _ParentWooCategoryMap.WooCategoryId;
+                            uint _newParentId = (_ParentWooCategoryMap == null) ? 0 : _ParentWooCategoryMap.WooCategoryId;
                             if ((!_wooProductCategory.name.Equals(updateViewEntity.CategoryName)) || ((_wooProductCategory.parent ?? 0) != _newParentId))
                             {
                                 _wooProductCategory.name = updateViewEntity.CategoryName;  // only update if necessary
-                                _wooProductCategory.parent = (uint)_newParentId;
+                                _wooProductCategory.parent = _newParentId;
                                 var _res = ((await _wooProductCategoryRepository.UpdateProductCategoryAsync(_wooProductCategory)));
                                 _result = ((_res == null) || (_res.id ==null)) ? AppUnitOfWork.CONST_WASERROR : (int)_res.id; // if null there is an issue
                             }

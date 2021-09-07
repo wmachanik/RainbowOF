@@ -53,9 +53,6 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("ParentItemId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid?>("PrimaryItemCategoryLookupId")
                         .HasColumnType("uniqueidentifier");
 
@@ -81,8 +78,6 @@ namespace RainbowOF.Data.SQL.Migrations
 
                     b.HasIndex("ItemName")
                         .IsUnique();
-
-                    b.HasIndex("ParentItemId");
 
                     b.HasIndex("ReplacementItemId");
 
@@ -201,6 +196,60 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.HasIndex("ItemId");
 
                     b.ToTable("ItemImages");
+                });
+
+            modelBuilder.Entity("RainbowOF.Models.Items.ItemVariant", b =>
+                {
+                    b.Property<Guid>("ItemVariantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("BasePrice")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("ImageURL")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ItemVariantAbbreviation")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("ItemVariantName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("ManageStock")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("QtyInStock")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SKU")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("ItemVariantId");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("ItemVariantId", "ItemId")
+                        .IsUnique();
+
+                    b.ToTable("ItemVariants");
                 });
 
             modelBuilder.Entity("RainbowOF.Models.Logs.WooSyncLog", b =>
@@ -526,15 +575,15 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Property<Guid>("ItemCategoryLookupId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("WooCategoryId")
-                        .HasColumnType("int");
+                    b.Property<long>("WooCategoryId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("WooCategoryName")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<int?>("WooCategoryParentId")
-                        .HasColumnType("int");
+                    b.Property<long?>("WooCategoryParentId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("WooCategorySlug")
                         .HasMaxLength(255)
@@ -609,19 +658,32 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.ToTable("WooProductMaps");
                 });
 
+            modelBuilder.Entity("RainbowOF.Models.Woo.WooProductVariantMap", b =>
+                {
+                    b.Property<Guid>("WooProductVariantMapId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("CanUpdate")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("ItemVariantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("WooProductVariantId")
+                        .HasColumnType("int");
+
+                    b.HasKey("WooProductVariantMapId");
+
+                    b.ToTable("WooProductVariantMaps");
+                });
+
             modelBuilder.Entity("RainbowOF.Models.Items.Item", b =>
                 {
-                    b.HasOne("RainbowOF.Models.Items.Item", "ParentItem")
-                        .WithMany()
-                        .HasForeignKey("ParentItemId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
                     b.HasOne("RainbowOF.Models.Items.Item", "ReplacementItem")
                         .WithMany()
                         .HasForeignKey("ReplacementItemId")
                         .OnDelete(DeleteBehavior.NoAction);
-
-                    b.Navigation("ParentItem");
 
                     b.Navigation("ReplacementItem");
                 });
@@ -693,6 +755,15 @@ namespace RainbowOF.Data.SQL.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("RainbowOF.Models.Items.ItemVariant", b =>
+                {
+                    b.HasOne("RainbowOF.Models.Items.Item", null)
+                        .WithMany("ItemVariants")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("RainbowOF.Models.Lookups.ItemAttributeVarietyLookup", b =>
                 {
                     b.HasOne("RainbowOF.Models.Lookups.ItemAttributeLookup", null)
@@ -746,6 +817,8 @@ namespace RainbowOF.Data.SQL.Migrations
                     b.Navigation("ItemCategories");
 
                     b.Navigation("ItemImages");
+
+                    b.Navigation("ItemVariants");
                 });
 
             modelBuilder.Entity("RainbowOF.Models.Items.ItemAttribute", b =>

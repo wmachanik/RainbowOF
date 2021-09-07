@@ -134,7 +134,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         //    return _ItemAttributeLookups;
         //}
 
-        async Task HandleCustomerSearchOnKeyUp(KeyboardEventArgs kbEventHandler)
+        async Task HandleCustomerSearchOnKeyUpAsync(KeyboardEventArgs kbEventHandler)
         {
             var key = (string)kbEventHandler.Key;   // not using this but just in case
                                                     //if (_gridSettings.CustomFilterValue.Length > 2)
@@ -142,7 +142,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             await _DataGrid.Reload();
             //}
         }
-        async Task OnRowInserting(SavedRowItem<ItemAttributeLookupView, Dictionary<string, object>> insertedItem)
+        async Task OnRowInsertingAsync(SavedRowItem<ItemAttributeLookupView, Dictionary<string, object>> insertedItem)
         {
             var newItem = insertedItem.Item;
 
@@ -153,13 +153,13 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         {
             newItem = _AttributeWooLinkedViewRepository.NewItemDefaultSetter(newItem);
         }
-        async Task<int> UpdateItemAttributeLookup(ItemAttributeLookupView updatedCatItemView)
+        async Task<int> UpdateItemAttributeLookupAsync(ItemAttributeLookupView updatedCatItemView)
         {
             int _result = await _AttributeWooLinkedViewRepository.UpdateItemAsync(updatedCatItemView);
             await _DataGrid.Reload();
             return _result;
         }
-        async Task OnRowUpdating(SavedRowItem<ItemAttributeLookupView, Dictionary<string, object>> updatedItem)
+        async Task OnRowUpdatingAsync(SavedRowItem<ItemAttributeLookupView, Dictionary<string, object>> updatedItem)
         {
             await _AttributeWooLinkedViewRepository.UpdateRowAsync(updatedItem.Item);
             await _DataGrid.Reload();
@@ -172,7 +172,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             _GridSettings.DeleteConfirmation.ShowModal("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.AttributeName}?", SelectedItemAttributeLookup.HasECommerceAttributeMap);  //,"Delete","Cancel"); - passed in on init
         }
         //
-        async Task ConfirmAddWooItem_Click(bool confirmClicked)
+        async Task ConfirmAddWooItem_ClickAsync(bool confirmClicked)
         {
             if (confirmClicked)
             {
@@ -181,7 +181,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
                 await _DataGrid.Reload();
             }
         }
-        async Task ConfirmDeleteWooItem_Click(bool confirmClicked)
+        async Task ConfirmDeleteWooItem_ClickAsync(bool confirmClicked)
         {
             IsLoading = true;
             // they want to delete the item to Woo 
@@ -192,7 +192,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             await _DataGrid.Reload();
         }
         //protected async Task
-        async Task ConfirmDelete_Click(ConfirmModalWithOption.ConfirmResults confirmationOption)
+        async Task ConfirmDelete_ClickAsync(ConfirmModalWithOption.ConfirmResults confirmationOption)
         {
             IsLoading = true;
             if ((confirmationOption == ConfirmModalWithOption.ConfirmResults.confirm) || (confirmationOption == ConfirmModalWithOption.ConfirmResults.confirmWithOption))
@@ -207,7 +207,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             IsLoading = false;
             await _DataGrid.Reload();
         }
-        public async Task OnRowRemoved(ItemAttributeLookupView modelItem)
+        public async Task OnRowRemovedAsync(ItemAttributeLookupView modelItem)
         {
             await InvokeAsync(StateHasChanged);
             await _DataGrid.Reload();  // reload the list so the latest item is displayed - not working here I think because of the awaits so move to confirm_clicks
@@ -227,7 +227,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             }
             return _listOfOrderBys;
         }
-        async Task DoGroupAction()
+        async Task DoGroupActionAsync()
         {
             //if (SelectedBulkAction == BulkAction.none)
             //    return;   ----> button should be disabled 

@@ -6,9 +6,13 @@
         {
             <Blazorise.Label>Importing @ImportingThis....</Blazorise.Label>
         }
-        else
+        else if (ImportingThis.Equals(string.Empty))
         {
             <Blazorise.Label>Check settings and select what to import</Blazorise.Label>
+        }
+        else
+        {
+            <Blazorise.Label>Import complete: @ImportingThis</Blazorise.Label>
         }
     </Blazorise.CardTitle>
 
@@ -16,7 +20,8 @@
         @if (IsImporting() && (currImportCounters.MaxRecs > 0))
         {
             <Blazorise.Progress Margin="Margin.Is3.FromBottom" Size="Size.Medium">
-                <Blazorise.ProgressBar Background="Background.Info" Max="currImportCounters.MaxRecs" Animated="true" Min="0" Value="currImportCounters.PercentOfRecsImported" Striped="true">@currImportCounters.PercentOfRecsImported%</Blazorise.ProgressBar>
+                <Blazorise.ProgressBar Background="Background.Info" Max="100" Animated="true" Min="0" Value="currImportCounters.PercentOfRecsImported" Striped="true">@currImportCounters.PercentOfRecsImported%</Blazorise.ProgressBar>
+                @*---MAX = currImportCounters.MaxRecs---*@
             </Blazorise.Progress>
         }
     </Blazorise.CardBody>

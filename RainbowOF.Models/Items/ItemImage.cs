@@ -13,6 +13,7 @@ namespace RainbowOF.Models.Items
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid ItemImageId { get; set; }
+        [Required]
         public Guid ItemId { get; set; }
         [StringLength(100)]
         [DisplayName("Item Image Name")]

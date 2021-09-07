@@ -19,5 +19,6 @@ namespace RainbowOF.Data.SQL.EntityConfigs.Items
             //itemAttributeModelBuilder.HasIndex(i => i.SKU)
             //    
         }
+        
     }
 }

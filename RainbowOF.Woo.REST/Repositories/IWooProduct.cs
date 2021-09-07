@@ -9,11 +9,11 @@ namespace RainbowOF.Woo.REST.Repositories
 {
     public interface IWooProduct
     {
-        Task<List<Product>> GetProductsOfType(string pProductType);
-        Task<List<Product>> GetAllProducts();
-        Task<List<Product>> GetAllProductsInStock();
-        Task<bool> CheckProductLink();
-        Task<int> GetProductCount();
+        Task<List<Product>> GetProductsOfTypeAsync(string pProductType);
+        Task<List<Product>> GetAllProductsAsync();
+        Task<List<Product>> GetAllProductsInStockAsync();
+        Task<bool> CheckProductLinkAsync();
+        Task<int> GetProductCountAsync();
         //// all UI related stuff here
         #region DataHandlingStuffForUIIntegration
         Task<Product> GetProductByIdAsync(int deleteWooEntityId);

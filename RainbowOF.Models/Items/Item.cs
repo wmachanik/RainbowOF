@@ -6,17 +6,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RainbowOF.Models.Items
 {
-    public enum ItemTypes
-    { 
-        Simple, 
-        Variable, 
-        GroupByType, 
-        Service, 
-        Collection, 
-        URL, 
-        VirtualItem, 
-        Other
-    }
     public class Item
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -33,8 +22,8 @@ namespace RainbowOF.Models.Items
         [StringLength(500)]    /// need to increase to allow more from Woo
         public string ItemDetail { get; set; }
         public Guid? PrimaryItemCategoryLookupId { get; set; }
-        [DefaultValue(0)]
-        public Guid? ParentItemId { get; set; }
+        //[DefaultValue(0)]
+        //public Guid? ParentItemId { get; set; } --> removed added as variant
         public Guid? ReplacementItemId { get; set; }
         [StringLength(10, ErrorMessage = "Abbreviated name")]
         public string ItemAbbreviatedName { get; set; }
@@ -52,17 +41,16 @@ namespace RainbowOF.Models.Items
         [Timestamp]
         public byte[] RowVersion { get; set; }
         // Related tables
-        [ForeignKey("ParentItemId")]
-        public virtual Item ParentItem { get; set; }
         [ForeignKey("ReplacementItemId")]
         public virtual Item ReplacementItem { get; set; }
         [ForeignKey("ItemId")]
         public virtual List<ItemCategory> ItemCategories { get; set; }
         [ForeignKey("ItemId")]
         public virtual List<ItemAttribute> ItemAttributes { get; set; }
-
         [ForeignKey("ItemId")]
         public virtual List<ItemImage> ItemImages { get; set; }
+        [ForeignKey("ItemId")]
+        public virtual List<ItemVariant> ItemVariants { get; set; }
 
         // may need these later
         //        public int? MerchantId { get; set; }

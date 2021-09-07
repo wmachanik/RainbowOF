@@ -9,10 +9,10 @@ namespace RainbowOF.Woo.REST.Repositories
 {
     public interface IWooProductAttribute
     {
-        Task<List<ProductAttribute>> GetProductAttributesOfType(string pProductAttributeType);
-        Task<List<ProductAttribute>> GetAllProductAttributes();
-        Task<bool> CheckProductAttributeLink();
-        Task<int> GetProductAttributeCount();
+        Task<List<ProductAttribute>> GetProductAttributesOfTypeAsync(string pProductAttributeType);
+        Task<List<ProductAttribute>> GetAllProductAttributesAsync();
+        Task<bool> CheckProductAttributeLinkAsync();
+        Task<int> GetProductAttributeCountAsync();
         Task<ProductAttribute> GetProductAttributeByIdAsync(int sourceWooEntityId);
         Task<ProductAttribute> DeleteProductAttributeByIdAsync(int deleteWooProductAttributeId);
         Task<ProductAttribute> AddProductAttributeAsync(ProductAttribute addWooProductAttribute);

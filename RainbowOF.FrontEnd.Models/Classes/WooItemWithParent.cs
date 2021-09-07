@@ -8,7 +8,7 @@ namespace RainbowOF.FrontEnd.Models.Classes
 {
     public class WooItemWithParent
     {
-        public int ChildId { get; set; }
-        public int ParentId { get; set; }
+        public uint ChildId { get; set; }
+        public uint ParentId { get; set; }
     }
 }

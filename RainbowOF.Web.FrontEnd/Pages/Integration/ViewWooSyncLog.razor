@@ -21,7 +21,7 @@
                             }
                             else
                             {
-                                <Select @bind-SelectedValue="@IndexSelectedDateTimeInLog" @onchange="OnLogDateChanged">
+                                <Select @bind-SelectedValue="@IndexSelectedDateTimeInLog" @onchange="OnLogDateChangedAsync">
                                     @{
                                             int i = 0;
                                             foreach (var when in DatesInLog)

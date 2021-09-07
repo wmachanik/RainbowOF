@@ -13,10 +13,10 @@ namespace RainbowOF.Woo.REST.Repositories
         Task<List<ProductCategory>> GetAllProductCategoriesAsync();
         Task<bool> CheckProductCategoryLinkAsync();
         Task<int> GetProductCategoryCountAsync();
-        Task<ProductCategory> GetProductCategoryByIdAsync(int deleteWooEntityId);
-        Task<ProductCategory> DeleteProductCategoryByIdAsync(int deleteWooProductCategoryId);
+        Task<ProductCategory> GetProductCategoryByIdAsync(uint deleteWooEntityId);
+        Task<ProductCategory> DeleteProductCategoryByIdAsync(uint deleteWooProductCategoryId);
         Task<ProductCategory> AddProductCategoryAsync(ProductCategory addWooProductCategory);
-//        Task<ProductCategory> FindProductCategoryByNameAsync(string findCategoryName); -> wooconmmerce does not support a search by string
+//        Task<ProductCategory> FindProductCategoryByNameAsync(string findCategoryName); -> woocommerce does not support a search by string
         Task<ProductCategory> UpdateProductCategoryAsync(ProductCategory updateWooProductCategory);
     }
 }

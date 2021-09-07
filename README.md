@@ -57,26 +57,30 @@ Done
 	- Items (only parent and essentially data)
 - Tools, including:
 	- Basic modal support
-	- Colour piciking tool
+	- Colour picking tool
 	- Toast messages (may migrate to blazorise solution)
 - Items:
-	- Category Lookup Component, including fitler, sort and paging support. Also CRUD with Woo integration.
-	- Attributes Lookup Component, including fitler, sort and paging support. Also CRUD with Woo integration.
-	- Attributes Varieties Lookup Component, used in Attributes Grid, and also in Attribute Varieties. Fitler, sort and paging done. CRUD done with Woo Support
-	- Items Grid View componenet. With fitler, sort and paging support. Editting moved to seperate component
-	- All done using an interface that addes a view then has similar CRUD / Fitler / Sort / Paging calls
+	- Category Lookup Component, including filter, sort and paging support. Also CRUD with Woo integration.
+	- Attributes Lookup Component, including filter, sort and paging support. Also CRUD with Woo integration.
+	- Attributes Varieties Lookup Component, used in Attributes Grid, and also in Attribute Varieties. Filter, sort and paging done. CRUD done with Woo Support
+	- Items Grid View component. With filter, sort and paging support. Editing moved to separate component
+	- All done using an interface that adds a view then has similar CRUD / Filter / Sort / Paging calls
 
 Busy
 -----
+- Update of design / tech document
 - Complete the Items edit:
 	- Integrate categories, specifically predicable / trackable categories
-	- Integreate attributes, specifically variation attributes so that Item variations (or children) can be created and dispalyed.
+	- Integrate attributes, specifically variation attributes so that Item variations (or children) can be created and displayed.
 	- Add a Woo Sync to pull the Item Variations (to be done via an interface that allows Woo Import to use it
 	- CRUD support to and from Database and also with Woo integration
+	- Complete Woo Import of Items to include variables
+	- Display only parents or parents and child with a sub-grid in items view
 
 To Do
 ------
-- Additonal item types - GroupBy / virtual / collections
+- Each section will first be added to the design then do. OPnce done the design doc is to be reviewed, and updated with a status.
+- Additional item types - GroupBy / virtual (is this a type or a separate setting?) / collections
 - Contacts all of it, including:
 	- Data
 	- Woo
@@ -87,19 +91,21 @@ To Do
 	- Woo
 	- Delivery sheet management
 	- Predications ?	
-- Third Party manager / Repairs
+- Third Party manager / Repairs (was called repairs move to third party)
 - Reminder emails and notifications including
-	- Prediciton (do we store in a table or calculate?
+	- Prediction (do we store in a table or calculate?
 	- Mobile?
 - CSV Import (of the old data, but also support of the new stuff)
+- Fix menu to be more like blazorise
 - Security:
-	- google / ms single sign on 
+	- Google / ms single sign on 
 - Auto Creation of sample data and table
 - Move to Cloud database.
 
 Next Phase
 ----------
 - Open source the project?
+- Fix the import to fire tasks so that it imports n products at a time - so more async
 - Mobile app to allow orders and tracking
 - Sage / Accounting integration
 - Item Templates > creation of items based on templates

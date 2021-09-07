@@ -28,7 +28,7 @@
                             Custom Search
                         </FieldLabel>
                         <FieldBody Style="width:80%">
-                            <TextEdit @bind-Text="@_GridSettings.CustomFilterValue" @onkeyup="HandleCustomerSearchOnKeyUp" />
+                            <TextEdit @bind-Text="@_GridSettings.CustomFilterValue" @onkeyup="HandleCustomerSearchOnKeyUpAsync" />
                         </FieldBody>
                     </Field>
                 </Fields>
@@ -61,7 +61,7 @@
                         <FieldBody>
                             &nbsp;&nbsp;&nbsp;&nbsp;
                             <Tooltip Text="Perform group actions on Attributes" Placement="TooltipPlacement.Right">
-                                <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Disabled="((SelectedBulkAction == BulkAction.none) || (SelectedItemAttributeLookups == null) || (SelectedItemAttributeLookups?.Count == 0))" Clicked="DoGroupAction">Group Action(s)</Blazorise.Button>
+                                <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Disabled="((SelectedBulkAction == BulkAction.none) || (SelectedItemAttributeLookups == null) || (SelectedItemAttributeLookups?.Count == 0))" Clicked="DoGroupActionAsync">Group Action(s)</Blazorise.Button>
                             </Tooltip>
                         </FieldBody>
                     </Field>
@@ -98,10 +98,10 @@
                           @bind-SelectedRow="@seletectedItem"
                           @bind-SelectedRows="@SelectedItemAttributeLookups"
                           DetailRowTrigger="@((item)=>(item.ItemAttributeVarietyLookups?.Count > 0  && item.ItemAttributeLookupId == seletectedItem?.ItemAttributeLookupId))"
-                          RowInserted="@OnRowInserting"
-                          RowUpdated="@OnRowUpdating"
+                          RowInserted="@OnRowInsertingAsync"
+                          RowUpdated="@OnRowUpdatingAsync"
                           RowRemoving="@OnRowRemoving"
-                          RowRemoved="@OnRowRemoved"
+                          RowRemoved="@OnRowRemovedAsync"
                           Narrow="@_GridSettings.IsNarrow" Filterable="@_GridSettings.IsFilterable"
                           UseInternalEditing="true"
                           ValidationsSummaryLabel="Error validating data. Following error occurs..."
@@ -381,12 +381,12 @@
 
 <RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage=" Attribute Message" NotificationTitle="" @ref="@_GridSettings.PopUpRef" />
 
-<RainbowOF.Components.Modals.ConfirmModal @ref="_GridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_Click" />
+<RainbowOF.Components.Modals.ConfirmModal @ref="_GridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_ClickAsync" />
 
-<RainbowOF.Components.Modals.ConfirmModal @ref="_GridSettings.DeleteWooItemConfirmation" ConfirmationClicked="ConfirmDeleteWooItem_Click" />
+<RainbowOF.Components.Modals.ConfirmModal @ref="_GridSettings.DeleteWooItemConfirmation" ConfirmationClicked="ConfirmDeleteWooItem_ClickAsync" />
 
 <RainbowOF.Components.Modals.ConfirmModalWithOption @ref="_GridSettings.DeleteConfirmation"
-                                                    ConfirmationClicked="ConfirmDelete_Click"
+                                                    ConfirmationClicked="ConfirmDelete_ClickAsync"
                                                     ConfirmationMessage=@($"Are you sure you want to delete ?")
                                                     ConfirmButtonText="Delete"
                                                     ConfirmOptionCheckText="Delete from Woo Too"

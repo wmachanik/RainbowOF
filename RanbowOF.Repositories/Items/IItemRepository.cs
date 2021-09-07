@@ -30,12 +30,12 @@ namespace RainbowOF.Repositories.Items
         /// </summary>
         /// <param name="SKU">SKU to search for</param>
         /// <returns>null for none and Item if found</returns>
-        Task<Item> FindFirstItemBySKU(string sourceSKU);
+        Task<Item> FindFirstItemBySKUAsync(string sourceSKU);
         /// <summary>
         /// Add and Item to the cross-checking for SKU duplication first
         /// </summary>
         /// <param name="newItem">New item to add</param>
         /// <returns>Number of records added or Error (AppUnitOfWork.CONST_WASERROR)</returns>
-        Task<int> AddItem(Item newItem);
+        Task<int> AddItemAsync(Item newItem);
     }
 }

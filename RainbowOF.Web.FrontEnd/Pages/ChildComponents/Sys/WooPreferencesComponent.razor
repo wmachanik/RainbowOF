@@ -36,7 +36,7 @@ else
                 <span class="input-group-text left-form-min">Woo Root API Postfix</span>
             </div>
             <Tooltip Text="The path for the root API calls" Fade="true">
-                <Blazorise.TextEdit Class="form-control" Placeholder="e.g. wc-api/v3" @bind-value="WooSettingsModel.RootAPIPostFix" id="ROORAPIPostfix"
+                <Blazorise.TextEdit Class="form-control" Placeholder="e.g. wc-api/v3" id="ROORAPIPostfix" Text="@WooSettingsModel.RootAPIPostFix"
                                     TextChanged="(()=>WooSettingsModel.RootAPIPostFix = WooSettingsModel.RootAPIPostFix.Trim())" />
             </Tooltip>
         </div>
@@ -45,7 +45,7 @@ else
                 <span class="input-group-text left-form-min">Woo JSON API Postfix</span>
             </div>
             <Tooltip Text="The path for the JSON type calls e.g. wp-json/wc/v3 " Fade="true">
-                <Blazorise.TextEdit Class="form-control" Placeholder="e.g. wp-json/wc/v3" @bind-value="WooSettingsModel.JSONAPIPostFix" id="JSONAPIPostfix"
+                <Blazorise.TextEdit Class="form-control" Placeholder="e.g. wp-json/wc/v3" Text="@WooSettingsModel.JSONAPIPostFix" id="JSONAPIPostfix"
                                     TextChanged="(()=>WooSettingsModel.JSONAPIPostFix = WooSettingsModel.JSONAPIPostFix.Trim())" />
             </Tooltip>
         </div>

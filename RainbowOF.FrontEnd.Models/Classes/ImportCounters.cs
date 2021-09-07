@@ -20,13 +20,18 @@ namespace RainbowOF.FrontEnd.Models.Classes
             TotalAdded = 0;
             TotalUpdated = 0;
             TotalImported = 0;
-            PercentOfRecsImported = 0;  // progress bar uses percentage not tota rec imports so need to convert
+            PercentOfRecsImported = 0;  // progress bar uses percentage not total rec imports so need to convert
             MaxRecs = 0;
         }
-        public int CalcPercentage(double TotalSoFar)
-        {
-            return Convert.ToInt32(Math.Round((TotalSoFar / (double)MaxRecs) * 100, 0));
-        }
+        /// <summary>
+        /// Calculates the percentage done, using max and total so far
+        /// </summary>
+        /// <param name="TotalSoFar">Total items processed</param>
+        /// <returns>Percentage in int or -1 for error</returns>
+        public int CalcPercentage(double TotalSoFar) => 
+            (MaxRecs>0) ? Convert.ToInt32(Math.Round((TotalSoFar / (double)MaxRecs) * 100, 0)) : -1;
+
+        public void CalcAndSetPercentage(double TotalSoFar) => PercentOfRecsImported = CalcPercentage(TotalSoFar);
     }
 }
 

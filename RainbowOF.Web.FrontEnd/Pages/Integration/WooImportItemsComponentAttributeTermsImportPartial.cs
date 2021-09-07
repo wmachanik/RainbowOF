@@ -12,7 +12,7 @@ using RainbowOF.Models.Lookups;
 
 namespace RainbowOF.Web.FrontEnd.Pages.Integration
 {
-    public partial class WooImportItemsComponent // for CategoryImport so file name WooImportItemsComponentAttributeTermsImport Partial
+    public partial class _WooImportItemsComponent // for CategoryImport so file name WooImportItemsComponentAttributeTermsImport Partial
     {
         /// <summary>
         /// All the attribute term import stuff. Attributes Terms in Woo are Attributed Varieties to us. Could we have generalised this for each item import with an object?
@@ -33,7 +33,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             //};
 
             IWooProductAttributeTerm _WooProductAttributeTerm = new WooProductAttributeTerm(_wooAPISettings, _Logger);
-            List<ProductAttributeTerm> wooProductAttributeTerms = await _WooProductAttributeTerm.GetAttributeTermsByAtttribute(currProductAttribute);
+            List<ProductAttributeTerm> wooProductAttributeTerms = await _WooProductAttributeTerm.GetAttributeTermsByAtttribute((uint)currProductAttribute.id);
             return wooProductAttributeTerms;
         }
         async Task<Guid> UpdateItemAttributeVariety(ProductAttributeTerm sourcePAT, Guid sourceParentAttributeId, ItemAttributeVarietyLookup currItemAttributeVariety)
@@ -69,7 +69,6 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                 return _ItemAttributeVariety.ItemAttributeVarietyLookupId;   // we found one with the same name so assume this is the correct one.
             }
         }
-
         async Task<Guid> AddOrUpdateItemAttributeVariety(ProductAttributeTerm sourcePAT, Guid sourceParentAttributeId, Guid sourceWooMappedItemAttributeTermId)
         {
             Guid _itemAttributeVarietyId = Guid.Empty;
@@ -101,16 +100,16 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
 
             return _itemAttributeTermId;
         }
-        async Task<Guid> AddProductAttributeTerm(ProductAttributeTerm sourcePAT, Guid sourceParentAttributeId, WooProductAttributeTermMap sourceWooAttributeTermMapsourceParentAttributeId)
+        async Task<Guid> AddProductAttributeTerm(ProductAttributeTerm sourcePAT, Guid sourceParentAttributeId, WooProductAttributeTermMap sourceWooAttributeTermMap)
         {
             Guid _itemAttributeTermId = Guid.Empty;
             IAppRepository<WooProductAttributeTermMap> _wooAttributeTermMapRepository = _AppUnitOfWork.Repository<WooProductAttributeTermMap>();
 
             // Add Item AttributeTerm if it does not exist
             _itemAttributeTermId = await AddOrGetIDItemAttributeVariety(sourcePAT, sourceParentAttributeId);
-            if (sourceWooAttributeTermMapsourceParentAttributeId == null)
+            if (sourceWooAttributeTermMap == null)
             {
-                sourceWooAttributeTermMapsourceParentAttributeId = new WooProductAttributeTermMap
+                sourceWooAttributeTermMap = new WooProductAttributeTermMap
                 {
                     WooProductAttributeTermId = (int)sourcePAT.id,
                     ItemAttributeVarietyLookupId = _itemAttributeTermId
@@ -118,10 +117,10 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             }
             else
             {
-                sourceWooAttributeTermMapsourceParentAttributeId.WooProductAttributeTermId = (int)sourcePAT.id;
-                sourceWooAttributeTermMapsourceParentAttributeId.ItemAttributeVarietyLookupId = _itemAttributeTermId;
+                sourceWooAttributeTermMap.WooProductAttributeTermId = (int)sourcePAT.id;
+                sourceWooAttributeTermMap.ItemAttributeVarietyLookupId = _itemAttributeTermId;
             }
-            if (await _wooAttributeTermMapRepository.AddAsync(sourceWooAttributeTermMapsourceParentAttributeId) == AppUnitOfWork.CONST_WASERROR)
+            if (await _wooAttributeTermMapRepository.AddAsync(sourceWooAttributeTermMap) == AppUnitOfWork.CONST_WASERROR)
             {
                 // did not add so set _ItemAttributeTermId to ItemAttributeTermID to Guid.Empty = error
                 _itemAttributeTermId = Guid.Empty;
@@ -159,10 +158,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             return (_wooProductAttributeMap == null) ? Guid.Empty : _wooProductAttributeMap.ItemAttributeLookupId;
 
         }
-        string ProductAttributeTermToString(ProductAttributeTerm sourcePAT, Guid sourceImportedId)
-        {
-            return $"Product Attribute Term {sourcePAT.name}, id: {sourcePAT.id}, imported and Attribute Id is {sourceImportedId}";
-        }
+        string ProductAttributeTermToString(ProductAttributeTerm sourcePAT, Guid sourceImportedId) => $"Product Attribute Term {sourcePAT.name}, id: {sourcePAT.id}, imported and Attribute Id is {sourceImportedId}";
         // 1. Cycle through categories and add to database if they do not exists - storing a WooReultsDate so we can filter the results later - ?
         // 3. Log each AttributeTerm and what we do with t in the log and in the WooResults
 

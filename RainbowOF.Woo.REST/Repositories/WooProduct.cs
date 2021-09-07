@@ -73,7 +73,7 @@ namespace RainbowOF.Woo.REST.Repositories
         }
         #endregion
         #region Data Retrieval stuff
-        private async Task<List<Product>> GetAllWithParams(Dictionary<string, string> pProductParams)
+        private async Task<List<Product>> GetAllWithParamsAsync(Dictionary<string, string> pProductParams)
         {
             List<Product> _WooProducts = null;
             int _Page = 1;
@@ -112,32 +112,32 @@ namespace RainbowOF.Woo.REST.Repositories
             }
             return _WooProducts;
         }
-        private async Task<List<Product>> GetAll(Dictionary<string, string> pProductParams)
+        private async Task<List<Product>> GetAllAsync(Dictionary<string, string> pProductParams)
         {
 
             if (pProductParams == null)
                 pProductParams = new Dictionary<string, string>();
-            return await GetAllWithParams(pProductParams);
+            return await GetAllWithParamsAsync(pProductParams);
         }
-        public async Task<List<Product>> GetAllProducts()
+        public async Task<List<Product>> GetAllProductsAsync()
         {
-            return await GetAll(null);
+            return await GetAllAsync(null);
         }
 
-        public async Task<List<Product>> GetAllProductsInStock()
+        public async Task<List<Product>> GetAllProductsInStockAsync()
         {
             Dictionary<string, string> _ProductParams = new Dictionary<string, string>();
             _ProductParams.Add("stock_status", "instock");
             _ProductParams.Add("status", "publish");
-            List<Product> _WooProducts = await GetAll(_ProductParams);
+            List<Product> _WooProducts = await GetAllAsync(_ProductParams);
             _ProductParams["status"] = "private";
-            List<Product> _WooPrivateProducts = await GetAll(_ProductParams);
+            List<Product> _WooPrivateProducts = await GetAllAsync(_ProductParams);
             if ((_WooProducts != null) && (_WooPrivateProducts != null))
                 _WooProducts.AddRange(_WooPrivateProducts);
 
             return _WooProducts;
         }
-        public async Task<bool> CheckProductLink()
+        public async Task<bool> CheckProductLinkAsync()
         {
             RestAPI _RestAPI = _Woo.GetJSONRestAPI;
 
@@ -157,12 +157,12 @@ namespace RainbowOF.Woo.REST.Repositories
             return count > 0;
         }
 
-        public async Task<List<Product>> GetProductsOfType(string pProductType)
+        public async Task<List<Product>> GetProductsOfTypeAsync(string pProductType)
         {
-            return await GetAll(new Dictionary<string, string>() { { "type", pProductType } });
+            return await GetAllAsync(new Dictionary<string, string>() { { "type", pProductType } });
         }
 
-        public async Task<int> GetProductCount()
+        public async Task<int> GetProductCountAsync()
         {
             int _count = 0;
             RestAPI _RestAPI = _Woo.GetRootRestAPI;

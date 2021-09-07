@@ -75,7 +75,6 @@ namespace RainbowOF.Repositories.Lookups
             return currentApplicatioonState.WooIsActive;
         }
 
-
         public virtual Task<int> AddWooItemAndMapAsync(TEntity addEntity)
         {
             _Logger.LogError($"AddWooItemAndMapAsync for Entity: {addEntity.ToString()} not implemented, place holder executed. Please implement.");

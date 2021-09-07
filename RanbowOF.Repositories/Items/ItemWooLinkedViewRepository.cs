@@ -256,7 +256,8 @@ namespace RainbowOF.Repositories.Items
                 ItemAbbreviatedName = fromVeiwEntity.ItemAbbreviatedName,
                 SortOrder = fromVeiwEntity.SortOrder,
                 BasePrice = fromVeiwEntity.BasePrice,
-                ParentItemId = ((fromVeiwEntity.ParentItemId ?? Guid.Empty) == Guid.Empty) ? null : (Guid)fromVeiwEntity.ParentItemId,
+                
+                //ParentItemId = ((fromVeiwEntity.ParentItemId ?? Guid.Empty) == Guid.Empty) ? null : (Guid)fromVeiwEntity.ParentItemId,
                 ////????? Lists and other lazy loads?
             };
 
@@ -285,7 +286,7 @@ namespace RainbowOF.Repositories.Items
                 //_CurrentItem.ItemAbbreviatedName = updateViewItem.ItemAbbreviatedName;
                 //_CurrentItem.SortOrder = updateViewItem.SortOrder;
                 //_CurrentItem.BasePrice = updateViewItem.BasePrice;
-                _CurrentItem.ParentItemId = ((updateViewItem.ParentItemId ?? Guid.Empty) == Guid.Empty) ? null : (Guid)updateViewItem.ParentItemId;
+                //_CurrentItem.ParentItemId = ((updateViewItem.ParentItemId ?? Guid.Empty) == Guid.Empty) ? null : (Guid)updateViewItem.ParentItemId;
                 ////????? Lists and other lazy loads?
 
                 _recsUpdted = await _ItemRepository.UpdateAsync(_CurrentItem);
@@ -375,7 +376,7 @@ namespace RainbowOF.Repositories.Items
             return _recsUpdated;
         }
 
-        private async Task<WooProductMap> GetWooProductMapFromID(Guid? sourceWooEntityId)
+        private async Task<WooProductMap> GetWooProductMapFromIDAsync(Guid? sourceWooEntityId)
         {
             if (sourceWooEntityId == null)
                 return null;
@@ -384,7 +385,7 @@ namespace RainbowOF.Repositories.Items
             WooProductMap _wooProductMap = await _wooProductMapRepo.FindFirstAsync(wam => wam.ItemId == sourceWooEntityId);
             return _wooProductMap;
         }
-        private async Task<int> DeleteWooAttributeLink(WooProductMap deleteWooProductMap)
+        private async Task<int> DeleteWooAttributeLinkAsync(WooProductMap deleteWooProductMap)
         {
             int _result = 0;
             IAppRepository<WooProductMap> _wooProductMapRepo = _AppUnitOfWork.Repository<WooProductMap>();
@@ -393,16 +394,16 @@ namespace RainbowOF.Repositories.Items
 
             return _result;
         }
-        private async Task<IWooProduct> GetIWooProduct()
+        private async Task<IWooProduct> GetIWooProductAsync()
         {
             WooAPISettings _wooAPISettings = await GetWooAPISettingsAsync();
             return new WooProduct(_wooAPISettings, _Logger);
         }
-        private async Task<int> DeleteWooAttribute(WooProductMap deleteWooProductMap)
+        private async Task<int> DeleteWooAttributeAsync(WooProductMap deleteWooProductMap)
         {
             int _result = AppUnitOfWork.CONST_WASERROR;  // if all goes well this will be change to the number of records returned
 
-            IWooProduct _wooProductRepository = await GetIWooProduct();
+            IWooProduct _wooProductRepository = await GetIWooProductAsync();
             if (_wooProductRepository != null)
             {
                 Product _TempWooCat = await _wooProductRepository.DeleteProductByIdAsync(deleteWooProductMap.WooProductId);
@@ -420,20 +421,20 @@ namespace RainbowOF.Repositories.Items
         {
             int _result = AppUnitOfWork.CONST_WASERROR;
             // delete the woo Attribute
-            WooProductMap _wooProductMap = await GetWooProductMapFromID(deleteWooEntityId);
+            WooProductMap _wooProductMap = await GetWooProductMapFromIDAsync(deleteWooEntityId);
             if (_wooProductMap == null)
                 _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product Attribute Id {deleteWooEntityId} was not found to have a Woo Attribute Map.");
             else
             {
                 if (deleteFromWoo)
                 {
-                    _result = await DeleteWooAttribute(_wooProductMap); ///Delete the Attribute in Woo
+                    _result = await DeleteWooAttributeAsync(_wooProductMap); ///Delete the Attribute in Woo
                     if (_result == AppUnitOfWork.CONST_WASERROR)
                         _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product Attribute Id {_wooProductMap.WooProductId} was not deleted from Woo categories. Error {_AppUnitOfWork.GetErrorMessage()}");
                     else
                         _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Woo Product Attribute Id {_wooProductMap.WooProductId} was deleted from Woo categories.");
                 }
-                _result = await DeleteWooAttributeLink(_wooProductMap);   //Delete our link data, if there was an error should we?
+                _result = await DeleteWooAttributeLinkAsync(_wooProductMap);   //Delete our link data, if there was an error should we?
                 if (_result == AppUnitOfWork.CONST_WASERROR)
                     _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product Attribute Id {_wooProductMap.WooProductId} was not deleted from Woo linked categories. Error {_AppUnitOfWork.GetErrorMessage()}");
                 else
@@ -455,7 +456,7 @@ namespace RainbowOF.Repositories.Items
         }
         private async Task<Product> AddItemToWooOnlySync(Item addEntity)
         {
-            IWooProduct _wooProductRepository = await GetIWooProduct();
+            IWooProduct _wooProductRepository = await GetIWooProductAsync();
             if (_wooProductRepository == null)
                 return null;
 
@@ -467,7 +468,7 @@ namespace RainbowOF.Repositories.Items
             return await _wooProductRepository.AddProductAsync(_wooProduct);  // should return a new version with ID
         }
 
-        private async Task<int> MapOurItemToWooItemSync(Product newWooProduct, Item addViewEntity)
+        private async Task<int> MapOurItemToWooItemAsync(Product newWooProduct, Item addViewEntity)
         {
             // create a map to the woo Attribute maps using the id and the Attribute
             //
@@ -504,7 +505,7 @@ namespace RainbowOF.Repositories.Items
             Product _wooProduct = await AddItemToWooOnlySync(addEntity);
             if (_wooProduct == null)
                 return AppUnitOfWork.CONST_WASERROR;
-            return await MapOurItemToWooItemSync(_wooProduct, addEntity);
+            return await MapOurItemToWooItemAsync(_wooProduct, addEntity);
             //}
             //else
             //    return AppUnitOfWork.CONST_WASERROR;
@@ -514,10 +515,10 @@ namespace RainbowOF.Repositories.Items
             int _result = 0;  /// null or not found
             if ((updateViewEntity.HasECommerceAttributeMap) && ((bool)(updateViewEntity.CanUpdateECommerceMap)))
             {
-                IWooProduct _wooProductRepository = await GetIWooProduct();
+                IWooProduct _wooProductRepository = await GetIWooProductAsync();
                 if (_wooProductRepository != null)                     //  - > if it does not exist then what?
                 {
-                    WooProductMap _updateWooMapEntity = await GetWooProductMapFromID(updateViewEntity.ItemId);
+                    WooProductMap _updateWooMapEntity = await GetWooProductMapFromIDAsync(updateViewEntity.ItemId);
                     if (_updateWooMapEntity == null)
                     {
                         // need to add the Attribute -> this is done later.

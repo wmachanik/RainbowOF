@@ -30,7 +30,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         public string Id { get; set; }
 
         public ItemView ItemEditting = null;
-        public List<Item> childItems = null;
+        public List<ItemVariant> childItems = null;
         //public List<ItemCategory> itemCategories = null;
         //public List<ItemAttribute> itemAttributes = null;
         //public List<ItemAttributeVariety> itemAttributeVarieties = null;
@@ -92,8 +92,12 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
                     /////////
                     ///
                     /// this sort of works now need to create a complete list with true /false
+                    /// 
+                    IAppRepository<ItemVariant> _itemVariantRepo = _AppUnitOfWork.Repository<ItemVariant>();
 
-                    childItems = (await _itemRepository.GetByAsync(i => i.ParentItemId == ItemId)).OrderBy(i => i.SortOrder).ToList();
+                    childItems = (await _itemVariantRepo.GetByAsync(iv => iv.ItemId == ItemId))
+                        .OrderBy(iv => iv.SortOrder)
+                        .ToList();
 
                     var selectedCats = entity.ItemCategories.Select(ic => new { ic.ItemCategoryDetail.ItemCategoryLookupId, ic.ItemCategoryDetail.FullCategoryName }).OrderBy(ob => ob.FullCategoryName);
                     if (selectedCats != null)

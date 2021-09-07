@@ -15,9 +15,6 @@ namespace RainbowOF.Datsa.SQL.EntityConfigs.Items
             //    .IsUnique();
             //itemModelBuilder.Property(i => i.IsEnabled)
             //    .HasDefaultValue(true);
-            itemModelBuilder.HasOne(i => i.ParentItem)
-                .WithMany()
-                .OnDelete(DeleteBehavior.NoAction);
             itemModelBuilder.HasOne(i => i.ReplacementItem)
                 .WithMany()
                 .OnDelete(DeleteBehavior.NoAction);
@@ -29,6 +26,9 @@ namespace RainbowOF.Datsa.SQL.EntityConfigs.Items
                 .WithOne()
                 .OnDelete(DeleteBehavior.ClientCascade);
             itemModelBuilder.HasMany(i => i.ItemImages)
+                .WithOne()
+                .OnDelete(DeleteBehavior.ClientCascade);
+            itemModelBuilder.HasMany(i => i.ItemVariants)
                 .WithOne()
                 .OnDelete(DeleteBehavior.ClientCascade);
         }

@@ -14,6 +14,7 @@ using Blazored.Toast;
 using RainbowOF.Tools.Services;
 using RainbowOF.ViewModels;
 using Blazorise.RichTextEdit;
+using RainbowOF.Integration.Repositories.Classes;
 
 namespace RainbowOF.Web.FrontEnd
 {
@@ -46,7 +47,7 @@ namespace RainbowOF.Web.FrontEnd
                 options.UseBubbleTheme = true;
             });
             // Auto mapper stuff
-            services.AddAutoMapper(typeof(ViewMappingProfile));
+            services.AddAutoMapper(typeof(ViewMappingProfile), typeof(IntegrationMappingProfile));
 
             // DBContext Stuff
             services.AddDbContext<ApplicationDbContext>(options =>
