@@ -145,7 +145,7 @@ namespace RainbowOF.Repositories.Items
                         .ThenInclude(cats => cats.ItemCategoryDetail)
                     .Include(itm => itm.ItemAttributes)
                         .ThenInclude(itmAtts => itmAtts.ItemAttributeVarieties)
-                        .ThenInclude(itmAttVars => itmAttVars.ItemAttributeVarietyLookupDetail)
+                        .ThenInclude(itmAttVars => itmAttVars.ItemAttributeVarietyDetail)
                     .Include(itm => itm.ItemAttributes)
                         .ThenInclude(itmAtts => itmAtts.ItemAttributeDetail)
                     .Include(itm => itm.ItemImages);
@@ -226,7 +226,7 @@ namespace RainbowOF.Repositories.Items
                         .ThenInclude(itmAtts => itmAtts.ItemAttributeDetail)
                     .Include(itm => itm.ItemAttributes)
                         .ThenInclude(itmAtts => itmAtts.ItemAttributeVarieties)
-                        .ThenInclude(itmAttVars => itmAttVars.ItemAttributeVarietyLookupDetail)
+                        .ThenInclude(itmAttVars => itmAttVars.ItemAttributeVarietyDetail)
                     .Include(itm => itm.ItemImages)
                     .FirstOrDefaultAsync(predicate);
 

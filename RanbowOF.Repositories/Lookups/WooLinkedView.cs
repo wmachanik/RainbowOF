@@ -23,13 +23,12 @@ namespace RainbowOF.Repositories.Lookups
         public ILoggerManager _Logger { get; set; }
         public IAppUnitOfWork _AppUnitOfWork { get; set; }
         public GridSettings _GridSettings { get; set; }
-        public IMapper _Mapper;
+        public IMapper _Mapper { get; set; }
 
-
-        public WooLinkedView(ILoggerManager sourceLogger, 
-                                IAppUnitOfWork sourceAppUnitOfWork, 
-                                GridSettings sourceGridSettings,
-                                IMapper sourceMapper)
+        public WooLinkedView(ILoggerManager sourceLogger,
+                               IAppUnitOfWork sourceAppUnitOfWork,
+                               GridSettings sourceGridSettings,
+                               IMapper sourceMapper)
         {
             _Logger = sourceLogger;
             _AppUnitOfWork = sourceAppUnitOfWork;
@@ -65,7 +64,7 @@ namespace RainbowOF.Repositories.Lookups
                             currentApplicatioonState.SetWooIsActive(await _wooProductCategory.CheckProductCategoryLinkAsync());
                     }
                 }
-                catch ( Exception ex )
+                catch (Exception ex)
                 {
                     _Logger.LogError($"Error running async tasks: {ex.Message}");
                     throw;

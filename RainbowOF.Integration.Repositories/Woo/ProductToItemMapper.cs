@@ -29,22 +29,22 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// </summary>
         /// <param name="sourceWooProductType">the string to convert from</param>
         /// <returns>ItemType</returns>
-        public ItemTypes MapWooTypeToItemType(string sourceWooProductType)
-        {
-            switch (sourceWooProductType)
-            {
-                case "grouped":
-                    return ItemTypes.Collection;
-                case "external":
-                    return ItemTypes.URL;
-                case "variable":
-                    return ItemTypes.Variable;
-                case "virtual":
-                    return ItemTypes.VirtualItem;
-                default:    // all others are simple
-                    return ItemTypes.Simple;
-            }
-        }
+        //public ItemTypes MapWooTypeToItemType(string sourceWooProductType)
+        //{
+        //    switch (sourceWooProductType)
+        //    {
+        //        case "grouped":
+        //            return ItemTypes.Collection;
+        //        case "external":
+        //            return ItemTypes.URL;
+        //        case "variable":
+        //            return ItemTypes.Variable;
+        //        case "virtual":
+        //            return ItemTypes.VirtualItem;
+        //        default:    // all others are simple
+        //            return ItemTypes.Simple;
+        //    }
+        //}
         /// <summary>
         /// Take the product date and map it to the Item data.
         /// The copies the info across:

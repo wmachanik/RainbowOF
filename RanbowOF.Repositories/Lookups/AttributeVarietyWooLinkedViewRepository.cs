@@ -237,8 +237,7 @@ namespace RainbowOF.Repositories.Lookups
             List<WooProductAttributeTermMap> WooProductAttributeTermMaps = await GetWooMappedItemsAsync(_ItemAttributeVarietyIds);
             // now get all the Units of Measure as a lazy load
             List<Guid?> _itemAttributeVarietyUomIds = _itemAttributeVarietyLookups.Where(it => (it.UoMId != null) && (it.UoMId != Guid.Empty)).Select(it => it.UoMId).Distinct().ToList();   // get all the ids selected should not return nulls
-            List<ItemUoMLookup> itemUoMs = await GetItemUoMsAsync(_itemAttributeVarietyUomIds); 
-
+            List<ItemUoMLookup> itemUoMs = await GetItemUoMsAsync(_itemAttributeVarietyUomIds);
             // Map Items to Woo AttributeVarietyMap
             foreach (var itemAttributeVariety in _itemAttributeVarietyLookups)
             {
@@ -250,8 +249,6 @@ namespace RainbowOF.Repositories.Lookups
                         : itemUoMs?.Where(uid => uid.ItemUoMLookupId == itemAttributeVariety.UoMId).FirstOrDefault();   // apply the "lazy" load to the item   /// : (itemUoMs == null) ? null : itemUoMs.Where(uid => uid.ItemUoMId == itemAttributeVariety.UoMId).FirstOrDefault(),
                 _itemAttributeVarietyLookupView.CanUpdateECommerceMap = _wooProductAttributeTermMap?.CanUpdate;
                 _itemAttributeVarietyViewLookups.Add(_itemAttributeVarietyLookupView);
-
-          
             }
             _TaskIsBusy = false;
             return _itemAttributeVarietyViewLookups;
@@ -264,7 +261,6 @@ namespace RainbowOF.Repositories.Lookups
         {
             if (newViewEntity == null)
                 newViewEntity = new ItemAttributeVarietyLookupView();
-
             newViewEntity.VarietyName = "AttributeVariety (must be unique)";
             newViewEntity.ItemAttributeLookupId = _ParentItemAttributeLookupId;
             newViewEntity.UoMId = null;
@@ -526,7 +522,6 @@ namespace RainbowOF.Repositories.Lookups
         public override async Task<int> AddWooItemAndMapAsync(ItemAttributeVarietyLookup addEntity)
         {
             // check it the item exists in woo !!!!!!(we did not do this as there is no such call;, if so get is id and return, otherwise add it and get its id
-
             //ProductAttributeVariety _wooProductAttributeTerm = await GetWooProductAttributeTermByName(addEntity.VarietyName);
             //if (_wooProductAttributeTerm == null)
             //{

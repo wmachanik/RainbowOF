@@ -130,7 +130,7 @@ namespace RainbowOF.Integration.Repositories.Woo
                         if (_itemAttributeVariety != null)
                         {
                             // copy the whole item across just in case there have been changes
-                            _itemAttributeVariety.ItemAttributeVarietyLookupDetail = _itemAttributeVarietyLookup;
+                            _itemAttributeVariety.ItemAttributeVarietyDetail = _itemAttributeVarietyLookup;
                             _itemAttributeVariety.ItemAttributeId = _itemAttribute.ItemAttributeId;
                         }
                     }
@@ -144,7 +144,7 @@ namespace RainbowOF.Integration.Repositories.Woo
                         _itemAttribute.ItemAttributeVarieties.Add(new ItemAttributeVariety
                         {
                             ItemAttributeVarietyLookupId = _itemAttributeVarietyLookup.ItemAttributeVarietyLookupId,
-                            ItemAttributeVarietyLookupDetail = _itemAttributeVarietyLookup,    // copy the whole attribute across
+                            ItemAttributeVarietyDetail = _itemAttributeVarietyLookup,    // copy the whole attribute across
                             ItemAttributeId = _itemAttribute.ItemAttributeId,
                             UoMId = _itemAttributeVarietyLookup.UoMId,
                             UoM = _itemAttributeVarietyLookup.UoM,

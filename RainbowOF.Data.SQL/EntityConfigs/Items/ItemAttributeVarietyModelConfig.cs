@@ -15,7 +15,7 @@ namespace RainbowOF.Data.SQL.EntityConfigs.Items
             //    .IsUnique();
             //activeItemAttributeVarietyModelBuilder.HasIndex(aiav => new { aiav.ItemAttributeId, aiav.ItemAttributeVarietyLookupId })
             //    .IsUnique();
-            activeItemAttributeVarietyModelBuilder.HasOne(aiav => aiav.ItemAttributeVarietyLookupDetail)
+            activeItemAttributeVarietyModelBuilder.HasOne(aiav => aiav.ItemAttributeVarietyDetail)
                 .WithMany()
                 .OnDelete(DeleteBehavior.NoAction);
             activeItemAttributeVarietyModelBuilder.HasOne(aiav => aiav.UoM)

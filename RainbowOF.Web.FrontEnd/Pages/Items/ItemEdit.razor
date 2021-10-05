@@ -101,9 +101,9 @@ else
                                                 <RichTextEditToolbarButton Action="RichTextEditAction.Clean" />
                                             </RichTextEditToolbarGroup>
                                             @*<RichTextEditToolbarGroup Float="Float.Right">
-                                                    <Button Class="btn-icon" Size="Size.ExtraSmall" onClick="window.open('https://www.quilljs.com/','quilljs')"><Icon Name="IconName.InfoCircle" /></Button>
-                                                    <Button Class="btn-icon" Size="Size.ExtraSmall" Clicked="@OnSave"><Icon Name="IconName.Save" /></Button>
-                                                </RichTextEditToolbarGroup>*@
+                                <Button Class="btn-icon" Size="Size.ExtraSmall" onClick="window.open('https://www.quilljs.com/','quilljs')"><Icon Name="IconName.InfoCircle" /></Button>
+                                <Button Class="btn-icon" Size="Size.ExtraSmall" Clicked="@OnSave"><Icon Name="IconName.Save" /></Button>
+                            </RichTextEditToolbarGroup>*@
                                         </Toolbar>
 
                                     </RichTextEdit>
@@ -200,6 +200,18 @@ else
                                             <ValidationError />
                                         </Feedback>
                                     </NumericEdit>
+                                </FieldBody>
+                            </Field>
+                        </Validation>
+                        <Validation>
+                            <Field Horizontal="true">
+                                <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Image</FieldLabel>
+                                <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
+                                    <TextEdit TValue="string" Placeholder="Image" Text="@ItemEditting.ItemImages.Count.ToString()">
+                                        <Feedback>
+                                            <ValidationError />
+                                        </Feedback>
+                                    </TextEdit>
                                 </FieldBody>
                             </Field>
                         </Validation>
@@ -385,7 +397,7 @@ else
                         <CardTitle>Item Children</CardTitle>
                     </CardHeader>
                     <CardBody>
-                        <DataGrid TItem="ItemVariant" Data="@childItems"
+                        <DataGrid TItem="ItemVariant" Data="@ItemVariants"
                                   Sortable="true" Editable="true"
                                   Striped="true"
                                   Hoverable="true"
@@ -394,7 +406,7 @@ else
                                   PageSize="5" ShowPager="true"
                                   PageSizes="@(new int[] { 5, 10, 15, 25, 50, 100 })"
                                   ShowPageSizes="true" PagerPosition="DataGridPagerPosition.TopAndBottom"
-                                  TotalItems="childItems.Count"
+                                  TotalItems="ItemVariants.Count"
                                   Bordered="true"
                                   Narrow="true" Filterable="true"
                                   UseInternalEditing="true"
@@ -404,7 +416,7 @@ else
                                   Padding="Padding.Is0">
                             <EmptyTemplate>
                                 @{
-                                    if (childItems == null)
+                                    if (ItemVariants == null)
                                     {
                                         //if (@IsLoading)
                                         //{
@@ -467,9 +479,14 @@ else
         <Row>
             <Column>
                 <FieldBody ColumnSize="ColumnSize.Is10.Is2.WithOffset">
-                    <Button Color="Color.Primary"><Icon Name="IconName.Save" /> Save</Button>
                     <Tooltip Text="Resynchronise with E-commerce platforms">
-                        <Button Color="Color.Info"><Icon Name="IconName.Sync" /> Re-sync</Button>
+                        <Button Color="Color.Info"> <Icon Name="IconName.Sync" /> Re-sync</Button>
+                    </Tooltip>
+                    <Tooltip Text="Save changes">
+                        <Button Color="Color.Primary"><Icon Name="IconName.Save" /> Save</Button>
+                    </Tooltip>
+                    <Tooltip Text="Cancel changes">
+                        <Button Color="Color.Danger"><Icon Name="IconName.Undo" /> Cancel Changes</Button>
                     </Tooltip>
                 </FieldBody>
             </Column>

@@ -28,7 +28,7 @@ namespace RainbowOF.Models.Items
         [ForeignKey(nameof(UoMId))]
         public virtual ItemUoMLookup UoM { get; set; }
         [ForeignKey(nameof(ItemAttributeVarietyLookupId))]
-        public ItemAttributeVarietyLookup ItemAttributeVarietyLookupDetail { get; set; }
+        public ItemAttributeVarietyLookup ItemAttributeVarietyDetail { get; set; }
 
     }
 }

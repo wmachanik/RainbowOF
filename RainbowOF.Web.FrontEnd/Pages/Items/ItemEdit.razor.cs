@@ -30,9 +30,9 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         public string Id { get; set; }
 
         public ItemView ItemEditting = null;
-        public List<ItemVariant> childItems = null;
-        //public List<ItemCategory> itemCategories = null;
-        //public List<ItemAttribute> itemAttributes = null;
+        public List<ItemVariant> ItemVariants = null;
+        public List<ItemCategory> ItemCategories = null;
+        public List<ItemAttribute> ItemAttributes = null;
         //public List<ItemAttributeVariety> itemAttributeVarieties = null;
 
         public bool collapseItemDetailsVisible = true;
@@ -95,7 +95,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
                     /// 
                     IAppRepository<ItemVariant> _itemVariantRepo = _AppUnitOfWork.Repository<ItemVariant>();
 
-                    childItems = (await _itemVariantRepo.GetByAsync(iv => iv.ItemId == ItemId))
+                    ItemVariants = (await _itemVariantRepo.GetByAsync(iv => iv.ItemId == ItemId))
                         .OrderBy(iv => iv.SortOrder)
                         .ToList();
 

@@ -21,26 +21,25 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
 {
     public partial class Items : ComponentBase
     {
-        // Interface Stuff
+        #region // Interface variables Stuff
         public GridSettings _GridSettings = new GridSettings();
-        public ItemView SelectedItemRow = null;
-        public BulkAction SelectedBulkAction = BulkAction.none;
-        // variables / Models
-        public List<ItemView> dataModels = null;
+        private ItemView _SelectedItemRow = null;
         public ItemView seletectedItem = null;
-
-        public bool GroupButtonEnabled = true;
-        private bool IsLoading = false;
-        private bool ShowItemDetail = false;
-        private bool ShowReplaceItem = false;
-        private bool ShowWooLinked = true;
+        public BulkAction SelectedBulkAction = BulkAction.none;
+        public List<ItemView> SelectedItemRows = null;
+        #endregion
+        #region // Models variables
+        public List<ItemView> dataModels = null;
+        //public bool GroupButtonEnabled = true;
+        private bool _IsLoading = false;
+        private bool _ShowItemDetail = false;
+        private bool _ShowReplaceItem = false;
+        private bool _ShowWooLinked = true;
         private string _Status = "";
-        DataGrid<ItemView> _DataGrid;
-
-        // All there workings are here
-        IItemWooLinkedView _ItemWooLinkedViewRepository;
-
-        public List<ItemView> SelectedItemRows;
+        private DataGrid<ItemView> _DataGrid;
+        private IItemWooLinkedView _ItemWooLinkedViewRepository;
+        #endregion
+        #region Injected classes
         [Inject]
         IAppUnitOfWork _AppUnitOfWork { get; set; }
         [Inject]
@@ -50,59 +49,36 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         [Inject]
         public IMapper _Mapper { get; set; }
 
+        #endregion
+        #region Support methods
+        // All there workings are here
+        /// <summary>
+        /// Initialises Item Woo Linked View Repository, and updates the page
+        /// </summary>
+        /// <returns>void</returns>
         protected override async Task OnInitializedAsync()
         {
             _ItemWooLinkedViewRepository = new ItemWooLinkedViewRepository(_Logger, _AppUnitOfWork, _GridSettings, _Mapper);
             //await LoadData();
             await InvokeAsync(StateHasChanged);
         }
-        private async Task SetLoadStatus(string statusString)
+        /// <summary>
+        /// Sets the Status string and updates the DOM with that string. Logs the change in status
+        /// </summary>
+        /// <param name="statusString"></param>
+        /// <returns>void</returns>
+        private async Task SetLoadStatusAsync(string statusString)
         {
             _Status = statusString;
+            _Logger.LogDebug($"Status changed to: {statusString}");
             await InvokeAsync(StateHasChanged);
         }
-        //public async Task LoadData()
-        //{
-        //    //await HandleReadDataAsync(new DataGridReadDataEventArgs<ItemView> (_GridSettings.CurrentPage, _GridSettings.PageSize, null, System.Threading.CancellationToken.None));
-        //}
-
-        public async Task HandleReadDataAsync(DataGridReadDataEventArgs<ItemView> inputDataGridReadData)
-        {
-            if (IsLoading)
-                return;
-
-            IsLoading = true;
-            // 
-
-            if (!inputDataGridReadData.CancellationToken.IsCancellationRequested)
-            {
-                DataGridParameters _dataGridParameters = _ItemWooLinkedViewRepository.GetDataGridCurrent(inputDataGridReadData, _GridSettings.CustomFilterValue);
-                if (_GridSettings.PageSize != inputDataGridReadData.PageSize)
-                { /// page sized changed so jump back to original page
-                    _GridSettings.CurrentPage = _dataGridParameters.CurrentPage = 1;  // force this
-                    _GridSettings.PageSize = inputDataGridReadData.PageSize;
-                    //                  await Reload();
-                }
-                await SetLoadStatus("Checking Woo status & loading Attributes");
-                try
-                {
-                    await SetLoadStatus("Checking Woo status");
-                    _GridSettings.WooIsActive = await _ItemWooLinkedViewRepository.WooIsActiveAsync(_AppState);
-                    ShowWooLinked = ShowWooLinked && _GridSettings.WooIsActive;  // show woo link is selected and woo is active.
-                    await SetLoadStatus("Loading Attributes");
-                    await LoadItemList(_dataGridParameters);
-                }
-                catch (Exception ex)
-                {
-                    _Logger.LogError($"Error running async tasks: {ex.Message}");
-                    throw;
-                }
-                _Status = string.Empty;
-            }
-            IsLoading = false;
-        }
-
-        private async Task LoadItemList(DataGridParameters currentDataGridParameters)
+        /// <summary>
+        /// Load the actual Items + View additional values into the data model using the current data grid parameters. Also saves the current selected lists and restores it.
+        /// </summary>
+        /// <param name="currentDataGridParameters">Grid parameters</param>
+        /// <returns>void</returns>
+        private async Task LoadItemListAsync(DataGridParameters currentDataGridParameters)
         {
             // store old select items list
             try
@@ -125,7 +101,62 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             SelectedItemRows = _ItemWooLinkedViewRepository.PopSelectedItems(dataModels);
             StateHasChanged();
         }
-        async Task HandleCustomerSearchOnKeyUp(KeyboardEventArgs kbEventHandler)
+        /// <summary>
+        /// Reload the Grid after resetting the page
+        /// </summary>
+        /// <returns>void</returns>
+        async Task ReloadAsync()
+        {
+            _GridSettings.CurrentPage = 1;
+            await _DataGrid.Reload();
+        }
+        #endregion
+        #region Interface methods
+        /// <summary>
+        /// Handle to loading of the Item data using paging, supporting searching and sorting. Load Item List.
+        /// Logic: Store the current selected items then retrieve details form grid then restore the selected items.
+        /// </summary>
+        /// <param name="inputDataGridReadData">Paging, sorting and filtering info</param>
+        /// <returns></returns>
+        public async Task HandleReadDataAsync(DataGridReadDataEventArgs<ItemView> inputDataGridReadData)
+        {
+            if (_IsLoading)
+                return;
+            _IsLoading = true;
+            // 
+            if (!inputDataGridReadData.CancellationToken.IsCancellationRequested)
+            {
+                DataGridParameters _dataGridParameters = _ItemWooLinkedViewRepository.GetDataGridCurrent(inputDataGridReadData, _GridSettings.CustomFilterValue);
+                if (_GridSettings.PageSize != inputDataGridReadData.PageSize)
+                { /// page sized changed so jump back to original page
+                    _GridSettings.CurrentPage = _dataGridParameters.CurrentPage = 1;  // force this
+                    _GridSettings.PageSize = inputDataGridReadData.PageSize;
+                    //                  await Reload();
+                }
+                await SetLoadStatusAsync("Checking Woo status & loading Attributes");
+                try
+                {
+                    await SetLoadStatusAsync("Checking Woo status");
+                    _GridSettings.WooIsActive = await _ItemWooLinkedViewRepository.WooIsActiveAsync(_AppState);
+                    _ShowWooLinked = _ShowWooLinked && _GridSettings.WooIsActive;  // show woo link is selected and woo is active.
+                    await SetLoadStatusAsync("Loading Attributes");
+                    await LoadItemListAsync(_dataGridParameters);
+                }
+                catch (Exception ex)
+                {
+                    _Logger.LogError($"Error running async tasks: {ex.Message}");
+                    throw;
+                }
+                _Status = string.Empty;
+            }
+            _IsLoading = false;
+        }
+        /// <summary>
+        /// Handle Customer Search On Key UP - essentially adds the key stroke to the filter.
+        /// </summary>
+        /// <param name="kbEventHandler"></param>
+        /// <returns></returns>
+        async Task HandleCustomerSearchOnKeyUpAsync(KeyboardEventArgs kbEventHandler)
         {
             var key = (string)kbEventHandler.Key;   // not using this but just in case
                                                     //if (_gridSettings.CustomFilterValue.Length > 2)
@@ -133,67 +164,110 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             await _DataGrid.Reload();
             //}
         }
-        async Task OnRowInserting(SavedRowItem<ItemView, Dictionary<string, object>> insertedItem)
+        /// <summary>
+        /// Handle the user confirmation asking to add the Woo Mapping
+        /// </summary>
+        /// <param name="confirmClick">Did the user click confirm</param>
+        /// <returns></returns>
+        async Task ConfirmAddWooItem_ClickAsync(bool clickConfirmed)
+        {
+            if (clickConfirmed)
+            {
+                // they want to add the item to Woo 
+                await _ItemWooLinkedViewRepository.AddWooItemAndMapAsync(_SelectedItemRow);
+                await _DataGrid.Reload();
+            }
+            // Should we mark that this item was not linked?
+        }
+        /// <summary>
+        /// When a row is inserted save that row and reload the grid
+        /// </summary>
+        /// <param name="insertedItem"></param>
+        /// <returns>void</returns>
+        async Task OnRowInsertingAsync(SavedRowItem<ItemView, Dictionary<string, object>> insertedItem)
         {
             var _newItem = insertedItem.Item;
 
             await _ItemWooLinkedViewRepository.InsertRowAsync(_newItem);
             await _DataGrid.Reload();
         }
+        /// <summary>
+        /// When a new item is created initialise the newItem.
+        /// </summary>
+        /// <param name="newItem">The item to be created (essentially it is passed by ref</param>
         void OnItemNewItemDefaultSetter(ItemView newItem) //Item pNewCatItem)
         {
             newItem = _ItemWooLinkedViewRepository.NewItemDefaultSetter(newItem);
         }
-        async Task<int> UpdateItem(ItemView UpdatedCatItemView)
+        /// <summary>
+        /// Update the item that is passed in.
+        /// </summary>
+        /// <param name="updatedCatItemView">the ItemView to be updated</param>
+        /// <returns>int value > 0 for success or -1 for error </returns>
+        async Task<int> UpdateItemAsync(ItemView updatedCatItemView)
         {
-            int _result = await _ItemWooLinkedViewRepository.UpdateItemAsync(UpdatedCatItemView);
+            int _result = await _ItemWooLinkedViewRepository.UpdateItemAsync(updatedCatItemView);
             await _DataGrid.Reload();
             return _result;
         }
-        async Task OnRowUpdating(SavedRowItem<ItemView, Dictionary<string, object>> updatedItem)
+        /// <summary>
+        /// On row updating - update the row (using Update Row Async)
+        /// </summary>
+        /// <param name="updatedItem"></param>
+        /// <returns></returns>
+        async Task OnRowUpdatingAsync(SavedRowItem<ItemView, Dictionary<string, object>> updatedItem)
         {
             await _ItemWooLinkedViewRepository.UpdateRowAsync(updatedItem.Item);
-            await _DataGrid.Reload();
+            //->>> show we do error checking?
+            //await _DataGrid.Reload();
         }
+        /// <summary>
+        /// On row removing async - Launch confirmation dialog, so an item can be deleted if the user wants
+        /// </summary>
+        /// <param name="modelItem">the model item to be delete, if confirmed</param>
         void OnRowRemoving(CancellableRowChange<ItemView> modelItem)
         {
             // set the Selected Item Attribute for use later
-            SelectedItemRow = modelItem.Item;
+            _SelectedItemRow = modelItem.Item;
             var deleteItem = modelItem;
-            _GridSettings.DeleteConfirmation.ShowModal("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.ItemName}?", SelectedItemRow.HasECommerceAttributeMap);  //,"Delete","Cancel"); - passed in on init
+            _GridSettings.DeleteConfirmation.ShowModal("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.ItemName}?", _SelectedItemRow.HasECommerceAttributeMap);  //,"Delete","Cancel"); - passed in on init
         }
-        //
-        async Task ConfirmAddWooItem_Click(bool confirmClick)
-        {
-            if (confirmClick)
-            {
-                // they want to add the item to Woo 
-                await _ItemWooLinkedViewRepository.AddWooItemAndMapAsync(SelectedItemRow);
-                await _DataGrid.Reload();
-            }
-        }
-        async Task ConfirmDeleteWooItem_Click(bool confirmClick)
+        /// <summary>
+        /// Deletion of the woo item is confirmed - so delete the product in Woo.
+        /// </summary>
+        /// <param name="confirmClick">Did the user confirm they want to delete it.</param>
+        /// <returns></returns>
+        async Task ConfirmDeleteWooItem_ClickAsync(bool confirmClick)
         {
             // they want to delete the item to Woo 
-            await _ItemWooLinkedViewRepository.DeleteWooItemAsync(SelectedItemRow.ItemId, confirmClick);
+            await _ItemWooLinkedViewRepository.DeleteWooItemAsync(_SelectedItemRow.ItemId, confirmClick);
             //  regardless of how we got here they wanted to delete the original Attribute so delete it now, but only after Woo delete if they wanted it deleted.
-            await _ItemWooLinkedViewRepository.DeleteRowAsync(SelectedItemRow);
+            await _ItemWooLinkedViewRepository.DeleteRowAsync(_SelectedItemRow);
             await _DataGrid.Reload();
         }
-        //protected async Task
-        async Task ConfirmDelete_Click(ConfirmModalWithOption.ConfirmResults confirmationOption)
+        /// <summary>
+        /// Deletion of the item for system - and also if confirmed in Woo
+        /// </summary>
+        /// <param name="confirmationOption">Confirmation option passed by grid</param>
+        /// <returns></returns>
+        async Task ConfirmDeleteItem_Click(ConfirmModalWithOption.ConfirmResults confirmationOption)
         {
             if ((confirmationOption == ConfirmModalWithOption.ConfirmResults.confirm) || (confirmationOption == ConfirmModalWithOption.ConfirmResults.confirmWithOption))
             {
                 // if there is a WooAttribute and we have to delete it, then delete that first.
                 if (confirmationOption == ConfirmModalWithOption.ConfirmResults.confirmWithOption)
-                    _GridSettings.DeleteWooItemConfirmation.ShowModal("Are you sure?", $"Delete {SelectedItemRow.ItemName} from Woo too?", "Delete", "Cancel");
+                    _GridSettings.DeleteWooItemConfirmation.ShowModal("Are you sure?", $"Delete {_SelectedItemRow.ItemName} from Woo too?", "Delete", "Cancel");
                 else
-                    await _ItemWooLinkedViewRepository.DeleteRowAsync(SelectedItemRow);
+                    await _ItemWooLinkedViewRepository.DeleteRowAsync(_SelectedItemRow);
 
             }
             await _DataGrid.Reload();
         }
+        /// <summary>
+        /// When a row is removed handle this
+        /// </summary>
+        /// <param name="modelItem">The ItemView to that was removed.</param>
+        /// <returns></returns>
         public async Task OnRowRemoved(ItemView modelItem)
         {
             await InvokeAsync(StateHasChanged);
@@ -214,6 +288,10 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             }
             return _listOfOrderBys;
         }
+        /// <summary>
+        /// Perform the group action as selected.
+        /// </summary>
+        /// <returns>void</returns>
         async Task DoGroupAction()
         {
             _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Info, "Applying the bulk action as requested");
@@ -229,11 +307,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Info, $"Bulk Action applied to {done} items and not applied to {failed} items.");
             await _DataGrid.Reload();
         }
-        async Task Reload()
-        {
-            _GridSettings.CurrentPage = 1;
-            await _DataGrid.Reload();
-        }
+        #endregion
 
         //private NewItemAttributeVarietyComponent NewAttributeVariety;
     }
