@@ -95,7 +95,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         {
             IAppRepository<WooProductVariantMap> _wooProductVariantMapRepo = _AppUnitOfWork.Repository<WooProductVariantMap>();
             /// was not an async made it one
-            WooProductVariantMap _wooProductVariantMap = await _wooProductVariantMapRepo.FindFirstAsync(wpa => wpa.WooProductVariantId == sourceWooEntityId);
+            WooProductVariantMap _wooProductVariantMap = await _wooProductVariantMapRepo.FindFirstByAsync(wpa => wpa.WooProductVariantId == sourceWooEntityId);
             return (_wooProductVariantMap == null) ? Guid.Empty : _wooProductVariantMap.ItemVariantId;
         }
         /// <summary>
@@ -126,7 +126,7 @@ namespace RainbowOF.Integration.Repositories.Woo
                 sourceWooMap.WooProductVariantId = (int)newWooEntity.id;
                 sourceWooMap.ItemVariantId = _itemVariantId;
             }
-            if (await _wooVariantMapRepository.AddAsync(sourceWooMap) == AppUnitOfWork.CONST_WASERROR)
+            if (await _wooVariantMapRepository.AddAsync(sourceWooMap) == null)
             {
                 // did not add so set _ItemVariantId to ItemVariantID to Guid.Empty = error
                 _itemVariantId = Guid.Empty;
@@ -145,13 +145,13 @@ namespace RainbowOF.Integration.Repositories.Woo
         {
             IAppRepository<ItemVariant> _itemVariantRepository = _AppUnitOfWork.Repository<ItemVariant>();
 
-            ItemVariant _ItemVariant = await _itemVariantRepository.FindFirstAsync(ic => ic.ItemVariantName == sourceEntity.description);
+            ItemVariant _ItemVariant = await _itemVariantRepository.FindFirstByAsync(ic => ic.ItemVariantName == sourceEntity.description);
             if (_ItemVariant == null)
             {
                 ItemVariant _newItemVariant = MapWooProductVariantInfo(sourceEntity, null);
                 _newItemVariant.ItemId = sourceParentId;  // the mapping copies the variant info but does not copy the Parent Item Id, as it does not exist in the source Entity
-                int _recsAdded = await _itemVariantRepository.AddAsync(_newItemVariant);
-                return (_recsAdded != AppUnitOfWork.CONST_WASERROR) ? _newItemVariant.ItemVariantId : Guid.Empty;
+                var _recsAdded = await _itemVariantRepository.AddAsync(_newItemVariant);
+                return (_recsAdded != null) ? _newItemVariant.ItemVariantId : Guid.Empty;
             }
             else
             {
@@ -172,7 +172,7 @@ namespace RainbowOF.Integration.Repositories.Woo
             Guid _itemVariantId = Guid.Empty;
             IAppRepository<ItemVariant> _ItemVariantRepository = _AppUnitOfWork.Repository<ItemVariant>();
             // check if the AttributeTerm exists
-            ItemVariant _itemVariant = await _ItemVariantRepository.FindFirstAsync(ic => ic.ItemVariantId == sourceWooMappedEntity.ItemVariantId);
+            ItemVariant _itemVariant = await _ItemVariantRepository.FindFirstByAsync(ic => ic.ItemVariantId == sourceWooMappedEntity.ItemVariantId);
             _itemVariantId = (_itemVariant != null)
                                 ? await UpdateEntityAsync(sourceEntity, sourceParentId, _itemVariant)
                                 : await AddEntityAsync(sourceEntity, sourceWooMappedEntity, sourceParentId);
@@ -241,7 +241,7 @@ namespace RainbowOF.Integration.Repositories.Woo
             IAppRepository<WooProductVariantMap> _wooProductariantMapRepository = _AppUnitOfWork.Repository<WooProductVariantMap>();
             // Import the ItemVariant and set sync data
             ///first check if it exists in the mapping, just in case there has been a name change
-            WooProductVariantMap _wooItemVariantMap = await _wooProductariantMapRepository.FindFirstAsync(wa => wa.WooProductVariantId == sourceEntity.id);
+            WooProductVariantMap _wooItemVariantMap = await _wooProductariantMapRepository.FindFirstByAsync(wa => wa.WooProductVariantId == sourceEntity.id);
             if (_wooItemVariantMap != null)   // the id exists so update
             {
                 _itemItemVariantId = await UpdateWooMappingEntityAsync(sourceEntity, _wooItemVariantMap, sourceParentId);

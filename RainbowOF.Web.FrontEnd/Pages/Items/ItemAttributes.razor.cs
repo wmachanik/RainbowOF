@@ -23,7 +23,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
     public partial class ItemAttributes : ComponentBase
     {
         // Interface Stuff
-        public GridSettings _GridSettings = new GridSettings();
+        //public GridSettings _WooLinkedGridSettings = new GridSettings();
         public ItemAttributeLookupView SelectedItemAttributeLookup = null;
         public BulkAction SelectedBulkAction = BulkAction.none;
         // variables / Models
@@ -50,7 +50,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
 
         protected override async Task OnInitializedAsync()
         {
-            _AttributeWooLinkedViewRepository = new AttributeWooLinkedViewRepository(_Logger, _AppUnitOfWork, _GridSettings, _Mapper);
+            _AttributeWooLinkedViewRepository = new AttributeWooLinkedViewRepository(_Logger, _AppUnitOfWork, /*_WooLinkedGridSettings, */_Mapper);
             //await LoadData();
             await InvokeAsync(StateHasChanged);
         }
@@ -61,7 +61,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         }
         //public async Task LoadData()
         //{
-        //    //await HandleReadDataAsync(new DataGridReadDataEventArgs<ItemAttributeLookupView>(_GridSettings.CurrentPage, _GridSettings.PageSize, null, System.Threading.CancellationToken.None));
+        //    //await HandleReadDataAsync(new DataGridReadDataEventArgs<ItemAttributeLookupView>( _AttributeWooLinkedViewRepository._WooLinkedGridSettings.CurrentPage,  _AttributeWooLinkedViewRepository._WooLinkedGridSettings.PageSize, null, System.Threading.CancellationToken.None));
         //}
 
         public async Task HandleReadDataAsync(DataGridReadDataEventArgs<ItemAttributeLookupView> inputDataGridReadData)
@@ -74,16 +74,16 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             {
                 if (!inputDataGridReadData.CancellationToken.IsCancellationRequested)
                 {
-                    DataGridParameters _dataGridParameters = _AttributeWooLinkedViewRepository.GetDataGridCurrent(inputDataGridReadData, _GridSettings.CustomFilterValue);
-                    if (_GridSettings.PageSize != inputDataGridReadData.PageSize)
+                    DataGridParameters _dataGridParameters = _AttributeWooLinkedViewRepository.GetDataGridCurrent(inputDataGridReadData, _AttributeWooLinkedViewRepository._WooLinkedGridSettings.CustomFilterValue);
+                    if ( _AttributeWooLinkedViewRepository._WooLinkedGridSettings.PageSize != inputDataGridReadData.PageSize)
                     { /// page sized changed so jump back to original page
-                        _GridSettings.CurrentPage = _dataGridParameters.CurrentPage = 1;  // force this
-                        _GridSettings.PageSize = inputDataGridReadData.PageSize;
+                         _AttributeWooLinkedViewRepository._WooLinkedGridSettings.CurrentPage = _dataGridParameters.CurrentPage = 1;  // force this
+                         _AttributeWooLinkedViewRepository._WooLinkedGridSettings.PageSize = inputDataGridReadData.PageSize;
                         //                  await Reload();
                     }
                     await SetLoadStatus("Checking Woo status & loading Attributes");
                     await SetLoadStatus("Checking Woo status");
-                    _GridSettings.WooIsActive = await _AttributeWooLinkedViewRepository.WooIsActiveAsync(_AppState);
+                     _AttributeWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive = await _AttributeWooLinkedViewRepository.WooIsActiveAsync(_AppState);
                     await SetLoadStatus("Loading Attributes");
                     await LoadItemAttributeLookupList(_dataGridParameters);
                     _Status = string.Empty;
@@ -137,7 +137,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         async Task HandleCustomerSearchOnKeyUpAsync(KeyboardEventArgs kbEventHandler)
         {
             var key = (string)kbEventHandler.Key;   // not using this but just in case
-                                                    //if (_gridSettings.CustomFilterValue.Length > 2)
+                                                    //if ( _AttributeWooLinkedViewRepository._WooLinkedGridSettings.CustomFilterValue.Length > 2)
                                                     //{
             await _DataGrid.Reload();
             //}
@@ -153,12 +153,12 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         {
             newItem = _AttributeWooLinkedViewRepository.NewItemDefaultSetter(newItem);
         }
-        async Task<int> UpdateItemAttributeLookupAsync(ItemAttributeLookupView updatedCatItemView)
-        {
-            int _result = await _AttributeWooLinkedViewRepository.UpdateItemAsync(updatedCatItemView);
-            await _DataGrid.Reload();
-            return _result;
-        }
+        //async Task<int> UpdateItemAttributeLookupAsync(ItemAttributeLookupView updatedCatItemView)
+        //{
+        //    int _result = await _AttributeWooLinkedViewRepository.UpdateItemAsync(updatedCatItemView);
+        //    await _DataGrid.Reload();
+        //    return _result;
+        //}
         async Task OnRowUpdatingAsync(SavedRowItem<ItemAttributeLookupView, Dictionary<string, object>> updatedItem)
         {
             await _AttributeWooLinkedViewRepository.UpdateRowAsync(updatedItem.Item);
@@ -169,7 +169,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             // set the Selected Item Attribute for use later
             SelectedItemAttributeLookup = modelItem.Item;
             var deleteItem = modelItem;
-            _GridSettings.DeleteConfirmation.ShowModal("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.AttributeName}?", SelectedItemAttributeLookup.HasECommerceAttributeMap);  //,"Delete","Cancel"); - passed in on init
+             _AttributeWooLinkedViewRepository._WooLinkedGridSettings.DeleteConfirmationWithOption.ShowModal("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.AttributeName}?", SelectedItemAttributeLookup.HasECommerceAttributeMap);  //,"Delete","Cancel"); - passed in on init
         }
         //
         async Task ConfirmAddWooItem_ClickAsync(bool confirmClicked)
@@ -199,7 +199,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             {
                 // if there is a WooAttribute and we have to delete it, then delete that first.
                 if (confirmationOption == ConfirmModalWithOption.ConfirmResults.confirmWithOption)
-                    _GridSettings.DeleteWooItemConfirmation.ShowModal("Are you sure?", $"Delete {SelectedItemAttributeLookup.AttributeName} from Woo too?", "Delete", "Cancel");
+                     _AttributeWooLinkedViewRepository._WooLinkedGridSettings.DeleteWooItemConfirmation.ShowModal("Are you sure?", $"Delete {SelectedItemAttributeLookup.AttributeName} from Woo too?", "Delete", "Cancel");
                 else
                     await _AttributeWooLinkedViewRepository.DeleteRowAsync(SelectedItemAttributeLookup);
 
@@ -232,7 +232,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             //if (SelectedBulkAction == BulkAction.none)
             //    return;   ----> button should be disabled 
 
-            _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Info, "Applying the bulk action as requested");
+             _AttributeWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Info, "Applying the bulk action as requested");
 
             int done = 0;
             int failed = 0;
@@ -243,12 +243,12 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
                 else
                     failed++;
             }
-            _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Info, $"Bulk Action applied to {done} items and not applied to {failed} items.");
+             _AttributeWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Info, $"Bulk Action applied to {done} items and not applied to {failed} items.");
             await _DataGrid.Reload();
         }
         async Task ReloadAsync()
         {
-            _GridSettings.CurrentPage = 1;
+             _AttributeWooLinkedViewRepository._WooLinkedGridSettings.CurrentPage = 1;
             await _DataGrid.Reload();
         }
 
@@ -263,11 +263,11 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         // ------------------------------------
         //bool OnCustomFilter(ItemAttributeLookupView model)
         //{
-        //    if (string.IsNullOrEmpty(_gridSettings.CustomFilterValue))
+        //    if (string.IsNullOrEmpty( _AttributeWooLinkedViewRepository._WooLinkedGridSettings.CustomFilterValue))
         //        return true;
         //    return
-        //        model.AttributeName?.Contains(_gridSettings.CustomFilterValue, StringComparison.OrdinalIgnoreCase) == true
-        //        || model.ParentAttribute?.AttributeName.Contains(_gridSettings.CustomFilterValue, StringComparison.OrdinalIgnoreCase) == true;
+        //        model.AttributeName?.Contains( _AttributeWooLinkedViewRepository._WooLinkedGridSettings.CustomFilterValue, StringComparison.OrdinalIgnoreCase) == true
+        //        || model.ParentAttribute?.AttributeName.Contains( _AttributeWooLinkedViewRepository._WooLinkedGridSettings.CustomFilterValue, StringComparison.OrdinalIgnoreCase) == true;
         //}
         //ItemAttributeLookup GetItemAttributeLookupItemFromView(ItemAttributeLookupView pItem)
         //{

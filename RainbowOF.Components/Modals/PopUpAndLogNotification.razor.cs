@@ -32,7 +32,6 @@ namespace RainbowOF.Components.Modals
         public int NotificationTimeout { get; set; } = 10;
 
         public PopUpAndLogNotification PopUpRef;
-
         [Inject]
         public ILoggerManager NotificationLogger { get; set; }
         [Inject]
@@ -43,7 +42,7 @@ namespace RainbowOF.Components.Modals
             switch (pNotificationType)
             {
                 case NotificationType.Info:
-                    NotificationToastService.ShowInfo(NotificationMessage, NotificationTitle);
+                    NotificationToastService.ShowInfo(NotificationMessage, NotificationTitle );
                     if (String.IsNullOrEmpty(NotificationTitle))
                         NotificationLogger.LogInfo($"Info: {NotificationMessage}");
                     else
@@ -94,7 +93,7 @@ namespace RainbowOF.Components.Modals
 
         public void ShowQuickNotification(NotificationType pNotificationType, string pMessage)
         {
-            NotificationTimeout = 5;
+            NotificationTimeout = 5;  // not sure were to send this
             NotificationMessage = pMessage;
             NotificationTitle = "";
             ShowNotification(pNotificationType);

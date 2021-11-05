@@ -18,7 +18,7 @@ namespace RainbowOF.Repositories.Common
         private ILoggerManager _Logger { get; }
         private IAppUnitOfWork _AppUnitOfWork { get; set; }
         /// should not need this had it her to stop the error: "There is no argument given that corresponds to the required formal parameter"
-        /// if it is asking for that you need to ass  : base (dbContext, logger, UnitOfWork) to the def 
+        /// if it is asking for that you need to ass  : base (dbContext, logger, UnitOfWork) to the definition 
         //public AppRepository() { }
         public AppRepository(ApplicationDbContext dbContext, ILoggerManager logger, IAppUnitOfWork unitOfWork)
         {
@@ -81,7 +81,7 @@ namespace RainbowOF.Repositories.Common
         //    return id;
         //}
 
-        public async Task<int> AddAsync(TEntity newEntity)
+        public async Task<TEntity> AddAsync(TEntity newEntity)
         {
             int _added = AppUnitOfWork.CONST_WASERROR;    // return if error
             _Logger.LogDebug($"Adding entity (async): {newEntity.ToString()}");
@@ -89,9 +89,8 @@ namespace RainbowOF.Repositories.Common
             try
             {
                 //_context.Entry(newEntity).State = EntityState.Added;
-                await _Table.AddAsync(newEntity);
+                newEntity = (await _Table.AddAsync(newEntity)).Entity;
                 _added = await _AppUnitOfWork.CompleteAsync();  // Save
-                // !!!!!!   id field is set once is save by EF - no need to set it
             }
             catch (Exception ex)
             {
@@ -100,7 +99,10 @@ namespace RainbowOF.Repositories.Common
                 throw;     // #Debug?
 #endif
             }
-            return _added;
+            if (_added == AppUnitOfWork.CONST_WASERROR)
+                return null;
+            else
+                return newEntity;
         }
         public async Task<int> AddRangeAsync(List<TEntity> newEntities)
         {
@@ -228,10 +230,8 @@ namespace RainbowOF.Repositories.Common
             }
             return _deleted;
         }
-
         public TEntity FindFirst()
         {
-
             TEntity _entity = null;
             _Logger.LogDebug($"Finding First entity of type: {typeof(TEntity)}");
 
@@ -250,7 +250,7 @@ namespace RainbowOF.Repositories.Common
             }
             return _entity;
         }
-        public TEntity FindFirst(Expression<Func<TEntity, bool>> predicate)
+        public TEntity FindFirstBy(Expression<Func<TEntity, bool>> predicate)
         {
             TEntity _entity = null;
             _Logger.LogDebug($"Finding First {predicate.ToString()} entity of type: {typeof(TEntity)}");
@@ -289,7 +289,7 @@ namespace RainbowOF.Repositories.Common
             }
             return _entity;
         }
-        public async Task<TEntity> FindFirstAsync(Expression<Func<TEntity, bool>> predicate)
+        public async Task<TEntity> FindFirstByAsync(Expression<Func<TEntity, bool>> predicate)
         {
             TEntity _entity = null;
             _Logger.LogDebug($"Finding First {predicate.ToString()} entity of type: {typeof(TEntity)}");

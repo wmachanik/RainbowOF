@@ -15,10 +15,7 @@ namespace RainbowOF.ViewModels.Common
         public string CustomFilterValue { get; set; } = string.Empty;
         public bool IsNarrow { get; set; } = true;
         public bool IsFilterable { get; set; } = false;
-        public bool WooIsActive { get; set; } = false;
-        public ConfirmModal AddToWooConfirmation { get; set; }
-        public ConfirmModal DeleteWooItemConfirmation { get; set; }
-        public ConfirmModalWithOption DeleteConfirmation { get; set; }
+        public ConfirmModal DeleteConfirmation { get; set; }
         public PopUpAndLogNotification PopUpRef { get; set; }
 
     }

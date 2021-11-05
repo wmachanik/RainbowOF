@@ -12,7 +12,7 @@ using RainbowOF.Woo.REST.Models;
 using RainbowOF.Tools.Services;
 using Blazorise.DataGrid;
 
-namespace RainbowOF.Repositories.Lookups
+namespace RainbowOF.Repositories.Integrations
 {
     /// <summary>
     /// Interface used handle the general model for grid CRUD where the Entity has a possible Woo link
@@ -25,6 +25,7 @@ namespace RainbowOF.Repositories.Lookups
                                                                          where TEntityView : class
                                                                          where TWooMapEntity : class
     {
+        public WooLinkedGridSettings _WooLinkedGridSettings { get; set; }
         Task<WooAPISettings> GetWooAPISettingsAsync();
         Task<bool> WooIsActiveAsync(ApplicationState currentApplicationState); 
         void PushSelectedItems(List<TEntityView> currentSelectedItems);
@@ -37,14 +38,14 @@ namespace RainbowOF.Repositories.Lookups
         Task<bool> IsDuplicateAsync(TEntity checkEntity);
         bool IsValid(TEntity checkEntity);
         Task<int> DoGroupActionAsync(TEntityView toVeiwEntity, BulkAction selectedAction);
+        Task<TWooMapEntity> AddWooItemAndMapAsync(TEntity addEntity);
         Task InsertRowAsync(TEntityView newVeiwEntity);
-        Task<int> AddWooItemAndMapAsync(TEntity addEntity);
         Task<int> DeleteWooItemAsync(Guid deleteWooEntityId, bool deleteFromWoo);
         Task DeleteRowAsync(TEntityView deleteViewEntity);
         Task<int> UpdateWooMappingAsync(TEntityView updateViewEntity);
         Task<int> UpdateWooItemAsync(TEntityView updateViewEntity);
         Task<int> UpdateWooItemAndMappingAsync(TEntityView updateViewEntity);
-        Task<int> UpdateItemAsync(TEntityView updateItem);
+        Task<int> UpdateItemAsync(TEntityView addEntity);    // (TEntityView updateItem);
         Task UpdateRowAsync(TEntityView updateViewEntity);
     }
 }

@@ -1,0 +1,358 @@
+﻿@page "/ItemCategories"
+@using Blazorise.DataGrid
+@using RainbowOF.ViewModels.Common
+@using RainbowOF.ViewModels.Lookups
+@*@inject NavigationManager NavigationManager*@
+
+@if (_CategoryWooLinkedViewRepository != null)
+{
+    <Row Style="z-index: 0" Margin="Margin.Is0">
+        <Column>
+            <Card Margin="Margin.Is0">
+                <CardHeader>
+                    <CardTitle><h2>Categories&nbsp;<Icon Name="IconName.Tag" /></h2></CardTitle>
+                </CardHeader>
+                <CardBody>
+                    <Fields>
+                        <Field Style="display: inline-flex">
+                            <FieldLabel Margin="Margin.IsAuto">
+                                Custom Search
+                            </FieldLabel>
+                            <FieldBody Style="width:80%">
+                                <TextEdit @bind-Text="@_CategoryWooLinkedViewRepository._WooLinkedGridSettings.CustomFilterValue" @onkeyup="HandleCustomerSearchOnKeyUp" />
+                            </FieldBody>
+                        </Field>
+                    </Fields>
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+    <Row Margin="Margin.Is0">
+        <Column>
+            <Card Margin="Margin.Is0">
+                <CardHeader>
+                    <CardTitle><h3>List of Categories</h3></CardTitle>
+                </CardHeader>
+                <CardSubtitle Margin="Margin.Is1" Style="border-bottom: 1px solid #999">
+                    <Fields>
+                        <Field Style="display: inline-flex;" Margin="Margin.Is1" JustifyContent="JustifyContent.Start">
+                            <FieldBody>
+                                <Tooltip Text="Select a Bulk Action to do on selected rows">
+                                    <Select TValue="BulkAction" SelectedValue="SelectedBulkAction" SelectedValueChanged="@((v) => SelectedBulkAction = v)" style="max-width:12em">
+                                        <SelectItem Value="BulkAction.none">none</SelectItem>
+                                        @{ if (_CategoryWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive)
+                                            {
+                                                <SelectItem Value="BulkAction.AllowWooSync">Allow Woo Sync</SelectItem>
+                                                <SelectItem Value="BulkAction.DisallowWooSync">Disallow Woo Sync</SelectItem>
+                                            }
+                                        }
+                                    </Select>
+                                </Tooltip>
+                            </FieldBody>
+                            <FieldBody>
+                                &nbsp;&nbsp;&nbsp;&nbsp;
+                                <Tooltip Text="Perform group actions on categories" Placement="TooltipPlacement.Right">
+                                    <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Disabled="((SelectedBulkAction == BulkAction.none) || (SelectedItemCategoryLookups == null) || (SelectedItemCategoryLookups?.Count == 0))" Clicked="DoGroupAction">Group Action(s)</Blazorise.Button>
+                                </Tooltip>
+                            </FieldBody>
+                        </Field>
+                        <Field Style="display: inline-block;" Margin="Margin.Is1">
+                            <FieldBody>
+                                <Blazorise.Check TValue="bool" Checked="@(_CategoryWooLinkedViewRepository._WooLinkedGridSettings.IsNarrow)" CheckedChanged="@((v) => _CategoryWooLinkedViewRepository._WooLinkedGridSettings.IsNarrow = v)">Narrow Grid?</Blazorise.Check>
+                            </FieldBody>
+                        </Field>
+                        <Field Margin="Margin.Is1" JustifyContent="JustifyContent.End">
+                            <FieldBody>
+                                <Tooltip Text="Refresh/reload categories" Placement="TooltipPlacement.Left">
+                                    <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Clicked="ReloadAsync"><Icon Name="IconName.Sync" /></Blazorise.Button>
+                                </Tooltip>
+                            </FieldBody>
+                        </Field>
+                    </Fields>
+                </CardSubtitle>
+                <CardBody Padding="Padding.IsAuto">
+                    <DataGrid @ref="_DataGrid"
+                              TItem="ItemCategoryLookupView" Data="@dataModels"
+                              ReadData="HandleReadDataAsync"
+                              Sortable="true" Editable="true"
+                              Striped="true"
+                              Hoverable="true"
+                              Responsive="true"
+                              EditMode="DataGridEditMode.Popup"
+                              PageSize="@_CategoryWooLinkedViewRepository._WooLinkedGridSettings.PageSize" ShowPager="true"
+                              PageSizes="@(new int[] { 5, 10, 15, 25, 50, 100 })"
+                              ShowPageSizes="true" PagerPosition="DataGridPagerPosition.TopAndBottom"
+                              TotalItems="_CategoryWooLinkedViewRepository._WooLinkedGridSettings.TotalItems"
+                              Bordered="true"
+                              CustomFilter="@OnCustomFilter"
+                              NewItemDefaultSetter="@OnItemCategoryLookupNewItemDefaultSetter"
+                              SelectionMode="DataGridSelectionMode.Multiple"
+                              @bind-SelectedRows="@SelectedItemCategoryLookups"
+                              RowInserted="@OnRowInserting"
+                              RowUpdated="@OnRowUpdating"
+                              RowRemoving="@OnRowRemoving"
+                              RowRemoved="@OnRowRemoved"
+                              Narrow="@_CategoryWooLinkedViewRepository._WooLinkedGridSettings.IsNarrow" Filterable="@_CategoryWooLinkedViewRepository._WooLinkedGridSettings.IsFilterable"
+                              UseInternalEditing="true"
+                              CurrentPage="_CategoryWooLinkedViewRepository._WooLinkedGridSettings.CurrentPage"
+                              PageChanged="(e) => _CategoryWooLinkedViewRepository._WooLinkedGridSettings.CurrentPage = e.Page"
+                              Padding="Padding.Is0">
+                        <EmptyTemplate>
+                            @if (string.IsNullOrEmpty(_Status))
+                            {
+                                <span>...</span>
+                            }
+                            else
+                            {
+                                <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                                    <Column>
+                                        <span class="alert-info">@_Status</span>
+                                    </Column>
+                                    <Column>
+                                        <div class="spinner-border m-5" role="status">
+                                            <span class="sr-only">Checking Woo Link and Loading Categories...</span>
+                                        </div>
+                                    </Column>
+                                </Row>
+                            }
+                        </EmptyTemplate>
+                        <LoadingTemplate>
+                            <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                                <Column>
+                                    <span class="alert-info">@_Status</span>
+                                </Column>
+                                <Column>
+                                    <div class="spinner-border m-5" role="status">
+                                        <span class="sr-only">Checking Woo Link and Loading Categories...</span>
+                                    </div>
+                                </Column>
+                            </Row>
+                        </LoadingTemplate>
+                        <DataGridColumns>
+                            <DataGridMultiSelectColumn TItem="ItemCategoryLookupView" Caption="[X]" Sortable="false" TextAlignment="TextAlignment.Center">
+                            </DataGridMultiSelectColumn>
+                            <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.CategoryName)" Caption="Category Name" Sortable="true" Editable="true">
+                                <DisplayTemplate>
+                                    @{
+                                        var catItem = (context as ItemCategoryLookupView);
+
+                                        if (catItem != null)
+                                        {
+                                            @*<NavLink ActiveClass="grid-link" @onclick="@(()=>NavigationManager.NavigateTo($"/editpage/{catItem.ItemCategoryLookupId}"))">*@
+                                            @if ((catItem.ParentCategoryId == null) || (catItem.ParentCategoryId == Guid.Empty))
+                                            {
+                                                <span style="font-weight: bold">@catItem.CategoryName</span>
+                                            }
+                                            else
+                                            {
+                                                <span>@catItem.CategoryIndent @catItem.CategoryName</span>
+                                            }
+                                            @*</NavLink>*@
+                                        }
+                                    }
+                                </DisplayTemplate>
+                            </DataGridColumn>
+                            <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.ParentCategoryId)" Caption="Parent Category" Sortable="true" Editable="true">
+                                <DisplayTemplate>
+                                    @{
+                                        var catItem = (context as ItemCategoryLookupView);
+
+                                        @((catItem.ParentCategory == null) ? "n/a" : catItem.ParentCategory.FullCategoryName);
+                                    }
+                                </DisplayTemplate>
+                                <EditTemplate>
+                                    @{
+                                        var listOfParents = GetListOfParentCategories();
+                                        var catItem = (context.Item as ItemCategoryLookupView);
+
+                                        if ((listOfParents != null) && (listOfParents.Count > 0))
+                                        {
+                                            <Select TValue="Guid" SelectedValue="@(context.CellValue == null ? Guid.Empty : (Guid)context.CellValue)" SelectedValueChanged="@((v) => context.CellValue = v)">
+                                                <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
+
+                                                @foreach (var item in listOfParents)
+                                                {
+                                                    // only add parents that are not this item
+                                                    if (catItem.ItemCategoryLookupId != item.Key)
+                                                    {
+                                                        <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
+                                                    }
+                                                }
+                                            </Select>
+                                        }
+                                    }
+                                </EditTemplate>
+                            </DataGridColumn>
+                            <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.UsedForPrediction)" Caption="Prediction" Sortable="true" Editable="true">
+                                <DisplayTemplate>
+                                    @{
+                                        var catItem = (context as ItemCategoryLookupView);
+
+                                        @( ((catItem.UsedForPrediction) ? "enable" : "disabled")) ;
+                                    }
+                                </DisplayTemplate>
+                                <EditTemplate>
+                                    <Tooltip Text="Is this category predictable / used in predications?">
+                                        @{
+                                            <Blazorise.Check TValue="bool" Checked="@((bool)context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)">Is used for prediction</Blazorise.Check>
+                                        }
+                                    </Tooltip>
+                                </EditTemplate>
+                                <FilterTemplate>
+                                    @{
+                                        <Select TValue="string" SelectedValue="@(string.IsNullOrEmpty((string)context.SearchValue) ? String.Empty : (string)(context.SearchValue) )"
+                                                SelectedValueChanged="@((e) => context.TriggerFilterChange(string.IsNullOrEmpty(e) ? "" : e.ToString()))">
+                                            <SelectItem Value="@String.Empty">none</SelectItem>
+                                            <SelectItem Value="@disabledStr">disabled</SelectItem>
+                                            <SelectItem Value="@enabledStr">enabled</SelectItem>
+                                        </Select>
+                                    }
+                                </FilterTemplate>
+                            </DataGridColumn>
+                            <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.CanUpdateECommerceMap)" Caption="Woo Linked" Sortable="false" Filterable="false" Editable="@(_CategoryWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive)">
+                                <DisplayTemplate>
+                                    @{
+                                        if (_CategoryWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive)
+                                        {
+                                            var wooItem = (context as ItemCategoryLookupView);
+
+                                            @( (wooItem.CanUpdateECommerceMap == null) ? "n/a" : ((bool)wooItem.CanUpdateECommerceMap ? "yes"  : "no" )) ;
+                                        }
+                                        else
+                                        {
+                                            @("inactive")
+                                        }
+                                    }
+                                </DisplayTemplate>
+                                <EditTemplate>
+                                    @{
+                                        @if (_CategoryWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive)
+                                        {
+                                            <Tooltip Text="Is this category synchronised with Woo Categories?">
+                                                @if (context.CellValue == null)
+                                                {
+                                                    <Blazorise.Check TValue="bool" Class="" Checked="@((context.CellValue==null) ? false : (bool) context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)">Add To Woo</Blazorise.Check>
+                                                }
+                                                else
+                                                {
+                                                    <Blazorise.Check TValue="bool" Class="" Checked="@((bool) context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)">Allow Woo Updates</Blazorise.Check>
+                                                }
+                                            </Tooltip>
+                                        }
+                                        else
+                                        {
+                                            <Tooltip Text="There is not active link to Woo">
+                                                @("no woo link active")
+                                            </Tooltip>
+                                        }
+                                    }
+                                </EditTemplate>
+                            </DataGridColumn>
+                            <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.Notes)" Caption="Notes" Sortable="true"
+                                            Editable="true" HeaderCellClass="desktop-only" CellClass="@((item)=>"desktop-only")">
+                                <DisplayTemplate>
+                                    @{
+                                        var itemNotes = (context as ItemCategoryLookupView).Notes;
+
+                                        // itemNotes = itemNotes.Length <= 150 ? itemNotes : itemNotes.Substring(0, 150) + "...";  // Should rather look at a max width
+
+                                        <span class="text-wrap">@itemNotes</span>
+
+                                    }
+                                </DisplayTemplate>
+                                <EditTemplate>
+                                    <MemoEdit Text="@((string)context.CellValue)" Rows="5" Placeholder="Any notes for this item..." TextChanged="@((value)=>context.CellValue = value)" />
+                                </EditTemplate>
+                            </DataGridColumn>
+                            <DataGridCommandColumn TItem="ItemCategoryLookupView" Width="6.5em">
+                                <NewCommandTemplate>
+                                    <Tooltip Text="New category" Style="z-index:99" Placement="TooltipPlacement.Bottom">
+                                        <Button Color="Color.Success" Clicked="@context.Clicked"><Icon Name="IconName.Add" /></Button>
+                                    </Tooltip>
+                                    <Tooltip Text="Filter by Column" Style="z-index:99" Placement="TooltipPlacement.Left">
+                                        <Button Color="Color.Info" Clicked="@(()=>_CategoryWooLinkedViewRepository._WooLinkedGridSettings.IsFilterable= !_CategoryWooLinkedViewRepository._WooLinkedGridSettings.IsFilterable)"><Icon Name="@((_CategoryWooLinkedViewRepository._WooLinkedGridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" /></Button>
+                                    </Tooltip>
+                                </NewCommandTemplate>
+                                <EditCommandTemplate>
+                                    <Tooltip Text="Edit category">
+                                        <Button Color="Color.Primary" Clicked="@context.Clicked"><Icon Name="IconName.Edit" /></Button>
+                                    </Tooltip>
+                                </EditCommandTemplate>
+                                <DeleteCommandTemplate>
+                                    <Tooltip Text="Delete category">
+                                        <Button Color="Color.Danger" Clicked="@context.Clicked"><Icon Name="IconName.Delete" /></Button>
+                                    </Tooltip>
+                                </DeleteCommandTemplate>
+                                <SaveCommandTemplate>
+                                    <Tooltip Text="Save">
+                                        <Button Color="Color.Primary" Clicked="@context.Clicked"><Icon Name="IconName.CheckCircle" /></Button>
+                                    </Tooltip>
+                                </SaveCommandTemplate>
+                                <CancelCommandTemplate>
+                                    <Tooltip Text="Undo changes">
+                                        <Button Color="Color.Secondary" Clicked="@context.Clicked"><Icon Name="IconName.Undo" /></Button>
+                                    </Tooltip>
+                                </CancelCommandTemplate>
+                                <ClearFilterCommandTemplate>
+                                    <Tooltip Text="Clear Filter" Style="z-index:99" Placement="TooltipPlacement.Left">
+                                        <Button Color="Color.Info" Outline="true" Clicked="@context.Clicked"><Icon Name="IconName.Clear" /></Button>
+                                    </Tooltip>
+                                </ClearFilterCommandTemplate>
+                            </DataGridCommandColumn>
+                        </DataGridColumns>
+                        <PopupTitleTemplate>
+                            @if (context.EditState == DataGridEditState.Edit)
+                            {
+                                @($"Edit Category {context.Item.CategoryName}")
+                            }
+                            else
+                            {
+                                @("Create Category")
+                            }
+                        </PopupTitleTemplate>
+
+                    </DataGrid>
+                </CardBody>
+                <CardFooter Style="display: inline-flex">
+                    <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                        <Column ColumnSize="ColumnSize.IsAuto">Statuses:</Column>
+                        <Column ColumnSize="ColumnSize.IsAuto">
+                            <Row>
+                                <Column ColumnSize="ColumnSize.IsAuto">
+                                    <Tooltip Text="Current Woo Status" Placement="TooltipPlacement.Right">
+                                        Woo link:
+                                    </Tooltip>
+                                </Column>
+                                <Column ColumnSize="ColumnSize.IsAuto">
+                                    @{
+                                        string IconColor = _CategoryWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive ? "green" : "red";
+                                        <Icon Name="@( _CategoryWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive ? IconName.CheckCircle : IconName.MinusCircle)"
+                                              Style="@($"color: {IconColor}; display: inline-flex")" />
+
+                                    }
+                                </Column>
+                                <Column>
+                                    &nbsp; @* more statuses here *@
+                                </Column>
+                            </Row>
+                        </Column>
+                    </Row>
+                </CardFooter>
+            </Card>
+        </Column>
+    </Row>
+
+    <RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage=" Category Message" NotificationTitle="" @ref="@_CategoryWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef" />
+
+    <RainbowOF.Components.Modals.ConfirmModal @ref="_CategoryWooLinkedViewRepository._WooLinkedGridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_Click" />
+
+    <RainbowOF.Components.Modals.ConfirmModal @ref="_CategoryWooLinkedViewRepository._WooLinkedGridSettings.DeleteWooItemConfirmation" ConfirmationClicked="ConfirmDeleteWooItem_Click" />
+
+    <RainbowOF.Components.Modals.ConfirmModalWithOption @ref="_CategoryWooLinkedViewRepository._WooLinkedGridSettings.DeleteConfirmationWithOption"
+                                                        ConfirmationClicked="ConfirmDelete_Click"
+                                                        ConfirmationMessage=@($"Are you sure you want to delete ?")
+                                                        ConfirmButtonText="Delete"
+                                                        ConfirmOptionCheckText="Delete from Woo Too"
+                                                        ShowConfirmOption="true"
+                                                        CancelButtonText="Cancel" />
+}

@@ -225,6 +225,9 @@ namespace RainbowOF.Woo.REST.Repositories
         {
             Product _Product = null;
             WCObject _WC = GetWCObject;
+
+            //var x = await _WC.ProductAttribute.Add(new ProductAttribute { id = 0 });
+
             try
             {
                 _Product = await _WC.Product.Add(addWooProduct);

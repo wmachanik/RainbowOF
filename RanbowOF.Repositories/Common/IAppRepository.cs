@@ -23,11 +23,11 @@ namespace RainbowOF.Repositories.Common
         IEnumerable<TEntity> GetBy(Expression<Func<TEntity, bool>> predicate);
         Task<IEnumerable<TEntity>> GetByAsync(Expression<Func<TEntity, bool>> predicate);
         TEntity FindFirst();
-        TEntity FindFirst(Expression<Func<TEntity, bool>> predicate);
+        TEntity FindFirstBy(Expression<Func<TEntity, bool>> predicate);
         Task<TEntity> FindFirstAsync();
-        Task<TEntity> FindFirstAsync(Expression<Func<TEntity, bool>> predicate);
+        Task<TEntity> FindFirstByAsync(Expression<Func<TEntity, bool>> predicate);
         int Add(TEntity newEntity);
-        Task<int> AddAsync(TEntity newEntity);
+        Task<TEntity> AddAsync(TEntity newEntity);
         Task<int> AddRangeAsync(List<TEntity> newEntities);
         int DeleteById(object sourceId);
         Task<int> DeleteByIdAsync(object sourceId);

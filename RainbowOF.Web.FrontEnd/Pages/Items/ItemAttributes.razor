@@ -1,12 +1,12 @@
 ﻿@*
-   -------------------------------------------------------------
-    Main page to display Item Attributes
+    -------------------------------------------------------------
+     Main page to display Item Attributes
 
-    Uses:
-        IAppUnitOfWork _appUnitOfWork
-        ApplicationState _appState
-        ILoggerManager _logger
-   -------------------------------------------------------------
+     Uses:
+         IAppUnitOfWork _appUnitOfWork
+         ApplicationState _appState
+         ILoggerManager _logger
+    -------------------------------------------------------------
 *@
 
 @page "/ItemAttributes"
@@ -15,381 +15,384 @@
 @using RainbowOF.ViewModels.Common
 @*@inject NavigationManager NavigationManager*@
 
-<Row Style="z-index: 0" Margin="Margin.Is0">
-    <Column>
-        <Card Margin="Margin.Is0">
-            <CardHeader>
-                <CardTitle><h2>Attributes&nbsp;<Icon Name="IconName.Bookmark" /></h2></CardTitle>
-            </CardHeader>
-            <CardBody>
-                <Fields>
-                    <Field Style="display: inline-flex">
-                        <FieldLabel Margin="Margin.IsAuto">
-                            Custom Search
-                        </FieldLabel>
-                        <FieldBody Style="width:80%">
-                            <TextEdit @bind-Text="@_GridSettings.CustomFilterValue" @onkeyup="HandleCustomerSearchOnKeyUpAsync" />
-                        </FieldBody>
-                    </Field>
-                </Fields>
-            </CardBody>
-        </Card>
-    </Column>
-</Row>
-<Row Margin="Margin.Is0">
-    <Column>
-        <Card Margin="Margin.Is0">
-            <CardHeader>
-                <CardTitle><h3>List of Attributes</h3></CardTitle>
-            </CardHeader>
-            <CardSubtitle Margin="Margin.Is1" Style="border-bottom: 1px solid #999">
-                <Fields>
-                    <Field Style="display: inline-flex;" Margin="Margin.Is1" JustifyContent="JustifyContent.Start">
-                        <FieldBody>
-                            <Tooltip Text="Select a Bulk Action to do on selected rows">
-                                <Select TValue="BulkAction" SelectedValue="SelectedBulkAction" SelectedValueChanged="@((v) => SelectedBulkAction = v)" style="max-width:12em">
-                                    <SelectItem Value="BulkAction.none">none</SelectItem>
-                                    @{ if (_GridSettings.WooIsActive)
-                                        {
-                                            <SelectItem Value="BulkAction.AllowWooSync">Allow Woo Sync</SelectItem>
-                                            <SelectItem Value="BulkAction.DisallowWooSync">Disallow Woo Sync</SelectItem>
+@if (_AttributeWooLinkedViewRepository != null)
+{
+    <Row Style="z-index: 0" Margin="Margin.Is0">
+        <Column>
+            <Card Margin="Margin.Is0">
+                <CardHeader>
+                    <CardTitle><h2>Attributes&nbsp;<Icon Name="IconName.Bookmark" /></h2></CardTitle>
+                </CardHeader>
+                <CardBody>
+                    <Fields>
+                        <Field Style="display: inline-flex">
+                            <FieldLabel Margin="Margin.IsAuto">
+                                Custom Search
+                            </FieldLabel>
+                            <FieldBody Style="width:80%">
+                                <TextEdit @bind-Text="@_AttributeWooLinkedViewRepository._WooLinkedGridSettings.CustomFilterValue" @onkeyup="HandleCustomerSearchOnKeyUpAsync" />
+                            </FieldBody>
+                        </Field>
+                    </Fields>
+                </CardBody>
+            </Card>
+        </Column>
+    </Row>
+    <Row Margin="Margin.Is0">
+        <Column>
+            <Card Margin="Margin.Is0">
+                <CardHeader>
+                    <CardTitle><h3>List of Attributes</h3></CardTitle>
+                </CardHeader>
+                <CardSubtitle Margin="Margin.Is1" Style="border-bottom: 1px solid #999">
+                    <Fields>
+                        <Field Style="display: inline-flex;" Margin="Margin.Is1" JustifyContent="JustifyContent.Start">
+                            <FieldBody>
+                                <Tooltip Text="Select a Bulk Action to do on selected rows">
+                                    <Select TValue="BulkAction" SelectedValue="SelectedBulkAction" SelectedValueChanged="@((v) => SelectedBulkAction = v)" style="max-width:12em">
+                                        <SelectItem Value="BulkAction.none">none</SelectItem>
+                                        @{ if (_AttributeWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive)
+                                            {
+                                                <SelectItem Value="BulkAction.AllowWooSync">Allow Woo Sync</SelectItem>
+                                                <SelectItem Value="BulkAction.DisallowWooSync">Disallow Woo Sync</SelectItem>
+                                            }
                                         }
-                                    }
-                                </Select>
-                            </Tooltip>
-                        </FieldBody>
-                        <FieldBody>
-                            &nbsp;&nbsp;&nbsp;&nbsp;
-                            <Tooltip Text="Perform group actions on Attributes" Placement="TooltipPlacement.Right">
-                                <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Disabled="((SelectedBulkAction == BulkAction.none) || (SelectedItemAttributeLookups == null) || (SelectedItemAttributeLookups?.Count == 0))" Clicked="DoGroupActionAsync">Group Action(s)</Blazorise.Button>
-                            </Tooltip>
-                        </FieldBody>
-                    </Field>
-                    <Field Style="display: inline-block;" Margin="Margin.Is1">
-                        <FieldBody>
-                            <Blazorise.Check TValue="bool" Checked="@(_GridSettings.IsNarrow)" CheckedChanged="@((v) => _GridSettings.IsNarrow = v)">Narrow Grid?</Blazorise.Check>
-                        </FieldBody>
-                    </Field>
-                    <Field Margin="Margin.Is1" JustifyContent="JustifyContent.End">
-                        <FieldBody>
-                            <Tooltip Text="Refresh/reload Attributes" Placement="TooltipPlacement.Left">
-                                <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Clicked="ReloadAsync"><Icon Name="IconName.Sync" /></Blazorise.Button>
-                            </Tooltip>
-                        </FieldBody>
-                    </Field>
-                </Fields>
-            </CardSubtitle>
-            <CardBody Padding="Padding.IsAuto">
-                <DataGrid @ref="_DataGrid"
-                          TItem="ItemAttributeLookupView" Data="@dataModels"
-                          ReadData="HandleReadDataAsync"
-                          Sortable="true" Editable="true"
-                          Striped="true"
-                          Hoverable="true"
-                          Responsive="true"
-                          EditMode="DataGridEditMode.Popup"
-                          PageSize="@_GridSettings.PageSize" ShowPager="true"
-                          PageSizes="@(new int[] { 5, 10, 15, 25, 50, 100 })"
-                          ShowPageSizes="true" PagerPosition="DataGridPagerPosition.TopAndBottom"
-                          TotalItems="_GridSettings.TotalItems"
-                          Bordered="true"
-                          NewItemDefaultSetter="@OnItemAttributeLookupNewItemDefaultSetter"
-                          SelectionMode="DataGridSelectionMode.Multiple"
-                          @bind-SelectedRow="@seletectedItem"
-                          @bind-SelectedRows="@SelectedItemAttributeLookups"
-                          DetailRowTrigger="@((item)=>(item.ItemAttributeVarietyLookups?.Count > 0  && item.ItemAttributeLookupId == seletectedItem?.ItemAttributeLookupId))"
-                          RowInserted="@OnRowInsertingAsync"
-                          RowUpdated="@OnRowUpdatingAsync"
-                          RowRemoving="@OnRowRemoving"
-                          RowRemoved="@OnRowRemovedAsync"
-                          Narrow="@_GridSettings.IsNarrow" Filterable="@_GridSettings.IsFilterable"
-                          UseInternalEditing="true"
-                          ValidationsSummaryLabel="Error validating data. Following error occurs..."
-                          ShowValidationsSummary="true"
-                          ShowValidationFeedback="true"
-                          CurrentPage="_GridSettings.CurrentPage"
-                          PageChanged="(e) => _GridSettings.CurrentPage = e.Page"
-                          Padding="Padding.Is0">
-                    <EmptyTemplate>
-                        @{
-                            if (string.IsNullOrEmpty(_Status))
-                            {
-                                if (@IsLoading)
+                                    </Select>
+                                </Tooltip>
+                            </FieldBody>
+                            <FieldBody>
+                                &nbsp;&nbsp;&nbsp;&nbsp;
+                                <Tooltip Text="Perform group actions on Attributes" Placement="TooltipPlacement.Right">
+                                    <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Disabled="((SelectedBulkAction == BulkAction.none) || (SelectedItemAttributeLookups == null) || (SelectedItemAttributeLookups?.Count == 0))" Clicked="DoGroupActionAsync">Group Action(s)</Blazorise.Button>
+                                </Tooltip>
+                            </FieldBody>
+                        </Field>
+                        <Field Style="display: inline-block;" Margin="Margin.Is1">
+                            <FieldBody>
+                                <Blazorise.Check TValue="bool" Checked="@(_AttributeWooLinkedViewRepository._WooLinkedGridSettings.IsNarrow)" CheckedChanged="@((v) => _AttributeWooLinkedViewRepository._WooLinkedGridSettings.IsNarrow = v)">Narrow Grid?</Blazorise.Check>
+                            </FieldBody>
+                        </Field>
+                        <Field Margin="Margin.Is1" JustifyContent="JustifyContent.End">
+                            <FieldBody>
+                                <Tooltip Text="Refresh/reload Attributes" Placement="TooltipPlacement.Left">
+                                    <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Clicked="ReloadAsync"><Icon Name="IconName.Sync" /></Blazorise.Button>
+                                </Tooltip>
+                            </FieldBody>
+                        </Field>
+                    </Fields>
+                </CardSubtitle>
+                <CardBody Padding="Padding.IsAuto">
+                    <DataGrid @ref="_DataGrid"
+                              TItem="ItemAttributeLookupView" Data="@dataModels"
+                              ReadData="HandleReadDataAsync"
+                              Sortable="true" Editable="true"
+                              Striped="true"
+                              Hoverable="true"
+                              Responsive="true"
+                              EditMode="DataGridEditMode.Popup"
+                              PageSize="@_AttributeWooLinkedViewRepository._WooLinkedGridSettings.PageSize" ShowPager="true"
+                              PageSizes="@(new int[] { 5, 10, 15, 25, 50, 100 })"
+                              ShowPageSizes="true" PagerPosition="DataGridPagerPosition.TopAndBottom"
+                              TotalItems="_AttributeWooLinkedViewRepository._WooLinkedGridSettings.TotalItems"
+                              Bordered="true"
+                              NewItemDefaultSetter="@OnItemAttributeLookupNewItemDefaultSetter"
+                              SelectionMode="DataGridSelectionMode.Multiple"
+                              @bind-SelectedRow="@seletectedItem"
+                              @bind-SelectedRows="@SelectedItemAttributeLookups"
+                              DetailRowTrigger="@((item) => (item.ItemAttributeVarietyLookups?.Count > 0 && item.ItemAttributeLookupId == seletectedItem?.ItemAttributeLookupId))"
+                              RowInserted="@OnRowInsertingAsync"
+                              RowUpdated="@OnRowUpdatingAsync"
+                              RowRemoving="@OnRowRemoving"
+                              RowRemoved="@OnRowRemovedAsync"
+                              Narrow="@_AttributeWooLinkedViewRepository._WooLinkedGridSettings.IsNarrow" Filterable="@_AttributeWooLinkedViewRepository._WooLinkedGridSettings.IsFilterable"
+                              UseInternalEditing="true"
+                              ValidationsSummaryLabel="Error validating data. Following error occurs..."
+                              ShowValidationsSummary="true"
+                              ShowValidationFeedback="true"
+                              CurrentPage="_AttributeWooLinkedViewRepository._WooLinkedGridSettings.CurrentPage"
+                              PageChanged="(e) => _AttributeWooLinkedViewRepository._WooLinkedGridSettings.CurrentPage = e.Page"
+                              Padding="Padding.Is0">
+                        <EmptyTemplate>
+                            @{
+                                if (string.IsNullOrEmpty(_Status))
                                 {
-                                    <Blazorise.Badge Color="Color.Primary">Loading...</Blazorise.Badge>
+                                    if (@IsLoading)
+                                    {
+                                        <Blazorise.Badge Color="Color.Primary">Loading...</Blazorise.Badge>
+                                    }
+                                    else
+                                    {
+                                        <Blazorise.Badge Color="Color.Warning">No attributes found, please add one.</Blazorise.Badge>
+                                    }
                                 }
                                 else
                                 {
-                                    <Blazorise.Badge Color="Color.Warning">No attributes found, please add one.</Blazorise.Badge>
+                                    <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                                        <Column>
+                                            <span class="alert-info">@_Status</span>
+                                        </Column>
+                                        <Column>
+                                            <div class="spinner-border m-5" role="status">
+                                                <span class="sr-only">Checking Woo Link and Loading Attributes...</span>
+                                            </div>
+                                        </Column>
+                                    </Row>
                                 }
                             }
-                            else
-                            {
-                                <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
-                                    <Column>
-                                        <span class="alert-info">@_Status</span>
-                                    </Column>
-                                    <Column>
-                                        <div class="spinner-border m-5" role="status">
-                                            <span class="sr-only">Checking Woo Link and Loading Attributes...</span>
-                                        </div>
-                                    </Column>
-                                </Row>
-                            }
-                        }
-                    </EmptyTemplate>
-                    <LoadingTemplate>
-                        <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
-                            <Column>
-                                <span class="alert-info">@_Status</span>
-                            </Column>
-                            <Column>
-                                <div class="spinner-border m-5" role="status">
-                                    <span class="sr-only">Checking Woo Link and Loading Attributes...</span>
-                                </div>
-                            </Column>
-                        </Row>
-                    </LoadingTemplate>
-                    <DataGridColumns>
-                        <DataGridMultiSelectColumn TItem="ItemAttributeLookupView" Caption="[X]" Sortable="false" TextAlignment="TextAlignment.Center" Width="1em">
-                        </DataGridMultiSelectColumn>
-                        <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.AttributeName)" Context="dataModels" Caption="Attribute Name" Sortable="true" Editable="true" ValidationPattern="^\S.{2,100}" >
-                            <DisplayTemplate Context="dataModels">
-                                @{
-                                    var attribItem = (dataModels as ItemAttributeLookupView);
+                        </EmptyTemplate>
+                        <LoadingTemplate>
+                            <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                                <Column>
+                                    <span class="alert-info">@_Status</span>
+                                </Column>
+                                <Column>
+                                    <div class="spinner-border m-5" role="status">
+                                        <span class="sr-only">Checking Woo Link and Loading Attributes...</span>
+                                    </div>
+                                </Column>
+                            </Row>
+                        </LoadingTemplate>
+                        <DataGridColumns>
+                            <DataGridMultiSelectColumn TItem="ItemAttributeLookupView" Caption="[X]" Sortable="false" TextAlignment="TextAlignment.Center" Width="1em">
+                            </DataGridMultiSelectColumn>
+                            <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.AttributeName)" Context="dataModels" Caption="Attribute Name" Sortable="true" Editable="true" ValidationPattern="^\S.{2,100}">
+                                <DisplayTemplate Context="dataModels">
+                                    @{
+                                        var attribItem = (dataModels as ItemAttributeLookupView);
 
-                                    if (attribItem != null)
-                                    {
-                                        @if ((attribItem.ItemAttributeVarietyLookups == null) || (attribItem.ItemAttributeVarietyLookups.Count == 0))
+                                        if (attribItem != null)
                                         {
-                                            <span>@attribItem.AttributeName</span>
-                                        }
-                                        else
-                                        {
-                                            <span style="font-weight: bold">@attribItem.AttributeName</span>
-                                        }
-                                    }
-                                }
-                            </DisplayTemplate>
-                        </DataGridColumn>
-                        <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.ItemAttributeVarietyLookups)" Caption="Attribute Variety" Sortable="true" Editable="false" Filterable="false">
-                            <DisplayTemplate>
-                                @{
-                                    var attribItem = (context as ItemAttributeLookupView);
-                                    @if ((attribItem.ItemAttributeVarietyLookups == null) || (attribItem.ItemAttributeVarietyLookups.Count == 0))   // no variety exists so ask if they want to add one
-                                    {
-                                        <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups.NewItemAttributeVarietyLookupComponent @ref="@NewAttributeVariety" PopUpRef="_GridSettings.PopUpRef" AddItemToWoo="_GridSettings.WooIsActive" />
-                                        <Button Color="Color.Primary" Clicked="@(() => NewAttributeVariety.ShowModal(attribItem.ItemAttributeLookupId))">
-                                            Add Variety
-                                        </Button>
-                                    }
-                                    else   //variety exists
-                                    {
-                                        // display max varieties if the item is not selected, otherwise tell them to look at grid
-                                        @if ((seletectedItem == null) || (seletectedItem.ItemAttributeLookupId != attribItem.ItemAttributeLookupId))
-                                        {
-                                            <span class="text-wrap">
-                                                @for (int i = 0; i < attribItem.ItemAttributeVarietyLookups.Count; i++)
-                                                {
-                                                    @(attribItem.ItemAttributeVarietyLookups[i].VarietyName)
-                                                    @(i < (attribItem.ItemAttributeVarietyLookups.Count - 1) ? ", " : ". ");
-                                                }
-                                                @if (attribItem.ItemAttributeVarietyLookups.Count == RainbowOF.Repositories.Common.AppUnitOfWork.CONST_MAX_DETAIL_PAGES)   //we  are at max so assume only max loaded
-                                                {
-                                                    <Blazorise.Badge Color="Color.Info">Click to see all...</Blazorise.Badge>
-                                                }
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <Blazorise.Badge Color="Color.Success">View items below</Blazorise.Badge>
-                                        }
-                                    } // else variety exists
-                                }
-                            </DisplayTemplate>
-                        </DataGridColumn>
-                        <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.OrderBy)" Caption="Order By" Sortable="true" Editable="true">
-                            <DisplayTemplate>
-                                @{
-                                    var attribItem = (context as ItemAttributeLookupView);
-                                    <span> @attribItem.OrderBy.ToString() </span>
-                                }
-                            </DisplayTemplate>
-                            <EditTemplate>
-                                @{
-                                    Dictionary<RainbowOF.Models.System.OrderBys, string> _OrderBys = GetListOfOrderBys();
-                                    var attribItem = (context.Item as ItemAttributeLookupView);
-
-                                    <Select TValue="RainbowOF.Models.System.OrderBys" SelectedValue="@(context.CellValue == null ? RainbowOF.Models.System.OrderBys.None : (RainbowOF.Models.System.OrderBys)context.CellValue)" SelectedValueChanged="@((v) => context.CellValue = v)">
-                                        @foreach (var item in _OrderBys)
-                                        {
-                                            <SelectItem TValue="RainbowOF.Models.System.OrderBys" Value="@item.Key"> @item.Value </SelectItem>
-                                        }
-                                    </Select>
-                                }
-                            </EditTemplate>
-                        </DataGridColumn>
-                        <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.CanUpdateECommerceMap)" Caption="Woo Linked" Sortable="false" Filterable="false" Editable="@(_GridSettings.WooIsActive)">
-                            <DisplayTemplate>
-                                @{
-                                    if (_GridSettings.WooIsActive)
-                                    {
-                                        var wooItem = (context as ItemAttributeLookupView);
-                                        @((wooItem.CanUpdateECommerceMap == null) ? "n/a" : ((bool)wooItem.CanUpdateECommerceMap ? "yes" : "no"));
-                                    }
-                                    else
-                                    {
-                                        @("inactive")
-                                    }
-                                }
-                            </DisplayTemplate>
-                            <EditTemplate>
-                                @{
-                                    @if (_GridSettings.WooIsActive)
-                                    {
-                                        <Tooltip Text="Is this Attribute synchronised with Woo Attributes?">
-                                            @if (context.CellValue == null)
+                                            @if ((attribItem.ItemAttributeVarietyLookups == null) || (attribItem.ItemAttributeVarietyLookups.Count == 0))
                                             {
-                                                <Blazorise.Check TValue="bool" Class="" Checked="@((context.CellValue==null) ? false : (bool) context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)"> Add To Woo</Blazorise.Check>
+                                                <span>@attribItem.AttributeName</span>
                                             }
                                             else
                                             {
-                                                <Blazorise.Check TValue="bool" Class="" Checked="@((bool) context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)"> Allow Woo Updates</Blazorise.Check>
+                                                <span style="font-weight: bold">@attribItem.AttributeName</span>
                                             }
-                                        </Tooltip>
+                                        }
                                     }
-                                    else
-                                    {
-                                        <Tooltip Text="There is not active link to Woo">
-                                            @("no woo link active")
-                                        </Tooltip>
+                                </DisplayTemplate>
+                            </DataGridColumn>
+                            <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.ItemAttributeVarietyLookups)" Caption="Attribute Variety" Sortable="true" Editable="false" Filterable="false">
+                                <DisplayTemplate>
+                                    @{
+                                        var attribItem = (context as ItemAttributeLookupView);
+                                        @if ((attribItem.ItemAttributeVarietyLookups == null) || (attribItem.ItemAttributeVarietyLookups.Count == 0))   // no variety exists so ask if they want to add one
+                                        {
+                                            <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups.NewItemAttributeVarietyLookupComponent @ref="@NewAttributeVariety" PopUpRef="_AttributeWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef" AddItemToWoo="_AttributeWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive" />
+                                            <Button Color="Color.Primary" Clicked="@(() => NewAttributeVariety.ShowModal(attribItem.ItemAttributeLookupId))">
+                                                Add Variety
+                                            </Button>
+                                        }
+                                        else   //variety exists
+                                        {
+                                            // display max varieties if the item is not selected, otherwise tell them to look at grid
+                                            @if ((seletectedItem == null) || (seletectedItem.ItemAttributeLookupId != attribItem.ItemAttributeLookupId))
+                                            {
+                                                <span class="text-wrap">
+                                                    @for (int i = 0; i < attribItem.ItemAttributeVarietyLookups.Count; i++)
+                                                    {
+                                                        @(attribItem.ItemAttributeVarietyLookups[i].VarietyName)
+                                                        @(i < (attribItem.ItemAttributeVarietyLookups.Count - 1) ? ", " : ". ");
+                                                    }
+                                                    @if (attribItem.ItemAttributeVarietyLookups.Count == RainbowOF.Repositories.Common.AppUnitOfWork.CONST_MAX_DETAIL_PAGES)   //we  are at max so assume only max loaded
+                                                    {
+                                                        <Blazorise.Badge Color="Color.Info">Click to see all...</Blazorise.Badge>
+                                                    }
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <Blazorise.Badge Color="Color.Success">View items below</Blazorise.Badge>
+                                            }
+                                        } // else variety exists
                                     }
-                                }
-                            </EditTemplate>
-                        </DataGridColumn>
-                        <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.Notes)" Caption="Notes" Sortable="true" ValidationPattern="^\S.{2,100}" 
-                                        Editable="true" HeaderCellClass="desktop-only" CellClass="@((item)=>"desktop - only")" Width="SizeToCells">
-                            <DisplayTemplate>
-                                @{
-                                    var itemNotes = (context as ItemAttributeLookupView).Notes;
-                                    <span class="text-truncate">
-                                        @itemNotes
-                                    </span>
-                                }
-                            </DisplayTemplate>
-                            <EditTemplate>
-                                <MemoEdit Text="@((string)context.CellValue)" Rows="5" Placeholder="Any notes for this item..." TextChanged="@((value)=>context.CellValue = value)" />
-                            </EditTemplate>
-                        </DataGridColumn>
-                        <DataGridCommandColumn TItem="ItemAttributeLookupView" Width="6.5em">
-                            <NewCommandTemplate>
-                                <Tooltip Text="New Attribute" Style="z-index:99" Placement="TooltipPlacement.Bottom">
-                                    <Button Color="Color.Success" Clicked="@context.Clicked">
-                                        <Icon Name="IconName.Add" />
-                                    </Button>
-                                </Tooltip>
-                                <Tooltip Text="Filter by Column" Style="z-index:99" Placement="TooltipPlacement.Left">
-                                    <Button Color="Color.Info" Clicked="@(()=>_GridSettings.IsFilterable= !_GridSettings.IsFilterable)">
-                                        <Icon Name="@((_GridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" />
-                                    </Button>
-                                </Tooltip>
-                            </NewCommandTemplate>
-                            <EditCommandTemplate>
-                                <Tooltip Text="Edit Attribute">
-                                    <Button Color="Color.Primary" Clicked="@context.Clicked">
-                                        <Icon Name="IconName.Edit" />
-                                    </Button>
-                                </Tooltip>
-                            </EditCommandTemplate>
-                            <DeleteCommandTemplate>
-                                <Tooltip Text="Delete Attribute">
-                                    <Button Color="Color.Danger" Clicked="@context.Clicked">
-                                        <Icon Name="IconName.Delete" />
-                                    </Button>
-                                </Tooltip>
-                            </DeleteCommandTemplate>
-                            <SaveCommandTemplate>
-                                <Tooltip Text="Save">
-                                    <Button Color="Color.Primary" Clicked="@context.Clicked">
-                                        <Icon Name="IconName.CheckCircle" />
-                                    </Button>
-                                </Tooltip>
-                            </SaveCommandTemplate>
-                            <CancelCommandTemplate>
-                                <Tooltip Text="Undo changes">
-                                    <Button Color="Color.Secondary" Clicked="@context.Clicked">
-                                        <Icon Name="IconName.Undo" />
-                                    </Button>
-                                </Tooltip>
-                            </CancelCommandTemplate>
-                            <ClearFilterCommandTemplate>
-                                <Tooltip Text="Clear Filter" Style="z-index:99" Placement="TooltipPlacement.Left">
-                                    <Button Color="Color.Info" Outline="true" Clicked="@context.Clicked">
-                                        <Icon Name="IconName.Clear" />
-                                    </Button>
-                                </Tooltip>
-                            </ClearFilterCommandTemplate>
-                        </DataGridCommandColumn>
-                    </DataGridColumns>
-                    <DetailRowTemplate>
-                        @{
-                            var thisAttribParentId = (context as ItemAttributeLookupView).ItemAttributeLookupId;
-                            <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups.ItemAttributeVarietiesLookupComponent ParentItemAttributeLookupId="thisAttribParentId" IsSubGrid="true" />
-                        }
-                    </DetailRowTemplate>
-                    <PopupTitleTemplate>
-                        @if (context.EditState == DataGridEditState.Edit)
-                        {
-                            @($"Edit Attribute {context.Item.AttributeName}")
-                        }
-                        else
-                        {
-                            @("Create Attrbiute")
-                        }
-                    </PopupTitleTemplate>
-                </DataGrid>
-            </CardBody>
-            <CardFooter Style="display: inline-flex">
-                <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
-                    <Column ColumnSize="ColumnSize.IsAuto"> Statuses:</Column>
-                    <Column ColumnSize="ColumnSize.IsAuto">
-                        <Row>
-                            <Column ColumnSize="ColumnSize.IsAuto">
-                                <Tooltip Text="Current Woo Status" Placement="TooltipPlacement.Right">
-                                    Woo link:
-                                </Tooltip>
-                            </Column>
-                            <Column ColumnSize="ColumnSize.IsAuto">
-                                @{
-                                    string IconColor = _GridSettings.WooIsActive ? "green" : "red";
-                                    <Icon Name="@( _GridSettings.WooIsActive ? IconName.CheckCircle : IconName.MinusCircle)"
-                                          Style="@($"color: { IconColor}; display: inline - flex")" />
+                                </DisplayTemplate>
+                            </DataGridColumn>
+                            <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.OrderBy)" Caption="Order By" Sortable="true" Editable="true">
+                                <DisplayTemplate>
+                                    @{
+                                        var attribItem = (context as ItemAttributeLookupView);
+                                        <span> @attribItem.OrderBy.ToString() </span>
+                                    }
+                                </DisplayTemplate>
+                                <EditTemplate>
+                                    @{
+                                        Dictionary<RainbowOF.Models.System.OrderBys, string> _OrderBys = GetListOfOrderBys();
+                                        var attribItem = (context.Item as ItemAttributeLookupView);
 
-                                }
-                            </Column>
-                            <Column>
-                                &nbsp; @* more statuses here *@
-                            </Column>
-                        </Row>
-                    </Column>
-                </Row>
-            </CardFooter>
-        </Card>
-    </Column>
-</Row>
+                                        <Select TValue="RainbowOF.Models.System.OrderBys" SelectedValue="@(context.CellValue == null ? RainbowOF.Models.System.OrderBys.None : (RainbowOF.Models.System.OrderBys)context.CellValue)" SelectedValueChanged="@((v) => context.CellValue = v)">
+                                            @foreach (var item in _OrderBys)
+                                            {
+                                                <SelectItem TValue="RainbowOF.Models.System.OrderBys" Value="@item.Key"> @item.Value </SelectItem>
+                                            }
+                                        </Select>
+                                    }
+                                </EditTemplate>
+                            </DataGridColumn>
+                            <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.CanUpdateECommerceMap)" Caption="Woo Linked" Sortable="false" Filterable="false" Editable="@(_AttributeWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive)">
+                                <DisplayTemplate>
+                                    @{
+                                        if (_AttributeWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive)
+                                        {
+                                            var wooItem = (context as ItemAttributeLookupView);
+                                            @((wooItem.CanUpdateECommerceMap == null) ? "n/a" : ((bool)wooItem.CanUpdateECommerceMap ? "yes" : "no"));
+                                        }
+                                        else
+                                        {
+                                            @("inactive")
+                                        }
+                                    }
+                                </DisplayTemplate>
+                                <EditTemplate>
+                                    @{
+                                        @if (_AttributeWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive)
+                                        {
+                                            <Tooltip Text="Is this Attribute synchronised with Woo Attributes?">
+                                                @if (context.CellValue == null)
+                                                {
+                                                    <Blazorise.Check TValue="bool" Class="" Checked="@((context.CellValue == null) ? false : (bool)context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)"> Add To Woo</Blazorise.Check>
+                                                }
+                                                else
+                                                {
+                                                    <Blazorise.Check TValue="bool" Class="" Checked="@((bool)context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)"> Allow Woo Updates</Blazorise.Check>
+                                                }
+                                            </Tooltip>
+                                        }
+                                        else
+                                        {
+                                            <Tooltip Text="There is not active link to Woo">
+                                                @("no woo link active")
+                                            </Tooltip>
+                                        }
+                                    }
+                                </EditTemplate>
+                            </DataGridColumn>
+                            <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.Notes)" Caption="Notes" Sortable="true" ValidationPattern="^\S.{2,100}"
+                                            Editable="true" HeaderCellClass="desktop-only" CellClass="@((item) => "desktop - only")" Width="SizeToCells">
+                                <DisplayTemplate>
+                                    @{
+                                        var itemNotes = (context as ItemAttributeLookupView).Notes;
+                                        <span class="text-truncate">
+                                            @itemNotes
+                                        </span>
+                                    }
+                                </DisplayTemplate>
+                                <EditTemplate>
+                                    <MemoEdit Text="@((string)context.CellValue)" Rows="5" Placeholder="Any notes for this item..." TextChanged="@((value) => context.CellValue = value)" />
+                                </EditTemplate>
+                            </DataGridColumn>
+                            <DataGridCommandColumn TItem="ItemAttributeLookupView" Width="6.5em">
+                                <NewCommandTemplate>
+                                    <Tooltip Text="New Attribute" Style="z-index:99" Placement="TooltipPlacement.Bottom">
+                                        <Button Color="Color.Success" Clicked="@context.Clicked">
+                                            <Icon Name="IconName.Add" />
+                                        </Button>
+                                    </Tooltip>
+                                    <Tooltip Text="Filter by Column" Style="z-index:99" Placement="TooltipPlacement.Left">
+                                        <Button Color="Color.Info" Clicked="@(() => _AttributeWooLinkedViewRepository._WooLinkedGridSettings.IsFilterable = !_AttributeWooLinkedViewRepository._WooLinkedGridSettings.IsFilterable)">
+                                            <Icon Name="@((_AttributeWooLinkedViewRepository._WooLinkedGridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" />
+                                        </Button>
+                                    </Tooltip>
+                                </NewCommandTemplate>
+                                <EditCommandTemplate>
+                                    <Tooltip Text="Edit Attribute">
+                                        <Button Color="Color.Primary" Clicked="@context.Clicked">
+                                            <Icon Name="IconName.Edit" />
+                                        </Button>
+                                    </Tooltip>
+                                </EditCommandTemplate>
+                                <DeleteCommandTemplate>
+                                    <Tooltip Text="Delete Attribute">
+                                        <Button Color="Color.Danger" Clicked="@context.Clicked">
+                                            <Icon Name="IconName.Delete" />
+                                        </Button>
+                                    </Tooltip>
+                                </DeleteCommandTemplate>
+                                <SaveCommandTemplate>
+                                    <Tooltip Text="Save">
+                                        <Button Color="Color.Primary" Clicked="@context.Clicked">
+                                            <Icon Name="IconName.CheckCircle" />
+                                        </Button>
+                                    </Tooltip>
+                                </SaveCommandTemplate>
+                                <CancelCommandTemplate>
+                                    <Tooltip Text="Undo changes">
+                                        <Button Color="Color.Secondary" Clicked="@context.Clicked">
+                                            <Icon Name="IconName.Undo" />
+                                        </Button>
+                                    </Tooltip>
+                                </CancelCommandTemplate>
+                                <ClearFilterCommandTemplate>
+                                    <Tooltip Text="Clear Filter" Style="z-index:99" Placement="TooltipPlacement.Left">
+                                        <Button Color="Color.Info" Outline="true" Clicked="@context.Clicked">
+                                            <Icon Name="IconName.Clear" />
+                                        </Button>
+                                    </Tooltip>
+                                </ClearFilterCommandTemplate>
+                            </DataGridCommandColumn>
+                        </DataGridColumns>
+                        <DetailRowTemplate>
+                            @{
+                                var thisAttribParentId = (context as ItemAttributeLookupView).ItemAttributeLookupId;
+                                <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups.ItemAttributeVarietiesLookupComponent ParentItemAttributeLookupId="thisAttribParentId" IsSubGrid="true" />
+                            }
+                        </DetailRowTemplate>
+                        <PopupTitleTemplate>
+                            @if (context.EditState == DataGridEditState.Edit)
+                            {
+                                @($"Edit Attribute {context.Item.AttributeName}")
+                            }
+                            else
+                            {
+                                @("Create Attrbiute")
+                            }
+                        </PopupTitleTemplate>
+                    </DataGrid>
+                </CardBody>
+                <CardFooter Style="display: inline-flex">
+                    <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                        <Column ColumnSize="ColumnSize.IsAuto"> Statuses:</Column>
+                        <Column ColumnSize="ColumnSize.IsAuto">
+                            <Row>
+                                <Column ColumnSize="ColumnSize.IsAuto">
+                                    <Tooltip Text="Current Woo Status" Placement="TooltipPlacement.Right">
+                                        Woo link:
+                                    </Tooltip>
+                                </Column>
+                                <Column ColumnSize="ColumnSize.IsAuto">
+                                    @{
+                                        string IconColor = _AttributeWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive ? "green" : "red";
+                                        <Icon Name="@( _AttributeWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive ? IconName.CheckCircle : IconName.MinusCircle)"
+                                              Style="@($"color: { IconColor}; display: inline - flex")" />
+
+                                    }
+                                </Column>
+                                <Column>
+                                    &nbsp; @* more statuses here *@
+                                </Column>
+                            </Row>
+                        </Column>
+                    </Row>
+                </CardFooter>
+            </Card>
+        </Column>
+    </Row>
 
 
-<RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage=" Attribute Message" NotificationTitle="" @ref="@_GridSettings.PopUpRef" />
+    <RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage=" Attribute Message" NotificationTitle="" @ref="@_AttributeWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef" />
 
-<RainbowOF.Components.Modals.ConfirmModal @ref="_GridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_ClickAsync" />
+    <RainbowOF.Components.Modals.ConfirmModal @ref="_AttributeWooLinkedViewRepository._WooLinkedGridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_ClickAsync" />
 
-<RainbowOF.Components.Modals.ConfirmModal @ref="_GridSettings.DeleteWooItemConfirmation" ConfirmationClicked="ConfirmDeleteWooItem_ClickAsync" />
+    <RainbowOF.Components.Modals.ConfirmModal @ref="_AttributeWooLinkedViewRepository._WooLinkedGridSettings.DeleteWooItemConfirmation" ConfirmationClicked="ConfirmDeleteWooItem_ClickAsync" />
 
-<RainbowOF.Components.Modals.ConfirmModalWithOption @ref="_GridSettings.DeleteConfirmation"
-                                                    ConfirmationClicked="ConfirmDelete_ClickAsync"
-                                                    ConfirmationMessage=@($"Are you sure you want to delete ?")
-                                                    ConfirmButtonText="Delete"
-                                                    ConfirmOptionCheckText="Delete from Woo Too"
-                                                    ShowConfirmOption="true"
-                                                    CancelButtonText="Cancel" />
+    <RainbowOF.Components.Modals.ConfirmModalWithOption @ref="_AttributeWooLinkedViewRepository._WooLinkedGridSettings.DeleteConfirmationWithOption"
+                                                        ConfirmationClicked="ConfirmDelete_ClickAsync"
+                                                        ConfirmationMessage=@($"Are you sure you want to delete ?")
+                                                        ConfirmButtonText="Delete"
+                                                        ConfirmOptionCheckText="Delete from Woo Too"
+                                                        ShowConfirmOption="true"
+                                                        CancelButtonText="Cancel" />
 
+}

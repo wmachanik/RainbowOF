@@ -222,6 +222,8 @@ namespace RainbowOF.Repositories.Items
                     .Include(itm => itm.ReplacementItem)
                     .Include(itm => itm.ItemCategories)
                         .ThenInclude(itmCat => itmCat.ItemCategoryDetail)
+                    .Include(itm => itm.ItemCategories)
+                        .ThenInclude(itmCat => itmCat.ItemUoMBase)
                     .Include(itm => itm.ItemAttributes)
                         .ThenInclude(itmAtts => itmAtts.ItemAttributeDetail)
                     .Include(itm => itm.ItemAttributes)
@@ -230,6 +232,8 @@ namespace RainbowOF.Repositories.Items
                     .Include(itm => itm.ItemImages)
                     .FirstOrDefaultAsync(predicate);
 
+                /// do some ordering 
+                _item.ItemCategories = _item.ItemCategories.OrderBy(itemCat => itemCat.ItemCategoryDetail.FullCategoryName).ToList();
                 /// -> do we include variants
                     ///.Include(itm => itm.ParentItem)
 
@@ -246,17 +250,17 @@ namespace RainbowOF.Repositories.Items
 
         public async Task<Item> FindFirstItemBySKUAsync(string sourceSKU)
         {
-            return await FindFirstAsync(i => i.SKU == sourceSKU);            
+            return await FindFirstByAsync(i => i.SKU == sourceSKU);            
         }
 
-        public async Task<int> AddItemAsync(Item newItem)
+        public async Task<Item> AddItemAsync(Item newItem)
         {
             if (!String.IsNullOrEmpty(newItem.SKU))
             {
                 if (await FindFirstItemBySKUAsync(newItem.SKU) != null)
                 {
                     _AppUnitOfWork.LogAndSetErrorMessage($"ERROR adding Item:  {newItem.ToString()} - duplicate SKU found in database");
-                    return AppUnitOfWork.CONST_WASERROR;
+                    return null;
                 }
             }
             // if we get here then the SKU is null or does not exists

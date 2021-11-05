@@ -5,6 +5,7 @@ using RainbowOF.ViewModels.Lookups;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using RainbowOF.Repositories.Integrations;
 
 namespace RainbowOF.Repositories.Lookups
 {

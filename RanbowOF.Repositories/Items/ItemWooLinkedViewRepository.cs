@@ -8,6 +8,7 @@ using RainbowOF.Models.Lookups;
 using RainbowOF.Models.System;
 using RainbowOF.Models.Woo;
 using RainbowOF.Repositories.Common;
+using RainbowOF.Repositories.Integrations;
 using RainbowOF.Repositories.Lookups;
 using RainbowOF.Tools;
 using RainbowOF.ViewModels.Common;
@@ -28,25 +29,87 @@ namespace RainbowOF.Repositories.Items
         #region Constructor
         public ItemWooLinkedViewRepository(ILoggerManager sourceLogger,
                                            IAppUnitOfWork sourceAppUnitOfWork,
-                                           GridSettings sourceGridSettings,
-                                           IMapper sourceMapper) : base(sourceLogger, sourceAppUnitOfWork, sourceGridSettings, sourceMapper)
+                                           //GridSettings sourceGridSettings,
+                                           IMapper sourceMapper) : base(sourceLogger, sourceAppUnitOfWork, /*sourceGridSettings,*/ sourceMapper)
         {
             //_logger = logger;
             //_appUnitOfWork = appUnitOfWork;
-            //_gridSettings = gridSettings;
+            //_WooLinkedGridSettings = gridSettings;
         }
         #endregion
         #region Support Methods
-        //private Dictionary<OrderBys, string> WooOrderByToWooOrerBy = new Dictionary<OrderBys, string>
-        //{
-        //    {OrderBys.Id, "id" },
-        //    {OrderBys.Name, "name" },
-        //    {OrderBys.None,"menu_order" },
-        //    {OrderBys.Number,"name_num" },
-        //    {OrderBys.SortOrder,"menu_order"  }
-        //};
         /// <summary>
-        /// Add item to woo, after mapping it
+        /// Add categories in the addedEntity to the targetProduct using the Woo Mappings we have. This is only called when a complete product is added. 
+        /// Logic: If not null get the mapping using our current Item Category GUID so we can use the Woo values
+        /// </summary>
+        /// <param name="addEntity">The Item just to be added to the database.</param>
+        /// <param name="targetProduct">The current Target Product, which we add to and return</param>
+        /// <returns>modified (if required) product</returns>
+        private async Task<Product> AddItemCategoriesToWooProductSync(Item addEntity, Product targetProduct)
+        {
+            if (addEntity.ItemCategories != null)
+            {
+                _Logger.LogInfo($"Adding {addEntity.ItemCategories.Count} categories to {addEntity.ItemName} Product to Woo...");
+                IAppRepository<WooCategoryMap> _wooCategoryMapRepository = _AppUnitOfWork.Repository<WooCategoryMap>();
+                WooCategoryMap _thisProductCategory = null;
+                foreach (var _itemCategory in addEntity.ItemCategories)
+                {
+                    if (_itemCategory.ItemCategoryDetail != null)
+                    {
+                        // Get Woo Category from our Id
+                        _thisProductCategory = await _wooCategoryMapRepository.FindFirstByAsync(wcm => wcm.ItemCategoryLookupId == _itemCategory.ItemCategoryLookupId);
+                        targetProduct.categories.Add(new ProductCategoryLine
+                        {
+                            id = _thisProductCategory.WooCategoryId,
+                            name = _itemCategory.ItemCategoryDetail.CategoryName
+                        });
+                    }
+                }
+            }
+            return targetProduct;
+        }
+        /// <summary>
+        /// Add attributes in the addedEntity to the targetProduct using the Woo Mappings we have. This is only called when a complete product is added. 
+        /// Logic: If not null get the mapping using our current Item Category GUID so we can use the Woo values
+        /// </summary>
+        /// <param name="addEntity">The Item just to be added to the database.</param>
+        /// <param name="targetProduct">The current Target Product, which we add to and return</param>
+        /// <returns>modified (if required) product</returns>
+        private async Task<Product> AddItemAttributesToWooProductSync(Item addEntity, Product targetProduct)
+        {
+            if (addEntity.ItemAttributes != null)
+            {
+                _Logger.LogInfo($"Adding {addEntity.ItemAttributes.Count} attributes to {addEntity.ItemName} Product to Woo...");
+                IAppRepository<WooProductAttributeMap> _wooProductAttributeMapRepository = _AppUnitOfWork.Repository<WooProductAttributeMap>();
+                WooProductAttributeMap _thisProductAttributeMap = null;
+                foreach (var _itemAttribute in addEntity.ItemAttributes)
+                {
+                    //use our values to get the mapped values and assign the attribute and terms
+                    if (_itemAttribute.ItemAttributeDetail != null)
+                    {
+                        // Get Woo Attributes from our Id
+                        _thisProductAttributeMap = await _wooProductAttributeMapRepository.FindFirstByAsync(wpam => wpam.ItemAttributeLookupId == _itemAttribute.ItemAttributeLookupId);
+                        if (_thisProductAttributeMap != null)
+                        {
+                            ProductAttributeLine _productAttribute = new ProductAttributeLine
+                            {
+                                id = (uint)_thisProductAttributeMap.WooProductAttributeId,
+                                name = _itemAttribute.ItemAttributeDetail.AttributeName,
+                                variation = _itemAttribute.IsUsedForItemVariety,
+                            };
+                            foreach (var _itemAttributeVariety in _itemAttribute.ItemAttributeVarieties)
+                            {
+                                _productAttribute.options.Add(_itemAttributeVariety.ItemAttributeVarietyDetail.VarietyName);
+                            }
+                            targetProduct.attributes.Add(_productAttribute);
+                        }
+                    }
+                }
+            }
+            return targetProduct;
+        }
+        /// <summary>
+        /// Add item to woo, after mapping it. Rev 1.1 – Added support to copy across Attributes and Categories from item.
         /// Logic: using the addedEntity map the relevant fields and add it to Woo
         /// </summary>
         /// <param name="addEntity">Entity to be added</param>
@@ -61,6 +124,10 @@ namespace RainbowOF.Repositories.Items
             Product _wooProduct = new Product();
 
             _Mapper.Map(addEntity, _wooProduct);
+            // copy across an Items Attributes and Categories
+            _wooProduct = await AddItemCategoriesToWooProductSync(addEntity, _wooProduct);
+            _wooProduct = await AddItemAttributesToWooProductSync(addEntity, _wooProduct);
+
             //Product _wooProduct = new Product
             //{
             //    name = addEntity.ItemName,
@@ -75,7 +142,7 @@ namespace RainbowOF.Repositories.Items
         /// <param name="newWooProduct">New Woo Product</param>
         /// <param name="addEntity">added Item</param>
         /// <returns>result of adding the entity</returns>
-        private async Task<int> AddItemToWooItemMapAsync(Product newWooProduct, Item addEntity)
+        private async Task<WooProductMap> AddItemToWooItemMapAsync(Product newWooProduct, Item addEntity)
         {
             // create a map to the woo Attribute maps using the id and the Attribute
             //
@@ -135,6 +202,155 @@ namespace RainbowOF.Repositories.Items
             return _result;
         }
         #endregion
+        #region Item Options Support 
+        /// <summary>
+        /// Add a source ItemCategory to the Product passed in
+        /// </summary>
+        /// <param name="sourceItemCategory">source item category</param>
+        /// <param name="originalProduct">the product we will modify</param>
+        /// <returns></returns>
+        public async Task<Product> AddItemCategoriesToWooProduct(ItemCategory sourceItemCategory, Product originalProduct)
+        {
+            IAppRepository<WooCategoryMap> _wooCategoryMapRepository = _AppUnitOfWork.Repository<WooCategoryMap>();
+            // Get Woo Category from our Id
+            WooCategoryMap _thisProductCategory = await _wooCategoryMapRepository.FindFirstByAsync(wcm => wcm.ItemCategoryLookupId == sourceItemCategory.ItemCategoryLookupId);
+            if (_thisProductCategory != null)
+                originalProduct.categories.Add(new ProductCategoryLine
+                {
+                    id = _thisProductCategory.WooCategoryId,
+                    name = sourceItemCategory.ItemCategoryDetail.CategoryName
+                });
+            return originalProduct;
+        }
+        /// <summary>
+        /// Here we check if any categories have been added or removed from the WooProduct.Categories. If so we set the HasChanged to true and modify the sourceProduct
+        /// Logic: For each Item Category name check if the name exists as a category.If not add it.Then for each product category check if that exist, if not delete it.
+        /// </summary>
+        /// <param name="originalProduct">The Woo Product we are working with</param>
+        /// <param name="sourceItem">Entity / Item to be added.</param>
+        /// <returns>A class that return true if changes, and includes the changed product.</returns>
+        public async Task<ClassHasChanged<Product>> CheckIfCategoriesHaveChanged(Product originalProduct, Item sourceItem)
+        {
+            ClassHasChanged<Product> _classHasChanged = new ClassHasChanged<Product>
+            {
+                HasChanged = false,
+                Entity = originalProduct
+            };
+            if (sourceItem.ItemCategories != null)
+            {
+                foreach (var _itemCat in sourceItem.ItemCategories)
+                {
+                    if (!originalProduct.categories.Exists(cat => cat.name == _itemCat.ItemCategoryDetail.CategoryName))
+                    {
+                        // the name does not exist so it we must add it
+                        _classHasChanged.Entity = await AddItemCategoriesToWooProduct(_itemCat, _classHasChanged.Entity);
+                        _classHasChanged.HasChanged = true;
+                    }
+                }
+                foreach (var _prodCat in originalProduct.categories)
+                {
+                    if (!sourceItem.ItemCategories.Exists(ic => ic.ItemCategoryDetail.CategoryName == _prodCat.name))
+                    {
+                        // the name does not exist so it we must add it
+                        _classHasChanged.Entity.categories.Remove(_prodCat);
+                        //_classHasChanged.Entity = await DeleteItemCategoriesToWooProduct(sourceItem, _classHasChanged.Entity);
+                        _classHasChanged.HasChanged = true;
+                    }
+                }
+            }
+            return _classHasChanged;
+        }
+        /// <summary>
+        /// Add a source ItemAttribute to the Product passed in
+        /// </summary>
+        /// <param name="sourceItemAttribute">source item Attribute</param>
+        /// <param name="originalProduct">the product we will modify</param>
+        /// <returns></returns>
+        public async Task<Product> AddItemAttributesToWooProduct(ItemAttribute sourceItemAttribute, Product originalProduct)
+        {
+            IAppRepository<WooProductAttributeMap> _wooAttributeMapRepository = _AppUnitOfWork.Repository<WooProductAttributeMap>();
+            // Get Woo Attribute from our Id
+            WooProductAttributeMap _thisProductAttribute = await _wooAttributeMapRepository.FindFirstByAsync(wcm => wcm.ItemAttributeLookupId == sourceItemAttribute.ItemAttributeLookupId);
+            if (_thisProductAttribute != null)
+                originalProduct.attributes.Add(new ProductAttributeLine
+                {
+                    id = (uint)_thisProductAttribute.WooProductAttributeId,
+                    name = sourceItemAttribute.ItemAttributeDetail.AttributeName,
+                    variation = sourceItemAttribute.IsUsedForItemVariety,
+                    options = sourceItemAttribute.ItemAttributeVarieties.Select(iav => iav.ItemAttributeVarietyDetail.VarietyName).ToList(),   // copy all the options
+                });
+            return originalProduct;
+        }
+        /// <summary>
+        /// Here we check if any Attributes have been added or removed from the WooProduct.Attributes. If so we set the HasChanged to true and modify the sourceProduct
+        /// Logic: For each Item Attribute name check if the name exists as a Attribute.If not add it.Then for each product Attribute check if that exist, if not delete it.
+        /// </summary>
+        /// <param name="originalProduct">The Woo Product we are working with</param>
+        /// <param name="sourceItem">Entity / Item to be added.</param>
+        /// <returns>A class that return true if changes, and includes the changed product.</returns>
+        public async Task<ClassHasChanged<Product>> CheckIfAttributesHaveChanged(Product originalProduct, Item sourceItem)
+        {
+            ClassHasChanged<Product> _classHasChanged = new ClassHasChanged<Product>
+            {
+                HasChanged = false,
+                Entity = originalProduct
+            };
+
+            if (sourceItem.ItemAttributes != null)
+            {
+                foreach (var _itemCat in sourceItem.ItemAttributes)
+                {
+                    if (!originalProduct.attributes.Exists(cat => cat.name == _itemCat.ItemAttributeDetail.AttributeName))
+                    {
+                        // the name does not exist so it we must add it
+                        _classHasChanged.Entity = await AddItemAttributesToWooProduct(_itemCat, _classHasChanged.Entity);
+                        _classHasChanged.HasChanged = true;
+                    }
+                    else
+                    {
+                        ///--> may be a little too much work here, perhaps we should just check if they are the same if not set it to the new options
+
+                        ///---> now we have to search for the terms
+                        /// if the original product (_classHasChanged.Entity) check if there are any terms that have been added, by seeing if they are in the sourceItem
+                        var _currentProductAttibutes = _classHasChanged.Entity.attributes.Find(cat => cat.name == _itemCat.ItemAttributeDetail.AttributeName);
+                        var _AttributeOptions = _itemCat.ItemAttributeVarieties.Select(iav => iav.ItemAttributeVarietyDetail.VarietyName).ToList();
+                        var _newAttributionOption = _AttributeOptions.Except(_currentProductAttibutes.options);  // should return a list of items not in the list.
+
+                        if (_newAttributionOption != null)
+                        {
+                            // not null so means we found a term that does not exists
+                            _currentProductAttibutes.options.AddRange(_newAttributionOption);
+                            _classHasChanged.HasChanged = true;
+                        }
+                        //// now we have to check if we need to delete any. So we scan all the existing attributes to sss
+                        var _removedAttributionOption = _currentProductAttibutes.options.Except(_AttributeOptions);  // should return a list of items not in the list.
+                        if (_removedAttributionOption != null)
+                        {
+                            // not null so means we found a term that does not exists
+                            foreach (var _option in _removedAttributionOption)
+                            {
+                                _currentProductAttibutes.options.Remove(_option);
+                            }
+                            _classHasChanged.HasChanged = true;
+                        }
+                    }
+                }
+
+                foreach (var _prodCat in originalProduct.attributes)
+                {
+                    if (!sourceItem.ItemAttributes.Exists(ic => ic.ItemAttributeDetail.AttributeName == _prodCat.name))
+                    {
+                        // the name does not exist so it we must add it
+                        _classHasChanged.Entity.attributes.Remove(_prodCat);
+                        //_classHasChanged.Entity = await DeleteItemAttributesToWooProduct(sourceItem, _classHasChanged.Entity);
+                        _classHasChanged.HasChanged = true;
+                    }
+                }
+            }
+            return _classHasChanged;
+        }
+
+        #endregion
         #region Interface Methods
         private List<ItemView> _oldSelectedItems = null;
         /// <summary>
@@ -183,7 +399,7 @@ namespace RainbowOF.Repositories.Items
         {
             IAppRepository<WooProductMap> _wooAttributeMapRepository = _AppUnitOfWork.Repository<WooProductMap>();
 
-            return await _wooAttributeMapRepository.FindFirstAsync(wcm => wcm.ItemId == mapWooEntityID);
+            return await _wooAttributeMapRepository.FindFirstByAsync(wcm => wcm.ItemId == mapWooEntityID);
         }
         /// <summary>
         /// Search and return for the woo mapped items using the list sent in.
@@ -208,7 +424,7 @@ namespace RainbowOF.Repositories.Items
             IItemRepository _ItemRepository = _AppUnitOfWork.itemRepository();
             DataGridItems<Item> _dataGridItems = await _ItemRepository.GetPagedDataEagerWithFilterAndOrderByAsync(currentDataGridParameters);
             List<Item> _Items = _dataGridItems.Entities.ToList();
-            _GridSettings.TotalItems = _dataGridItems.TotalRecordCount;
+            _WooLinkedGridSettings.TotalItems = _dataGridItems.TotalRecordCount;
             return _Items;
         }
         /// <summary>
@@ -267,7 +483,7 @@ namespace RainbowOF.Repositories.Items
             List<ItemView> _itemViewLookups = new List<ItemView>();
             // Get a list of all the Attribute maps that exists
             List<Guid> _ItemAttribIds = _Items.Where(it => it.ItemId != Guid.Empty).Select(it => it.ItemId).ToList();   // get all the ids selected
-            // Get all related ids
+                                                                                                                        // Get all related ids
             List<WooProductMap> WooProductMaps = await GetWooMappedItemsAsync(_ItemAttribIds);
             // Map Items to Woo AttributeMap
             foreach (var entity in _Items)
@@ -416,27 +632,27 @@ namespace RainbowOF.Repositories.Items
         {
             IAppRepository<Item> _ItemRepository = _AppUnitOfWork.Repository<Item>();
             // first check we do not already have a Attribute like this.
-            if (await _ItemRepository.FindFirstAsync(ial => ial.ItemName == newVeiwEntity.ItemName) == null)
+            if (await _ItemRepository.FindFirstByAsync(ial => ial.ItemName == newVeiwEntity.ItemName) == null)
             {
                 Item _NewItem = GetItemFromView(newVeiwEntity); // store this here since when it is added it will automatically update the id field
-                int _recsAdded = await _ItemRepository.AddAsync(_NewItem);
-                if (_recsAdded != AppUnitOfWork.CONST_WASERROR)
+                var _recsAdded = await _ItemRepository.AddAsync(_NewItem);
+                if (_recsAdded != null)
                 {
-                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"{newVeiwEntity.ItemName} - added", "Attribute Added");
+                    _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"{newVeiwEntity.ItemName} - added", "Attribute Added");
                     if (newVeiwEntity.CanUpdateECommerceMap ?? false)
                     {
                         // they selected to update woo so add to Woo
-                        if (await AddWooItemAndMapAsync(_NewItem) == AppUnitOfWork.CONST_WASERROR)   // add if they select to update
-                            _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Error adding {newVeiwEntity.ItemName} to Woo - {_AppUnitOfWork.GetErrorMessage()}", "Error adding Woo Attribute");
+                        if (await AddWooItemAndMapAsync(_NewItem) == null)   // add if they select to update
+                            _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Error adding {newVeiwEntity.ItemName} to Woo - {_AppUnitOfWork.GetErrorMessage()}", "Error adding Woo Attribute");
                         else
-                            _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"{newVeiwEntity.ItemName} - added to Woo", "Woo Attribute Added");
+                            _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"{newVeiwEntity.ItemName} - added to Woo", "Woo Attribute Added");
                     }
                 }
                 else
-                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{newVeiwEntity.ItemName} - {_AppUnitOfWork.GetErrorMessage()}", "Error adding Attribute");
+                    _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{newVeiwEntity.ItemName} - {_AppUnitOfWork.GetErrorMessage()}", "Error adding Attribute");
             }
             else
-                _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{newVeiwEntity.ItemName} already exists, so could not be added.");
+                _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{newVeiwEntity.ItemName} already exists, so could not be added.");
             //-> done in parent       await LoadAllViewItemsAsync();   // reload the list so the latest item is displayed
         }
         /// <summary>
@@ -451,7 +667,7 @@ namespace RainbowOF.Repositories.Items
                 return null;
 
             IAppRepository<WooProductMap> _wooProductMapRepo = _AppUnitOfWork.Repository<WooProductMap>();
-            WooProductMap _wooProductMap = await _wooProductMapRepo.FindFirstAsync(wam => wam.ItemId == sourceWooEntityId);
+            WooProductMap _wooProductMap = await _wooProductMapRepo.FindFirstByAsync(wam => wam.ItemId == sourceWooEntityId);
             return _wooProductMap;
         }
         /// <summary>
@@ -466,22 +682,22 @@ namespace RainbowOF.Repositories.Items
             // delete the woo Attribute
             WooProductMap _wooProductMap = await GetWooProductMapFromIDAsync(deleteWooEntityId);
             if (_wooProductMap == null)
-                _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product Attribute Id {deleteWooEntityId} was not found to have a Woo Attribute Map.");
+                _WooLinkedGridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product Attribute Id {deleteWooEntityId} was not found to have a Woo Attribute Map.");
             else
             {
                 if (deleteFromWoo)
                 {
                     _result = await DeleteWooProductAsync(_wooProductMap); ///Delete the Attribute in Woo
                     if (_result == AppUnitOfWork.CONST_WASERROR)
-                        _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product Attribute Id {_wooProductMap.WooProductId} was not deleted from Woo categories. Error {_AppUnitOfWork.GetErrorMessage()}");
+                        _WooLinkedGridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product Attribute Id {_wooProductMap.WooProductId} was not deleted from Woo categories. Error {_AppUnitOfWork.GetErrorMessage()}");
                     else
-                        _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Woo Product Attribute Id {_wooProductMap.WooProductId} was deleted from Woo categories.");
+                        _WooLinkedGridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Woo Product Attribute Id {_wooProductMap.WooProductId} was deleted from Woo categories.");
                 }
                 _result = await DeleteWooProductMappingAsync(_wooProductMap);   //Delete our link data, if there was an error should we?
                 if (_result == AppUnitOfWork.CONST_WASERROR)
-                    _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product Attribute Id {_wooProductMap.WooProductId} was not deleted from Woo linked categories. Error {_AppUnitOfWork.GetErrorMessage()}");
+                    _WooLinkedGridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product Attribute Id {_wooProductMap.WooProductId} was not deleted from Woo linked categories. Error {_AppUnitOfWork.GetErrorMessage()}");
                 else
-                    _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Woo Product Attribute Id {_wooProductMap.WooProductId} was deleted from Woo linked categories.");
+                    _WooLinkedGridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Woo Product Attribute Id {_wooProductMap.WooProductId} was deleted from Woo linked categories.");
             }
             return _result;
         }
@@ -510,7 +726,7 @@ namespace RainbowOF.Repositories.Items
         /// </summary>
         /// <param name="addEntity">Item that we have added to the system.</param>
         /// <returns>number of records added, or error</returns>
-        public override async Task<int> AddWooItemAndMapAsync(Item addEntity)
+        public override async Task<WooProductMap> AddWooItemAndMapAsync(Item addEntity)
         {
             // check it the item exists in woo !!!!!!(we did not do this as there is no such call;, if so get is id and return, otherwise add it and get its id
 
@@ -519,7 +735,7 @@ namespace RainbowOF.Repositories.Items
             //{
             Product _wooProduct = await AddItemToWooOnlySync(addEntity);
             if (_wooProduct == null)
-                return AppUnitOfWork.CONST_WASERROR;
+                return null;
             return await AddItemToWooItemMapAsync(_wooProduct, addEntity);
             //}
             //else
@@ -538,15 +754,15 @@ namespace RainbowOF.Repositories.Items
             var _recsDelete = await _itemRepository.DeleteByIdAsync(deleteViewEntity.ItemId);
 
             if (_recsDelete == AppUnitOfWork.CONST_WASERROR)
-                _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Item: {deleteViewEntity.ItemName} is no longer found, was it deleted?");
+                _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Item: {deleteViewEntity.ItemName} is no longer found, was it deleted?");
             else
-                _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Item: {deleteViewEntity.ItemName} was it deleted?");
+                _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Item: {deleteViewEntity.ItemName} was it deleted?");
         }
         /// <summary>
         /// Update whether the woo Product map for the view item can be updated, dependant on the current setting
         /// Logic: Retrieve item from database. If it exists and the status has changed (i.e we can update, but we now we cannot and vice versa) then update the can map status. If it did not exists add the mapping.
         /// </summary>
-        /// <param name="updatedViewEntity">Item view we want to update if required.</param>
+        /// <param name="updatedViewEntity">Item view we want to update and link to woo if required.</param>
         /// <returns>number of records updated, or error</returns>
         public override async Task<int> UpdateWooMappingAsync(ItemView updatedViewEntity)
         {
@@ -555,21 +771,25 @@ namespace RainbowOF.Repositories.Items
             WooProductMap updateWooProductMap = await GetWooMappedItemAsync(updatedViewEntity.ItemId);
             if (updateWooProductMap != null)
             {
-                if (updateWooProductMap.CanUpdate == updatedViewEntity.CanUpdateECommerceMap)
-                {
-                    // not necessary to display message.
-                    //    PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Warning, $"Woo Attribute Map for Attribute: {updatedViewEntity.ItemName} has not changed, so was not updated?");
-                }
-                else
+                // this should only be called if their is a woo mapping and all is enabled
+                //if (updateWooProductMap.CanUpdate == updatedViewEntity.CanUpdateECommerceMap)
+                //{
+                //    // not necessary to display message.
+                //    //    PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Warning, $"Woo Attribute Map for Attribute: {updatedViewEntity.ItemName} has not changed, so was not updated?");
+                //}
+                //else
+                //{
+
+                if (updateWooProductMap.CanUpdate != (bool)updatedViewEntity.CanUpdateECommerceMap)
                 {
                     updateWooProductMap.CanUpdate = (bool)updatedViewEntity.CanUpdateECommerceMap;
                     IAppRepository<WooProductMap> WooProductMapRepository = _AppUnitOfWork.Repository<WooProductMap>();
                     _recsUpdated = await WooProductMapRepository.UpdateAsync(updateWooProductMap);
-                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Item: {updatedViewEntity.ItemName} was updated.");
+                    _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Item: {updatedViewEntity.ItemName} was updated.");
                 }
             }
             else
-                _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product Map for Item: {updatedViewEntity.ItemName} is no longer found, was it deleted?");
+                _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Product Map for Item: {updatedViewEntity.ItemName} is no longer found, was it deleted?");
             await LoadAllViewItemsAsync();
             return _recsUpdated;
         }
@@ -588,7 +808,7 @@ namespace RainbowOF.Repositories.Items
         //            _updateWooProductMap.CanUpdate = (bool)updatedViewEntity.CanUpdateECommerceMap;
         //            IAppRepository<WooProductMap> WooProductRepository = _AppUnitOfWork.Repository<WooProductMap>();
         //            _recsUpdated = await WooProductRepository.UpdateAsync(_updateWooProductMap);
-        //            _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Item: {updatedViewEntity.ItemName} was updated.");
+        //            _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Item: {updatedViewEntity.ItemName} was updated.");
         //        }
         //    }
         //    else
@@ -596,7 +816,7 @@ namespace RainbowOF.Repositories.Items
         //        // nothing was found, so this probably means they now want to add. We should had a Pop up to check
         //        int _result = await AddWooItemAndMapAsync(GetItemFromView(updatedViewEntity));
         //        if (_result != AppUnitOfWork.CONST_WASERROR)
-        //            _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Item {updatedViewEntity.ItemName} has been added to woo?");
+        //            _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Item {updatedViewEntity.ItemName} has been added to woo?");
         //    }
         //    return _recsUpdated;
         //}
@@ -609,34 +829,42 @@ namespace RainbowOF.Repositories.Items
         public override async Task<int> UpdateWooItemAsync(ItemView updateViewEntity)
         {
             int _result = 0;  /// null or not found
-            if ((updateViewEntity.HasECommerceAttributeMap) && ((bool)(updateViewEntity.CanUpdateECommerceMap)))
+            IWooProduct _wooProductRepository = await GetIWooProductAsync();
+            if (_wooProductRepository != null)                     //  - > if it does not exist then what?
             {
-                IWooProduct _wooProductRepository = await GetIWooProductAsync();
-                if (_wooProductRepository != null)                     //  - > if it does not exist then what?
+                WooProductMap _updateWooMapEntity = await GetWooProductMapFromIDAsync(updateViewEntity.ItemId);
+                if (_updateWooMapEntity == null)
                 {
-                    WooProductMap _updateWooMapEntity = await GetWooProductMapFromIDAsync(updateViewEntity.ItemId);
-                    if (_updateWooMapEntity == null)
+                    // need to add the Attribute -> this is done later.
+                    _result = (await AddWooItemAndMapAsync(updateViewEntity)) != null ? 1 : AppUnitOfWork.CONST_WASERROR;
+                }
+                else
+                {
+                    Product _wooProduct = await _wooProductRepository.GetProductByIdAsync(_updateWooMapEntity.WooProductId);
+                    if (_wooProduct == null)
                     {
-                        // need to add the Attribute -> this is done later.
-                        _result = await AddWooItemAndMapAsync(updateViewEntity);
+                        return AppUnitOfWork.CONST_WASERROR;  /// oops what happened >?
                     }
                     else
                     {
-                        Product _wooProduct = await _wooProductRepository.GetProductByIdAsync(_updateWooMapEntity.WooProductId);
-                        if (_wooProduct == null)
+                        // only update if different
+                        _Mapper.Map(updateViewEntity, _wooProduct); //
+                        ClassHasChanged<Product> _productClassHasChanged = await CheckIfAttributesHaveChanged(_wooProduct, GetItemFromView(updateViewEntity));
+                        bool _HasChanged = _productClassHasChanged.HasChanged;  // store this since we may over write this
+                        _productClassHasChanged = await CheckIfAttributesHaveChanged(_productClassHasChanged.Entity, GetItemFromView(updateViewEntity));
+                        _HasChanged = (_HasChanged || _productClassHasChanged.HasChanged);
+                        // If attribute or category has changed we need to save
+                        // Now need to check if product has change
+                        // AddItemToWooItemMapAsyn
+    ///-----> busy here
+    ///
+    /// -> think I finished 
+                        if (_HasChanged) //|| (!_wooProduct.order_by.Equals(updateViewEntity.OrderBy.ToString(), StringComparison.OrdinalIgnoreCase)))
                         {
-                            return AppUnitOfWork.CONST_WASERROR;  /// oops what happened >?
-                        }
-                        else
-                        {
-                            // only update if different
-                            if ((!_wooProduct.name.Equals(updateViewEntity.ItemName))) //|| (!_wooProduct.order_by.Equals(updateViewEntity.OrderBy.ToString(), StringComparison.OrdinalIgnoreCase)))
-                            {
-                                _wooProduct.name = updateViewEntity.ItemName;  // only update if necessary
-                                //_wooProduct.order_by = ConvertToWooOrderBy(updateViewEntity.OrderBy);
-                                var _res = ((await _wooProductRepository.UpdateProductAsync(_wooProduct)));
-                                _result = ((_res == null) || (_res.id == null)) ? AppUnitOfWork.CONST_WASERROR : (int)_res.id; // if null there is an issue
-                            }
+                            // _wooProduct.name = updateEntity.ItemName;  // only update if necessary
+                            //_wooProduct.order_by = ConvertToWooOrderBy(updateViewEntity.OrderBy);
+                            var _res = ((await _wooProductRepository.UpdateProductAsync(_wooProduct)));
+                            _result = ((_res == null) || (_res.id == null)) ? AppUnitOfWork.CONST_WASERROR : (int)_res.id; // if null there is an issue
                         }
                     }
                 }
@@ -649,54 +877,62 @@ namespace RainbowOF.Repositories.Items
         /// </summary>
         /// <param name="updateViewEntity">The Entity that is being updated</param>
         /// <returns>null if nothing changed or the new WooCategopryMap</returns>
-        public override async Task<int> UpdateWooItemAndMappingAsync(ItemView updateViewEntity)
+        public override async Task<int> UpdateWooItemAndMappingAsync(ItemView updateItemView)
         {
-            int _result = await UpdateWooItemAsync(updateViewEntity);
+            int _result = await UpdateWooItemAsync(updateItemView);
             if (_result > 0)
-                _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Updated woo Attribute {updateViewEntity.ItemName}.");
+                _WooLinkedGridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Updated woo Attribute {updateItemView.ItemName}.");
             else if (_result == AppUnitOfWork.CONST_WASERROR)
-                _GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Attribute {updateViewEntity.ItemName} update failed.");
+                _WooLinkedGridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo Attribute {updateItemView.ItemName} update failed.");
 
-            _result = await UpdateWooMappingAsync(updateViewEntity);
+            _result = await UpdateWooMappingAsync(updateItemView);
             return _result;
         }
         /// <summary>
         /// Update the Item using the View Item data we have from the system
         /// Logic: Retrieve the item by Id; if it does not exist, show error, otherwise map data across and update in the database.
         /// </summary>
-        /// <param name="updateViewItem">Item view we want to update.</param>
+        /// <param name="updateItem">Item view we want to update.</param>
         /// <returns>number of records updated, or zero means item no longer there. OR return Error if there was one.</returns>
-        public override async Task<int> UpdateItemAsync(ItemView updateViewItem)
+        public override async Task<int> UpdateItemAsync(ItemView updateItem)
         {
             int _recsUpdted = 0;
             IAppRepository<Item> _ItemRepository = _AppUnitOfWork.Repository<Item>();
             // first check it exists - it could have been deleted 
-            Item _CurrentItem = await _ItemRepository.GetByIdAsync(updateViewItem.ItemId);
+            Item _CurrentItem = await _ItemRepository.GetByIdAsync(updateItem.ItemId);
             if (_CurrentItem == null)
             {
-                _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Item: {updateViewItem.ItemName} is no longer found, was it deleted?");
+                _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Item: {updateItem.ItemName} is no longer found, was it deleted?");
                 return AppUnitOfWork.CONST_WASERROR;
             }
             else
             {
-                _Mapper.Map(updateViewItem, _CurrentItem);
+                //                _Mapper.Map(updateViewItem, _CurrentItem);
                 //_CurrentItem.ItemName = updateViewItem.ItemName;
                 //_CurrentItem.SKU = updateViewItem.SKU;
                 //_CurrentItem.IsEnabled = updateViewItem.IsEnabled;
                 //_CurrentItem.ItemDetail = updateViewItem.ItemDetail;
-                _CurrentItem.PrimaryItemCategoryLookupId = ((updateViewItem.PrimaryItemCategoryLookupId ?? Guid.Empty) == Guid.Empty) ? null : (Guid)updateViewItem.PrimaryItemCategoryLookupId;
-                _CurrentItem.ReplacementItemId = ((updateViewItem.ReplacementItemId ?? Guid.Empty) == Guid.Empty) ? null : (Guid)updateViewItem.ReplacementItemId;
+                _CurrentItem.PrimaryItemCategoryLookupId = ((updateItem.PrimaryItemCategoryLookupId ?? Guid.Empty) == Guid.Empty) ? null : (Guid)updateItem.PrimaryItemCategoryLookupId;
+                _CurrentItem.ReplacementItemId = ((updateItem.ReplacementItemId ?? Guid.Empty) == Guid.Empty) ? null : (Guid)updateItem.ReplacementItemId;
                 //_CurrentItem.ItemAbbreviatedName = updateViewItem.ItemAbbreviatedName;
                 //_CurrentItem.SortOrder = updateViewItem.SortOrder;
                 //_CurrentItem.BasePrice = updateViewItem.BasePrice;
                 //_CurrentItem.ParentItemId = ((updateViewItem.ParentItemId ?? Guid.Empty) == Guid.Empty) ? null : (Guid)updateViewItem.ParentItemId;
-                ////????? Lists and other lazy loads?
+                ////????? Lists and other lazy loads
 
                 _recsUpdted = await _ItemRepository.UpdateAsync(_CurrentItem);
                 if (_recsUpdted == AppUnitOfWork.CONST_WASERROR)
-                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{updateViewItem.ItemName} - {_AppUnitOfWork.GetErrorMessage()}", "Error updating Attribute");
-                if (await UpdateWooItemAndMappingAsync(updateViewItem) == AppUnitOfWork.CONST_WASERROR)
-                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{updateViewItem.ItemName} - {_AppUnitOfWork.GetErrorMessage()}", "Error updating Attribute Map");   // should we send a message here error = mapping not updated 
+                    _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{updateItem.ItemName} - {_AppUnitOfWork.GetErrorMessage()}", "Error updating Attribute");
+                // if Woo Is Active and this item is mapped
+                if ((_WooLinkedGridSettings.WooIsActive) && (updateItem.HasECommerceAttributeMap))
+                {
+                    if (await UpdateWooItemAndMappingAsync(updateItem) == AppUnitOfWork.CONST_WASERROR)
+                        _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{updateItem.ItemName} - {_AppUnitOfWork.GetErrorMessage()}", "Error updating Attribute Map");   // should we send a message here error = mapping not updated 
+                }
+
+             /*   need to go and update all the updates to only use entity and not view, check for integrations(Woo)
+                    should be done here.
+             */
 
             }
             return _recsUpdted;
@@ -710,7 +946,7 @@ namespace RainbowOF.Repositories.Items
         public override async Task UpdateRowAsync(ItemView updateVeiwEntity)
         {
             //if (await IsDuplicateAsync(updateVeiwEntity))
-            //    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Attribute Name: {updateVeiwEntity.ItemName} - already exists, cannot be updated", "Exists already");
+            //    _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Attribute Name: {updateVeiwEntity.ItemName} - already exists, cannot be updated", "Exists already");
             //else
             //{
             if (IsValid(updateVeiwEntity))
@@ -718,14 +954,14 @@ namespace RainbowOF.Repositories.Items
                 // update and check for errors 
                 if (await UpdateItemAsync(updateVeiwEntity) == AppUnitOfWork.CONST_WASERROR)
                 {
-                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Error updating Attribute: {updateVeiwEntity.ItemName} -  {_AppUnitOfWork.GetErrorMessage()}", "Updating Attribute Error");
+                    _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Error updating Attribute: {updateVeiwEntity.ItemName} -  {_AppUnitOfWork.GetErrorMessage()}", "Updating Attribute Error");
                 }
                 else
-                    _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Item: {updateVeiwEntity.ItemName} was updated.");
+                    _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Item: {updateVeiwEntity.ItemName} was updated.");
             }
             else
             {
-                _GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Attribute Item {updateVeiwEntity.ItemName} cannot be parent and child.", "Error updating");
+                _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Attribute Item {updateVeiwEntity.ItemName} cannot be parent and child.", "Error updating");
             }
             //}
             //-> done in parent await LoadAllViewItemsAsync();   // reload the list so the latest item is displayed

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace RainbowOF.Web.FrontEnd.Pages.Items
 {
-    public partial class ItemAttributeVarieties : ComponentBase
+    public partial class ItemAttributeVarietiesLookup : ComponentBase
     {
         public Guid AttributeParentId = Guid.Empty;
         public ItemAttributeVarietiesLookupComponent _VarietiesComponent;

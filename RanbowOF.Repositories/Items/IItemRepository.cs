@@ -36,6 +36,6 @@ namespace RainbowOF.Repositories.Items
         /// </summary>
         /// <param name="newItem">New item to add</param>
         /// <returns>Number of records added or Error (AppUnitOfWork.CONST_WASERROR)</returns>
-        Task<int> AddItemAsync(Item newItem);
+        Task<Item> AddItemAsync(Item newItem);
     }
 }

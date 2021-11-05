@@ -67,7 +67,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                 else
                 {
                     // it means that there was a record in the database.
-                    IsSaved = (await _WooSettingsRepo.AddAsync(modelWooSettings)) > 0;
+                    IsSaved = (await _WooSettingsRepo.AddAsync(modelWooSettings)) != null;
                 }
                 IsChanged = false;
                 if (IsSaved) ShowChangedStatus.UpdateModalMessage("Woo settings have been saved.");

@@ -96,8 +96,7 @@ namespace RainbowOF.Repositories.System
             else
             {
                 // it means that there was a record in the database.
-                recsUpdated = await _SysPrefsRepo.AddAsync(updateSysPrefsModel.SysPrefs);
-                updated = recsUpdated > 0;
+                updated = (await _SysPrefsRepo.AddAsync(updateSysPrefsModel.SysPrefs)) != null;
             }
             // run this update regardless 
             if (updateSysPrefsModel.WooSettings.WooSettingsId > 0)
@@ -109,8 +108,7 @@ namespace RainbowOF.Repositories.System
             else
             {
                 // it means that there was a record in the database.
-                recsUpdated = await _WooSettingsRepo.AddAsync(updateSysPrefsModel.WooSettings);
-                updated = updated && (recsUpdated > 0);
+                updated = (await _WooSettingsRepo.AddAsync(updateSysPrefsModel.WooSettings)) != null;
             }
             return updated;
         }

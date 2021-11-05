@@ -1,12 +1,13 @@
 ﻿@page "/itemedit/{id}"
 @using RainbowOF.Models.Items
 @using RainbowOF.Models.Lookups
+@using RainbowOF.Components.Modals
 
 <h2>Item Edit</h2>
 
 @if (ItemEditting == null)
 {
-    <Badge Class="alert-info" Pill="true">Loading item...</Badge>
+    <Badge Class="alert-info" Pill="true">@LoadingMessage</Badge>
 }
 else
 {
@@ -46,7 +47,7 @@ else
                             <Field Horizontal="true">
                                 <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Item Enabled</FieldLabel>
                                 <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
-                                    <Check @bind-Checked="@ItemEditting.IsEnabled">
+                                    <Check  @bind-Checked="@ItemEditting.IsEnabled">
                                         <ChildContent>
                                             Enabled?
                                         </ChildContent>
@@ -101,9 +102,9 @@ else
                                                 <RichTextEditToolbarButton Action="RichTextEditAction.Clean" />
                                             </RichTextEditToolbarGroup>
                                             @*<RichTextEditToolbarGroup Float="Float.Right">
-                                <Button Class="btn-icon" Size="Size.ExtraSmall" onClick="window.open('https://www.quilljs.com/','quilljs')"><Icon Name="IconName.InfoCircle" /></Button>
-                                <Button Class="btn-icon" Size="Size.ExtraSmall" Clicked="@OnSave"><Icon Name="IconName.Save" /></Button>
-                            </RichTextEditToolbarGroup>*@
+                                                    <Button Class="btn-icon" Size="Size.ExtraSmall" onClick="window.open('https://www.quilljs.com/','quilljs')"><Icon Name="IconName.InfoCircle" /></Button>
+                                                    <Button Class="btn-icon" Size="Size.ExtraSmall" Clicked="@OnSave"><Icon Name="IconName.Save" /></Button>
+                                                </RichTextEditToolbarGroup>*@
                                         </Toolbar>
 
                                     </RichTextEdit>
@@ -112,7 +113,7 @@ else
                         </Validation>
                         <Validation>
                             <Field Horizontal="true">
-                                <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Item Abrv</FieldLabel>
+                                <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Item Abr</FieldLabel>
                                 <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
                                     <TextEdit Placeholder="Item Abreviation use for order fulfilment" @bind-Text="@ItemEditting.ItemAbbreviatedName">
                                         <Feedback>
@@ -250,21 +251,6 @@ else
                                             </FieldBody>
                                         </Field>
                                     </Validation>
-                                    <!--<Validation>
-                                        <Field Horizontal="true">
-                                            <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Parent Item</FieldLabel>
-                                            <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
-                                                <Select TValue="Guid" SelectedValue="@(ItemEditting.ParentItemId == null ? Guid.Empty : (Guid)ItemEditting.ParentItemId)"
-                                                        SelectedValueChanged="@((v) => ItemEditting.ParentItemId = v)">
-                                                    <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>-->
-                                                    @*@foreach (var item in _ListOfUoMSymbols)
-                                                        {
-                                                            <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
-                                                        }*@
-                                                <!--</Select>
-                                            </FieldBody>
-                                        </Field>
-                                    </Validation>-->
                                     <Validation>
                                         <Field Horizontal="true">
                                             <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Replacement Item</FieldLabel>
@@ -306,20 +292,9 @@ else
                                 <Blazorise.CollapseBody>
                                     <Field Horizontal="true" JustifyContent="JustifyContent.Start">
                                         <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
-                                            <div class="overflow-auto" style="max-height: 160px">
-                                                <Repeater Items="@categoryNodes">
-                                                    <Check @bind-Checked="@context.IsChecked">@context.CategoryName</Check>
-                                                </Repeater>
-                                            </div>
+                                            @*----- Item Category Grid is a separate component*@
+                                            <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items.ItemCategoriesComponent ParentItemId="@ItemEditting.ItemId" SourceItemCategories="@ItemEditting.ItemCategories" />
                                         </FieldBody>
-                                    </Field>
-                                    <Field Horizontal="true" JustifyContent="JustifyContent.Start">
-                                        <FieldLabel ColumnSize="ColumnSize.Is6">
-                                            <Buttons>
-                                                <Button Color="Color.Primary">Add</Button>  @*Clicked="@(() => Show model to add)"*@
-                                                <Button Color="Color.Warning" Disabled="@(categoryNodes.Count == 0)">Remove</Button>  @*Clicked="@(() => categoryNodes.Remove(categoryNodes.FindFirstOrDefault(cn => !cn.IsChecked )))*@
-                                            </Buttons>
-                                        </FieldLabel>
                                     </Field>
                                 </Blazorise.CollapseBody>
                             </Blazorise.Collapse>
@@ -397,79 +372,86 @@ else
                         <CardTitle>Item Children</CardTitle>
                     </CardHeader>
                     <CardBody>
-                        <DataGrid TItem="ItemVariant" Data="@ItemVariants"
-                                  Sortable="true" Editable="true"
-                                  Striped="true"
-                                  Hoverable="true"
-                                  Responsive="true"
-                                  EditMode="DataGridEditMode.Popup"
-                                  PageSize="5" ShowPager="true"
-                                  PageSizes="@(new int[] { 5, 10, 15, 25, 50, 100 })"
-                                  ShowPageSizes="true" PagerPosition="DataGridPagerPosition.TopAndBottom"
-                                  TotalItems="ItemVariants.Count"
-                                  Bordered="true"
-                                  Narrow="true" Filterable="true"
-                                  UseInternalEditing="true"
-                                  ValidationsSummaryLabel="Error validating data. Following error occurs..."
-                                  ShowValidationsSummary="true"
-                                  ShowValidationFeedback="true"
-                                  Padding="Padding.Is0">
-                            <EmptyTemplate>
-                                @{
-                                    if (ItemVariants == null)
-                                    {
-                                        //if (@IsLoading)
-                                        //{
-                                        <Blazorise.Badge Color="Color.Primary">Loading...</Blazorise.Badge>
-                                        @*}
-                                            else
-                                            {
-                                                <Blazorise.Badge Color="Color.Warning">No attributes found, please add one.</Blazorise.Badge>
-                                            }*@
-                                    }
-                                }
-                            </EmptyTemplate>
-                            <LoadingTemplate>
-                                <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
-                                    <Column>
-                                        <span class="alert-info">Loading</span>
-                                    </Column>
-                                </Row>
-                            </LoadingTemplate>
-                            <DataGridColumns>
-                                <DataGridColumn TItem="ItemVariant" Field="@nameof(ItemVariant.ItemVariantName)" Caption="Item Name" Sortable="true" Editable="true" ValidationPattern="^\S.{2,100}">
-                                </DataGridColumn>
-                                <DataGridColumn TItem="ItemVariant" Field="@nameof(ItemVariant.SKU)" Caption="SKU" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,100}">
-                                </DataGridColumn>
-                                <DataGridColumn TItem="ItemVariant" Field="@nameof(ItemVariant.IsEnabled)" Caption="Enabled?" Sortable="true" Editable="true">
-                                    <DisplayTemplate>
-                                        @{
-                                            var rowItem = (context as ItemVariant);
-                                            @(rowItem.IsEnabled ? "yes" : "no");
+                        @if (ItemVariants == null)
+                        {
+                            <Blazorise.Badge Color="Color.Info">Item has no variants</Blazorise.Badge>
+                        }
+                        else
+                        {
+                            <DataGrid TItem="ItemVariant" Data="@ItemVariants"
+                                      Sortable="true" Editable="true"
+                                      Striped="true"
+                                      Hoverable="true"
+                                      Responsive="true"
+                                      EditMode="DataGridEditMode.Popup"
+                                      PageSize="5" ShowPager="true"
+                                      PageSizes="@(new int[] { 5, 10, 15, 25, 50, 100 })"
+                                      ShowPageSizes="true" PagerPosition="DataGridPagerPosition.TopAndBottom"
+                                      TotalItems="ItemVariants.Count"
+                                      Bordered="true"
+                                      Narrow="true" Filterable="true"
+                                      UseInternalEditing="true"
+                                      ValidationsSummaryLabel="Error validating data. Following error occurs..."
+                                      ShowValidationsSummary="true"
+                                      ShowValidationFeedback="true"
+                                      Padding="Padding.Is0">
+                                <EmptyTemplate>
+                                    @{
+                                        if (ItemVariants == null)
+                                        {
+                                            //if (@IsLoading)
+                                            //{
+                                            <Blazorise.Badge Color="Color.Primary">Loading...</Blazorise.Badge>
+                                            @*}
+                                                else
+                                                {
+                                                    <Blazorise.Badge Color="Color.Warning">No attributes found, please add one.</Blazorise.Badge>
+                                                }*@
                                         }
-                                    </DisplayTemplate>
-                                    <EditTemplate>
-                                        <Tooltip Text="Is this item enabled?">
+                                    }
+                                </EmptyTemplate>
+                                <LoadingTemplate>
+                                    <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                                        <Column>
+                                            <span class="alert-info">Loading</span>
+                                        </Column>
+                                    </Row>
+                                </LoadingTemplate>
+                                <DataGridColumns>
+                                    <DataGridColumn TItem="ItemVariant" Field="@nameof(ItemVariant.ItemVariantName)" Caption="Item Name" Sortable="true" Editable="true" ValidationPattern="^\S.{2,100}">
+                                    </DataGridColumn>
+                                    <DataGridColumn TItem="ItemVariant" Field="@nameof(ItemVariant.SKU)" Caption="SKU" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,100}">
+                                    </DataGridColumn>
+                                    <DataGridColumn TItem="ItemVariant" Field="@nameof(ItemVariant.IsEnabled)" Caption="Enabled?" Sortable="true" Editable="true">
+                                        <DisplayTemplate>
                                             @{
-                                                <Blazorise.Check TValue="bool" Checked="@((bool)context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)">Is Enabled</Blazorise.Check>
+                                                var rowItem = (context as ItemVariant);
+                                                @(rowItem.IsEnabled ? "yes" : "no");
                                             }
-                                        </Tooltip>
-                                    </EditTemplate>
-                                    @*<FilterTemplate>
-                                            @{
-                                                <Select TValue="string" SelectedValue="@(string.IsNullOrEmpty(context.SearchValue) ? String.Empty : (context.SearchValue) )"
-                                                        SelectedValueChanged="@((e) => context.TriggerFilterChange(string.IsNullOrEmpty(e) ? "" : e.ToString()))">
-                                                    <SelectItem Value="@String.Empty">none</SelectItem>
-                                                    <SelectItem Value="@($"enabled")">enabled</SelectItem>
-                                                    <SelectItem Value="@($"disabled")">disabled</SelectItem>
-                                                </Select>
-                                            }
-                                        </FilterTemplate>*@
-                                </DataGridColumn>
-                                <DataGridColumn TItem="ItemVariant" Field="@nameof(ItemVariant.ItemVariantAbbreviation)" Caption="Abrv" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,10}">
-                                </DataGridColumn>
-                            </DataGridColumns>
-                        </DataGrid>
+                                        </DisplayTemplate>
+                                        <EditTemplate>
+                                            <Tooltip Text="Is this item enabled?">
+                                                @{
+                                                    <Blazorise.Check TValue="bool" Checked="@((bool)context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)">Is Enabled</Blazorise.Check>
+                                                }
+                                            </Tooltip>
+                                        </EditTemplate>
+                                        @*<FilterTemplate>
+                                                @{
+                                                    <Select TValue="string" SelectedValue="@(string.IsNullOrEmpty(context.SearchValue) ? String.Empty : (context.SearchValue) )"
+                                                            SelectedValueChanged="@((e) => context.TriggerFilterChange(string.IsNullOrEmpty(e) ? "" : e.ToString()))">
+                                                        <SelectItem Value="@String.Empty">none</SelectItem>
+                                                        <SelectItem Value="@($"enabled")">enabled</SelectItem>
+                                                        <SelectItem Value="@($"disabled")">disabled</SelectItem>
+                                                    </Select>
+                                                }
+                                            </FilterTemplate>*@
+                                    </DataGridColumn>
+                                    <DataGridColumn TItem="ItemVariant" Field="@nameof(ItemVariant.ItemVariantAbbreviation)" Caption="Abrv" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,10}">
+                                    </DataGridColumn>
+                                </DataGridColumns>
+                            </DataGrid>
+                        }
                     </CardBody>
                 </Card>
             </Column>
@@ -496,5 +478,3 @@ else
 
 
 }
-
-

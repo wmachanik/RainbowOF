@@ -13,26 +13,26 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RainbowOF.Repositories.Lookups
+namespace RainbowOF.Repositories.Integrations
 {
     public class WooLinkedView<TEntity, TEntityView, TWooMapEntity> : IWooLinkedView<TEntity, TEntityView, TWooMapEntity>
-        where TEntity : class
-        where TEntityView : class
-        where TWooMapEntity : class
+                        where TEntity : class
+                        where TEntityView : class
+                        where TWooMapEntity : class
     {
         public ILoggerManager _Logger { get; set; }
         public IAppUnitOfWork _AppUnitOfWork { get; set; }
-        public GridSettings _GridSettings { get; set; }
+        public WooLinkedGridSettings _WooLinkedGridSettings { get; set; } = new();
         public IMapper _Mapper { get; set; }
 
         public WooLinkedView(ILoggerManager sourceLogger,
-                               IAppUnitOfWork sourceAppUnitOfWork,
-                               GridSettings sourceGridSettings,
-                               IMapper sourceMapper)
+                             IAppUnitOfWork sourceAppUnitOfWork,
+                              //GridSettings sourceGridSettings,
+                             IMapper sourceMapper)
         {
             _Logger = sourceLogger;
             _AppUnitOfWork = sourceAppUnitOfWork;
-            _GridSettings = sourceGridSettings;
+            //_WooLinkedGridSettings = sourceGridSettings;
             _Mapper = sourceMapper;
         }
 
@@ -74,7 +74,7 @@ namespace RainbowOF.Repositories.Lookups
             return currentApplicatioonState.WooIsActive;
         }
 
-        public virtual Task<int> AddWooItemAndMapAsync(TEntity addEntity)
+        public virtual Task<TWooMapEntity> AddWooItemAndMapAsync(TEntity addEntity)
         {
             _Logger.LogError($"AddWooItemAndMapAsync for Entity: {addEntity.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
@@ -163,9 +163,9 @@ namespace RainbowOF.Repositories.Lookups
             throw new NotImplementedException();
         }
 
-        public virtual Task<int> UpdateItemAsync(TEntityView updateItem)
+        public virtual Task<int> UpdateItemAsync(TEntityView updateItemView)
         {
-            _Logger.LogError($"UpdateItemAsync for Entity: {updateItem.ToString()} not implemented, place holder executed. Please implement.");
+            _Logger.LogError($"UpdateItemAsync for Entity: {updateItemView.ToString()} not implemented, place holder executed. Please implement.");
             throw new NotImplementedException();
         }
 

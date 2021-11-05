@@ -46,8 +46,8 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
                 IAppRepository<ItemAttributeVarietyLookup> _appRepository = _AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
                 if (_appRepository != null)
                 {
-                    int _result = await _appRepository.AddAsync(_NewItemAttributeVarietyLookupView);
-                    if (_result == AppUnitOfWork.CONST_WASERROR)
+                    var _result = await _appRepository.AddAsync(_NewItemAttributeVarietyLookupView);
+                    if (_result == null)
                         PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Error adding new attribute variety: {_NewItemAttributeVarietyLookupView.VarietyName}");
                     else
                         PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Attribute variety: {_NewItemAttributeVarietyLookupView.VarietyName} added.");

@@ -72,7 +72,7 @@ namespace RainbowOF.Integration.Repositories.Woo
                 foreach (var cat in currWooProd.categories)
                 {
                     Guid CategoryId = await _wooImportProductCategories.GetWooMappedEntityIdByIdAsync((uint)cat.id);
-                    _itemCategoryLookup = await _itemCategoryLookupRepo.FindFirstAsync(ic => ic.ItemCategoryLookupId == CategoryId);
+                    _itemCategoryLookup = await _itemCategoryLookupRepo.FindFirstByAsync(ic => ic.ItemCategoryLookupId == CategoryId);
                     if (_itemCategoryLookup != null)
                     {
                         ///////// check if exists if this is not a new item
@@ -112,7 +112,7 @@ namespace RainbowOF.Integration.Repositories.Woo
             ItemAttributeVarietyLookup _itemAttributeVarietyLookup = null;
             foreach (var attrbiTerm in prodAttrib.options)
             {
-                _itemAttributeVarietyLookup = await _itemAttribVarietyLookupRepo.FindFirstAsync(ItemAttributeVariety => ItemAttributeVariety.VarietyName == attrbiTerm);
+                _itemAttributeVarietyLookup = await _itemAttribVarietyLookupRepo.FindFirstByAsync(ItemAttributeVariety => ItemAttributeVariety.VarietyName == attrbiTerm);
                 if (_itemAttributeVarietyLookup != null)
                 {
                     // found so update or add
@@ -169,7 +169,7 @@ namespace RainbowOF.Integration.Repositories.Woo
             //            IAppRepository<ItemAttributeLookup> _itemAttributeLookupRepo = _AppUnitOfWork.Repository<ItemAttributeLookup>();
             IAppRepository<WooProductAttributeMap> _wooProductAttributeMapRepo = _AppUnitOfWork.Repository<WooProductAttributeMap>();
             // check if this is an update or an add for categories and attributes
-            WooProductAttributeMap _wooProductAttributeMap = await _wooProductAttributeMapRepo.FindFirstAsync(wpa => wpa.WooProductAttributeId == prodAttrib.id);
+            WooProductAttributeMap _wooProductAttributeMap = await _wooProductAttributeMapRepo.FindFirstByAsync(wpa => wpa.WooProductAttributeId == prodAttrib.id);
             if (_wooProductAttributeMap != null)
             {
                 if ((HasAttributes) && (currItem.ItemAttributes.Exists(ic => ic.ItemAttributeLookupId == _wooProductAttributeMap.ItemAttributeLookupId)))
@@ -234,7 +234,7 @@ namespace RainbowOF.Integration.Repositories.Woo
                     ItemId = _itemId,
                     CanUpdate = true
                 };
-                if (await _wooProductMapRepository.AddAsync(_wooProductMap) == AppUnitOfWork.CONST_WASERROR)
+                if (await _wooProductMapRepository.AddAsync(_wooProductMap) == null)
                 {
                     // did not add so set _ItemProductId to ItemProductID to Guid.Empty = error
                     _itemId = Guid.Empty;
@@ -327,7 +327,7 @@ foreach variant do and import.
         public async Task<Guid> GetWooMappedEntityIdByIdAsync(uint sourceWooEntityId)
         {
             IAppRepository<WooProductMap> _wooProductMapRepo = _AppUnitOfWork.Repository<WooProductMap>();
-            WooProductMap _wooProductMap = await _wooProductMapRepo.FindFirstAsync(wp => wp.WooProductId == sourceWooEntityId);
+            WooProductMap _wooProductMap = await _wooProductMapRepo.FindFirstByAsync(wp => wp.WooProductId == sourceWooEntityId);
             return (_wooProductMap == null) ? Guid.Empty : _wooProductMap.ItemId;
         }
         /// <summary>
@@ -348,7 +348,7 @@ foreach variant do and import.
                 _newItem = await AssignWooProductCategoryAsync(_newItem, newWooEntity);    // adding the item but not the linked items
                 _newItem = await AssignWooProductAttributesAsync(_newItem, newWooEntity);
                 IItemRepository _itemRepo = _AppUnitOfWork.itemRepository();
-                if (await _itemRepo.AddItemAsync(_newItem) <= 0)   
+                if (await _itemRepo.AddItemAsync(_newItem) == null)   
                 {
                     _newItem.ItemId = Guid.Empty;    // if no records added or there was an error.
                 }
@@ -447,7 +447,7 @@ foreach variant do and import.
             {
                 IItemRepository _itemRepository  = _AppUnitOfWork.itemRepository();
 
-                Item _item = await _itemRepository.FindFirstAsync(ic => ic.ItemId == sourceChildWooEntityId);
+                Item _item = await _itemRepository.FindFirstByAsync(ic => ic.ItemId == sourceChildWooEntityId);
                 if (_item == null)
                     _IsUpdated = false;
                 else
@@ -539,7 +539,7 @@ foreach variant do and import.
 
             // Import the Product and set sync data
             ///first check if it exists in the mapping, just in case there has been a name change
-            WooProductMap _wooProductMap = await _wooProductMapRepository.FindFirstAsync(wp => wp.WooProductId == sourceEntity.id);
+            WooProductMap _wooProductMap = await _wooProductMapRepository.FindFirstByAsync(wp => wp.WooProductId == sourceEntity.id);
             if (_wooProductMap != null)   // the id exists so update
             {
                 if (_wooProductMap.CanUpdate)    /// only if the product can be updated 

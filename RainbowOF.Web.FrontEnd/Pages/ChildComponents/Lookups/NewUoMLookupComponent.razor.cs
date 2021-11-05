@@ -51,8 +51,8 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
                 IAppRepository<ItemUoMLookup> appRepository = _AppUnitOfWork.Repository<ItemUoMLookup>();
                 if (appRepository != null)
                 {
-                    int _result = await appRepository.AddAsync(_NewItemUoM);
-                    if (_result == AppUnitOfWork.CONST_WASERROR)
+                    var _result = await appRepository.AddAsync(_NewItemUoM);
+                    if (_result == null)
                         PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Error adding new Unit of Measure: {_NewItemUoM.UoMName}");
                     else
                         PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Unit of Measure: {_NewItemUoM.UoMName} added.");

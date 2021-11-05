@@ -1,0 +1,196 @@
+﻿@*
+    -------------------------------------------------------------
+    Component to view Categories in a grid for an item
+    Parameters:
+        > PopUpAndLogNotification PopUpRef to display the results of the add
+        > List<ItemCategory> SourceItemCategories
+    Uses:
+        IAppUnitOfWork _appUnitOfWork
+    -------------------------------------------------------------
+*@
+@using RainbowOF.Models.Items
+
+
+add not adding, seems to be using the guid of he lookup id
+also add not refreshing grid, as we seem to need to reload from the database.
+delete not working
+update not working
+
+
+
+
+
+
+
+@if (_ItemCategoryGridViewRepository == null)
+{
+    <Badge Color="Color.Primary" Pill="true">loading...</Badge>
+}
+else if ((ModelItemCategories == null) || (ModelItemCategories.Count == 0))
+{
+    <Badge Color="Color.Primary" Pill="true">Item has no categories</Badge>
+}
+else
+{
+    <DataGrid @ref="_DataGrid"
+              TItem="ItemCategory" Data="@ModelItemCategories"
+              Sortable="true" Editable="true"
+              Striped="true"
+              Hoverable="true"
+              Responsive="true"
+              EditMode="DataGridEditMode.Popup"
+              TotalItems="ModelItemCategories.Count"
+              PageSize="25"
+              @bind-SelectedRow="@SeletectedItemCategory"
+              Bordered="true"
+              Narrow="true"
+              Filterable="@_ItemCategoryGridViewRepository._GridSettings.IsFilterable"
+              UseInternalEditing="true"
+              NewItemDefaultSetter="@OnNewItemCategoryDefaultSetter"
+              RowInserted="@OnRowInsertingAsync"
+              RowUpdated="@OnRowUpdatingAsync"
+              RowRemoving="@OnRowRemoving"
+              RowRemoved="@OnRowRemovedAsync"
+              Padding="Padding.Is0">
+        <EmptyTemplate>
+            @if (ModelItemCategories == null)
+            {
+                <span>None...</span>
+            }
+        </EmptyTemplate>
+        <LoadingTemplate>
+            <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                <Column>
+                    <span class="alert-info">Loading...</span>
+                </Column>
+            </Row>
+        </LoadingTemplate>
+        <DataGridColumns>
+            <DataGridColumn TItem="ItemCategory" Field="@nameof(ItemCategory.ItemCategoryLookupId)" TextAlignment="TextAlignment.Left" Context="childData" Caption="Category" Editable="true" Sortable="true">
+                <DisplayTemplate>
+                    @{
+                        var _itemCategory = (childData as ItemCategory);
+
+                        if ((_itemCategory != null) && (_itemCategory.ItemCategoryDetail != null))
+                        {
+                            @_itemCategory.ItemCategoryDetail.FullCategoryName
+                        }
+                        else
+                        {
+                            <span>n/a</span>
+                        }
+                    }
+                </DisplayTemplate>
+                <EditTemplate>
+                    @{
+                        Dictionary<Guid, string> _Categories = GetListOfCategories();
+@*---- Need to remove the categories that are in the database for insert ----*@
+                        var _itemCategory = (childData.Item as ItemCategory);
+
+                        <Select TValue="Guid" SelectedValue="@((Guid)childData.CellValue)" SelectedValueChanged="@((v) => childData.CellValue = v)">
+                            @foreach (var item in _Categories)
+                            {
+                                <SelectItem TValue="Guid" Value="@item.Key">@item.Value</SelectItem>
+                            }
+                        </Select>
+                    }
+                </EditTemplate>
+            </DataGridColumn>
+            <DataGridColumn TItem="ItemCategory" Field="@nameof(ItemCategory.UsedForPrediction)" TextAlignment="TextAlignment.Left" Context="childData" Caption="Used 4 Prediction" Editable="true">
+                <EditTemplate>
+                    <Check TValue="bool" Checked="@((bool)childData.CellValue)" CheckedChanged="@((v) => childData.CellValue = v)"  >
+                        <ChildContent>
+                            Yes?
+                        </ChildContent>
+                        <Feedback>
+                            <ValidationError />
+                        </Feedback>
+                    </Check>
+                </EditTemplate>
+            </DataGridColumn>
+            <DataGridColumn TItem="ItemCategory" Field="@nameof(ItemCategory.UoMBaseId)" TextAlignment="TextAlignment.Left" Context="childData" Caption="Base UoM" Editable="true">
+                <DisplayTemplate>
+                    @{
+                        var _itemCategory = (childData as ItemCategory);
+                        if ((_itemCategory.UoMBaseId != null) && (_itemCategory.ItemUoMBase!=null))
+                        {
+                            @_itemCategory.ItemUoMBase.UoMName
+                        }
+                        else
+                        {
+                            <span>n/a</span>
+                        }
+                    }
+                </DisplayTemplate>
+                <EditTemplate>
+                    @{
+                        //Guid _CatUoMId = (Guid)childData.CellValue;
+                        <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups.UoMLookupSelectListComponent PopUpRef="PopUpRef" SourceUoMId="(Guid?)childData.CellValue" UoMIdChangedEvent="@((u) => childData.CellValue = u)" />
+                    }
+                </EditTemplate>
+            </DataGridColumn>
+            <DataGridCommandColumn TItem="ItemCategory" Width="6.5em">
+                <NewCommandTemplate>
+                    <Tooltip Text="New Item Category" Style="z-index:99" Placement="TooltipPlacement.Bottom">
+                        <Button Color="Color.Success" Clicked="@context.Clicked">
+                            <Icon Name="IconName.Add" />
+                        </Button>
+                    </Tooltip>
+                    <Tooltip Text="Filter by Column" Style="z-index:99" Placement="TooltipPlacement.Left">
+                        <Button Color="Color.Info" Clicked="@(()=>_ItemCategoryGridViewRepository._GridSettings.IsFilterable= !_ItemCategoryGridViewRepository._GridSettings.IsFilterable)">
+                            <Icon Name="@((_ItemCategoryGridViewRepository._GridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" />
+                        </Button>
+                    </Tooltip>
+                </NewCommandTemplate>
+                <EditCommandTemplate>
+                    <Tooltip Text="Edit Attribute">
+                        <Button Color="Color.Primary" Clicked="@context.Clicked">
+                            <Icon Name="IconName.Edit" />
+                        </Button>
+                    </Tooltip>
+                </EditCommandTemplate>
+                <DeleteCommandTemplate>
+                    <Tooltip Text="Delete Attribute">
+                        <Button Color="Color.Danger" Clicked="@context.Clicked">
+                            <Icon Name="IconName.Delete" />
+                        </Button>
+                    </Tooltip>
+                </DeleteCommandTemplate>
+                <SaveCommandTemplate>
+                    <Tooltip Text="Save">
+                        <Button Color="Color.Primary" Clicked="@context.Clicked">
+                            <Icon Name="IconName.CheckCircle" />
+                        </Button>
+                    </Tooltip>
+                </SaveCommandTemplate>
+                <CancelCommandTemplate>
+                    <Tooltip Text="Undo changes">
+                        <Button Color="Color.Secondary" Clicked="@context.Clicked">
+                            <Icon Name="IconName.Undo" />
+                        </Button>
+                    </Tooltip>
+                </CancelCommandTemplate>
+                <ClearFilterCommandTemplate>
+                    <Tooltip Text="Clear Filter" Style="z-index:99" Placement="TooltipPlacement.Left">
+                        <Button Color="Color.Info" Outline="true" Clicked="@context.Clicked">
+                            <Icon Name="IconName.Clear" />
+                        </Button>
+                    </Tooltip>
+                </ClearFilterCommandTemplate>
+            </DataGridCommandColumn>
+
+        </DataGridColumns>
+    </DataGrid>
+}
+
+
+<RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage=" Item Message" NotificationTitle="" @ref="@_ItemCategoryGridViewRepository._GridSettings.PopUpRef" />
+
+@*<RainbowOF.Components.Modals.ConfirmModal @ref="_ItemCategoryGridViewRepository._GridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_ClickAsync" />*@
+
+
+<RainbowOF.Components.Modals.ConfirmModal @ref="_ItemCategoryGridViewRepository._GridSettings.DeleteConfirmation"
+                                          ConfirmationClicked="ConfirmDelete_ClickAsync"
+                                          ConfirmationMessage=@($"Are you sure you want to delete ?")
+                                          ConfirmButtonText="Delete"
+                                          CancelButtonText="Cancel" />
