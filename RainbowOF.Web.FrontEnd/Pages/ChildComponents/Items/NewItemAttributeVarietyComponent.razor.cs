@@ -9,18 +9,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
+namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
 {
-    public partial class NewItemAttributeVarietyLookupComponent : ComponentBase
+    public partial class NewItemAttributeVarietyComponent : ComponentBase
     {
         [Inject]
         IAppUnitOfWork _AppUnitOfWork { get; set; }
         [Parameter]
         public PopUpAndLogNotification PopUpRef { get; set; }
-        [Parameter]
-        public bool AddItemToWoo { get; set; } = false;
 
-        private Modal NewAttributeVarietyLookupModalRef;
+        private Modal NewAttributeVarietyModalRef;
 
         public ItemAttributeVarietyLookupView _NewItemAttributeVarietyLookupView = new ();
 
@@ -35,8 +33,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
             _NewItemAttributeVarietyLookupView.FGColour = String.Empty;
             _NewItemAttributeVarietyLookupView.BGColour = String.Empty;
             _NewItemAttributeVarietyLookupView.Symbol = String.Empty; 
-            _NewItemAttributeVarietyLookupView.CanUpdateECommerceMap = AddItemToWoo ? true : null;  // if they want to add woo then do so here
-            NewAttributeVarietyLookupModalRef.Show();
+            NewAttributeVarietyModalRef.Show();
         }
 
         private async Task HideModal(bool SaveClicked)
@@ -53,7 +50,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
                         PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Attribute variety: {_NewItemAttributeVarietyLookupView.VarietyName} added.");
                 }
             }
-            NewAttributeVarietyLookupModalRef.Hide();
+            NewAttributeVarietyModalRef.Hide();
         }
     }
 }

@@ -188,12 +188,12 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
         {
             newItem = _AttributeVarietyWooLinkedViewRepository.NewItemDefaultSetter(newItem);
         }
-        async Task<int> UpdateItemAttributeVarietyLookup(ItemAttributeVarietyLookupView updatedItemView)
-        {
-            int _result = await _AttributeVarietyWooLinkedViewRepository.UpdateItemAsync(updatedItemView);
-            await _VarietiesDataGrid.Reload();
-            return _result;
-        }
+        //async Task<int> UpdateItemAttributeVarietyLookup(ItemAttributeVarietyLookupView updatedItemView)
+        //{
+        //    int _result = await _AttributeVarietyWooLinkedViewRepository.UpdateItemAsync(updatedItemView);
+        //    await _VarietiesDataGrid.Reload();
+        //    return _result;
+        //}
 
         async Task OnVarietyRowUpdating(SavedRowItem<ItemAttributeVarietyLookupView, Dictionary<string, object>> updatedItem)
         {

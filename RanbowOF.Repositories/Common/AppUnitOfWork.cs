@@ -17,9 +17,11 @@ namespace RainbowOF.Repositories.Common
 {
     public class AppUnitOfWork : IAppUnitOfWork
     {
-        // CONST
+        #region Public constants
         public const int CONST_WASERROR = -1;
         public const int CONST_MAX_DETAIL_PAGES = 50;
+        #endregion
+        #region Generic privates
         // generics
         private ApplicationDbContext _Context;
         private IDbContextTransaction dbTransaction = null;
@@ -33,21 +35,28 @@ namespace RainbowOF.Repositories.Common
         private IItemCategoryLookupRepository _ItemCategoryLookupRepository = null;
         private IItemAttributeLookupRepository _ItemAttributeLookupRepository = null;
         private IItemAttributeVarietyLookupRepository _ItemAttributeVarietyLookupRepository = null;
-        // Internal vars
-        private Dictionary<Guid, string> _ListOfUoMSymbols;
-
-        // Unit of Work Error handling
+        #endregion
+        #region Internal List vars
+        private Dictionary<Guid, string> _listOfCategories = null;
+        private Dictionary<Guid, string> _ListOfUoMSymbols = null;
+        private Dictionary<Guid, string> _ListOfAttributes = null;
+        private Dictionary<Guid, string> _ListOfAttributeVarieties = null;
+        #endregion
+        #region Unit of Work Error handling
         private string _ErrorMessage = String.Empty;
-
-        public Dictionary<Type, object> Repositories
-        {
-            get { return _repositories; }
-            set { Repositories = value; }
-        }
+        #endregion
+        #region Initialisation
         public AppUnitOfWork(ApplicationDbContext context, ILoggerManager logger)
         {
             _Context = context;
             _Logger = logger;
+        }
+        #endregion
+        #region Public's of the unit of work repos
+        public Dictionary<Type, object> Repositories
+        {
+            get { return _repositories; }
+            set { Repositories = value; }
         }
         public IAppRepository<TEntity> Repository<TEntity>() where TEntity : class
         {
@@ -95,6 +104,30 @@ namespace RainbowOF.Repositories.Common
                 _ItemAttributeVarietyLookupRepository = new ItemAttributeVarietyLookupRepository(_Context, _Logger, this);
             return _ItemAttributeVarietyLookupRepository;
         }
+        #endregion
+        #region lists and variables from database
+        public bool DBTransactionIsStillRunning()
+        {
+            return dbTransaction != null;
+        }
+        public Dictionary<Guid, string> GetListOfCategories(bool IsForceReload = false)
+        {
+            if ((IsForceReload) || (_listOfCategories == null))
+            {
+                if (_listOfCategories != null) _listOfCategories.Clear();
+                else _listOfCategories = new Dictionary<Guid, string>();
+
+                IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = Repository<ItemCategoryLookup>();
+                var _itemCategories = _itemCategoryLookupRepository.GetAll()
+                    .OrderBy(ic => ic.FullCategoryName)
+                    .ToList();  // cannot async as part of UI for
+                foreach (var _itemCategory in _itemCategories)
+                {
+                    _listOfCategories.Add(_itemCategory.ItemCategoryLookupId, _itemCategory.FullCategoryName);
+                }
+            }
+            return _listOfCategories;
+        }
         public Dictionary<Guid, string> GetListOfUoMSymbols(bool IsForceReload = false)
         {
             if (IsForceReload)
@@ -117,17 +150,51 @@ namespace RainbowOF.Repositories.Common
             }
             return _ListOfUoMSymbols;
         }
-        public bool DBTransactionIsStillRunning()
+        public Dictionary<Guid, string> GetListOfAttributes(bool IsForceReload = false)
         {
-            return dbTransaction != null;
+            if ((IsForceReload) || (_ListOfAttributes == null))
+            {
+                if (_ListOfAttributes != null) _ListOfAttributes.Clear();
+                else _ListOfAttributes = new Dictionary<Guid, string>();
+
+                IAppRepository<ItemAttributeLookup> _itemAttributeLookupRepository = Repository<ItemAttributeLookup>();
+                var _itemAttributes = _itemAttributeLookupRepository.GetAll()
+                    .OrderBy(ia => ia.AttributeName)
+                    .ToList();  // cannot async as part of UI for
+                foreach (var _itemAttribute in _itemAttributes)
+                {
+                    _ListOfAttributes.Add(_itemAttribute.ItemAttributeLookupId, _itemAttribute.AttributeName);
+                }
+            }
+            return _ListOfAttributes;
         }
+        public Dictionary<Guid, string> GetListOfAttributeVarieties(Guid parentAttributeLookupId, bool IsForceReload = false)
+        {
+            if ((IsForceReload) || (_ListOfAttributeVarieties == null))
+            {
+                if (_ListOfAttributeVarieties != null) _ListOfAttributeVarieties.Clear();
+                else _ListOfAttributeVarieties = new Dictionary<Guid, string>();
+
+                IAppRepository<ItemAttributeVarietyLookup> _itemAttributeVarietyLookupRepository = Repository<ItemAttributeVarietyLookup>();
+                var _itemAttributeVarieties = _itemAttributeVarietyLookupRepository.GetBy(iav => iav.ItemAttributeLookupId == parentAttributeLookupId)
+                    .OrderBy(ic => ic.VarietyName)
+                    .ToList();  // cannot async as part of UI for
+                foreach (var _itemAttributeVariety in _itemAttributeVarieties)
+                {
+                    _ListOfAttributeVarieties.Add(_itemAttributeVariety.ItemAttributeVarietyLookupId, _itemAttributeVariety.VarietyName);
+                }
+            }
+            return _ListOfAttributeVarieties;
+        }
+        #endregion
+        #region Centralised Context Handling
         public void BeginTransaction()
         {
             ClearErrorMessage();  // assume an error has been cleared
             if (dbTransaction == null)    // should be null - if not should we not throw an error?
                 dbTransaction = _Context.Database.BeginTransaction();
             else
-                _Logger.LogDebug("Second transaction started before current transaction completed!"); 
+                _Logger.LogDebug("Second transaction started before current transaction completed!");
         }
         public int Complete()
         {
@@ -155,7 +222,7 @@ namespace RainbowOF.Repositories.Common
             try
             {
                 _Logger.LogDebug("Committing changes (async).");
-               recsCommited = await _Context.SaveChangesAsync(true);
+                recsCommited = await _Context.SaveChangesAsync(true);
                 if (dbTransaction != null)
                 {
                     dbTransaction.Commit();
@@ -199,6 +266,8 @@ namespace RainbowOF.Repositories.Common
             Dispose(true);
             GC.SuppressFinalize(this);
         }
+        #endregion
+        #region Error Messages
         public bool IsInErrorState()
         {
             return _ErrorMessage != string.Empty;
@@ -221,6 +290,7 @@ namespace RainbowOF.Repositories.Common
             _Logger.LogError(sourceErrorMessage);
             RollbackTransaction();
         }
+        #endregion
 
     }
 }

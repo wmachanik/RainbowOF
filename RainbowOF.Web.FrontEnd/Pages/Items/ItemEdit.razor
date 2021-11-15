@@ -47,7 +47,7 @@ else
                             <Field Horizontal="true">
                                 <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Item Enabled</FieldLabel>
                                 <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
-                                    <Check  @bind-Checked="@ItemEditting.IsEnabled">
+                                    <Check @bind-Checked="@ItemEditting.IsEnabled">
                                         <ChildContent>
                                             Enabled?
                                         </ChildContent>
@@ -293,7 +293,7 @@ else
                                     <Field Horizontal="true" JustifyContent="JustifyContent.Start">
                                         <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
                                             @*----- Item Category Grid is a separate component*@
-                                            <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items.ItemCategoriesComponent ParentItemId="@ItemEditting.ItemId" SourceItemCategories="@ItemEditting.ItemCategories" />
+                                            <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items.ItemCategoriesComponent PopUpRef="@PopUpRef" ParentItemId="@ItemEditting.ItemId" SourceItemCategories="@ItemEditting.ItemCategories" />
                                         </FieldBody>
                                     </Field>
                                 </Blazorise.CollapseBody>
@@ -318,48 +318,7 @@ else
                             </Blazorise.Heading>
                         </Blazorise.CollapseHeader>
                         <Blazorise.CollapseBody>
-                            <Card Margin="Margin.Is0" Class="overflow-auto">
-                                <CardBody>
-                                    <table class="table table-striped table-hover table-borderless table-sm table-responsive">
-                                        <tbody>
-                                            <Repeater Items="@ItemEditting.ItemAttributes">
-                                                <tr>
-                                                    <th style="width:auto">
-                                                        @context.ItemAttributeDetail.AttributeName
-                                                    </th>
-                                                    <td style="width:auto">
-                                                        @if (context.ItemAttributeDetail.ItemAttributeVarietyLookups != null)
-                                                        {
-                                                            <ul>
-                                                                @foreach (var att in context.ItemAttributeDetail.ItemAttributeVarietyLookups)
-                                                                {
-                                                                    <li>@att.VarietyName</li>
-                                                                }
-                                                            </ul>
-                                                        }
-                                                    </td>
-                                                    <td style="width:auto">
-                                                        @if (context.IsUsedForItemVariety)
-                                                        {<Badge Color="Color.Info">Used for variations</Badge>}
-                                                        else
-                                                        {<span>&nbsp;</span>}
-                                                    </td>
-                                                </tr>
-                                            </Repeater>
-                                        </tbody>
-                                    </table>
-                                </CardBody>
-                                <CardFooter>
-                                    <Row>
-                                        <Column>
-                                            <Button Color="Color.Secondary">Add Attributes</Button>
-                                        </Column>
-                                        <Column>
-                                            <Button Color="Color.Warning">Remove Attributes</Button>
-                                        </Column>
-                                    </Row>
-                                </CardFooter>
-                            </Card>
+                            <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items.ItemAttributesComponent PopUpRef="@PopUpRef" ParentItemId="@ItemEditting.ItemId" SourceItemAttributes="@ItemEditting.ItemAttributes" />
                         </Blazorise.CollapseBody>
                     </Blazorise.Collapse>
                 </Blazorise.Accordion>
@@ -476,5 +435,52 @@ else
 
     </Validations>
 
+    <RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage=" Item Message" NotificationTitle="" @ref="@PopUpRef" />
+
 
 }
+
+
+
+@*<Card Margin="Margin.Is0" Class="overflow-auto">
+        <CardBody>
+            <table class="table table-striped table-hover table-borderless table-sm table-responsive">
+                <tbody>
+                    <Repeater Items="@ItemEditting.ItemAttributes">
+                        <tr>
+                            <th style="width:auto">
+                                @context.ItemAttributeDetail.AttributeName
+                            </th>
+                            <td style="width:auto">
+                                @if (context.ItemAttributeDetail.ItemAttributeVarietyLookups != null)
+                                {
+                                    <ul>
+                                        @foreach (var att in context.ItemAttributeDetail.ItemAttributeVarietyLookups)
+                                        {
+                                            <li>@att.VarietyName</li>
+                                        }
+                                    </ul>
+                                }
+                            </td>
+                            <td style="width:auto">
+                                @if (context.IsUsedForItemVariety)
+                                {<Badge Color="Color.Info">Used for variations</Badge>}
+                                else
+                                {<span>&nbsp;</span>}
+                            </td>
+                        </tr>
+                    </Repeater>
+                </tbody>
+            </table>
+        </CardBody>
+        <CardFooter>
+            <Row>
+                <Column>
+                    <Button Color="Color.Secondary">Add Attributes</Button>
+                </Column>
+                <Column>
+                    <Button Color="Color.Warning">Remove Attributes</Button>
+                </Column>
+            </Row>
+        </CardFooter>
+    </Card>*@

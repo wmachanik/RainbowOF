@@ -158,13 +158,13 @@
                                     <Button Color="Color.Secondary" Outline="@IsSubGrid" Clicked="@VarietyDataModels.Clicked"><Icon Name="IconName.Clear" /></Button>
                                 </ClearFilterCommandTemplate>
                             </DataGridCommandColumn>
-                            <DataGridColumn TItem="ItemAttributeVarietyLookupView" Field="@nameof(ItemAttributeVarietyLookupView.VarietyName)" Context="VarietyDataModels" Caption="Variety" Editable="true" Filterable="true" />
+                            <DataGridColumn TItem="ItemAttributeVarietyLookupView" Field="@nameof(ItemAttributeVarietyLookupView.VarietyName)" Context="VarietyDataModels" 
+                                            Caption="Variety" Editable="true" Filterable="true" />
                             <DataGridColumn TItem="ItemAttributeVarietyLookupView" Field="@nameof(ItemAttributeVarietyLookupView.UoMId)" Caption="Unit" Editable="true" Context="VarietyDataModels">
                                 <DisplayTemplate Context="VarietyDataModels">
                                     @{
                                         var ItemsUoM = VarietyDataModels.UoM;
-
-                                        @((ItemsUoM == null) ? (VarietyDataModels.UoMId == null ? "n/a" : VarietyDataModels.UoMId) : ItemsUoM.UoMSymbol );
+                                        @((ItemsUoM == null) ? "n/a" : ItemsUoM.UoMSymbol );
                                     }
                                 </DisplayTemplate>
                                 <EditTemplate Context="VarietyDataModels">

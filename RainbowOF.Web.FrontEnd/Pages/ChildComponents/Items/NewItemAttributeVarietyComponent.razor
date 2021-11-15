@@ -9,7 +9,7 @@
         IAppUnitOfWork _appUnitOfWork
     -------------------------------------------------------------
 *@
-<Modal @ref="NewAttributeVarietyLookupModalRef">
+<Modal @ref="NewAttributeVarietyModalRef">
     <ModalContent Size="Blazorise.ModalSize.Default" Centered="true">
         <ModalHeader>
             <ModalTitle>
@@ -25,7 +25,9 @@
             </Field>
             <Field>
                 <FieldLabel>UoM</FieldLabel>
-                <UoMLookupSelectListComponent PopUpRef="PopUpRef" SourceUoMId="_NewItemAttributeVarietyLookupView.UoMId" UoMIdChangedEvent="@((u) => _NewItemAttributeVarietyLookupView.UoMId = u)"></UoMLookupSelectListComponent>
+                <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups.UoMLookupSelectListComponent PopUpRef="PopUpRef" 
+                                                                                                   SourceUoMId="_NewItemAttributeVarietyLookupView.UoMId" 
+                                                                                                   UoMIdChangedEvent="@((u) => _NewItemAttributeVarietyLookupView.UoMId = u)" />
             </Field>
             <Field>
                 <FieldLabel>Sort Order</FieldLabel>

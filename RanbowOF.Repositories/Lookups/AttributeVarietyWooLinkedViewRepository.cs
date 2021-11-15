@@ -306,13 +306,14 @@ namespace RainbowOF.Repositories.Lookups
             }
             else
             {
-                _CurrentItemAttributeVarietyLookup.VarietyName = updateViewItem.VarietyName;
-                _CurrentItemAttributeVarietyLookup.UoMId  = ( (updateViewItem.UoMId?? Guid.Empty) == Guid.Empty) ? null : updateViewItem.UoMId;
-                _CurrentItemAttributeVarietyLookup.Symbol = updateViewItem.Symbol;
-                _CurrentItemAttributeVarietyLookup.BGColour = updateViewItem.BGColour;
-                _CurrentItemAttributeVarietyLookup.FGColour = updateViewItem.FGColour;
-                _CurrentItemAttributeVarietyLookup.SortOrder = updateViewItem.SortOrder;
-                _CurrentItemAttributeVarietyLookup.Notes = updateViewItem.Notes;
+                _Mapper.Map(updateViewItem, _CurrentItemAttributeVarietyLookup);
+                //_CurrentItemAttributeVarietyLookup.VarietyName = _CurrentItemAttributeVarietyLookup.VarietyName;
+                //_CurrentItemAttributeVarietyLookup.UoMId  = ( (updateViewItem.UoMId?? Guid.Empty) == Guid.Empty) ? null : updateViewItem.UoMId;
+                //_CurrentItemAttributeVarietyLookup.Symbol = updateViewItem.Symbol;
+                //_CurrentItemAttributeVarietyLookup.BGColour = updateViewItem.BGColour;
+                //_CurrentItemAttributeVarietyLookup.FGColour = updateViewItem.FGColour;
+                //_CurrentItemAttributeVarietyLookup.SortOrder = updateViewItem.SortOrder;
+                //_CurrentItemAttributeVarietyLookup.Notes = updateViewItem.Notes;
                 _recsUpdted = await _itemAttributeVarietyLookupRepository.UpdateAsync(_CurrentItemAttributeVarietyLookup);
                 if (_recsUpdted == AppUnitOfWork.CONST_WASERROR)
                     _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"{updateViewItem.VarietyName} - {_AppUnitOfWork.GetErrorMessage()}", "Error updating Attribute Variety");

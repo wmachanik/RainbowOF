@@ -11,17 +11,6 @@
 @using RainbowOF.Models.Items
 
 
-add not adding, seems to be using the guid of he lookup id
-also add not refreshing grid, as we seem to need to reload from the database.
-delete not working
-update not working
-
-
-
-
-
-
-
 @if (_ItemCategoryGridViewRepository == null)
 {
     <Badge Color="Color.Primary" Pill="true">loading...</Badge>
@@ -48,7 +37,7 @@ else
               UseInternalEditing="true"
               NewItemDefaultSetter="@OnNewItemCategoryDefaultSetter"
               RowInserted="@OnRowInsertingAsync"
-              RowUpdated="@OnRowUpdatingAsync"
+              RowUpdated="@OnRowUpdatedAsync"
               RowRemoving="@OnRowRemoving"
               RowRemoved="@OnRowRemovedAsync"
               Padding="Padding.Is0">
@@ -66,28 +55,22 @@ else
             </Row>
         </LoadingTemplate>
         <DataGridColumns>
-            <DataGridColumn TItem="ItemCategory" Field="@nameof(ItemCategory.ItemCategoryLookupId)" TextAlignment="TextAlignment.Left" Context="childData" Caption="Category" Editable="true" Sortable="true">
+            <DataGridColumn TItem="ItemCategory" Field="@nameof(ItemCategory.ItemCategoryLookupId)" TextAlignment="TextAlignment.Left" Context="itemCategoryData" Caption="Category" Editable="true" Sortable="true">
                 <DisplayTemplate>
                     @{
-                        var _itemCategory = (childData as ItemCategory);
-
-                        if ((_itemCategory != null) && (_itemCategory.ItemCategoryDetail != null))
-                        {
-                            @_itemCategory.ItemCategoryDetail.FullCategoryName
-                        }
-                        else
-                        {
-                            <span>n/a</span>
-                        }
+                        var _itemCategory = (itemCategoryData as ItemCategory);
+                        @(((_itemCategory != null) && (_itemCategory.ItemCategoryDetail != null)) ?
+                              @_itemCategory.ItemCategoryDetail.FullCategoryName
+                            : "n/a")
                     }
                 </DisplayTemplate>
                 <EditTemplate>
                     @{
                         Dictionary<Guid, string> _Categories = GetListOfCategories();
-@*---- Need to remove the categories that are in the database for insert ----*@
-                        var _itemCategory = (childData.Item as ItemCategory);
+                        @*---- Need to remove the categories that are in the database for insert ----*@
+                        var _itemCategory = (itemCategoryData.Item as ItemCategory);
 
-                        <Select TValue="Guid" SelectedValue="@((Guid)childData.CellValue)" SelectedValueChanged="@((v) => childData.CellValue = v)">
+                        <Select TValue="Guid" SelectedValue="@((Guid)itemCategoryData.CellValue)" SelectedValueChanged="@((v) => itemCategoryData.CellValue = v)">
                             @foreach (var item in _Categories)
                             {
                                 <SelectItem TValue="Guid" Value="@item.Key">@item.Value</SelectItem>
@@ -96,9 +79,17 @@ else
                     }
                 </EditTemplate>
             </DataGridColumn>
-            <DataGridColumn TItem="ItemCategory" Field="@nameof(ItemCategory.UsedForPrediction)" TextAlignment="TextAlignment.Left" Context="childData" Caption="Used 4 Prediction" Editable="true">
+            <DataGridColumn TItem="ItemCategory" Field="@nameof(ItemCategory.UsedForPrediction)" TextAlignment="TextAlignment.Left" Context="itemCategoryData" Caption="Used 4 Prediction" Editable="true">
+                <DisplayTemplate>
+                    @{
+                        var _itemCategory = (itemCategoryData as ItemCategory);
+                        @(((_itemCategory != null) && (_itemCategory.UsedForPrediction )) 
+                             ? "yes"
+                             : "no")
+                    }
+                </DisplayTemplate>
                 <EditTemplate>
-                    <Check TValue="bool" Checked="@((bool)childData.CellValue)" CheckedChanged="@((v) => childData.CellValue = v)"  >
+                    <Check TValue="bool" Checked="@((bool)itemCategoryData.CellValue)" CheckedChanged="@((v) => itemCategoryData.CellValue = v)">
                         <ChildContent>
                             Yes?
                         </ChildContent>
@@ -108,25 +99,28 @@ else
                     </Check>
                 </EditTemplate>
             </DataGridColumn>
-            <DataGridColumn TItem="ItemCategory" Field="@nameof(ItemCategory.UoMBaseId)" TextAlignment="TextAlignment.Left" Context="childData" Caption="Base UoM" Editable="true">
+            <DataGridColumn TItem="ItemCategory" Field="@nameof(ItemCategory.UoMBaseId)" TextAlignment="TextAlignment.Left" Context="itemCategoryData" Caption="Base UoM" Editable="true">
                 <DisplayTemplate>
                     @{
-                        var _itemCategory = (childData as ItemCategory);
-                        if ((_itemCategory.UoMBaseId != null) && (_itemCategory.ItemUoMBase!=null))
+                        var _itemCategory = (itemCategoryData as ItemCategory);
+
+                        @*var ItemsUoM = (itemCategoryData as ItemCategory).UoM;
+
+                        if ((_itemCategory.UoMBaseId != null) && (_itemCategory.ItemUoMBase != null))
                         {
                             @_itemCategory.ItemUoMBase.UoMName
                         }
                         else
                         {
                             <span>n/a</span>
-                        }
+                        }*@
+
+                        @((_itemCategory.ItemUoMBase == null) ? "n/a" : _itemCategory.ItemUoMBase.UoMSymbol);
+
                     }
                 </DisplayTemplate>
                 <EditTemplate>
-                    @{
-                        //Guid _CatUoMId = (Guid)childData.CellValue;
-                        <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups.UoMLookupSelectListComponent PopUpRef="PopUpRef" SourceUoMId="(Guid?)childData.CellValue" UoMIdChangedEvent="@((u) => childData.CellValue = u)" />
-                    }
+                    <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups.UoMLookupSelectListComponent PopUpRef="PopUpRef" SourceUoMId="(Guid?)itemCategoryData.CellValue" UoMIdChangedEvent="@((u) => itemCategoryData.CellValue = u)" />
                 </EditTemplate>
             </DataGridColumn>
             <DataGridCommandColumn TItem="ItemCategory" Width="6.5em">
@@ -181,16 +175,17 @@ else
 
         </DataGridColumns>
     </DataGrid>
-}
 
 
-<RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage=" Item Message" NotificationTitle="" @ref="@_ItemCategoryGridViewRepository._GridSettings.PopUpRef" />
+    @*<RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage=" Item Message" NotificationTitle="" @ref="@_ItemCategoryGridViewRepository._GridSettings.PopUpRef" />*@
 
-@*<RainbowOF.Components.Modals.ConfirmModal @ref="_ItemCategoryGridViewRepository._GridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_ClickAsync" />*@
+    @*<RainbowOF.Components.Modals.ConfirmModal @ref="_ItemCategoryGridViewRepository._GridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_ClickAsync" />*@
 
 
-<RainbowOF.Components.Modals.ConfirmModal @ref="_ItemCategoryGridViewRepository._GridSettings.DeleteConfirmation"
-                                          ConfirmationClicked="ConfirmDelete_ClickAsync"
-                                          ConfirmationMessage=@($"Are you sure you want to delete ?")
-                                          ConfirmButtonText="Delete"
-                                          CancelButtonText="Cancel" />
+                        <RainbowOF.Components.Modals.ConfirmModal @ref="_ItemCategoryGridViewRepository._GridSettings.DeleteConfirmation"
+                                                                  ConfirmationClicked="ConfirmDelete_ClickAsync"
+                                                                  ConfirmationMessage=@($"Are you sure you want to delete ?")
+                                                                  ConfirmButtonText="Delete"
+                                                                  CancelButtonText="Cancel" />
+
+                    }

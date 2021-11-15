@@ -10,9 +10,9 @@ using RainbowOF.Models.Lookups;
 
 namespace RainbowOF.Repositories.Items
 {
-    public class ItemCategoryGridViewRepository : GridViewRepository<ItemCategory>, IItemCategoryGridViewRepository
+    public class ItemAttributeVarietyGridViewRepository : GridViewRepository<ItemAttributeVariety>, IItemAttributeVarietyGridViewRepository
     {
-        public ItemCategoryGridViewRepository(ILoggerManager sourceLogger, IAppUnitOfWork sourceAppUnitOfWork) : base(sourceLogger, sourceAppUnitOfWork)
+        public ItemAttributeVarietyGridViewRepository(ILoggerManager sourceLogger, IAppUnitOfWork sourceAppUnitOfWork) : base(sourceLogger, sourceAppUnitOfWork)
         {
             // base initialises
         }
@@ -23,14 +23,16 @@ namespace RainbowOF.Repositories.Items
         /// </summary>
         /// <param name="newEntity">TEntity newEntity: blank entity to be initialised</param>
         /// <returns>null.</returns>
-        public override ItemCategory NewViewEntityDefaultSetter(ItemCategory newEntity, Guid ParentId)
+        public override ItemAttributeVariety NewViewEntityDefaultSetter(ItemAttributeVariety newEntity, Guid ParentId)
         {
             if (newEntity == null)
-                newEntity = new ItemCategory();
+                newEntity = new ItemAttributeVariety();
 
-            newEntity.ItemId = ParentId;
-            newEntity.UsedForPrediction = false;
-            newEntity.ItemCategoryLookupId = Guid.Empty;
+            newEntity.ItemAttributeId = ParentId;
+            newEntity.IsDefault = false;
+            newEntity.UoMId = Guid.Empty;
+            newEntity.UoMQtyPerItem = 1;
+            newEntity.ItemAttributeVarietyLookupId = Guid.Empty;
             return newEntity;
         }
         /// <summary>
@@ -40,17 +42,13 @@ namespace RainbowOF.Repositories.Items
         /// </summary>
         /// <param name="checkEntity">Entity to be checked</param>
         /// <returns>Bool true if a duplicate false if not. </returns>
-        public override async Task<bool> IsDuplicateAsync(ItemCategory checkEntity)
+        public override async Task<bool> IsDuplicateAsync(ItemAttributeVariety checkEntity)
         {
-            if (checkEntity.ItemCategoryLookupId == Guid.Empty)
+            if (checkEntity.ItemAttributeVarietyLookupId == Guid.Empty)
                 return false;
-            // here we need to check if the category is the same, as we cannot haver duplicate names
-            IAppRepository<ItemCategory> _itemCategoryRepository = _AppUnitOfWork.Repository<ItemCategory>();
-            var _result = await _itemCategoryRepository.FindFirstByAsync(
-                                    checkEntity.ItemCategoryId == Guid.Empty ?   
-                                        (ic => (ic.ItemId == checkEntity.ItemId) && (ic.ItemCategoryLookupId == checkEntity.ItemCategoryLookupId)):
-                                        (ic => (ic.ItemId == checkEntity.ItemId) && (ic.ItemCategoryId != checkEntity.ItemCategoryId) && (ic.ItemCategoryLookupId == checkEntity.ItemCategoryLookupId))
-                                        );
+            // here we need to check if the AttributeVariety is the same, as we cannot haver duplicate names
+            IAppRepository<ItemAttributeVariety> _itemAttributeVarietyRepository = _AppUnitOfWork.Repository<ItemAttributeVariety>();
+            var _result = await _itemAttributeVarietyRepository.FindFirstByAsync(ic => (ic.ItemAttributeVarietyId == checkEntity.ItemAttributeVarietyId) && (ic.ItemAttributeVarietyLookupId == checkEntity.ItemAttributeVarietyLookupId));
             return (_result != null);
         }
         /// <summary>
@@ -59,23 +57,23 @@ namespace RainbowOF.Repositories.Items
         /// </summary>
         /// <param name="checkEntity">TEntity sourceEntity: Entity to be checked</param>
         /// <returns>Bool true if a valid false if not. </returns>
-        public override bool IsValid(ItemCategory checkEntity)
+        public override bool IsValid(ItemAttributeVariety checkEntity)
         {
-            return (checkEntity.ItemCategoryLookupId != Guid.Empty);
+            return (checkEntity.ItemAttributeVarietyLookupId != Guid.Empty);
         }
         #endregion
         #region Interface specific routines
         /// <summary>
-        /// Get the Item Category Lookup Referenced by its Id
-        /// Logic: Use generic GetById to return the ItemCategoryLookup by Id
+        /// Get the Item AttributeVariety Lookup Referenced by its Id
+        /// Logic: Use generic GetById to return the ItemAttributeVarietyLookup by Id
         /// </summary>
-        /// <param name="sourceItemCategoryLookupId">Id to search for</param>
-        /// <returns>ItemCategoryLookup item, if found or null</returns>
-        public async Task<ItemCategoryLookup> GetItemCategoryByIdAsync(Guid sourceItemCategoryLookupId)
+        /// <param name="sourceItemAttributeVarietyLookupId">Id to search for</param>
+        /// <returns>ItemAttributeVarietyLookup item, if found or null</returns>
+        public async Task<ItemAttributeVarietyLookup> GetItemAttributeVarietyByIdAsync(Guid sourceItemAttributeVarietyLookupId)
         {
-            IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
-            ItemCategoryLookup _itemCategoryLookup = await _itemCategoryLookupRepository.GetByIdAsync(sourceItemCategoryLookupId);
-            return _itemCategoryLookup;
+            IAppRepository<ItemAttributeVarietyLookup> _itemAttributeVarietyLookupRepository = _AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
+            ItemAttributeVarietyLookup _itemAttributeVarietyLookup = await _itemAttributeVarietyLookupRepository.GetByIdAsync(sourceItemAttributeVarietyLookupId);
+            return _itemAttributeVarietyLookup;
         }
         /// <summary>
         /// Get the Item Unit of Measure (UoM) referenced by its Id

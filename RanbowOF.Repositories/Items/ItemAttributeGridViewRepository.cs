@@ -73,17 +73,6 @@ namespace RainbowOF.Repositories.Items
             ItemAttributeLookup _itemAttributeLookup = await _itemAttributeLookupRepository.GetByIdAsync(sourceItemAttributeLookupId);
             return _itemAttributeLookup;
         }
-        /// <summary>
-        /// Get the Item Unit of Measure (UoM) referenced by its Id
-        /// </summary>
-        /// <param name="sourceItemUoMLookupId">ItemUoMId to search for</param>
-        /// <returns>UoM Lookup item, if found or null</returns>
-        public async Task<ItemUoMLookup> GetItemUoMByIdAsync(Guid sourceItemUoMLookupId)
-        {
-            IAppRepository<ItemUoMLookup> _itemUoMLookupRepository = _AppUnitOfWork.Repository<ItemUoMLookup>();
-            ItemUoMLookup _itemUoMLookup = await _itemUoMLookupRepository.GetByIdAsync(sourceItemUoMLookupId);
-            return _itemUoMLookup;
-        }
         #endregion
 
     }

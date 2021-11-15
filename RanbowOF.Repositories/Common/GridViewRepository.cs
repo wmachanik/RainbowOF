@@ -162,12 +162,12 @@ namespace RainbowOF.Repositories.Common
                 }
                 else
                 {
-                    IAppRepository<TEntity> appRepository = _AppUnitOfWork.Repository<TEntity>();
-                    var _result = await appRepository.UpdateAsync(updatedEntity);
-                    if (_result == AppUnitOfWork.CONST_WASERROR)
-                        _GridSettings.PopUpRef.ShowNotification(Components.Modals.PopUpAndLogNotification.NotificationType.Error, $"Error updating: {updatedEntityDescription}.");
+                    IAppRepository<TEntity> _appRepository = _AppUnitOfWork.Repository<TEntity>();
+                    var _result = await _appRepository.UpdateAsync(updatedEntity);
+                    if (_AppUnitOfWork.IsInErrorState())
+                        _GridSettings.PopUpRef.ShowNotification(Components.Modals.PopUpAndLogNotification.NotificationType.Error, $"Error updating: {updatedEntityDescription} - {_AppUnitOfWork.GetErrorMessage()}.");
                     else
-                        _GridSettings.PopUpRef.ShowNotification(Components.Modals.PopUpAndLogNotification.NotificationType.Success, $"{updatedEntityDescription} added.");
+                        _GridSettings.PopUpRef.ShowNotification(Components.Modals.PopUpAndLogNotification.NotificationType.Success, $"{updatedEntityDescription} updated.");
                     return _result;
                }
             }

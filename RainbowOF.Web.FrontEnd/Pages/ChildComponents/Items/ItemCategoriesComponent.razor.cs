@@ -1,4 +1,5 @@
-﻿using Blazorise.DataGrid;
+﻿using AutoMapper;
+using Blazorise.DataGrid;
 using Microsoft.AspNetCore.Components;
 using RainbowOF.Components.Modals;
 using RainbowOF.Models.Items;
@@ -29,6 +30,8 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         IAppUnitOfWork _AppUnitOfWork { get; set; }
         [Inject]
         public ILoggerManager _Logger { get; set; }
+        [Inject]
+        public IMapper _Mapper { get; set; }
         #endregion
         #region Parameters
         [Parameter]
@@ -36,7 +39,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         [Parameter]
         public List<ItemCategory> SourceItemCategories { get; set; }
         [Parameter]
-        public Guid ParentItemId {get;set; }
+        public Guid ParentItemId { get; set; }
         //[Parameter]
         //public bool CanUseAsync { get; set; } = true;  // issues with detail mean that if this is a detail grid we disable Async
         #endregion
@@ -45,30 +48,16 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         {
             base.OnInitialized();
             _ItemCategoryGridViewRepository = new ItemCategoryGridViewRepository(_Logger, _AppUnitOfWork);
+            _ItemCategoryGridViewRepository._GridSettings.PopUpRef = PopUpRef;
             ModelItemCategories = SourceItemCategories;
             await InvokeAsync(StateHasChanged);
         }
         #endregion
         #region BackEnd Routines
-        private Dictionary<Guid, string> _listOfCategories = null;
-        public Dictionary<Guid, string> GetListOfCategories(bool mustForce = false)
-        {
-            if ((mustForce) || (_listOfCategories == null))
-            {
-                if (_listOfCategories != null) _listOfCategories.Clear();
-                else _listOfCategories = new Dictionary<Guid, string>();
 
-                IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
-                var _itemCategories = _itemCategoryLookupRepository.GetAll()
-                    .OrderBy(ic => ic.FullCategoryName)
-                    .ToList();  // cannot async as part of UI for
-                foreach (var _itemCategory in _itemCategories)
-                {
-                    _listOfCategories.Add(_itemCategory.ItemCategoryLookupId, _itemCategory.FullCategoryName);
-                }
-            }
-            return _listOfCategories;
-        }
+        public Dictionary<Guid, string> GetListOfCategories(bool IsForceReload = false)
+               => _AppUnitOfWork.GetListOfCategories(IsForceReload);
+
         // Interface Stuff
         void OnNewItemCategoryDefaultSetter(ItemCategory newItem)
         {
@@ -85,19 +74,19 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
             var newItemCategory = insertedItemCategory.Item;
             if (newItemCategory.ItemCategoryLookupId == Guid.Empty)
             {
-                _ItemCategoryGridViewRepository._GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, "Item's Category cannot be blank!");
+                PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, "Item's Category cannot be blank!");
             }
             else
             {
-                _ItemCategoryGridViewRepository._GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Info, "Adding Category to Item.");
+                PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Info, "Adding Category to Item.");
                 newItemCategory.ItemCategoryDetail = await _ItemCategoryGridViewRepository.GetItemCategoryByIdAsync(newItemCategory.ItemCategoryLookupId);
                 if (newItemCategory.ItemCategoryDetail == null)
                 {
-                    _ItemCategoryGridViewRepository._GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, "Error finding Category in lookup table!");
+                    PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, "Error finding Category in lookup table!");
                 }
                 else
                 {
-                    if ((newItemCategory.UoMBaseId!= null)&& (newItemCategory.UoMBaseId != Guid.Empty))
+                    if ((newItemCategory.UoMBaseId != null) && (newItemCategory.UoMBaseId != Guid.Empty))
                     {
                         newItemCategory.ItemUoMBase = await _ItemCategoryGridViewRepository.GetItemUoMByIdAsync((Guid)newItemCategory.UoMBaseId);
                         if (newItemCategory.ItemUoMBase == null)
@@ -110,41 +99,107 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
             }
             await _DataGrid.Reload();
         }
+
+        private async Task<ItemCategory> SetUoMValues(ItemCategory sourceItemCategory)
+        {
+            if ((sourceItemCategory.UoMBaseId != null))
+            {
+                // have they removed the UoM or added item, if it = Guid.Empty it may have been removed?
+                if (sourceItemCategory.UoMBaseId == Guid.Empty)
+                {
+                    if (sourceItemCategory.ItemUoMBase != null)
+                    {
+                        // if we get here they have removed their UoM, so kill it.
+                        sourceItemCategory.UoMBaseId = null;
+                        sourceItemCategory.ItemUoMBase = null;
+                    }
+                }
+                else
+                {
+                    sourceItemCategory.ItemUoMBase = await _ItemCategoryGridViewRepository.GetItemUoMByIdAsync((Guid)sourceItemCategory.UoMBaseId);
+                    if (sourceItemCategory.ItemUoMBase == null)
+                    {
+                        PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, "Error finding Unit of Measure in lookup table!");
+                    }
+                }
+            }
+            return sourceItemCategory;
+
+        }
+
+        //async Task OnRowUpdatingAsync(CancellableRowChange<ItemCategory, Dictionary<string, object>> updatingItem) 
         /// <summary>
         /// Handle the grid update
         /// </summary>
         /// <param name="updatedItem">What the grid passes us</param>
         /// <returns>void</returns>
-        async Task OnRowUpdatingAsync(SavedRowItem<ItemCategory, Dictionary<string, object>> updatedItem)
+        async Task OnRowUpdatedAsync(SavedRowItem<ItemCategory, Dictionary<string, object>> updatedItem)
         {
-            var updateItemCategory = updatedItem.Item;
-            if (updateItemCategory.ItemCategoryDetail == null)
+            var _updatedItemCategory = updatedItem.Item;
+            if (_updatedItemCategory.ItemCategoryDetail == null)
             {
                 PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, "Item's Category cannot be blank...");
             }
             else
             {
-                _ItemCategoryGridViewRepository._GridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Info, "Updating Category in Item.");
-                updateItemCategory.ItemCategoryDetail = await _ItemCategoryGridViewRepository.GetItemCategoryByIdAsync(updateItemCategory.ItemCategoryLookupId);
-                if (updateItemCategory.ItemCategoryDetail == null)
+                PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Info, "Updating Category in Item.");
+                var _currentItemCategory = await _ItemCategoryGridViewRepository.GetEntityByIdAsync(_updatedItemCategory.ItemCategoryId);
+                if (_currentItemCategory == null)
                 {
-                    _ItemCategoryGridViewRepository._GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, "Error finding Category in lookup table!");
+                    PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, "Error updating category, it could not be found in the table.");
                 }
                 else
                 {
-                    if ((updateItemCategory.UoMBaseId != null) && (updateItemCategory.UoMBaseId != Guid.Empty))
-                    {
-                        updateItemCategory.ItemUoMBase = await _ItemCategoryGridViewRepository.GetItemUoMByIdAsync((Guid)updateItemCategory.UoMBaseId);
-                        if (updateItemCategory.ItemUoMBase == null)
-                        {
-                            PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, "Error finding Unit of Measure in lookup table!");
-                        }
-                    }
-                    await _ItemCategoryGridViewRepository.UpdateViewRowAsync(updatedItem.Item, updatedItem.Item.ItemCategoryDetail.CategoryName);
+                    _updatedItemCategory = await SetUoMValues(_updatedItemCategory);
+                    _Mapper.Map(_updatedItemCategory, _currentItemCategory);
+                    var _result = await _ItemCategoryGridViewRepository.UpdateViewRowAsync(_currentItemCategory, _currentItemCategory.ItemCategoryDetail.CategoryName);
+                    if (_AppUnitOfWork.IsInErrorState() || (_result <= 0))
+                        PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Error updating category {_AppUnitOfWork.GetErrorMessage()}, it could not be found in the table.");
+                    //else
+                    //    PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Success, $"Category {_updatedItemCategory.ItemCategoryDetail.CategoryName}, updated.");
                 }
             }
-            await _DataGrid.Reload();
+            //await _DataGrid.Reload();
+            StateHasChanged();
         }
+        /*   Old update code before using mapper.
+        //_updatedItemCategory.ItemCategoryDetail = await _ItemCategoryGridViewRepository.GetItemCategoryByIdAsync(_updatedItemCategory.ItemCategoryLookupId);
+        //if (_updatedItemCategory.ItemCategoryDetail == null)
+        //{
+        //    _ItemCategoryGridViewRepository._GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, "Error finding Category in lookup table!");
+        //}
+        //else
+        //{
+        //    if ((_updatedItemCategory.UoMBaseId != null))
+        //    {
+        //        // have they removed the UoM or added item, if it = Guid.Empty it may have been removed?
+        //        if (_updatedItemCategory.UoMBaseId == Guid.Empty)
+        //        {
+        //            if (_updatedItemCategory.ItemUoMBase != null)
+        //            {
+        //                // if we get here they have removed their UoM, so kill it.
+        //                _updatedItemCategory.UoMBaseId = null;
+        //                _updatedItemCategory.ItemUoMBase = null;
+        //            }
+        //        }
+        //        else
+        //        {
+        //            _updatedItemCategory.ItemUoMBase = await _ItemCategoryGridViewRepository.GetItemUoMByIdAsync((Guid)_updatedItemCategory.UoMBaseId);
+        //            if (_updatedItemCategory.ItemUoMBase == null)
+        //            {
+        //                PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, "Error finding Unit of Measure in lookup table!");
+        //            }
+        //        }
+        //    }
+        //ItemCategory _currentItemCategory = await _ItemCategoryGridViewRepository.GetEntityByIdAsync(_updatedItemCategory.ItemCategoryId);
+        //if (_currentItemCategory != null)
+        //{
+        //    _currentItemCategory = _updatedItemCategory;
+        //var _result = await _ItemCategoryGridViewRepository.UpdateViewRowAsync(_updatedItemCategory, _updatedItemCategory.ItemCategoryDetail.CategoryName);
+                var _result = await _ItemCategoryGridViewRepository.UpdateViewRowAsync(_currentItemCategory, _currentItemCategory.ItemCategoryDetail.CategoryName);
+                //}
+        */
+
         void OnRowRemoving(CancellableRowChange<ItemCategory> modelItem)
         {
             // set the Selected Item Attribute for use later

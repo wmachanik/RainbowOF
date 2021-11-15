@@ -55,7 +55,6 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             public string CategoryName { get; set; }
             public bool IsChecked { get; set; } = true;
         }
-
         private List<CategoryNode> categoryNodes = new();
         #endregion
         //IList<CategoryNode> ExpandedNodes = new List<CategoryNode>();

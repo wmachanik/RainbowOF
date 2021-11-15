@@ -24,7 +24,15 @@ namespace RainbowOF.ViewModels
             CreateMap<ItemAttributeLookup, ItemAttributeLookupView>();
             CreateMap<ItemAttributeLookupView, ItemAttributeLookup>();
             CreateMap<ItemAttributeVarietyLookup, ItemAttributeVarietyLookupView>();
-            CreateMap<ItemAttributeVarietyLookupView, ItemAttributeVarietyLookup>();
+            CreateMap<ItemAttributeVarietyLookupView, ItemAttributeVarietyLookup>()
+                .ForMember(dest => dest.UoMId, act => act.MapFrom(src => ((src.UoMId ?? Guid.Empty) == Guid.Empty) ? null : src.UoMId));
+            // for update mapping - this is recommended for any EF class with nullable property.
+            CreateMap<ItemCategory, ItemCategory>()
+                .ForMember(dest => dest.UoMBaseId, act => act.MapFrom(src => ((src.UoMBaseId ?? Guid.Empty) == Guid.Empty) ? null : src.UoMBaseId));
+            CreateMap<ItemAttribute, ItemAttribute>();
+            CreateMap<ItemAttributeVariety, ItemAttributeVariety>()
+                .ForMember(dest => dest.UoMId, act => act.MapFrom(src => ((src.UoMId ?? Guid.Empty) == Guid.Empty) ? null : src.UoMId));
+
         }
     }
 }

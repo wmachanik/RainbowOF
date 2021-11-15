@@ -1,0 +1,206 @@
+﻿@*
+    -------------------------------------------------------------
+    Component to view Attributes in a grid for an item
+    Parameters:
+        > PopUpAndLogNotification PopUpRef to display the results of the add
+        > List<ItemAttribute> SourceItemAttributes
+    Uses:
+        IAppUnitOfWork _appUnitOfWork
+    -------------------------------------------------------------
+*@
+@using RainbowOF.Models.Items
+1. Need to add the "add" attribute Term/Variety
+2. Look at moving lookup to App unit of work.
+
+
+@if (_ItemAttributeGridViewRepository == null)
+{
+    <Badge Color="Color.Primary" Pill="true">loading...</Badge>
+}
+else if ((ModelItemAttributes == null) || (ModelItemAttributes.Count == 0))
+{
+    <Badge Color="Color.Primary" Pill="true">Item has no Attributes</Badge>
+}
+else
+{
+    <DataGrid @ref="_DataGrid"
+              TItem="ItemAttribute" Data="@ModelItemAttributes"
+              Sortable="true" Editable="true"
+              Striped="true"
+              Hoverable="true"
+              Responsive="true"
+              EditMode="DataGridEditMode.Popup"
+              TotalItems="ModelItemAttributes.Count"
+              PageSize="25"
+              SelectionMode="DataGridSelectionMode.Single"
+              @bind-SelectedRow="SeletectedItemAttribute"
+              Bordered="true"
+              Narrow="true"
+              Filterable="@_ItemAttributeGridViewRepository._GridSettings.IsFilterable"
+              UseInternalEditing="true"
+              NewItemDefaultSetter="@OnNewItemAttributeDefaultSetter"
+              RowInserted="@OnRowInsertingAsync"
+              RowUpdated="@OnRowUpdatingAsync"
+              RowRemoving="@OnRowRemoving"
+              RowRemoved="@OnRowRemovedAsync"
+              DetailRowTrigger="@((item) => (item.ItemAttributeVarieties?.Count > 0 && item.ItemAttributeLookupId == SeletectedItemAttribute?.ItemAttributeLookupId))"
+              Padding="Padding.Is0">
+        <EmptyTemplate>
+            @if (ModelItemAttributes == null)
+            {
+                <span>None...</span>
+            }
+        </EmptyTemplate>
+        <LoadingTemplate>
+            <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                <Column>
+                    <span class="alert-info">Loading...</span>
+                </Column>
+            </Row>
+        </LoadingTemplate>
+        <DataGridColumns>
+            <DataGridColumn TItem="ItemAttribute" Field="@nameof(ItemAttribute.ItemAttributeLookupId)" TextAlignment="TextAlignment.Left" Context="itemAttributeData" Caption="Attribute" Editable="true" Sortable="true">
+                <DisplayTemplate>
+                    @{
+                        var _itemAttribute = (itemAttributeData as ItemAttribute);
+                        @((_itemAttribute != null) && (_itemAttribute.ItemAttributeDetail == null) ? "n/a" : _itemAttribute.ItemAttributeDetail.AttributeName);
+                    }
+                </DisplayTemplate>
+                <EditTemplate>
+                    @{
+                        Dictionary<Guid, string> _Attributes = GetListOfAttributes();
+                        @*---- Need to remove the Attributes that are in the database for insert ----*@
+                        var _itemAttribute = (itemAttributeData.Item as ItemAttribute);
+
+                        <Select TValue="Guid" SelectedValue="@((Guid)itemAttributeData.CellValue)" SelectedValueChanged="@((v) => itemAttributeData.CellValue = v)">
+                            @foreach (var item in _Attributes)
+                            {
+                                <SelectItem TValue="Guid" Value="@item.Key">@item.Value</SelectItem>
+                            }
+                        </Select>
+                    }
+                </EditTemplate>
+            </DataGridColumn>
+            <DataGridColumn TItem="ItemAttribute" Field="@nameof(ItemAttribute.IsUsedForItemVariety)" TextAlignment="TextAlignment.Left" Context="itemAttributeData" Caption="Used 4 Variants" Editable="true">
+                <EditTemplate>
+                    <Check TValue="bool" Checked="@((bool)itemAttributeData.CellValue)" CheckedChanged="@((v) => itemAttributeData.CellValue = v)">
+                        <ChildContent>
+                            Yes?
+                        </ChildContent>
+                        <Feedback>
+                            <ValidationError />
+                        </Feedback>
+                    </Check>
+                </EditTemplate>
+            </DataGridColumn>
+            <DataGridColumn TItem="ItemAttribute" Field="@nameof(ItemAttribute.ItemAttributeVarieties)" TextAlignment="TextAlignment.Left" Context="itemAttributeData" Caption="Varieties/Terms" Editable="false">
+                <DisplayTemplate>
+                    @{
+                        var attribItem = (itemAttributeData as ItemAttribute);
+                        @if ((attribItem.ItemAttributeVarieties == null) || (attribItem.ItemAttributeVarieties.Count == 0))   // no variety exists so ask if they want to add one
+                        {
+                            @*<RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups.NewItemAttributeVarietyLookupComponent @ref="@NewAttributeVariety" PopUpRef="_AttributeWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef" AddItemToWoo="_AttributeWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive" />*@
+                            <Button Color="Color.Primary">  @*Clicked="@(() => NewAttributeVariety.ShowModal(attribItem.ItemAttributeLookupId))">*@
+                                Add Variety
+                            </Button>
+                        }
+                        else   //variety exists
+                        {
+                            // display max varieties if the item is not selected, otherwise tell them to look at grid
+                            @if ((SeletectedItemAttribute == null) || (SeletectedItemAttribute.ItemAttributeLookupId != attribItem.ItemAttributeLookupId))
+                            {
+                                <span class="text-wrap">
+                                    @for (int i = 0; i < attribItem.ItemAttributeVarieties.Count; i++)
+                                    {
+                                        @(attribItem.ItemAttributeVarieties[i].ItemAttributeVarietyDetail?.VarietyName)
+                                        @(i < (attribItem.ItemAttributeVarieties.Count - 1) ? ", " : ". ");
+                                    }
+                                    @if (attribItem.ItemAttributeVarieties.Count == RainbowOF.Repositories.Common.AppUnitOfWork.CONST_MAX_DETAIL_PAGES)   //we  are at max so assume only max loaded
+                                    {
+                                        <Blazorise.Badge Color="Color.Info">Click to see all...</Blazorise.Badge>
+                                    }
+                                </span>
+                            }
+                            else
+                            {
+                                <Blazorise.Badge Color="Color.Success">View items below</Blazorise.Badge>
+                            }
+                        } // else variety exists
+
+                    }
+                </DisplayTemplate>
+
+            </DataGridColumn>
+            <DataGridCommandColumn TItem="ItemAttribute" Width="6.5em">
+                <NewCommandTemplate>
+                    <Tooltip Text="New Item Attribute" Style="z-index:99" Placement="TooltipPlacement.Bottom">
+                        <Button Color="Color.Success" Clicked="@context.Clicked">
+                            <Icon Name="IconName.Add" />
+                        </Button>
+                    </Tooltip>
+                    <Tooltip Text="Filter by Column" Style="z-index:99" Placement="TooltipPlacement.Left">
+                        <Button Color="Color.Info" Clicked="@(()=>_ItemAttributeGridViewRepository._GridSettings.IsFilterable= !_ItemAttributeGridViewRepository._GridSettings.IsFilterable)">
+                            <Icon Name="@((_ItemAttributeGridViewRepository._GridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" />
+                        </Button>
+                    </Tooltip>
+                </NewCommandTemplate>
+                <EditCommandTemplate>
+                    <Tooltip Text="Edit Attribute">
+                        <Button Color="Color.Primary" Clicked="@context.Clicked">
+                            <Icon Name="IconName.Edit" />
+                        </Button>
+                    </Tooltip>
+                </EditCommandTemplate>
+                <DeleteCommandTemplate>
+                    <Tooltip Text="Delete Attribute">
+                        <Button Color="Color.Danger" Clicked="@context.Clicked">
+                            <Icon Name="IconName.Delete" />
+                        </Button>
+                    </Tooltip>
+                </DeleteCommandTemplate>
+                <SaveCommandTemplate>
+                    <Tooltip Text="Save">
+                        <Button Color="Color.Primary" Clicked="@context.Clicked">
+                            <Icon Name="IconName.CheckCircle" />
+                        </Button>
+                    </Tooltip>
+                </SaveCommandTemplate>
+                <CancelCommandTemplate>
+                    <Tooltip Text="Undo changes">
+                        <Button Color="Color.Secondary" Clicked="@context.Clicked">
+                            <Icon Name="IconName.Undo" />
+                        </Button>
+                    </Tooltip>
+                </CancelCommandTemplate>
+                <ClearFilterCommandTemplate>
+                    <Tooltip Text="Clear Filter" Style="z-index:99" Placement="TooltipPlacement.Left">
+                        <Button Color="Color.Info" Outline="true" Clicked="@context.Clicked">
+                            <Icon Name="IconName.Clear" />
+                        </Button>
+                    </Tooltip>
+                </ClearFilterCommandTemplate>
+            </DataGridCommandColumn>
+
+        </DataGridColumns>
+        <DetailRowTemplate>
+            @{
+                var thisAttrib = (context as ItemAttribute);
+
+                <ItemAttributeVarietiesComponent PopUpRef="@PopUpRef" 
+                                                 SourceItemAttribute="@thisAttrib" />
+            }
+        </DetailRowTemplate>
+    </DataGrid>
+
+
+    @*<RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage=" Item Message" NotificationTitle="" @ref="@_ItemAttributeGridViewRepository._GridSettings.PopUpRef" />*@
+
+    @*<RainbowOF.Components.Modals.ConfirmModal @ref="_ItemAttributeGridViewRepository._GridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_ClickAsync" />*@
+
+
+    <RainbowOF.Components.Modals.ConfirmModal @ref="_ItemAttributeGridViewRepository._GridSettings.DeleteConfirmation"
+                                              ConfirmationClicked="ConfirmDelete_ClickAsync"
+                                              ConfirmationMessage=@($"Are you sure you want to delete ?")
+                                              ConfirmButtonText="Delete"
+                                              CancelButtonText="Cancel" />
+}

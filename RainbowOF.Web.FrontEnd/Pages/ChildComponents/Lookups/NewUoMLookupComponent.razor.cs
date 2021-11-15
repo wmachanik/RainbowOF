@@ -25,7 +25,6 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
         public ItemUoMLookup _NewItemUoM = new();
         private Dictionary<Guid, string> _ListOfUoMSymbols = null;
 
-
         protected override async Task OnInitializedAsync()
         {
             //SelectedUoMId = ((SourceUoMId ?? Guid.Empty) == Guid.Empty) ? Guid.Empty : (Guid)SourceUoMId;  // store in a local var to keep state until modal closed. If not Select list changes to original value
