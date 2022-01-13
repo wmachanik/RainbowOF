@@ -23,7 +23,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Sys
         public string WooStatus = "none";
         public bool Waiting = false;
         protected ShowModalMessage ShowModalStatus { get; set; }
-        public async void CheckWooStatus()
+        public async Task CheckWooStatusAsync()
         {
             Waiting = true;
             StateHasChanged();
@@ -48,7 +48,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Sys
             Waiting = false;
             StateHasChanged();
             ShowModalStatus.UpdateModalMessage($"Woo API call status: {Environment.NewLine}{Environment.NewLine}  {WooStatus}");
-            ShowModalStatus.ShowModal();
+            await ShowModalStatus.ShowModalAsync();
         }
 
         protected void StatusClosed_Click()

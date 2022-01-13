@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using RainbowOF.FrontEnd.Models.Classes;
 using RainbowOF.Models.Items;
+using RainbowOF.Models.Lookups;
 using RainbowOF.Models.System;
 using RainbowOF.Models.Woo;
 using RainbowOF.Repositories.Common;
@@ -34,6 +35,7 @@ namespace RainbowOF.Integration.Repositories.Woo
             _Logger = logger;
             _AppWooSettings = appWooSettings;
             _Mapper = mapper;
+            _Logger.LogDebug("WooImportVariation initialised.");
         }
         #endregion
         #region Private Variables
@@ -58,16 +60,61 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// <param name="sourceWooVariant"></param>
         /// <param name="currItemVariant"></param>
         /// <returns></returns>
-        public ItemVariant MapWooProductVariantInfo(Variation sourceWooVariant, ItemVariant currItemVariant)
+        public async Task<ItemVariant> MapWooProductVariantInfo(Variation sourceWooVariant, ItemVariant currItemVariant)
         {
             if (currItemVariant == null)
                 currItemVariant = new();
 
+            if (sourceWooVariant.description == String.Empty)
+                sourceWooVariant.description = sourceWooVariant.attributes[0].option;
+            if (sourceWooVariant.sku == String.Empty)
+                sourceWooVariant.sku = sourceWooVariant.attributes[0].option;
+
             _Mapper.Map(sourceWooVariant, currItemVariant);
-            ///--> may need to do other stuff here
+            //--> now we have mapped the main stuff we nee d to map the attributes
+            currItemVariant = await MapWooProductVariantAttributes(sourceWooVariant, currItemVariant);
             return currItemVariant;
         }
+        /// <summary>
+        /// Using the source woo Variant map the attributes and attribute options to the Item variant
+        /// Logic: for each source variant option find the attribute in the lookup table and map it top the ItemVariant associated attribute, 
+        ///     and then also using the string description the associated term to that attribute.
+        /// </summary>
+        /// <param name="sourceWooVariant">The source woo product</param>
+        /// <param name="currItemVariant">The Item Variant with everything else mapped.</param>
+        /// <returns></returns>
+        private async Task<ItemVariant> MapWooProductVariantAttributes(Variation sourceWooVariant, ItemVariant currItemVariant)
+        {
 
+            //if (currItemVariant.ItemVariantName.Contains("250"))
+            //    currItemVariant.IsEnabled = true;
+
+            IAppRepository<WooProductAttributeMap> _wooProductAttributeMap = _AppUnitOfWork.Repository<WooProductAttributeMap>();
+            IAppRepository<ItemAttributeVarietyLookup> _itemAttributeVarietyLookup = _AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
+            if (sourceWooVariant.attributes.Count > 0)
+            {
+                foreach (var _wooVariant in sourceWooVariant.attributes)  // loop through all variants and add
+                {
+                    {
+                        var _productAttribute = await _wooProductAttributeMap.FindFirstByAsync(wpa => wpa.WooProductAttributeId == _wooVariant.id);
+                        if (_productAttribute != null)  // should never be null if so there is an issue - not sure what to do with this at the moment
+                        {
+                            currItemVariant.AssocatedAttributeLookupId = _productAttribute.ItemAttributeLookupId;
+                            var _productAttributeVarietty = await _itemAttributeVarietyLookup
+                                .FindFirstByAsync(iavl =>
+                                                            (iavl.ItemAttributeLookupId == _productAttribute.ItemAttributeLookupId)
+                                                         && (iavl.VarietyName == _wooVariant.option)
+                                                  );
+                            if (_productAttributeVarietty != null)  // should never be null if so there is an issue - not sure what to do with this at the moment 
+                            {
+                                currItemVariant.AssociatedAttributeVarietyLookupId = _productAttributeVarietty.ItemAttributeVarietyLookupId;
+                            }
+                        }
+                    }
+                }
+            }
+            return currItemVariant;
+        }
         #endregion
         #region Interface Methods
         /// <summary>
@@ -82,7 +129,6 @@ namespace RainbowOF.Integration.Repositories.Woo
             WooAPISettings _wooAPISettings = new WooAPISettings(_AppWooSettings);
             WooProductVariation _wooVariant = new(_wooAPISettings, _Logger);
             List<Variation> wooVariants = await _wooVariant.GetProductVariationsByProductIdAsync(parentAttributeId);
-
             return wooVariants;
         }
         /// <summary>
@@ -111,8 +157,10 @@ namespace RainbowOF.Integration.Repositories.Woo
         {
             Guid _itemVariantId = Guid.Empty;
             IAppRepository<WooProductVariantMap> _wooVariantMapRepository = _AppUnitOfWork.Repository<WooProductVariantMap>();
-            // Add Item Variant if it does not exist
+            // Add Item Variant if it does not exist otherwise update
             _itemVariantId = await AddOrGetEntityIDAsync(newWooEntity, sourceParentId);
+            if (_itemVariantId == Guid.Empty)  // error adding
+                return _itemVariantId;         // do not add variant map as there is an issue.
             if (sourceWooMap == null)
             {
                 sourceWooMap = new WooProductVariantMap
@@ -120,16 +168,17 @@ namespace RainbowOF.Integration.Repositories.Woo
                     WooProductVariantId = (int)newWooEntity.id,
                     ItemVariantId = _itemVariantId
                 };
+                if (await _wooVariantMapRepository.AddAsync(sourceWooMap) == null)
+                {
+                    // did not add so set _ItemVariantId to ItemVariantID to Guid.Empty = error
+                    _itemVariantId = Guid.Empty;
+                }
             }
             else
             {
                 sourceWooMap.WooProductVariantId = (int)newWooEntity.id;
                 sourceWooMap.ItemVariantId = _itemVariantId;
-            }
-            if (await _wooVariantMapRepository.AddAsync(sourceWooMap) == null)
-            {
-                // did not add so set _ItemVariantId to ItemVariantID to Guid.Empty = error
-                _itemVariantId = Guid.Empty;
+                await _wooVariantMapRepository.UpdateAsync(sourceWooMap);  // no error checking since update is just in case, could probably skip.
             }
             return _itemVariantId;
         }
@@ -144,18 +193,19 @@ namespace RainbowOF.Integration.Repositories.Woo
         public async Task<Guid> AddOrGetEntityIDAsync(Variation sourceEntity, Guid sourceParentId)
         {
             IAppRepository<ItemVariant> _itemVariantRepository = _AppUnitOfWork.Repository<ItemVariant>();
-
-            ItemVariant _ItemVariant = await _itemVariantRepository.FindFirstByAsync(ic => ic.ItemVariantName == sourceEntity.description);
-            if (_ItemVariant == null)
+            ItemVariant _itemVariant = null;
+            if (sourceEntity.description != string.Empty)
+                _itemVariant = await _itemVariantRepository.FindFirstByAsync(ic => (ic.ItemId == sourceParentId) && (ic.ItemVariantName == sourceEntity.description));
+            if (_itemVariant == null)
             {
-                ItemVariant _newItemVariant = MapWooProductVariantInfo(sourceEntity, null);
+                ItemVariant _newItemVariant = await MapWooProductVariantInfo(sourceEntity, null);
                 _newItemVariant.ItemId = sourceParentId;  // the mapping copies the variant info but does not copy the Parent Item Id, as it does not exist in the source Entity
                 var _recsAdded = await _itemVariantRepository.AddAsync(_newItemVariant);
                 return (_recsAdded != null) ? _newItemVariant.ItemVariantId : Guid.Empty;
             }
             else
             {
-                return _ItemVariant.ItemVariantId;   // we found one with the same name so assume this is the correct one.
+                return _itemVariant.ItemVariantId;   // we found one with the same name so assume this is the correct one.
             }
         }
         /// <summary>
@@ -173,9 +223,24 @@ namespace RainbowOF.Integration.Repositories.Woo
             IAppRepository<ItemVariant> _ItemVariantRepository = _AppUnitOfWork.Repository<ItemVariant>();
             // check if the AttributeTerm exists
             ItemVariant _itemVariant = await _ItemVariantRepository.FindFirstByAsync(ic => ic.ItemVariantId == sourceWooMappedEntity.ItemVariantId);
-            _itemVariantId = (_itemVariant != null)
-                                ? await UpdateEntityAsync(sourceEntity, sourceParentId, _itemVariant)
-                                : await AddEntityAsync(sourceEntity, sourceWooMappedEntity, sourceParentId);
+            if (_itemVariant != null)
+            {
+                // make sure the mapped variant is pointing to the correct parent if not delete the mapping and then add.
+                if (_itemVariant.ItemId == sourceParentId)
+                {
+                    _itemVariantId = await UpdateEntityAsync(sourceEntity, sourceParentId, _itemVariant);
+                }
+                else
+                {
+                    IAppRepository<WooProductVariantMap> _wooProductVariantMapRepository = _AppUnitOfWork.Repository<WooProductVariantMap>();
+                    await _wooProductVariantMapRepository.DeleteByAsync(wpv => wpv.ItemVariantId == sourceWooMappedEntity.ItemVariantId);
+                    _itemVariantId = await AddEntityAsync(sourceEntity, sourceWooMappedEntity, sourceParentId);
+                }
+            }
+            else
+            {
+                _itemVariantId = await AddEntityAsync(sourceEntity, sourceWooMappedEntity, sourceParentId);
+            }
             return _itemVariantId;
         }
         /// <summary>
@@ -201,7 +266,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         {
             IAppRepository<ItemVariant> _itemVariantRepository = _AppUnitOfWork.Repository<ItemVariant>();
             bool _success = false;
-            updatedEntity = MapWooProductVariantInfo(updatedWooEntity, updatedEntity);
+            updatedEntity = await MapWooProductVariantInfo(updatedWooEntity, updatedEntity);
             _success = await _itemVariantRepository.UpdateAsync(updatedEntity) != AppUnitOfWork.CONST_WASERROR;
             return (_success ? updatedEntity.ItemVariantId : Guid.Empty);
         }
@@ -219,6 +284,8 @@ namespace RainbowOF.Integration.Repositories.Woo
             Guid _ItemVariantId = Guid.Empty;
             IAppRepository<WooProductVariantMap> _wooProductVariantMapRepository = _AppUnitOfWork.Repository<WooProductVariantMap>();
             _ItemVariantId = await AddOrUpdateEntityAsync(updatedWooEntity, targetWooMap, sourceParentId);
+            if (_ItemVariantId == Guid.Empty)
+                return Guid.Empty;  // error so exit;
             /// Now update the woo ItemVariant using the _ItemVariantId returned.
             if (await _wooProductVariantMapRepository.UpdateAsync(targetWooMap) == AppUnitOfWork.CONST_WASERROR)
             {   // did not updated so set _ItemVariantId to ItemVariantID to Guid.Empty = error
@@ -277,7 +344,7 @@ namespace RainbowOF.Integration.Repositories.Woo
                     return null;
                 }
             }
-////-> not sure if we should abort if the one import fails.
+            ////-> not sure if we should abort if the one import fails.
             return CurrImportCounters;
         }
         #endregion

@@ -26,7 +26,6 @@ namespace RainbowOF.Integration.Repositories.Woo
     {
         [Inject]
         public IMapper _Mapper { get; set; }
-
         #region Variables
         public List<WooItemWithParent> EntityWithParents { get; set; } = new();
         public IAppUnitOfWork _AppUnitOfWork { get; set; }
@@ -45,6 +44,7 @@ namespace RainbowOF.Integration.Repositories.Woo
             _Logger = logger;
             _AppWooSettings = appWooSettings;
             _Mapper = mapper;
+            _Logger.LogDebug("WooImportProduct initialised.");
         }
 
         public WooImportProduct()
@@ -110,9 +110,15 @@ namespace RainbowOF.Integration.Repositories.Woo
         {
             IAppRepository<ItemAttributeVarietyLookup> _itemAttribVarietyLookupRepo = _AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
             ItemAttributeVarietyLookup _itemAttributeVarietyLookup = null;
-            foreach (var attrbiTerm in prodAttrib.options)
+            foreach (var attribTerm in prodAttrib.options)
             {
-                _itemAttributeVarietyLookup = await _itemAttribVarietyLookupRepo.FindFirstByAsync(ItemAttributeVariety => ItemAttributeVariety.VarietyName == attrbiTerm);
+                if (attribTerm.StartsWith("Aero"))
+                    currItem.IsEnabled = true;
+
+                /////----> attribute add / update this was wrong
+                ///
+                // find any term that has the same ParentId and the same term. changed 10 Dec 2021 to include the "parent" ItemAttributeLookupId
+                _itemAttributeVarietyLookup = await _itemAttribVarietyLookupRepo.FindFirstByAsync(iavl => ((iavl.ItemAttributeLookupId == currWooProductAttributeMap.ItemAttributeLookupId) && (iavl.VarietyName == attribTerm)));
                 if (_itemAttributeVarietyLookup != null)
                 {
                     // found so update or add
@@ -136,23 +142,29 @@ namespace RainbowOF.Integration.Repositories.Woo
                     }
                     else
                     {
-                        // we have a attribute variety, this means we should have an attribute that, that belongs too.
-
+                        // we have a attribute variety, this means we should have an attribute that, that it belongs too.
                         if (_itemAttribute.ItemAttributeVarieties == null)
                             _itemAttribute.ItemAttributeVarieties = new List<ItemAttributeVariety>();
                         // create a new variety assume 1.0 as in 1-1 QTY and update the ItemDetails. Do not change Item Id as then EF core knows it is a new record.
-                        _itemAttribute.ItemAttributeVarieties.Add(new ItemAttributeVariety
-                        {
-                            ItemAttributeVarietyLookupId = _itemAttributeVarietyLookup.ItemAttributeVarietyLookupId,
-                            ItemAttributeVarietyDetail = _itemAttributeVarietyLookup,    // copy the whole attribute across
-                            ItemAttributeId = _itemAttribute.ItemAttributeId,
-                            UoMId = _itemAttributeVarietyLookup.UoMId,
-                            UoM = _itemAttributeVarietyLookup.UoM,
-                            UoMQtyPerItem = 1.0
-                        });
+                        ItemAttributeVariety _itemAttributeVariety = new ItemAttributeVariety();
+                        _Mapper.Map(_itemAttributeVarietyLookup, _itemAttributeVariety);
+
+                        // need to allocate the attribute id
+                        _itemAttributeVariety.ItemAttributeId = _itemAttribute.ItemAttributeId;
+                        _itemAttribute.ItemAttributeVarieties.Add(_itemAttributeVariety);  // add the new variant
+                        //_itemAttribute.ItemAttributeVarieties.Add(new ItemAttributeVariety
+                        //{
+                        //    ItemAttributeVarietyLookupId = _itemAttributeVarietyLookup.ItemAttributeVarietyLookupId,
+                        //    ItemAttributeVarietyDetail = _itemAttributeVarietyLookup,    // copy the whole attribute across
+                        //    ItemAttributeId = _itemAttribute.ItemAttributeId,
+                        //    UoMId = _itemAttributeVarietyLookup.UoMId,
+                        //    UoM = _itemAttributeVarietyLookup.UoM,
+                        //    UoMQtyPerItem = 1.0
+                        //});
                     }
                     //currItem.ItemAttributes.Add(_itemAttribute);
                 }
+                //-> should we not add it here?
             }
             return currItem;
         }
@@ -224,7 +236,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         {
             Guid _itemId = Guid.Empty;
             IAppRepository<WooProductMap> _wooProductMapRepository = _AppUnitOfWork.Repository<WooProductMap>();
-            //it may not be in the map, but we may have a product with tat name so see if we do -Add Item Product if it does not exist
+            //it may not be in the map, but we may have a product with that name so see if we do -Add Item Product if it does not exist
             _itemId = await AddOrGetEntityIDAsync(currWooProd);
             if (_itemId != Guid.Empty)
             {
@@ -246,12 +258,12 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// <summary>
         /// Delete a Map from the item map table.
         /// </summary>
-        /// <param name="sourceWooProductMapId">The Id of source map to delete</param>
+        /// <param name="sourceItemId">The Id of source map to delete</param>
         /// <returns>1 if deleted or Error</returns>
-        private async Task<int> DeleteWooProductMapAsync(Guid sourceWooProductMapId)
+        private async Task<int> DeleteWooProductMapByItemIdAsync(Guid sourceItemId)
         {
             IAppRepository<WooProductMap> _wooProductMapRepository = _AppUnitOfWork.Repository<WooProductMap>();
-            return await _wooProductMapRepository.DeleteByIdAsync(sourceWooProductMapId);
+            return await _wooProductMapRepository.DeleteByAsync(wpm => wpm.ItemId == sourceItemId);
         }
         /// <summary>
         /// Import the actual Variations of a variable product into the items table and set currItem.Id as parent
@@ -264,44 +276,6 @@ namespace RainbowOF.Integration.Repositories.Woo
             WooImportVariation _wooImportVariation = new WooImportVariation(_AppUnitOfWork,_Logger,_AppWooSettings, _Mapper);
             return await _wooImportVariation.ImportProductVariants((uint)sourceWooEntity.id, sourceEntity.ItemId);
         }
-            //foreach (var itemVariant in soureWooEntity.variations)
-            //{
-/*----------------------------
- * 
-for each variant there is variant id. Either we can get all variants and then add them, or we can get one at a time and add them.
-Getting all at the same time should be a quicker REST call
-so rather than doing a foreach loop, rather just take the fact that there will be at least two variant and get them all 
-then run the import. 
-
-Logic: Get all Product Varaints
-foreach variant do and import.
-
-                /////////////////
-
-
-
-*/
-                ///
-                /// --------------------------------------------------------------------
-                /// need to add this, is it an option we need to offer to the user?
-        //        /// --------------------------------------------------------------------
-        //        ////
-        //        /// - add item varieties 
-        //        /// 
-        //        IAppRepository<WooProductMap> _wooProductMap = _AppUnitOfWork.Repository<WooProductMap>();
-        //        var prod = await _wooProductMap.FindFirstAsync(wpm => wpm.WooProductId == itemVariant);
-        //        if (prod == null)
-        //        {
-        //            // add it to database and also map
-        //        }
-        //        else
-        //        {
-        //            // update it
-        //        }
-                
-        //    }
-        //    return sourceEntity;
-        //}
         #endregion
         #region Interface Methods
         /// <summary>
@@ -410,7 +384,9 @@ foreach variant do and import.
             else
             {
                 // if we got here then the product map is pointing to the wrong ID, so delete the ID and add the item
-                await DeleteWooProductMapAsync(sourceWooMappedEntityId);
+                if (!_AppUnitOfWork.IsInErrorState())  // did something go wrong rather?
+                    await DeleteWooProductMapByItemIdAsync(sourceWooMappedEntityId);
+                ////-> we need to add this item since the id we have is not corresponding.
                 _itemId = await AddProductToItemsAsync(sourceEntity);
             }
             return _itemId;
@@ -476,7 +452,7 @@ foreach variant do and import.
                 updateEntity = await AssignWooProductCategoryAsync(updateEntity, updatedWooEntity);
                 updateEntity = await AssignWooProductAttributesAsync(updateEntity, updatedWooEntity);
                 if (updateEntity.ItemType == ItemTypes.Variable)
-                    /*updateEntity = dont use the number of variants here */ await ImportProductVariationsAsync(updatedWooEntity, updateEntity);
+                    await ImportProductVariationsAsync(updatedWooEntity, updateEntity);  // we don't handle errors here, probably should do something, but no way of knowing where the error is
                 // now update the item
                 IItemRepository _itemRepo = _AppUnitOfWork.itemRepository();
                 if (await _itemRepo.UpdateAsync(updateEntity) == 0)
@@ -501,7 +477,7 @@ foreach variant do and import.
                 // If we add other date we should update
             }
             return _itemId;
-
+        }
             //////----> same as AddOrUpdateEntity so used there.
 
             //IItemRepository _itemRepository = _AppUnitOfWork.itemRepository();
@@ -521,9 +497,8 @@ foreach variant do and import.
             //}
             //return _itemId;
             //throw new NotImplementedException();
-
             /// in categories we call add or get Entity, do we here? 
-        }
+        
         /// <summary>
         /// For each product
         ///     o If the product does not exists add and copy woo details to new record increase Counter.added

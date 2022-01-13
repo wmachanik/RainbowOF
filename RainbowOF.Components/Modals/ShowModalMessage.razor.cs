@@ -1,5 +1,6 @@
 ﻿using Blazorise;
 using Microsoft.AspNetCore.Components;
+using System.Threading.Tasks;
 
 namespace RainbowOF.Components.Modals
 {
@@ -11,14 +12,11 @@ namespace RainbowOF.Components.Modals
         public string ModalMessage { get; set; } = "Message";
 
         public Modal modalRef;
-        public void ShowModal()
-        {
-            modalRef.Show();
-        }
-        public void HideModal()
-        {
-            modalRef.Hide();
-        }
+        public async Task ShowModalAsync()
+          =>  await modalRef.Show();
+        public async Task HideModalAsync()
+          => await modalRef.Hide();
+       
         public void UpdateModalTitle(string pTitle)
         {
             ModalTitle = pTitle;

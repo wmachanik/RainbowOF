@@ -29,6 +29,7 @@ namespace RainbowOF.Integration.Repositories.Woo
             _AppUnitOfWork = appUnitOfWork ?? throw new ArgumentNullException(nameof(appUnitOfWork));
             _Logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _AppWooSettings = appWooSettings ?? throw new ArgumentNullException(nameof(appWooSettings));
+            _Logger.LogDebug("WooImportProductAttributeTerm initialised.");
         }
         #endregion
         #region Interface Methods
@@ -44,8 +45,8 @@ namespace RainbowOF.Integration.Repositories.Woo
         public async Task<Guid> AddOrGetEntityIDAsync(ProductAttributeTerm sourceEntity, Guid sourceParentId)
         {
             IAppRepository<ItemAttributeVarietyLookup> _itemAttributeVarietyRepository = _AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
-
-            ItemAttributeVarietyLookup _ItemAttributeVariety = await _itemAttributeVarietyRepository.FindFirstByAsync(ic => ic.VarietyName == sourceEntity.name);
+            // we need to search for both variety name and "parent" attribute id, to make sure that the name belongs to this attribute
+            ItemAttributeVarietyLookup _ItemAttributeVariety = await _itemAttributeVarietyRepository.FindFirstByAsync(ic => (ic.ItemAttributeLookupId == sourceParentId) && (ic.VarietyName == sourceEntity.name));
             if (_ItemAttributeVariety == null)
             {
                 ItemAttributeVarietyLookup _newItemAttributeVariety = new ItemAttributeVarietyLookup
@@ -67,8 +68,12 @@ namespace RainbowOF.Integration.Repositories.Woo
         {
             Guid _itemAttributeVarietyId = Guid.Empty;
             IAppRepository<ItemAttributeVarietyLookup> _itemAttributeVarietyRepository = _AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
+            if (sourceEntity.name.StartsWith("Aero"))
+                _itemAttributeVarietyId = Guid.Empty;  // rubbish code just to debug
             // check if the AttributeTerm exists
-            ItemAttributeVarietyLookup _ItemAttributeVariety = await _itemAttributeVarietyRepository.FindFirstByAsync(ic => ic.ItemAttributeVarietyLookupId == sourceWooMappedEntity.ItemAttributeVarietyLookupId);
+            ItemAttributeVarietyLookup _ItemAttributeVariety = await _itemAttributeVarietyRepository
+                .FindFirstByAsync(ic => ((ic.ItemAttributeLookupId == sourceParentId) &&   // we need to match both the id and the parent id, to cater for same name attributes with different parents
+                                         (ic.ItemAttributeVarietyLookupId == sourceWooMappedEntity.ItemAttributeVarietyLookupId)));
             _itemAttributeVarietyId = (_ItemAttributeVariety != null)
                                         ? await UpdateEntityAsync(sourceEntity, sourceParentId, _ItemAttributeVariety)
                                         : await AddEntityAsync(sourceEntity, sourceWooMappedEntity, sourceParentId);
@@ -95,20 +100,20 @@ namespace RainbowOF.Integration.Repositories.Woo
                     WooProductAttributeTermId = (int)newWooEntity.id,
                     ItemAttributeVarietyLookupId = _itemAttributeTermId
                 };
+                if (await _wooAttributeTermMapRepository.AddAsync(sourceWooMap) == null)
+                    return Guid.Empty;
             }
             else
             {
+                // it exists so it needs to be updated
                 sourceWooMap.WooProductAttributeTermId = (int)newWooEntity.id;
                 sourceWooMap.ItemAttributeVarietyLookupId = _itemAttributeTermId;
-            }
-            if (await _wooAttributeTermMapRepository.AddAsync(sourceWooMap) == null)
-            {
+                if (await _wooAttributeTermMapRepository.UpdateAsync(sourceWooMap) == AppUnitOfWork.CONST_WASERROR)
+                    return Guid.Empty;
                 // did not add so set _ItemAttributeTermId to ItemAttributeTermID to Guid.Empty = error
-                _itemAttributeTermId = Guid.Empty;
             }
             return _itemAttributeTermId;
         }
-
         public Task<bool> FindAndSetParentEntityAsync(WooItemWithParent sourceWooEntityWithParent)
         {
             throw new NotImplementedException();

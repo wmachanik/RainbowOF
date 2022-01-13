@@ -16,7 +16,7 @@ else
         <Blazorise.Badge Class="alert-info">Preferences Saved...</Blazorise.Badge>
     }
 
-    <EditForm Model="@modelWooSettings" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit">
+    <EditForm Model="@modelWooSettings" OnValidSubmit="HandleValidSubmitAsync" OnInvalidSubmit="HandleInvalidSubmit">
         <DataAnnotationsValidator />
         <Blazorise.ValidationSummary />
 

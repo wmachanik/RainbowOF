@@ -12,6 +12,7 @@ using RainbowOF.Repositories.Lookups;
 using RainbowOF.Models.Items;
 using System.Linq;
 using RainbowOF.Models.Lookups;
+using System.Linq.Expressions;
 
 namespace RainbowOF.Repositories.Common
 {
@@ -19,6 +20,7 @@ namespace RainbowOF.Repositories.Common
     {
         #region Public constants
         public const int CONST_WASERROR = -1;
+        public const int CONST_INVALID_ID = 0;
         public const int CONST_MAX_DETAIL_PAGES = 50;
         #endregion
         #region Generic privates
@@ -30,6 +32,7 @@ namespace RainbowOF.Repositories.Common
         private readonly Dictionary<Type, object> _repositories = new Dictionary<Type, object>();
         /// Custom Repos
         private IItemRepository _ItemRepository = null;
+        private IItemAttributeRepository _ItemAttributeRepository = null;
         private ISysPrefsRepository _SysPrefsRepository = null;
         private IWooSyncLogRepository _WooSyncLogRepository = null;
         private IItemCategoryLookupRepository _ItemCategoryLookupRepository = null;
@@ -37,10 +40,11 @@ namespace RainbowOF.Repositories.Common
         private IItemAttributeVarietyLookupRepository _ItemAttributeVarietyLookupRepository = null;
         #endregion
         #region Internal List vars
-        private Dictionary<Guid, string> _listOfCategories = null;
+        private Dictionary<Type, object> _LookupLists = new Dictionary<Type, object>();
         private Dictionary<Guid, string> _ListOfUoMSymbols = null;
-        private Dictionary<Guid, string> _ListOfAttributes = null;
-        private Dictionary<Guid, string> _ListOfAttributeVarieties = null;
+        //private Dictionary<Guid, string> _ListOfAttributes = null;
+        List<ItemAttributeVarietyLookup> _ListOfAttributeVarieties = null;
+        List<ItemAttributeVariety> _ListOfItemAttributeVarieties = null;
         #endregion
         #region Unit of Work Error handling
         private string _ErrorMessage = String.Empty;
@@ -50,6 +54,7 @@ namespace RainbowOF.Repositories.Common
         {
             _Context = context;
             _Logger = logger;
+            _Logger.LogDebug("AppUnitOfWork initialised.");
         }
         #endregion
         #region Public's of the unit of work repos
@@ -65,6 +70,7 @@ namespace RainbowOF.Repositories.Common
                 return Repositories[typeof(TEntity)] as AppRepository<TEntity>;
             }
             IAppRepository<TEntity> sourceRepo = new AppRepository<TEntity>(_Context, _Logger, this);
+            _Logger.LogDebug($"Repository type: {typeof(TEntity).Name} retrieved / initialised.");
             Repositories.Add(typeof(TEntity), sourceRepo);
             return sourceRepo;
         }
@@ -73,6 +79,12 @@ namespace RainbowOF.Repositories.Common
             if (_ItemRepository == null)
                 _ItemRepository = new ItemRepository(_Context, _Logger, this);
             return _ItemRepository;
+        }
+        public IItemAttributeRepository itemAttributeRepository()
+        {
+            if (_ItemAttributeRepository == null)
+                _ItemAttributeRepository = new ItemAttributeRepository(_Context, _Logger, this);
+            return _ItemAttributeRepository;
         }
         public ISysPrefsRepository sysPrefsRepository()
         {
@@ -110,24 +122,77 @@ namespace RainbowOF.Repositories.Common
         {
             return dbTransaction != null;
         }
-        public Dictionary<Guid, string> GetListOfCategories(bool IsForceReload = false)
+        public Dictionary<Type, object> LookupLists
         {
-            if ((IsForceReload) || (_listOfCategories == null))
-            {
-                if (_listOfCategories != null) _listOfCategories.Clear();
-                else _listOfCategories = new Dictionary<Guid, string>();
-
-                IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = Repository<ItemCategoryLookup>();
-                var _itemCategories = _itemCategoryLookupRepository.GetAll()
-                    .OrderBy(ic => ic.FullCategoryName)
-                    .ToList();  // cannot async as part of UI for
-                foreach (var _itemCategory in _itemCategories)
-                {
-                    _listOfCategories.Add(_itemCategory.ItemCategoryLookupId, _itemCategory.FullCategoryName);
-                }
-            }
-            return _listOfCategories;
+            get { return _LookupLists; }
+            set { _LookupLists = value; }
         }
+        public List<TLookupItem> GetListOf<TLookupItem>(bool IsForceReload = false, Func<TLookupItem, object> orderByExpression = null) where TLookupItem : class
+        { 
+            if (LookupLists.ContainsKey(typeof(TLookupItem)))
+            {
+                if (IsForceReload)
+                {
+                    LookupLists.Remove(typeof(TLookupItem)); // of we are forcing reload delete the old list
+                }
+                else 
+                    return LookupLists[typeof(TLookupItem)] as List<TLookupItem>;
+            }
+            IAppRepository<TLookupItem> appRepository = Repository<TLookupItem>();
+            if (appRepository == null)
+            {
+                // problem so return null
+                return null;
+            }
+            List<TLookupItem> lookupItems = (orderByExpression == null) ? appRepository.GetAll().ToList() : appRepository.GetAllOrderBy(orderByExpression, false).ToList();
+            //List<TLookupItem> lookupItems = appRepository.GetAll().ToList(); // : appRepository.GetAllOrderBy(orderByExpression, false).ToList();
+            LookupLists.Add(typeof(TLookupItem), lookupItems);
+            return lookupItems;
+        }
+
+        public async Task<List<TLookupItem>> GetListOfAsync<TLookupItem>(bool IsForceReload = false, Expression<Func<TLookupItem, object>> orderByExpression = null) where TLookupItem : class
+        {
+            ///->> I am not sure this routine works seems to have an async error some where linked to order expression
+            if (LookupLists.ContainsKey(typeof(TLookupItem)))
+            {
+                if (IsForceReload)
+                {
+                    LookupLists.Remove(typeof(TLookupItem)); // of we are forcing reload delete the old list
+                }
+                else
+                    return LookupLists[typeof(TLookupItem)] as List<TLookupItem>;
+            }
+            IAppRepository<TLookupItem> appRepository = Repository<TLookupItem>();
+            if (appRepository == null)
+            {
+                // problem so return null
+                return null;
+            }
+           var lookupItems = (orderByExpression == null)
+                ? await appRepository.GetAllAsync()
+                : await appRepository.GetAllOrderByAsync(orderByExpression, false);
+            LookupLists.Add(typeof(TLookupItem), lookupItems);
+            return lookupItems.ToList();
+        }
+
+        //public Dictionary<Guid, string> GetListOfCategories(bool IsForceReload = false)
+        //{
+        //    if-`+ ((IsForceReload) || (_listOfCategories == null))
+        //    {
+        //        if (_listOfCategories != null) _listOfCategories.Clear();
+        //        else _listOfCategories = new Dictionary<Guid, string>();
+
+        //        IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = Repository<ItemCategoryLookup>();
+        //        var _itemCategories = _itemCategoryLookupRepository.GetAll()
+        //            .OrderBy(ic => ic.FullCategoryName)
+        //            .ToList();  // cannot async as part of UI for
+        //        foreach (var _itemCategory in _itemCategories)
+        //        {
+        //            _listOfCategories.Add(_itemCategory.ItemCategoryLookupId, _itemCategory.FullCategoryName);
+        //        }
+        //    }
+        //    return _listOfCategories;
+        //}
         public Dictionary<Guid, string> GetListOfUoMSymbols(bool IsForceReload = false)
         {
             if (IsForceReload)
@@ -150,42 +215,74 @@ namespace RainbowOF.Repositories.Common
             }
             return _ListOfUoMSymbols;
         }
-        public Dictionary<Guid, string> GetListOfAttributes(bool IsForceReload = false)
-        {
-            if ((IsForceReload) || (_ListOfAttributes == null))
-            {
-                if (_ListOfAttributes != null) _ListOfAttributes.Clear();
-                else _ListOfAttributes = new Dictionary<Guid, string>();
+        //public Dictionary<Guid, string> GetListOfAttributes(bool IsForceReload = false)
+        //{
+        //    if ((IsForceReload) || (_ListOfAttributes == null))
+        //    {
+        //        if (_ListOfAttributes != null) _ListOfAttributes.Clear();
+        //        else _ListOfAttributes = new Dictionary<Guid, string>();
 
-                IAppRepository<ItemAttributeLookup> _itemAttributeLookupRepository = Repository<ItemAttributeLookup>();
-                var _itemAttributes = _itemAttributeLookupRepository.GetAll()
-                    .OrderBy(ia => ia.AttributeName)
-                    .ToList();  // cannot async as part of UI for
-                foreach (var _itemAttribute in _itemAttributes)
-                {
-                    _ListOfAttributes.Add(_itemAttribute.ItemAttributeLookupId, _itemAttribute.AttributeName);
-                }
-            }
-            return _ListOfAttributes;
-        }
-        public Dictionary<Guid, string> GetListOfAttributeVarieties(Guid parentAttributeLookupId, bool IsForceReload = false)
+        //        IAppRepository<ItemAttributeLookup> _itemAttributeLookupRepository = Repository<ItemAttributeLookup>();
+        //        var _itemAttributes = _itemAttributeLookupRepository.GetAll()
+        //            .OrderBy(ia => ia.AttributeName)
+        //            .ToList();  // cannot async as part of UI for
+        //        foreach (var _itemAttribute in _itemAttributes)
+        //        {
+        //            _ListOfAttributes.Add(_itemAttribute.ItemAttributeLookupId, _itemAttribute.AttributeName);
+        //        }
+        //    }
+        //    return _ListOfAttributes;
+        //}
+        /// <summary>
+        /// Get or return a list of Attribute Varieties based on the parentId
+        /// </summary>
+        /// <param name="parentAttributeLookupId">Id of parent</param>
+        /// <param name="IsForceReload">must we force reload</param>
+        /// <returns>List of attributes</returns>
+        public List<ItemAttributeVarietyLookup> GetListOfAttributeVarieties(Guid parentAttributeLookupId, bool IsForceReload = false)
         {
             if ((IsForceReload) || (_ListOfAttributeVarieties == null))
             {
                 if (_ListOfAttributeVarieties != null) _ListOfAttributeVarieties.Clear();
-                else _ListOfAttributeVarieties = new Dictionary<Guid, string>();
+                // else _ListOfAttributeVarieties = new Dictionary<Guid, string>();
 
                 IAppRepository<ItemAttributeVarietyLookup> _itemAttributeVarietyLookupRepository = Repository<ItemAttributeVarietyLookup>();
-                var _itemAttributeVarieties = _itemAttributeVarietyLookupRepository.GetBy(iav => iav.ItemAttributeLookupId == parentAttributeLookupId)
-                    .OrderBy(ic => ic.VarietyName)
+                _ListOfAttributeVarieties = _itemAttributeVarietyLookupRepository.GetBy(iavl => iavl.ItemAttributeLookupId == parentAttributeLookupId)
+                    .OrderBy(iavl => iavl.VarietyName)
                     .ToList();  // cannot async as part of UI for
-                foreach (var _itemAttributeVariety in _itemAttributeVarieties)
-                {
-                    _ListOfAttributeVarieties.Add(_itemAttributeVariety.ItemAttributeVarietyLookupId, _itemAttributeVariety.VarietyName);
-                }
+                //foreach (var _itemAttributeVariety in _itemAttributeVarieties)
+                //{
+                //    _ListOfAttributeVarieties.Add(_itemAttributeVariety.ItemAttributeVarietyLookupId, _itemAttributeVariety.VarietyName);
+                //}
             }
             return _ListOfAttributeVarieties;
         }
+
+        public List<ItemAttributeVariety> GetListOfItemAttributeVarieties(Guid sourceAssoicatedItemAttributeId, bool IsForceReload = false)
+        {
+            if ((IsForceReload) || (_ListOfItemAttributeVarieties == null))
+            {
+                if (_ListOfItemAttributeVarieties != null) _ListOfItemAttributeVarieties.Clear();
+                // else _ListOfAttributeVarieties = new Dictionary<Guid, string>();
+                IItemAttributeRepository _itemAttributeRepository = itemAttributeRepository();
+
+                _ListOfItemAttributeVarieties = _itemAttributeRepository.GetAssociatedVarients(sourceAssoicatedItemAttributeId);
+            }
+            return _ListOfItemAttributeVarieties;
+        }
+        public async Task<List<ItemAttributeVariety>> GetListOfItemAttributeVarietiesAsync(Guid sourceAssoicatedItemAttributeId, bool IsForceReload = false)
+        {
+            if ((IsForceReload) || (_ListOfItemAttributeVarieties == null))
+            {
+                if (_ListOfItemAttributeVarieties != null) _ListOfItemAttributeVarieties.Clear();
+                // else _ListOfAttributeVarieties = new Dictionary<Guid, string>();
+                IItemAttributeRepository _itemAttributeRepository = itemAttributeRepository();
+
+                _ListOfItemAttributeVarieties = await _itemAttributeRepository.GetAssociatedVarientsAsync(sourceAssoicatedItemAttributeId);
+            }
+            return _ListOfItemAttributeVarieties;
+        }
+
         #endregion
         #region Centralised Context Handling
         public void BeginTransaction()

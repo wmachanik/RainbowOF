@@ -51,7 +51,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             IsSaved = false;
             StateHasChanged();
         }
-        public async void HandleValidSubmit()
+        public async Task HandleValidSubmitAsync()
         {
             if (modelWooSettings != null)
             {
@@ -71,9 +71,9 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                 }
                 IsChanged = false;
                 if (IsSaved) ShowChangedStatus.UpdateModalMessage("Woo settings have been saved.");
-                else ShowChangedStatus.UpdateModalMessage("Error  saving Woo settings. Please check database access.");
+                else ShowChangedStatus.UpdateModalMessage("Error saving Woo settings. Please check database access.");
                 HideSaving();
-                ShowChangedStatus.ShowModal();
+                await ShowChangedStatus.ShowModalAsync();
                 StateHasChanged();
             }
         }
@@ -101,7 +101,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             // check if saved.
             if (IsChanged)
             {
-                //ShowChangedStatus.ShowModal();
+                //ShowChangedStatus.ShowModalAsync();
             }
             else
             {

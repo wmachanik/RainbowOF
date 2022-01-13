@@ -159,17 +159,17 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         //    await _DataGrid.Reload();
         //    return _result;
         //}
-        async Task OnRowUpdatingAsync(SavedRowItem<ItemAttributeLookupView, Dictionary<string, object>> updatedItem)
+        async Task OnRowUpdatedAsync(SavedRowItem<ItemAttributeLookupView, Dictionary<string, object>> updatedItem)
         {
             await _AttributeWooLinkedViewRepository.UpdateRowAsync(updatedItem.Item);
             await _DataGrid.Reload();
         }
-        void OnRowRemoving(CancellableRowChange<ItemAttributeLookupView> modelItem)
+        async Task OnRowRemovingAsync(CancellableRowChange<ItemAttributeLookupView> modelItem)
         {
             // set the Selected Item Attribute for use later
             SelectedItemAttributeLookup = modelItem.Item;
             var deleteItem = modelItem;
-             _AttributeWooLinkedViewRepository._WooLinkedGridSettings.DeleteConfirmationWithOption.ShowModal("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.AttributeName}?", SelectedItemAttributeLookup.HasECommerceAttributeMap);  //,"Delete","Cancel"); - passed in on init
+            await _AttributeWooLinkedViewRepository._WooLinkedGridSettings.DeleteConfirmationWithOption.ShowModalAsync("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.AttributeName}?", SelectedItemAttributeLookup.HasECommerceAttributeMap);  //,"Delete","Cancel"); - passed in on init
         }
         //
         async Task ConfirmAddWooItem_ClickAsync(bool confirmClicked)
@@ -199,7 +199,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             {
                 // if there is a WooAttribute and we have to delete it, then delete that first.
                 if (confirmationOption == ConfirmModalWithOption.ConfirmResults.confirmWithOption)
-                     _AttributeWooLinkedViewRepository._WooLinkedGridSettings.DeleteWooItemConfirmation.ShowModal("Are you sure?", $"Delete {SelectedItemAttributeLookup.AttributeName} from Woo too?", "Delete", "Cancel");
+                    await _AttributeWooLinkedViewRepository._WooLinkedGridSettings.DeleteWooItemConfirmation.ShowModalAsync("Are you sure?", $"Delete {SelectedItemAttributeLookup.AttributeName} from Woo too?", "Delete", "Cancel");
                 else
                     await _AttributeWooLinkedViewRepository.DeleteRowAsync(SelectedItemAttributeLookup);
 

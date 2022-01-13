@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Lookups
 {
+
     public class ItemAttributeVarietyLookupRepository : AppRepository<ItemAttributeVarietyLookup>, IItemAttributeVarietyLookupRepository
     {
         private ApplicationDbContext _Context = null;
@@ -25,6 +26,7 @@ namespace RainbowOF.Repositories.Lookups
             _Context = sourceDbContext;
             _Logger = sourceLogger;
             _AppUnitOfWork = sourceAppUnitOfWork;
+            _Logger.LogDebug("ItemAttributeVarietyLookupRepository initialised.");
         }
 
         List<OrderByParameter<ItemAttributeVarietyLookup>> GetOrderByExpressions(List<SortParam> currentSortParams)
@@ -42,7 +44,11 @@ namespace RainbowOF.Repositories.Lookups
                         break;
 
                     case nameof(ItemAttributeVarietyLookup.UoM):
-                        _orderByExpressions.Add(new OrderByParameter<ItemAttributeVarietyLookup>() { IsAscending = col.Direction == Blazorise.SortDirection.Ascending, OrderByExperssion = iavl => iavl.UoM.UoMName});
+                        _orderByExpressions.Add(new OrderByParameter<ItemAttributeVarietyLookup>() { IsAscending = col.Direction == Blazorise.SortDirection.Ascending, OrderByExperssion = iavl => iavl.UoM.UoMName });
+                        break;
+
+                    case nameof(ItemAttributeVarietyLookup.DefaultSKUSuffix):
+                        _orderByExpressions.Add(new OrderByParameter<ItemAttributeVarietyLookup>() { IsAscending = col.Direction == Blazorise.SortDirection.Ascending, OrderByExperssion = iavl => iavl.DefaultSKUSuffix });
                         break;
 
                     case nameof(ItemAttributeVarietyLookup.Symbol):
@@ -88,6 +94,10 @@ namespace RainbowOF.Repositories.Lookups
 
                     case nameof(ItemAttributeVarietyLookup.UoM):
                         _filterByExpressions.Add(iavl => iavl.UoM.ToString().ToLower().Contains(col.FilterBy));
+                        break;
+
+                    case nameof(ItemAttributeVarietyLookup.DefaultSKUSuffix):
+                        _filterByExpressions.Add(iavl => iavl.DefaultSKUSuffix.ToString().ToLower().Contains(col.FilterBy));
                         break;
 
                     case nameof(ItemAttributeVarietyLookup.SortOrder):

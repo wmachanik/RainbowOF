@@ -35,9 +35,9 @@ namespace RainbowOF.Components.Modals
             _ConfirmButtonText = ConfirmButtonText;
             _CancelButtonText = CancelButtonText;
         }
-        protected async Task OnConfirmationChange(bool value)
+        protected async Task OnConfirmationChangeAsync(bool value)
         {
-            modalRef.Hide();
+            await modalRef.Hide();
             await ConfirmationClicked.InvokeAsync(value);
         }
         internal void SetTitleAndMessage(string modalTitle, string modalMessage)
@@ -51,46 +51,45 @@ namespace RainbowOF.Components.Modals
         /// <param name="Title">Modal Title (optional)</param>
         /// <param name="Message">Modal Message (optional)</param>
         /// <param name="Color">Modal Colour</param>
-        public void ShowModal()
+        public async Task ShowModalAsync()
         {
             StateHasChanged();
-            modalRef.Show();
+            await modalRef.Show();
         }
 
-        public void ShowModal(string modalTitle)
+        public async Task ShowModalAsync(string modalTitle)
         {
             _ConfirmationTitle = modalTitle;
-            ShowModal();
+            await ShowModalAsync();
         }
-        public void ShowModal(string modalTitle, string modalMessage)
+        public async Task ShowModalAsync(string modalTitle, string modalMessage)
         {
             SetTitleAndMessage(modalTitle, modalMessage);
-            ShowModal();
+            await ShowModalAsync();
         }
-        public void ShowModal(string modalTitle, string modalMessage, Blazorise.Color modalColor)
+        public async Task ShowModalAsync(string modalTitle, string modalMessage, Blazorise.Color modalColor)
         {
             _ConfirmColor = modalColor;
             SetTitleAndMessage(modalTitle, modalMessage);
-            ShowModal();
+            await ShowModalAsync();
         }
-        public void ShowModal(string modalTitle, string modalMessage, string modalConfirmationButtonText, string modalCancelButtonText)
+        public async Task ShowModalAsync(string modalTitle, string modalMessage, string modalConfirmationButtonText, string modalCancelButtonText)
         {
             SetTitleAndMessage(modalTitle, modalMessage);
             _ConfirmButtonText = modalConfirmationButtonText;
             _CancelButtonText = modalCancelButtonText;
-            ShowModal();
+            await ShowModalAsync();
         }
-        public void ShowModal(string modalTitle, string modalMessage, 
+        public async Task ShowModalAsync(string modalTitle, string modalMessage, 
             string modalConfirmationButtonText, string modalCancelButtonText, 
             Blazorise.Color modalColor)
         {
             _ConfirmColor = modalColor;
-            ShowModal(modalTitle, modalMessage,modalConfirmationButtonText,modalCancelButtonText);
-            ShowModal();
+            await ShowModalAsync(modalTitle, modalMessage,modalConfirmationButtonText,modalCancelButtonText);
         }
-        public void HideModal()
+        public async Task HideModalAsync()
         {
-            modalRef.Hide();
+            await modalRef.Hide();
         }
     }
 }

@@ -37,7 +37,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         private bool _ShowWooLinked = true;
         private string _Status = "";
         private DataGrid<ItemView> _DataGrid;
-        private  IItemWooLinkedView _ItemWooLinkedViewRepository;
+        private IItemWooLinkedView _ItemWooLinkedViewRepository;
         #endregion
         #region Injected classes
         [Inject]
@@ -48,7 +48,6 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         public ILoggerManager _Logger { get; set; }
         [Inject]
         public IMapper _Mapper { get; set; }
-
         #endregion
         #region Support methods
         // All there workings are here
@@ -70,7 +69,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         private async Task SetLoadStatusAsync(string statusString)
         {
             _Status = statusString;
-            _Logger.LogDebug($"Status changed to: {statusString}");
+            _Logger.LogDebug($"Items - Status changed to: {statusString}");
             await InvokeAsync(StateHasChanged);
         }
         /// <summary>
@@ -94,7 +93,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             }
             catch (Exception ex)
             {
-                _Logger.LogError($"Error running async tasks: {ex.Message}");
+                _Logger.LogError( $"Items - Error running async tasks: {ex.Message}");
                 throw;
             }
             //restore the old items that were selected.
@@ -145,7 +144,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
                 }
                 catch (Exception ex)
                 {
-                    _Logger.LogError($"Error running async tasks: {ex.Message}");
+                    _Logger.LogError($"Items - Error running async tasks: {ex.Message}");
                     throw;
                 }
                 _Status = string.Empty;
@@ -212,11 +211,11 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             return _result;
         }
         /// <summary>
-        /// On row updating - update the row (using Update Row Async)
+        /// On row updated - update the row (using Update Row Async)
         /// </summary>
         /// <param name="updatedItem"></param>
         /// <returns></returns>
-        async Task OnRowUpdatingAsync(SavedRowItem<ItemView, Dictionary<string, object>> updatedItem)
+        async Task OnRowUpdatedAsync(SavedRowItem<ItemView, Dictionary<string, object>> updatedItem)
         {
             await _ItemWooLinkedViewRepository.UpdateRowAsync(updatedItem.Item);
             //->>> show we do error checking?
@@ -226,12 +225,12 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         /// On row removing async - Launch confirmation dialog, so an item can be deleted if the user wants
         /// </summary>
         /// <param name="modelItem">the model item to be delete, if confirmed</param>
-        void OnRowRemoving(CancellableRowChange<ItemView> modelItem)
+        async Task OnRowRemovingAsync(CancellableRowChange<ItemView> modelItem)
         {
             // set the Selected Item Attribute for use later
             _SelectedItemRow = modelItem.Item;
             var deleteItem = modelItem;
-            _ItemWooLinkedViewRepository._WooLinkedGridSettings.DeleteConfirmationWithOption.ShowModal("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.ItemName}?", _SelectedItemRow.HasECommerceAttributeMap);  //,"Delete","Cancel"); - passed in on init
+            await _ItemWooLinkedViewRepository._WooLinkedGridSettings.DeleteConfirmationWithOption.ShowModalAsync("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.ItemName}?", _SelectedItemRow.HasECommerceAttributeMap);  //,"Delete","Cancel"); - passed in on init
         }
         /// <summary>
         /// Deletion of the woo item is confirmed - so delete the product in Woo.
@@ -257,7 +256,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             {
                 // if there is a WooAttribute and we have to delete it, then delete that first.
                 if (confirmationOption == ConfirmModalWithOption.ConfirmResults.confirmWithOption)
-                    _ItemWooLinkedViewRepository._WooLinkedGridSettings.DeleteWooItemConfirmation.ShowModal("Are you sure?", $"Delete {_SelectedItemRow.ItemName} from Woo too?", "Delete", "Cancel");
+                    await _ItemWooLinkedViewRepository._WooLinkedGridSettings.DeleteWooItemConfirmation.ShowModalAsync("Are you sure?", $"Delete {_SelectedItemRow.ItemName} from Woo too?", "Delete", "Cancel");
                 else
                     await _ItemWooLinkedViewRepository.DeleteRowAsync(_SelectedItemRow);
 
@@ -309,7 +308,6 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             await _DataGrid.Reload();
         }
         #endregion
-
         //private NewItemAttributeVarietyComponent NewAttributeVariety;
     }
 }

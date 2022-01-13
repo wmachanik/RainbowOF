@@ -39,23 +39,47 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         [Parameter]
         public List<ItemAttribute> SourceItemAttributes { get; set; }
         [Parameter]
-        public Guid ParentItemId {get;set; }
+        public Guid ParentItemId { get; set; }
         //[Parameter]
         //public bool CanUseAsync { get; set; } = true;  // issues with detail mean that if this is a detail grid we disable Async
         #endregion
         #region Initialisation
         protected override async Task OnInitializedAsync()
         {
-            base.OnInitialized();
+            await base.OnInitializedAsync();
+            ModelItemAttributes = SourceItemAttributes;
+            // load lookup here, force reload as could be new item    - async order by failing again, not sure why tried await task also has a error
+            //await Task.Run(() =>
+            //{
+                _AppUnitOfWork.GetListOf<ItemAttributeLookup>(true, ial => ial.AttributeName);
+            //});
+            //!!! This must be done last so that loading is displayed until we are finished loading.
             _ItemAttributeGridViewRepository = new ItemAttributeGridViewRepository(_Logger, _AppUnitOfWork);
             _ItemAttributeGridViewRepository._GridSettings.PopUpRef = PopUpRef;   // use the forms Pop Up ref
-            ModelItemAttributes = SourceItemAttributes;
+            _Logger.LogDebug("ItemAttributesComponent initialised.");
             await InvokeAsync(StateHasChanged);
         }
         #endregion
         #region BackEnd Routines
-        public Dictionary<Guid, string> GetListOfAttributes(bool IsForceReload = false)
-            =>  _AppUnitOfWork.GetListOfAttributes(IsForceReload);
+        /// <summary>
+        ///  Return a list of Attributes that are available for selection
+        ///  Logic:
+        ///     1. Get a list of all ids that are already allocated except the current item
+        ///     2. set list to be the current item and any options that not already allocated
+        /// </summary>
+        /// <param name="currentAttributeLookupId">The one that is currently selected</param>
+        /// <param name="mustForce">must the list be reloaded (used for refresh etc.)</param>
+        /// <returns>List of item attribute varieties to be used.</returns>
+        public List<ItemAttributeLookup> GetListOfAttributes(Guid currentAttributeLookupId,
+                                                             bool IsForceReload = false)
+        { 
+            List<ItemAttributeLookup> _itemAttributeLookups = _AppUnitOfWork.GetListOf<ItemAttributeLookup>(IsForceReload, ial => ial.AttributeName);
+            // 1.
+            var _usedItems = ModelItemAttributes.Where(miav => (miav.ItemAttributeLookupId != currentAttributeLookupId));
+            // 2. 
+            var _unselectedItems = _itemAttributeLookups.Where(iav => !_usedItems.Any(miav => (miav.ItemAttributeLookupId == iav.ItemAttributeLookupId)));
+            return _unselectedItems.ToList();
+        }
         // Interface Stuff
         void OnNewItemAttributeDefaultSetter(ItemAttribute newItem)
         {
@@ -75,7 +99,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
             }
             else
             {
-                PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Info, "Adding Attribute to Item.");
+                PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Info, "Adding attribute to item.");
                 newItemAttribute.ItemAttributeDetail = await _ItemAttributeGridViewRepository.GetItemAttributeByIdAsync(newItemAttribute.ItemAttributeLookupId);
                 if (newItemAttribute.ItemAttributeDetail == null)
                 {
@@ -103,7 +127,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         /// </summary>
         /// <param name="updatedItem">What the grid passes us</param>
         /// <returns>void</returns>
-        async Task OnRowUpdatingAsync(SavedRowItem<ItemAttribute, Dictionary<string, object>> updatedItem)
+        async Task OnRowUpdatedAsync(SavedRowItem<ItemAttribute, Dictionary<string, object>> updatedItem)
         {
             var _updatedItemAttribute = updatedItem.Item;
             if (_updatedItemAttribute.ItemAttributeDetail == null)
@@ -122,20 +146,40 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
                 else
                 {
                     _Mapper.Map(_updatedItemAttribute, _currentItemAttribute);
+                    //var _result = 
+                    await _ItemAttributeGridViewRepository.UpdateViewRowAsync(_currentItemAttribute, _currentItemAttribute.ItemAttributeDetail.AttributeName);
                     if (_AppUnitOfWork.IsInErrorState())
                     {
-                        PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Error updating attribute  {_AppUnitOfWork.GetErrorMessage()}, it could not be found in the table.");
+                        PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Error updating attribute {_AppUnitOfWork.GetErrorMessage()}, it could not be found in the table.");
                     }
+                    // update the in memory children, but only after update just in case EF core tries to update the children (which should not be needed as they are added as views
+                    //-> note needed as this we disabled the editing _updatedItemAttribute = SetAttributeDetail(_updatedItemAttribute);
                 }
             }
             //await _DataGrid.Reload();
+            StateHasChanged();
         }
-        void OnRowRemoving(CancellableRowChange<ItemAttribute> modelItem)
+
+        private ItemAttribute SetAttributeDetail(ItemAttribute updatedItemAttribute)
+        {
+            if (updatedItemAttribute.ItemAttributeLookupId == Guid.Empty)
+            {
+                updatedItemAttribute.ItemAttributeDetail = null; /// force it null, cannot dispose?
+            }
+            else
+            {
+                var _ItemAtts = _AppUnitOfWork.GetListOf<ItemAttributeLookup>();
+                updatedItemAttribute.ItemAttributeDetail = _ItemAtts.FirstOrDefault(ic => ic.ItemAttributeLookupId == updatedItemAttribute.ItemAttributeLookupId);
+            }
+            return updatedItemAttribute;
+        }
+
+        async Task OnRowRemovingAsync(CancellableRowChange<ItemAttribute> modelItem)
         {
             // set the Selected Item Attribute for use later
             SeletectedItemAttribute = modelItem.Item;
             var deleteItem = modelItem;
-            _ItemAttributeGridViewRepository._GridSettings.DeleteConfirmation.ShowModal("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.ItemAttributeDetail.AttributeName}?");  //,"Delete","Cancel"); - passed in on init
+            await _ItemAttributeGridViewRepository._GridSettings.DeleteConfirmation.ShowModalAsync("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.ItemAttributeDetail.AttributeName}?");  //,"Delete","Cancel"); - passed in on init
         }
         /// <summary>
         /// Confirm Delete Click is called when the user confirms they want to delete.

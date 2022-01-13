@@ -35,6 +35,7 @@ namespace RainbowOF.Repositories.Items
             //_logger = logger;
             //_appUnitOfWork = appUnitOfWork;
             //_WooLinkedGridSettings = gridSettings;
+            sourceLogger.LogDebug("ItemWooLinkedViewRepository initialised.");
         }
         #endregion
         #region Support Methods
@@ -165,7 +166,7 @@ namespace RainbowOF.Repositories.Items
         {
             int _result = 0;
             IAppRepository<WooProductMap> _wooProductMapRepo = _AppUnitOfWork.Repository<WooProductMap>();
-            _result = await _wooProductMapRepo.DeleteByIdAsync(deleteWooProductMap.WooProductMapId);
+            _result = await _wooProductMapRepo.DeleteByPrimaryIdAsync(deleteWooProductMap.WooProductMapId);
             return _result;
         }
         private WooAPISettings _wooAPISettings { get; set; } = null;
@@ -751,7 +752,7 @@ namespace RainbowOF.Repositories.Items
         {
             IAppRepository<Item> _itemRepository = _AppUnitOfWork.Repository<Item>();
 
-            var _recsDelete = await _itemRepository.DeleteByIdAsync(deleteViewEntity.ItemId);
+            var _recsDelete = await _itemRepository.DeleteByPrimaryIdAsync(deleteViewEntity.ItemId);
 
             if (_recsDelete == AppUnitOfWork.CONST_WASERROR)
                 _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Item: {deleteViewEntity.ItemName} is no longer found, was it deleted?");

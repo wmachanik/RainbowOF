@@ -44,15 +44,15 @@
                                     </Row>
                                 </LoadingTemplate>
                                 <DataGridColumns>
-                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.CategoryName)" TextAlignment="TextAlignment.Left">
+                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.CategoryName)" TextAlignment="TextAlignment.Start">
                                         <DisplayTemplate>
                                             Cat:
                                             <bold>@context.CategoryName</bold>
                                         </DisplayTemplate>
                                     </DataGridColumn>
-                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.UsedForPrediction)" TextAlignment="TextAlignment.Left">
+                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.UsedForPrediction)" TextAlignment="TextAlignment.Start">
                                     </DataGridColumn>
-                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.Notes)" TextAlignment="TextAlignment.Left">
+                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.Notes)" TextAlignment="TextAlignment.Start">
                                     </DataGridColumn>
                                 </DataGridColumns>
                                 <DetailRowTemplate>
@@ -93,11 +93,11 @@
                                                     </Row>
                                                 </LoadingTemplate>
                                                 <DataGridColumns>
-                                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.CategoryName)" TextAlignment="TextAlignment.Left" Context="childData">
+                                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.CategoryName)" TextAlignment="TextAlignment.Start" Context="childData">
                                                     </DataGridColumn>
-                                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.UsedForPrediction)" TextAlignment="TextAlignment.Left" Context="childData">
+                                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.UsedForPrediction)" TextAlignment="TextAlignment.Start" Context="childData">
                                                     </DataGridColumn>
-                                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.Notes)" TextAlignment="TextAlignment.Left" Context="childData">
+                                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.Notes)" TextAlignment="TextAlignment.Start" Context="childData">
                                                     </DataGridColumn>
                                                 </DataGridColumns>
                                                 <DetailRowTemplate Context="childData">
@@ -136,11 +136,11 @@
                                                                     </Row>
                                                                 </LoadingTemplate>
                                                                 <DataGridColumns>
-                                                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.CategoryName)" TextAlignment="TextAlignment.Left" Context="subChildData">
+                                                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.CategoryName)" TextAlignment="TextAlignment.Start" Context="subChildData">
                                                                     </DataGridColumn>
-                                                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.UsedForPrediction)" TextAlignment="TextAlignment.Left" Context="subChildData">
+                                                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.UsedForPrediction)" TextAlignment="TextAlignment.Start" Context="subChildData">
                                                                     </DataGridColumn>
-                                                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.Notes)" TextAlignment="TextAlignment.Left" Context="subChildData">
+                                                                    <DataGridColumn TItem="ItemCategoryLookup" Field="@nameof(ItemCategoryLookup.Notes)" TextAlignment="TextAlignment.Start" Context="subChildData">
                                                                     </DataGridColumn>
                                                                 </DataGridColumns>
                                                             </DataGrid>

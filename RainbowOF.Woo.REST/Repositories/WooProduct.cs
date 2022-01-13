@@ -61,7 +61,7 @@ namespace RainbowOF.Woo.REST.Repositories
                     catch (Exception ex)
                     {
                         if (_Woo.Logger != null)
-                            _Woo.Logger.LogError("Error setting up WOO REST API: " + ex.Message);
+                            _Woo.Logger.LogError("WooProduct - Error setting up WOO REST API: " + ex.Message);
                     }
                 }
                 return _wcObject;
@@ -199,7 +199,7 @@ namespace RainbowOF.Woo.REST.Repositories
             catch (Exception ex)
             {
                 if (_Woo.Logger != null)
-                    _Woo.Logger.LogError("Error calling WOO REST JSON API: " + ex.Message);
+                    _Woo.Logger.LogError("WooProduct - Error calling WOO REST JSON API: " + ex.Message);
             }
             return _Product;
         }
@@ -216,7 +216,7 @@ namespace RainbowOF.Woo.REST.Repositories
             catch (Exception ex)
             {
                 if (_Woo.Logger != null)
-                    _Woo.Logger.LogError($"Error calling deleting product category by id: {deleteWooProductId} Async. Error:  {ex.Message}");
+                    _Woo.Logger.LogError($"WooProduct - Error calling deleting product category by id: {deleteWooProductId} Async. Error:  {ex.Message}");
             }
             return _Product;
         }
@@ -235,12 +235,10 @@ namespace RainbowOF.Woo.REST.Repositories
             catch (Exception ex)
             {
                 if (_Woo.Logger != null)
-                    _Woo.Logger.LogError($"Error calling Add ProductAsync for product: {addWooProduct.name}. Error:  {ex.Message}");
+                    _Woo.Logger.LogError($"WooProduct - Error calling Add ProductAsync for product: {addWooProduct.name}. Error:  {ex.Message}");
             }
             return _Product;
         }
-
-
         public async Task<Product> UpdateProductAsync(Product updateWooProduct)
         {
             Product _Product = null;
@@ -252,7 +250,7 @@ namespace RainbowOF.Woo.REST.Repositories
             catch (Exception ex)
             {
                 if (_Woo.Logger != null)
-                    _Woo.Logger.LogError($"Error calling Update ProductAsync for product: {updateWooProduct.name}. Error: {ex.Message}");
+                    _Woo.Logger.LogError($"WooProduct - Error calling Update ProductAsync for product: {updateWooProduct.name}. Error: {ex.Message}");
             }
             return _Product;
         }

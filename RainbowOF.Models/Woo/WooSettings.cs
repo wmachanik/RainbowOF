@@ -11,7 +11,7 @@ namespace RainbowOF.Models.System
         [DefaultValue("www.mysite.com")]
         [StringLength(500)]
         public string QueryURL { get; set; }
-        [DisplayName("Woo URL is secu`re")]
+        [DisplayName("Woo URL is secure")]
         [DefaultValue(true)]
         public bool IsSecureURL { get; set; } = true;
         [DisplayName("Consumer Key for Woo integration")]

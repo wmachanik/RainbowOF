@@ -28,6 +28,7 @@ namespace RainbowOF.Repositories.Lookups
             _Context = sourceDbContext;
             _Logger = sourceLogger;
             _AppUnitOfWork = sourceAppUnitOfWork;
+            _Logger.LogDebug("ItemAttributeLookupRepository initialised.");
         }
         #endregion
 

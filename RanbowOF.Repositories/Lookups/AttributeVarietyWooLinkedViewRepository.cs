@@ -24,8 +24,11 @@ namespace RainbowOF.Repositories.Lookups
 {
     public class AttributeVarietyWooLinkedViewRepository : WooLinkedView<ItemAttributeVarietyLookup, ItemAttributeVarietyLookupView, WooProductAttributeTermMap>, IAttributeVarietyWooLinkedView
     {
+        #region Private variables
         private Guid _ParentItemAttributeLookupId = Guid.Empty;
-        private int _WooParentAttributeId = -1;
+        private int _WooParentAttributeId = AppUnitOfWork.CONST_INVALID_ID;
+        #endregion
+        #region Initialise
         public AttributeVarietyWooLinkedViewRepository(ILoggerManager logger,
                                                        IAppUnitOfWork sourceAppUnitOfWork,
                                                        //GridSettings sourceGridSettings,
@@ -33,7 +36,10 @@ namespace RainbowOF.Repositories.Lookups
                                                        Guid sourceParentItemAttributeLookupId) : base (logger, sourceAppUnitOfWork, /*sourceGridSettings,*/ sourceMapper)
         {
             _ParentItemAttributeLookupId = sourceParentItemAttributeLookupId;
+            logger.LogDebug("AttributeVarietyWooLinkedViewRepository initialised");
         }
+        #endregion
+        #region Public interfaces
         /// <summary>
         /// If the Parent ID changes and the grid needs a refresh then you need to change this value, otherwise the data will reflect the old Parent ID of the Attribute
         /// </summary>
@@ -43,12 +49,12 @@ namespace RainbowOF.Repositories.Lookups
             if (!sourceParentAttributeId.Equals(_ParentItemAttributeLookupId))
             {
                 _ParentItemAttributeLookupId = sourceParentAttributeId;
-                _WooParentAttributeId = -1;  //  force a reload of the parent id from the database.
+                _WooParentAttributeId = AppUnitOfWork.CONST_INVALID_ID;  //  force a reload of the parent id from the database.
             }
         }
         private async Task<int> GetAttributeTermParentId()
         {
-            if (_WooParentAttributeId == -1)
+            if (_WooParentAttributeId == AppUnitOfWork.CONST_INVALID_ID)  
             {
                 IAppRepository<WooProductAttributeMap> _wooAttributeMapRepository = _AppUnitOfWork.Repository<WooProductAttributeMap>(); 
                 WooProductAttributeMap wooProductAttributeMap = await _wooAttributeMapRepository.FindFirstByAsync(wcm => wcm.ItemAttributeLookupId == _ParentItemAttributeLookupId);
@@ -59,14 +65,13 @@ namespace RainbowOF.Repositories.Lookups
             }
             return _WooParentAttributeId;
         }
-
         public override async Task DeleteRowAsync(ItemAttributeVarietyLookupView deleteViewEntity)
         {
             IAppRepository<ItemAttributeVarietyLookup> _itemAttributeVarietyLookupRepository = _AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
 
             //var ignore = await Task.Run(() => deleteViewEntity.BGColour);   // rubbish code so we don't do Async - Async Delete causing issues.
             //var _recsDelete = _itemAttributeVarietyLookupRepository.DeleteById(deleteViewEntity.ItemAttributeVarietyLookupId);   // await   DeleteByIdAsync(deleteViewEntity.ItemAttributeVarietyLookupId);     //DeleteByAsync(iavl => iavl.ItemAttributeVarietyLookupId == SelectedItemAttributeVarietyLookup.ItemAttributeVarietyLookupId);
-            var _recsDelete = await _itemAttributeVarietyLookupRepository.DeleteByIdAsync(deleteViewEntity.ItemAttributeVarietyLookupId);   // await   DeleteByIdAsync(deleteViewEntity.ItemAttributeVarietyLookupId);     //DeleteByAsync(iavl => iavl.ItemAttributeVarietyLookupId == SelectedItemAttributeVarietyLookup.ItemAttributeVarietyLookupId);
+            var _recsDelete = await _itemAttributeVarietyLookupRepository.DeleteByPrimaryIdAsync(deleteViewEntity.ItemAttributeVarietyLookupId);   // await   DeleteByIdAsync(deleteViewEntity.ItemAttributeVarietyLookupId);     //DeleteByAsync(iavl => iavl.ItemAttributeVarietyLookupId == SelectedItemAttributeVarietyLookup.ItemAttributeVarietyLookupId);
 
             if (_recsDelete == AppUnitOfWork.CONST_WASERROR)
                 _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Attribute Variety: {deleteViewEntity.VarietyName} is no longer found, was it deleted?");
@@ -265,6 +270,8 @@ namespace RainbowOF.Repositories.Lookups
             newViewEntity.VarietyName = "AttributeVariety (must be unique)";
             newViewEntity.ItemAttributeLookupId = _ParentItemAttributeLookupId;
             newViewEntity.UoMId = null;
+            newViewEntity.UoMQtyPerItem = 1;
+            newViewEntity.DefaultSKUSuffix = string.Empty;
             newViewEntity.Symbol = string.Empty;
             newViewEntity.BGColour = string.Empty;
             newViewEntity.FGColour = string.Empty;
@@ -276,20 +283,21 @@ namespace RainbowOF.Repositories.Lookups
 
         public override ItemAttributeVarietyLookup GetItemFromView(ItemAttributeVarietyLookupView fromVeiwEntity)
         {
-            ItemAttributeVarietyLookup _newItemAttributeVarietyLookup = new ItemAttributeVarietyLookup
-            {
-                ItemAttributeVarietyLookupId = fromVeiwEntity.ItemAttributeVarietyLookupId,
-                VarietyName = fromVeiwEntity.VarietyName,
-                ItemAttributeLookupId = fromVeiwEntity.ItemAttributeLookupId,
-                UoMId = fromVeiwEntity.UoMId,
-                Symbol = fromVeiwEntity.Symbol,
-                BGColour = fromVeiwEntity.BGColour,
-                FGColour = fromVeiwEntity.FGColour,
-                SortOrder = fromVeiwEntity.SortOrder,
-                UoM = fromVeiwEntity.UoM,
-                //                ParentAttributeVarietyId = (fromVeiwEntity.ParentAttributeVarietyId == Guid.Empty) ? null : fromVeiwEntity.ParentAttributeVarietyId,
-                Notes = fromVeiwEntity.Notes,
-            };
+            ItemAttributeVarietyLookup _newItemAttributeVarietyLookup = new ItemAttributeVarietyLookup();
+            _Mapper.Map(fromVeiwEntity, _newItemAttributeVarietyLookup);
+            //{
+            //    ItemAttributeVarietyLookupId = fromVeiwEntity.ItemAttributeVarietyLookupId,
+            //    VarietyName = fromVeiwEntity.VarietyName,
+            //    ItemAttributeLookupId = fromVeiwEntity.ItemAttributeLookupId,
+            //    UoMId = fromVeiwEntity.UoMId,
+            //    Symbol = fromVeiwEntity.Symbol,
+            //    BGColour = fromVeiwEntity.BGColour,
+            //    FGColour = fromVeiwEntity.FGColour,
+            //    SortOrder = fromVeiwEntity.SortOrder,
+            //    UoM = fromVeiwEntity.UoM,
+            //    //                ParentAttributeVarietyId = (fromVeiwEntity.ParentAttributeVarietyId == Guid.Empty) ? null : fromVeiwEntity.ParentAttributeVarietyId,
+            //    Notes = fromVeiwEntity.Notes,
+            //};
 
             return _newItemAttributeVarietyLookup;
         }
@@ -414,7 +422,7 @@ namespace RainbowOF.Repositories.Lookups
             int _result = 0;
             IAppRepository<WooProductAttributeTermMap> _wooProductAttributeTermMapRepo = _AppUnitOfWork.Repository<WooProductAttributeTermMap>();
 
-            _result = await _wooProductAttributeTermMapRepo.DeleteByIdAsync(deleteWooProductAttributeTermMap.WooProductAttributeTermMapId);
+            _result = await _wooProductAttributeTermMapRepo.DeleteByPrimaryIdAsync(deleteWooProductAttributeTermMap.WooProductAttributeTermMapId);
 
             return _result;
         }
@@ -600,5 +608,6 @@ namespace RainbowOF.Repositories.Lookups
             var _ItemUoMs = await appRepository.GetByAsync(iu =>  linkedItemUoMIDs.Contains(iu.ItemUoMLookupId));   // ItemAttributeVarietyLookupId
             return _ItemUoMs.ToList();
         }
+        #endregion
     }
 }

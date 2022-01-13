@@ -4,14 +4,14 @@
     <ModalContent IsCentered="true" Size="ModalSize.Large">
         <ModalHeader>
             <ModalTitle>@_ConfirmationTitle</ModalTitle>
-            <CloseButton Clicked="@(() => OnConfirmationChange(false))" />
+            <CloseButton Clicked="@(() => OnConfirmationChangeAsync(false))" />
         </ModalHeader>
         <ModalBody>
             @_ConfirmationMessage
         </ModalBody>
         <ModalFooter>
-            <Blazorise.Button Color="@_ConfirmColor" Clicked="@(() => OnConfirmationChange(true))">@_ConfirmButtonText</Blazorise.Button>
-            <Button Color="Color.Secondary" Clicked="@(() => OnConfirmationChange(false))">@_CancelButtonText</Button>
+            <Blazorise.Button Color="@_ConfirmColor" Clicked="@(() => OnConfirmationChangeAsync(true))">@_ConfirmButtonText</Blazorise.Button>
+            <Button Color="Color.Secondary" Clicked="@(() => OnConfirmationChangeAsync(false))">@_CancelButtonText</Button>
         </ModalFooter>
     </ModalContent>
 </Modal>

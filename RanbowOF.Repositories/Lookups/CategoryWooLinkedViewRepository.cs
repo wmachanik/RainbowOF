@@ -23,10 +23,12 @@ namespace RainbowOF.Repositories.Lookups
 {
     public class CategoryWooLinkedViewRepository : WooLinkedView<ItemCategoryLookup, ItemCategoryLookupView, WooCategoryMap>, ICategoryWooLinkedView
     {
+        #region Private vars
         //private ILoggerManager _logger { get; set; }
         //private IAppUnitOfWork _appUnitOfWork { get; set; }
         //private GridSettings _WooLinkedGridSettings { get; set; }
-
+        #endregion
+        #region Initialisation
         public CategoryWooLinkedViewRepository(ILoggerManager sourceLogger,
                                                IAppUnitOfWork sourceAppUnitOfWork,
                                                //GridSettings sourceGridSettings,
@@ -35,13 +37,15 @@ namespace RainbowOF.Repositories.Lookups
             //_logger = logger;
             //_appUnitOfWork = appUnitOfWork;
             //_WooLinkedGridSettings = gridSettings;
+            sourceLogger.LogDebug("CategoryWooLinkedViewRepository initialised.");
         }
-
+        #endregion
+        #region Interface routines
         public override async Task DeleteRowAsync(ItemCategoryLookupView deleteViewEntity)
         {
             IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
 
-            var _recsDelete = await _itemCategoryLookupRepository.DeleteByIdAsync(deleteViewEntity.ItemCategoryLookupId);     //DeleteByAsync(icl => icl.ItemCategoryLookupId == SelectedItemCategoryLookup.ItemCategoryLookupId);
+            var _recsDelete = await _itemCategoryLookupRepository.DeleteByPrimaryIdAsync(deleteViewEntity.ItemCategoryLookupId);     //DeleteByAsync(icl => icl.ItemCategoryLookupId == SelectedItemCategoryLookup.ItemCategoryLookupId);
 
             if (_recsDelete == AppUnitOfWork.CONST_WASERROR)
                 _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Category: {deleteViewEntity.CategoryName} is no longer found, was it deleted?");
@@ -408,7 +412,7 @@ namespace RainbowOF.Repositories.Lookups
             int _result = 0;
             IAppRepository<WooCategoryMap> _wooCategoryMapRepo = _AppUnitOfWork.Repository<WooCategoryMap>();
 
-            _result = await _wooCategoryMapRepo.DeleteByIdAsync(deleteWooCategoryMap.WooCategoryMapId);
+            _result = await _wooCategoryMapRepo.DeleteByPrimaryIdAsync(deleteWooCategoryMap.WooCategoryMapId);
 
             return _result;
         }
@@ -579,10 +583,11 @@ namespace RainbowOF.Repositories.Lookups
             if (_result > 0)
                 _WooLinkedGridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Updated woo category {updateViewEntity.CategoryName}.");
             else if (_result == AppUnitOfWork.CONST_WASERROR)
-                _WooLinkedGridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo category {updateViewEntity.CategoryName} update failed.");
+                _WooLinkedGridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Woo category {updateViewEntity.CategoryName} update failed, check WordPress firewall settings.");
 
             _result = await UpdateWooCategoryMap(updateViewEntity);
             return _result;
         }
+        #endregion
     }
 }

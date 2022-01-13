@@ -29,7 +29,7 @@
                 <Icon Name="IconName.Palette" />
                 Select Colour
             </ModalTitle>
-            <CloseButton Clicked="@HideModal" />
+            <CloseButton Clicked="@HideModalAsync" />
         </ModalHeader>
         <ModalBody>
             <div>
@@ -47,7 +47,7 @@
             </div>
         </ModalBody>
         <ModalFooter>
-            <Button Color="Color.Secondary" Clicked="@HideModal">Close</Button>
+            <Button Color="Color.Secondary" Clicked="@HideModalAsync">Close</Button>
         </ModalFooter>
     </ModalContent>
 </Blazorise.Modal>

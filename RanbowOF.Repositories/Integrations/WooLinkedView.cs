@@ -34,6 +34,7 @@ namespace RainbowOF.Repositories.Integrations
             _AppUnitOfWork = sourceAppUnitOfWork;
             //_WooLinkedGridSettings = sourceGridSettings;
             _Mapper = sourceMapper;
+            _Logger.LogDebug($"WooLinkedView with entity type {typeof(TEntity).Name}, EntityView type {typeof(TEntityView).Name} and WooMapEntity type {typeof(TWooMapEntity).Name} initialised.");
         }
 
         public async Task<WooAPISettings> GetWooAPISettingsAsync()

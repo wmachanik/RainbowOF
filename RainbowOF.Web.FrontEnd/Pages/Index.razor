@@ -15,13 +15,13 @@ Welcome to Rainbow Order Fulfilment manager.
         </NavLink>
         <ul>
             <li>
-                <NavLink class="nav-link" href="/itemedit/5cebc1e7-5aff-4133-8914-08d8c772ac9f">
+                <NavLink class="nav-link" href="/itemedit/3565948d-d1d5-477a-6682-08d9bf00293d">
                     Edit  Simple Item
                 </NavLink>
             </li>
             <li>
-                <NavLink class="nav-link" href="/itemedit/EF6FC283-A7D6-4E69-891F-08D8C772AC9F">
-                    Edit Armonizar
+                <NavLink class="nav-link" href="/itemedit/0b6fe32e-265a-4ad0-6677-08d9bf00293d">
+                    Edit Green hnOrg
                 </NavLink>
             </li>
         </ul>
@@ -60,8 +60,8 @@ Welcome to Rainbow Order Fulfilment manager.
 
 <Blazorise.Divider />
 <label style="background-color: @myColour; color: @myFGColour">@myColour</label>
-<Button Color="Color.Secondary" Clicked="(() => colorSelector.ShowModal())"><Icon Name="IconName.PaintRoller"></Icon></Button>
-<Button Color="Color.Secondary" Clicked="(() => colorFGSelector.ShowModal())"><Icon Name="IconName.PaintBrush"></Icon></Button>
+<Button Color="Color.Secondary" Clicked="(() => colorSelector.ShowModalAsync())"><Icon Name="IconName.PaintRoller"></Icon></Button>
+<Button Color="Color.Secondary" Clicked="(() => colorFGSelector.ShowModalAsync())"><Icon Name="IconName.PaintBrush"></Icon></Button>
 
 <RainbowOF.Components.Modals.ColorSelector @ref="colorSelector" ColourValue="@myColour" ColourValueChanged="@((bg)=> myColour = bg)" />
 <RainbowOF.Components.Modals.ColorSelector @ref="colorFGSelector" ColourValue="@myFGColour" ColourValueChanged="@((v) => myFGColour = v)" />
@@ -72,7 +72,7 @@ Welcome to Rainbow Order Fulfilment manager.
 
 <Check TValue="bool" Checked="@(myShowOption)" CheckedChanged="@((v) => myShowOption = v)">Show Confirm Option</Check>
 
-<Button Color="Color.Light" Clicked="(() => ShowConfirm())"><Icon Name="IconName.Bell"></Icon>Confirmation</Button>
+<Button Color="Color.Light" Clicked="(() => ShowConfirmAsync())"><Icon Name="IconName.Bell"></Icon>Confirmation</Button>
 
 
 <RainbowOF.Components.Modals.ConfirmModalWithOption @ref="_confirmModalWithOption"
@@ -101,9 +101,9 @@ Welcome to Rainbow Order Fulfilment manager.
         myColour = value;
     }
 
-    void ShowConfirm()
+    async Task ShowConfirmAsync()
     {
-        _confirmModalWithOption.ShowModal("This is a confirmation", "Are you sure you want to confirm?", "Please Confirm", myShowOption);
+        await _confirmModalWithOption.ShowModalAsync("This is a confirmation", "Are you sure you want to confirm?", "Please Confirm", myShowOption);
         //StateHasChanged();
     }
 

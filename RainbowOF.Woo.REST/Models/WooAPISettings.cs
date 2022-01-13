@@ -11,7 +11,10 @@ namespace RainbowOF.Woo.REST.Models
         {
             get
             {
-                if (!QueryURL.EndsWith("/")) QueryURL += "/";
+                if (QueryURL == null)
+                    return string.Empty;
+                if (!QueryURL.EndsWith("/")) 
+                    QueryURL += "/";
                 return ((IsSecureURL) ? "https://" : "http://") + QueryURL;
             }
         }

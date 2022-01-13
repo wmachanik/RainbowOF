@@ -47,10 +47,13 @@ namespace RainbowOF.Repositories.Items
             // here we need to check if the category is the same, as we cannot haver duplicate names
             IAppRepository<ItemCategory> _itemCategoryRepository = _AppUnitOfWork.Repository<ItemCategory>();
             var _result = await _itemCategoryRepository.FindFirstByAsync(
-                                    checkEntity.ItemCategoryId == Guid.Empty ?   
-                                        (ic => (ic.ItemId == checkEntity.ItemId) && (ic.ItemCategoryLookupId == checkEntity.ItemCategoryLookupId)):
-                                        (ic => (ic.ItemId == checkEntity.ItemId) && (ic.ItemCategoryId != checkEntity.ItemCategoryId) && (ic.ItemCategoryLookupId == checkEntity.ItemCategoryLookupId))
-                                        );
+                                    checkEntity.ItemCategoryId == Guid.Empty ?
+                                        (ic => (ic.ItemId == checkEntity.ItemId)
+                                            && (ic.ItemCategoryLookupId == checkEntity.ItemCategoryLookupId)) :
+                                        (ic => (ic.ItemId == checkEntity.ItemId)
+                                            && (ic.ItemCategoryId != checkEntity.ItemCategoryId) 
+                                            && (ic.ItemCategoryLookupId == checkEntity.ItemCategoryLookupId))
+                                      );
             return (_result != null);
         }
         /// <summary>

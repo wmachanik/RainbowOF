@@ -30,6 +30,7 @@ namespace RainbowOF.Integration.Repositories.Woo
             _AppUnitOfWork = sourceAppUnitOfWork;
             _Logger = sourceLogger;
             _AppWooSettings = sourecAppWooSettings;
+            _Logger.LogDebug("WooImportProductAttribute initialised.");
         }
         //async Task<Guid> AddProductAttribute(ProductAttribute pPA, WooProductAttributeMap pWooAttributeMap)
         /// <summary>

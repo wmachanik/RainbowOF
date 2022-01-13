@@ -21,7 +21,7 @@ namespace RainbowOF.Models.Lookups
     public class ItemUoMLookup
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public Guid ItemUoMLookupId { get; set; }   
+        public Guid ItemUoMLookupId { get; set; }
         [Required]
         [StringLength(100)]
         [DisplayName("UoM Name")]

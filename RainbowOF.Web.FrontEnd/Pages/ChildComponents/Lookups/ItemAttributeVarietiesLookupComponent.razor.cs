@@ -195,17 +195,19 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
         //    return _result;
         //}
 
-        async Task OnVarietyRowUpdating(SavedRowItem<ItemAttributeVarietyLookupView, Dictionary<string, object>> updatedItem)
+        async Task OnVarietyRowUpdatingAsync(SavedRowItem<ItemAttributeVarietyLookupView, Dictionary<string, object>> updatedItem)
         {
-            await _AttributeVarietyWooLinkedViewRepository.UpdateRowAsync(updatedItem.Item);
+            var _updatedItem = updatedItem.Item;
+
+            await _AttributeVarietyWooLinkedViewRepository.UpdateRowAsync(_updatedItem);
             await _VarietiesDataGrid.Reload();
         }
-        void OnVarietyRowRemoving(CancellableRowChange<ItemAttributeVarietyLookupView> modelItem)
+        async Task OnVarietyRowRemovingAsync(CancellableRowChange<ItemAttributeVarietyLookupView> modelItem)
         {
             // set the Selected Item Attribute for use later
             SelectedItemAttributeVarietyLookup = modelItem.Item;
             var deleteItem = modelItem;
-            _AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.DeleteConfirmationWithOption.ShowModal("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.VarietyName}?", SelectedItemAttributeVarietyLookup.HasECommerceAttributeVarietyMap);  //,"Delete","Cancel"); - passed in on init
+            await _AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.DeleteConfirmationWithOption.ShowModalAsync("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.VarietyName}?", SelectedItemAttributeVarietyLookup.HasECommerceAttributeVarietyMap);  //,"Delete","Cancel"); - passed in on init
         }
         //
         async Task ConfirmVarietyAddWooItem_Click(bool confirmClicked)
@@ -234,7 +236,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
             {
                 // if there is a WooAttribute and we have to delete it, then delete that first.
                 if (confirmationOption == ConfirmModalWithOption.ConfirmResults.confirmWithOption)
-                    _AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.DeleteWooItemConfirmation.ShowModal("Are you sure?", $"Delete {SelectedItemAttributeVarietyLookup.VarietyName} from Woo too?", "Delete", "Cancel");
+                    await _AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.DeleteWooItemConfirmation.ShowModalAsync("Are you sure?", $"Delete {SelectedItemAttributeVarietyLookup.VarietyName} from Woo too?", "Delete", "Cancel");
                 else
                     await _AttributeVarietyWooLinkedViewRepository.DeleteRowAsync(SelectedItemAttributeVarietyLookup);
 

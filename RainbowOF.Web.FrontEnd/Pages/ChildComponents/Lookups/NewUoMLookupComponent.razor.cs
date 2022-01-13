@@ -33,14 +33,14 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
             await InvokeAsync(StateHasChanged);
         }
 
-        public void ShowModal()
+        public async Task ShowModalAsync()
         {
             _NewItemUoM.UoMName = "each";
             _NewItemUoM.UoMSymbol = "@";
             _NewItemUoM.BaseUoMId = null;
             _NewItemUoM.BaseConversationFactor = 1;
             _NewItemUoM.RoundTo = 2;
-            NewUoMModalRef.Show();
+            await NewUoMModalRef.Show();
         }
 
         private async Task HideModal(bool IsSaveClicked)
@@ -57,7 +57,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
                         PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Unit of Measure: {_NewItemUoM.UoMName} added.");
                 }
             }
-            NewUoMModalRef.Hide();
+            await NewUoMModalRef.Hide();
             await UoMAddedEvent.InvokeAsync(IsSaveClicked);   // tell the parent if we saved or not -> We could change SavedClicked if there was an error.
         }
 

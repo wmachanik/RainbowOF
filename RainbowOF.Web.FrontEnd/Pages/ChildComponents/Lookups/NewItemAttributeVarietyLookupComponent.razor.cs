@@ -24,7 +24,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
 
         public ItemAttributeVarietyLookupView _NewItemAttributeVarietyLookupView = new ();
 
-        public void ShowModal(Guid parentItemAttributeId)
+        public async Task ShowModalAsync(Guid parentItemAttributeId)
         {
             _NewItemAttributeVarietyLookupView.ItemAttributeLookupId = parentItemAttributeId;
 
@@ -36,7 +36,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
             _NewItemAttributeVarietyLookupView.BGColour = String.Empty;
             _NewItemAttributeVarietyLookupView.Symbol = String.Empty; 
             _NewItemAttributeVarietyLookupView.CanUpdateECommerceMap = AddItemToWoo ? true : null;  // if they want to add woo then do so here
-            NewAttributeVarietyLookupModalRef.Show();
+            await NewAttributeVarietyLookupModalRef.Show();
         }
 
         private async Task HideModal(bool SaveClicked)
@@ -53,7 +53,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
                         PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Attribute variety: {_NewItemAttributeVarietyLookupView.VarietyName} added.");
                 }
             }
-            NewAttributeVarietyLookupModalRef.Hide();
+            await NewAttributeVarietyLookupModalRef.Hide();
         }
     }
 }

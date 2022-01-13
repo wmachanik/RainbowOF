@@ -22,11 +22,12 @@ namespace RainbowOF.Models.Items
         public Guid ItemAttributeVarietyLookupId { get; set; }
         [DefaultValue(false)]
         public bool IsDefault { get; set; }
-        public Guid? UoMId { get; set; }
-        [DefaultValue(1.0)]
-        public double UoMQtyPerItem { get; set; }
-        [ForeignKey(nameof(UoMId))]
-        public virtual ItemUoMLookup UoM { get; set; }
+        // -> moved to the lookup -> removed 17 Nov 2021
+        //public Guid? UoMId { get; set; }
+        //[DefaultValue(1.0)]
+        //public double UoMQtyPerItem { get; set; }
+        //[ForeignKey(nameof(UoMId))]
+        //public virtual ItemUoMLookup UoM { get; set; }
         [ForeignKey(nameof(ItemAttributeVarietyLookupId))]
         public ItemAttributeVarietyLookup ItemAttributeVarietyDetail { get; set; }
 

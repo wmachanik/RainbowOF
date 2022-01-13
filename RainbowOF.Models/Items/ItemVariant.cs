@@ -34,6 +34,8 @@ namespace RainbowOF.Models.Items
         public Guid ItemVariantId { get; set; }
         [Required]   // cannot have a variant without a Parent Item this points to the parent item
         public Guid ItemId { get; set; }
+        public Guid AssocatedAttributeLookupId { get; set; }
+        public Guid AssociatedAttributeVarietyLookupId { get; set; }
         [Required(ErrorMessage = "Item or Product variant is required")]
         [StringLength(100)]
         [DisplayName("Item variant")]

@@ -18,6 +18,12 @@ namespace RainbowOF.Models.Lookups
         public string VarietyName { get; set; }
         [DisplayName("Type of Unit of Measure (option)")]
         public Guid? UoMId { get; set; }
+        [DisplayName("If this UoM is not the base UoM then what is this factor")]
+        [DefaultValue(1.0)]
+        public double UoMQtyPerItem { get; set; }    // added 17 Nov 2021
+        [StringLength(10)]
+        [DisplayName("Default Suffix for variant's SKU")]
+        public string DefaultSKUSuffix { get; set; }  // added 17 Nov 2021
         public int SortOrder { get; set; }
         [StringLength(2)]
         public string Symbol { get; set; }

@@ -1,7 +1,9 @@
 ﻿using LinqKit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using RainbowOF.Data.SQL;
 using RainbowOF.Models.Items;
+using RainbowOF.Models.Lookups;
 using RainbowOF.Repositories.Common;
 using RainbowOF.Tools;
 using RainbowOF.ViewModels.Common;
@@ -16,7 +18,6 @@ namespace RainbowOF.Repositories.Items
 {
     public class ItemRepository : AppRepository<Item>, IItemRepository
     {
-
         #region Injected Items
         private ApplicationDbContext _Context = null;
         private ILoggerManager _Logger { get; set; }
@@ -29,6 +30,7 @@ namespace RainbowOF.Repositories.Items
             _Context = dbContext;
             _Logger = logger;
             _AppUnitOfWork = appUnitOfWork;
+            _Logger.LogDebug("ItemRepository initialised.");
         }
         #endregion
 
@@ -139,7 +141,7 @@ namespace RainbowOF.Repositories.Items
                 // start with a basic Linq Query with Eager loading
                 // do eager loading since we are working with paging, so load parent, replacement, categories, attributes and attribute varieties
                 IQueryable<Item> _query = _table
-//                    .Include(itm => itm.ParentItem)  --> variant
+                    //                    .Include(itm => itm.ParentItem)  --> variant
                     .Include(itm => itm.ReplacementItem)
                     .Include(itm => itm.ItemCategories)
                         .ThenInclude(cats => cats.ItemCategoryDetail)
@@ -208,17 +210,20 @@ namespace RainbowOF.Repositories.Items
             return _dataGridData;
         }
         #endregion
-
         #region Database retrieval and manipulation 
         public async Task<Item> FindFirstEagerLoadingItemAsync(Expression<Func<Item, bool>> predicate)
         {
             Item _item = null;
-            DbSet<Item>  _table = _Context.Set<Item>();
+            DbSet<Item> _table = _Context.Set<Item>();
+            _AppUnitOfWork.ClearErrorMessage(); //-- clear any error message
 
             try
             {
                 _Logger.LogDebug($"Finding first eager loading - whole item using predicate: {predicate.ToString()}");
-                _item = await _table
+
+                // _item = _Context.Items.Single(predicate);
+
+                var _query = _table
                     .Include(itm => itm.ReplacementItem)
                     .Include(itm => itm.ItemCategories)
                         .ThenInclude(itmCat => itmCat.ItemCategoryDetail)
@@ -227,16 +232,42 @@ namespace RainbowOF.Repositories.Items
                     .Include(itm => itm.ItemAttributes)
                         .ThenInclude(itmAtts => itmAtts.ItemAttributeDetail)
                     .Include(itm => itm.ItemAttributes)
-                        .ThenInclude(itmAtts => itmAtts.ItemAttributeVarieties)
-                        .ThenInclude(itmAttVars => itmAttVars.ItemAttributeVarietyDetail)
-                    .Include(itm => itm.ItemImages)
-                    .FirstOrDefaultAsync(predicate);
+                       .ThenInclude(itmAtts => itmAtts.ItemAttributeVarieties)
+                            .ThenInclude(itmAttVars => itmAttVars.ItemAttributeVarietyDetail)
+                    //.ThenInclude(iavd => iavd.UoM) => crashes here and cannot figure out why
+                    .Include(itm => itm.ItemImages);
 
-                /// do some ordering 
-                _item.ItemCategories = _item.ItemCategories.OrderBy(itemCat => itemCat.ItemCategoryDetail.FullCategoryName).ToList();
-                /// -> do we include variants
-                    ///.Include(itm => itm.ParentItem)
+                var _sql = _query.ToQueryString();
+                _Logger.LogDebug($"SQL Query is: {_sql}");
 
+                _item = await _query.FirstOrDefaultAsync(predicate);
+
+                // load VarietyDetail UoM manually as then include crashes
+                if (_item != null)  /// do some ordering 
+                {
+                    _item.ItemCategories = _item.ItemCategories.OrderBy(itemCat => itemCat.ItemCategoryDetail.FullCategoryName).ToList();
+                    //IAppRepository<ItemAttributeVariety> _itemAttributeVarietyRepository = _AppUnitOfWork.Repository<ItemAttributeVariety>();
+                    IAppRepository<ItemUoMLookup> _ItemUoMLookupRepository = _AppUnitOfWork.Repository<ItemUoMLookup>();
+                    foreach (var itemAtt in _item.ItemAttributes)
+                    {
+                        ////.Include(itm => itm.ItemAttributes)
+                        ////    .ThenInclude(itmAtts => itmAtts.ItemAttributeVarieties)
+                        ////        .ThenInclude(itmAttVars => itmAttVars.ItemAttributeVarietyDetail)
+                        //if (itemAtt.ItemAttributeId != Guid.Empty)
+                        //{
+                        //    itemAtt.ItemAttributeVarieties = (await _itemAttributeVarietyRepository.GetByAsync(iav => iav.ItemAttributeId == itemAtt.ItemAttributeId)).ToList();
+                        //}
+                        foreach (var itemAttVar in itemAtt.ItemAttributeVarieties)
+                        {
+                            //.ThenInclude(iavd => iavd.UoM) => crashes here and cannot figure out why
+                            if (itemAttVar.ItemAttributeVarietyDetail.UoMId != null)
+                            {
+                                itemAttVar.ItemAttributeVarietyDetail.UoM = await _ItemUoMLookupRepository.GetByIdAsync(itemAttVar.ItemAttributeVarietyDetail.UoMId);
+                            }
+                        }
+
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -250,7 +281,7 @@ namespace RainbowOF.Repositories.Items
 
         public async Task<Item> FindFirstItemBySKUAsync(string sourceSKU)
         {
-            return await FindFirstByAsync(i => i.SKU == sourceSKU);            
+            return await FindFirstByAsync(i => i.SKU == sourceSKU);
         }
 
         public async Task<Item> AddItemAsync(Item newItem)

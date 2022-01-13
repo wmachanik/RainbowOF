@@ -3,14 +3,14 @@
     Component to add Display a grid of Attribute Variety
 
     Parameter:
-     > Guid ParentItemAttributeLookupId the ItemAttribute that variety is associated to default = Guid.Empty;
-     > int StartingPageSize starting page size of grid default is 5;
-     > bool IsSubGrid is it a sub grid (i.e. change the colours) default = false;
+    > Guid ParentItemAttributeLookupId the ItemAttribute that variety is associated to default = Guid.Empty;
+    > int StartingPageSize starting page size of grid default is 5;
+    > bool IsSubGrid is it a sub grid (i.e. change the colours) default = false;
 
     Uses:
-       IAppUnitOfWork _appUnitOfWork
-       ApplicationState _appState
-       ILoggerManager _logger
+    IAppUnitOfWork _appUnitOfWork
+    ApplicationState _appState
+    ILoggerManager _logger
     -------------------------------------------------------------
 *@
 
@@ -35,7 +35,8 @@
                                 <Tooltip Text="Select a Bulk Action to do on selected rows">
                                     <Select TValue="BulkAction" SelectedValue="SelectedBulkAction" SelectedValueChanged="@((v) => SelectedBulkAction = v)" style="max-width:12em">
                                         <SelectItem Value="BulkAction.none">none</SelectItem>
-                                        @{ if (_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive)
+                                        @{
+                                            if (_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive)
                                             {
                                                 <SelectItem Value="BulkAction.AllowWooSync">Allow Woo Sync</SelectItem>
                                                 <SelectItem Value="BulkAction.DisallowWooSync">Disallow Woo Sync</SelectItem>
@@ -67,30 +68,30 @@
                 </CardSubtitle>
                 <CardBody Padding="Padding.IsAuto">
                     <DataGrid @ref="_VarietiesDataGrid"
-                              TItem="ItemAttributeVarietyLookupView" Data="@VarietyDataModels"
-                              ReadData="HandleReadDataAsync"
-                              Sortable="true" Editable="true"
-                              Striped="true"
-                              Hoverable="true"
-                              Responsive="true"
-                              EditMode="DataGridEditMode.Popup"
-                              PageSize="@_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.PageSize" ShowPager="true"
-                              PageSizes="@(new int[] { 5, 10, 15, 25, 50, 100 })"
-                              ShowPageSizes="true" PagerPosition="DataGridPagerPosition.TopAndBottom"
-                              TotalItems="_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.TotalItems"
-                              Bordered="true"
-                              NewItemDefaultSetter="@OnItemAttributeVarietyLookupNewItemDefaultSetter"
-                              SelectionMode="DataGridSelectionMode.Multiple"
-                              @bind-SelectedRows="@SelectedItemAttributeVarietyLookups"
-                              RowInserted="@OnVarietyRowInserting"
-                              RowUpdated="@OnVarietyRowUpdating"
-                              RowRemoving="@OnVarietyRowRemoving"
-                              RowRemoved="@OnVarietyRowRemoved"
-                              Narrow="@_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.IsNarrow" Filterable="@_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.IsFilterable"
-                              UseInternalEditing="true"
-                              CurrentPage="_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.CurrentPage"
-                              PageChanged="(e) => _AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.CurrentPage = e.Page"
-                              Padding="Padding.Is0">
+                          TItem="ItemAttributeVarietyLookupView" Data="@VarietyDataModels"
+                          ReadData="HandleReadDataAsync"
+                          Sortable="true" Editable="true"
+                          Striped="true"
+                          Hoverable="true"
+                          Responsive="true"
+                          EditMode="DataGridEditMode.Popup"
+                          PageSize="@_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.PageSize" ShowPager="true"
+                          PageSizes="@(new int[] { 5, 10, 15, 25, 50, 100 })"
+                          ShowPageSizes="true" PagerPosition="DataGridPagerPosition.TopAndBottom"
+                          TotalItems="_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.TotalItems"
+                          Bordered="true"
+                          NewItemDefaultSetter="@OnItemAttributeVarietyLookupNewItemDefaultSetter"
+                          SelectionMode="DataGridSelectionMode.Multiple"
+                          @bind-SelectedRows="@SelectedItemAttributeVarietyLookups"
+                          RowInserted="@OnVarietyRowInserting"
+                          RowUpdated="@OnVarietyRowUpdatingAsync"
+                          RowRemoving="@OnVarietyRowRemovingAsync"
+                          RowRemoved="@OnVarietyRowRemoved"
+                          Narrow="@_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.IsNarrow" Filterable="@_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.IsFilterable"
+                          UseInternalEditing="true"
+                          CurrentPage="_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.CurrentPage"
+                          PageChanged="(e) => _AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.CurrentPage = e.Page"
+                          Padding="Padding.Is0">
                         <EmptyTemplate>
                             @{
                                 if (string.IsNullOrEmpty(_Status))
@@ -158,8 +159,8 @@
                                     <Button Color="Color.Secondary" Outline="@IsSubGrid" Clicked="@VarietyDataModels.Clicked"><Icon Name="IconName.Clear" /></Button>
                                 </ClearFilterCommandTemplate>
                             </DataGridCommandColumn>
-                            <DataGridColumn TItem="ItemAttributeVarietyLookupView" Field="@nameof(ItemAttributeVarietyLookupView.VarietyName)" Context="VarietyDataModels" 
-                                            Caption="Variety" Editable="true" Filterable="true" />
+                            <DataGridColumn TItem="ItemAttributeVarietyLookupView" Field="@nameof(ItemAttributeVarietyLookupView.VarietyName)" Context="VarietyDataModels"
+                                        Caption="Variety" Editable="true" Filterable="true" />
                             <DataGridColumn TItem="ItemAttributeVarietyLookupView" Field="@nameof(ItemAttributeVarietyLookupView.UoMId)" Caption="Unit" Editable="true" Context="VarietyDataModels">
                                 <DisplayTemplate Context="VarietyDataModels">
                                     @{
@@ -175,10 +176,36 @@
                                             <br />
                                         }
                                         <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups.UoMLookupSelectListComponent PopUpRef="@_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef" SourceUoMId="VarietyDataModels.Item.UoMId"
-                                                                                                                           UoMIdChangedEvent="@((v) => VarietyDataModels.CellValue = v)" />
+                                                                                                                   UoMIdChangedEvent="@((v) => VarietyDataModels.CellValue = v)" />
                                     }
                                 </EditTemplate>
                             </DataGridColumn>
+                            <DataGridNumericColumn TItem="ItemAttributeVarietyLookupView" Field="@nameof(ItemAttributeVarietyLookupView.UoMQtyPerItem)"
+                                               Context="VarietyDataModels" Caption="Qty / UoM" Editable="true">
+                                <DisplayTemplate>
+                                    @{
+                                        var _itemAttributeVarietyLookup = (VarietyDataModels as ItemAttributeVarietyLookupView);
+                                        @(((_itemAttributeVarietyLookup.UoMId != null) && (_itemAttributeVarietyLookup.UoM != null)) ? @_itemAttributeVarietyLookup.UoMQtyPerItem : "n/a")
+                                    }
+                                </DisplayTemplate>
+                                <EditTemplate>
+                                    <Tooltip Text="Used for predictive calculations, needs a Unit of measure this is the quanity multiple relative to the base UoM" Style="z-index:99" Placement="TooltipPlacement.TopStart">
+                                        @{
+                                            var _itemAttributeVarietyLookup = (VarietyDataModels.Item as ItemAttributeVarietyLookupView);
+                                            bool _hasUoM = ((_itemAttributeVarietyLookup.UoMId != null) && (_itemAttributeVarietyLookup.UoM != null));
+                                            @if (_hasUoM)
+                                            {
+                                                <Blazorise.NumericEdit TValue="double" Value="@((double)VarietyDataModels.CellValue)"
+                                                           ValueChanged="@( v => VarietyDataModels.CellValue = v )" />
+                                            }
+                                            else
+                                            {
+                                                <span>n/a</span>
+                                            }
+                                        }
+                                    </Tooltip>
+                                </EditTemplate>
+                            </DataGridNumericColumn>
                             <DataGridColumn TItem="ItemAttributeVarietyLookupView" Field="@nameof(ItemAttributeVarietyLookupView.Symbol)" Caption="Symbol" Editable="true" Context="VarietyDataModels">
                                 <EditTemplate Context="VarietyDataModels">
                                     @{
@@ -186,8 +213,6 @@
                                         var selectedVarItem = (string)(VarietyDataModels?.CellValue ?? "n/a");
                                         <Select TValue="string" SelectedValue="@((string)(VarietyDataModels?.CellValue ?? "n/a"))" SelectedValueChanged="@((v) => VarietyDataModels.CellValue = v)">
                                             <SelectItem TValue="string" Value="@selectedVarItem">@selectedVarItem</SelectItem>
-
-
                                             @foreach (var item in listOfSymbols)
                                             {
                                                 // only add UoMs that are not this item
@@ -225,7 +250,7 @@
                                             string bgColour = (VarietyDataModels.Item.BGColour == null) ? "#ffffff" : VarietyDataModels.Item.BGColour;
                                             <span style="clear:both; padding:6px; color: @VarietyDataModels.CellValue.ToString(); background-color: @bgColour">@VarietyDataModels.CellValue.ToString()</span>
                                             <Tooltip Text="Change Foreground Colour" Fade="true">
-                                                <Button Color="Color.Primary" Clicked="(() => colorFGSelector.ShowModal())"><Icon Name="IconName.PaintBrush"></Icon></Button>
+                                                <Button Color="Color.Primary" Clicked="(() => colorFGSelector.ShowModalAsync())"><Icon Name="IconName.PaintBrush"></Icon></Button>
                                             </Tooltip>
                                             <Tooltip Text="Disable Foreground Colour" Fade="true">
                                                 <Button Color="Color.Warning" Outline="false" Clicked="(() => VarietyDataModels.CellValue = null)"><Icon Name="IconName.MinusCircle"></Icon></Button>
@@ -260,7 +285,7 @@
                                             string fgColour = (VarietyDataModels.Item.FGColour == null) ? "#FFFFFF" : VarietyDataModels.Item.FGColour;
                                             <span style="clear:both; padding:6px; color: @fgColour; background-color: @VarietyDataModels.CellValue.ToString()">@VarietyDataModels.CellValue.ToString()</span>
                                             <Tooltip Text="Change Background Colour" Fade="true">
-                                                <Button Color="Color.Primary" Clicked="(() => colorBGSelector.ShowModal())"><Icon Name="IconName.PaintRoller"></Icon></Button>
+                                                <Button Color="Color.Primary" Clicked="(() => colorBGSelector.ShowModalAsync())"><Icon Name="IconName.PaintRoller"></Icon></Button>
                                             </Tooltip>
                                             <Tooltip Text="Disable Background Colour" Fade="true">
                                                 <Button Color="Color.Warning" Outline="false" Clicked="(() => VarietyDataModels.CellValue = null)"><Icon Name="IconName.MinusCircle"></Icon></Button>
@@ -276,7 +301,8 @@
                                         if (_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive)
                                         {
                                             var wooItem = (VarietyDataModels as ItemAttributeVarietyLookupView);
-                                            @((wooItem.CanUpdateECommerceMap == null) ? "n/a" : ((bool)wooItem.CanUpdateECommerceMap ? "yes" : "no"));
+                                            @((wooItem.CanUpdateECommerceMap == null) ? "n/a" : ((bool)wooItem.CanUpdateECommerceMap ? "yes" : "no"))
+                                            ;
                                         }
                                         else
                                         {
@@ -310,7 +336,7 @@
                             </DataGridColumn>
                             <DataGridNumericColumn TItem="ItemAttributeVarietyLookupView" Field="@nameof(ItemAttributeVarietyLookupView.SortOrder)" Caption="SortOrder" Editable="true" Context="VarietyDataModels" />
                             <DataGridColumn TItem="ItemAttributeVarietyLookupView" Field="@nameof(ItemAttributeVarietyLookupView.Notes)" Caption="Notes" Editable="true" Context="VarietyDataModels"
-                                            HeaderCellClass="desktop-only" CellClass="@((item) => "desktop-only")" />
+                                        HeaderCellClass="desktop-only" CellClass="@((item) => "desktop-only")" />
                         </DataGridColumns>
                     </DataGrid>
                 </CardBody>
@@ -328,7 +354,7 @@
                                     @{
                                         string IconColor = _AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive ? "green" : "red";
                                         <Icon Name="@( _AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive ? IconName.CheckCircle : IconName.MinusCircle)"
-                                              Style="@($"color: {IconColor}; display: inline-flex")" />
+                                      Style="@($"color: {IconColor}; display: inline-flex")" />
 
                                     }
                                 </Column>
@@ -343,19 +369,21 @@
         </Column>
     </Row>
 
-    <RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage=" Attribute Message" NotificationTitle="" @ref="@_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef" />
+    <RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage=" Attribute Message" NotificationTitle="" @ref="_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef" />
 
-    <RainbowOF.Components.Modals.ConfirmModal @ref="_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmVarietyAddWooItem_Click" />
+    <RainbowOF.Components.Modals.ConfirmModal @ref="_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.AddToWooConfirmation" 
+                                 ConfirmationClicked="ConfirmVarietyAddWooItem_Click" />
 
-    <RainbowOF.Components.Modals.ConfirmModal @ref="_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.DeleteWooItemConfirmation" ConfirmationClicked="ConfirmVarietyDeleteWooItem_Click" />
+    <RainbowOF.Components.Modals.ConfirmModal @ref="_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.DeleteWooItemConfirmation"
+                                 ConfirmationClicked="ConfirmVarietyDeleteWooItem_Click" />
 
     <RainbowOF.Components.Modals.ConfirmModalWithOption @ref="_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.DeleteConfirmationWithOption"
-                                                        ConfirmationClicked="ConfirmVarietyDelete_Click"
-                                                        ConfirmationMessage=@($"Are you sure you want to delete ?")
-                                                        ConfirmButtonText="Delete"
-                                                        ConfirmOptionCheckText="Delete from Woo Too"
-                                                        ShowConfirmOption="true"
-                                                        CancelButtonText="Cancel" />
+                                                    ConfirmationClicked="ConfirmVarietyDelete_Click"
+                                                    ConfirmationMessage=@($"Are you sure you want to delete ?")
+                                                    ConfirmButtonText="Delete"
+                                                    ConfirmOptionCheckText="Delete from Woo Too"
+                                                    ShowConfirmOption="true"
+                                                    CancelButtonText="Cancel" />
 
 }
 @*<RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage="Attribute Message" NotificationTitle="" @ref="@_varietyGridSettings.PopUpRef" />
@@ -381,10 +409,10 @@
                 <FieldLabel>Sort Order</FieldLabel>
                 <TextEdit TextChanged="((sv) => _NewItemAttributeVarietyLookupView.SortOrder = Convert.ToInt32(sv))" InputMode="TextInputMode.Numeric" Text="@_NewItemAttributeVarietyLookupView.SortOrder.ToString()" Placeholder="Enter variety sort order..." />
             </Field>
-            @*<Field>
-                <FieldLabel>Add To Woo</FieldLabel>
-                <Blazorise.Check Checked="@_NewItemAttributeVarietyLookupView.CanUpdateECommerceMap"></Blazorise.Check>
-            </Field>*@
+@*<Field>
+    <FieldLabel>Add To Woo</FieldLabel>
+    <Blazorise.Check Checked="@_NewItemAttributeVarietyLookupView.CanUpdateECommerceMap"></Blazorise.Check>
+    </Field>*@
             <Field>
                 <FieldLabel>Notes</FieldLabel>
                 <TextEdit Text="@_NewItemAttributeVarietyLookupView.Notes" Placeholder="Any notes..." />

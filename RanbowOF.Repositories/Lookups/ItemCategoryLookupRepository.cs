@@ -14,16 +14,19 @@ using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Lookups
 {
-     public class ItemCategoryLookupRepository : AppRepository<ItemCategoryLookup>, IItemCategoryLookupRepository
+    public class ItemCategoryLookupRepository : AppRepository<ItemCategoryLookup>, IItemCategoryLookupRepository
     {
+        #region Private vars of parameters
         private ApplicationDbContext _Context = null;
         private ILoggerManager _Logger { get; set; }
         private IAppUnitOfWork _AppUnitOfWork { get; set; }
-        public ItemCategoryLookupRepository(ApplicationDbContext sourceDbContext, ILoggerManager sourceLogger, IAppUnitOfWork sourceAppUnitOfWork) : base (sourceDbContext, sourceLogger, sourceAppUnitOfWork)
+        #endregion
+        public ItemCategoryLookupRepository(ApplicationDbContext sourceDbContext, ILoggerManager sourceLogger, IAppUnitOfWork sourceAppUnitOfWork) : base(sourceDbContext, sourceLogger, sourceAppUnitOfWork)
         {
             _Context = sourceDbContext;
             _Logger = sourceLogger;
             _AppUnitOfWork = sourceAppUnitOfWork;
+            _Logger.LogDebug("ItemCategoryLookupRepository initialised...");
         }
 
         public async Task<List<ItemCategoryLookup>> GetAllEagerLoadingAsync()
@@ -38,7 +41,7 @@ namespace RainbowOF.Repositories.Lookups
             }
             catch (Exception ex)
             {
-                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all records from ItemCategoryLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage( $"!!!Error Getting all records from ItemCategoryLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -119,7 +122,7 @@ namespace RainbowOF.Repositories.Lookups
 
             try
             {
-                _Logger.LogDebug($"Getting all records with eager loading of ItemCategoryLookup order by an filter Data Grid Parameters: {currentDataGridParameters.ToString()}");
+                _Logger.LogDebug( $"Getting all records with eager loading of ItemCategoryLookup order by an filter Data Grid Parameters: {currentDataGridParameters.ToString()}");
                 // get a list of Order bys and filters
                 List<OrderByParameter<ItemCategoryLookup>> _orderByExpressions = GetOrderByExpressions(currentDataGridParameters.SortParams);
                 List<Expression<Func<ItemCategoryLookup, bool>>> _filterByExpressions = GetFilterByExpressions(currentDataGridParameters.FilterParams);
@@ -188,7 +191,7 @@ namespace RainbowOF.Repositories.Lookups
             }
             catch (Exception ex)
             {
-                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all records from ItemCategoryLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
+                _AppUnitOfWork.LogAndSetErrorMessage( $"!!!Error Getting all records from ItemCategoryLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif

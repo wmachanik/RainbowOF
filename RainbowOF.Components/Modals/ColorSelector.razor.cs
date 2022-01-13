@@ -43,18 +43,17 @@ namespace RainbowOF.Components.Modals
 
         private Modal modalRef;
 
-        public void ShowModal()  //ModalSize modalSize, int? maxHeight = null, bool centered = false)
+        public async Task ShowModalAsync()  //ModalSize modalSize, int? maxHeight = null, bool centered = false)
         {
             //this.centered = centered;
             //this.modalSize = modalSize;
             //this.maxHeight = maxHeight;
 
-            modalRef.Show();
+            await modalRef.Show();
         }
 
-        public void HideModal()
-        {
-            modalRef.Hide();
-        }
+        public async Task HideModalAsync()
+            => await modalRef.Hide();
+       
     }
 }

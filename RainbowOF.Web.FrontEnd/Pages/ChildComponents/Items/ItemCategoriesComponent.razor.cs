@@ -46,17 +46,42 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         #region Initialisation
         protected override async Task OnInitializedAsync()
         {
-            base.OnInitialized();
+            await base.OnInitializedAsync();
+            ModelItemCategories = SourceItemCategories;
+            // call this now so that it exists in memory
+            //await Task.Run(() => { 
+                _AppUnitOfWork.GetListOf<ItemCategoryLookup>(true, icl => icl.FullCategoryName); 
+            //}); // -> async sorts wrong because field FullCategoryName not in database
+            //!! run the init of the GridView here to make sure we display loading while we load.
             _ItemCategoryGridViewRepository = new ItemCategoryGridViewRepository(_Logger, _AppUnitOfWork);
             _ItemCategoryGridViewRepository._GridSettings.PopUpRef = PopUpRef;
-            ModelItemCategories = SourceItemCategories;
             await InvokeAsync(StateHasChanged);
+            _Logger.LogDebug("ItemCategoriesComponent initialised.");
         }
         #endregion
         #region BackEnd Routines
-
-        public Dictionary<Guid, string> GetListOfCategories(bool IsForceReload = false)
-               => _AppUnitOfWork.GetListOfCategories(IsForceReload);
+        /// <summary>
+        ///  Return a list of Attribute Varieties that are available for selection
+        ///  Logic:
+        ///     1. Get a list of all ids that are already allocated except the current item
+        ///     2. set list to be the current item and any options that not already allocated
+        /// </summary>
+        /// <param name="currentCategoryLookupId">The one that is currently selected</param>
+        /// <param name="mustForce">must the list be reloaded (used for refresh etc.)</param>
+        /// <returns>List of item attribute varieties to be used.</returns>
+        public List<ItemCategoryLookup> GetListOfCategories(Guid? currentCategoryLookupId = null, bool IsForceReload = false)
+        {
+            List<ItemCategoryLookup> _itemCategorys = _AppUnitOfWork.GetListOf<ItemCategoryLookup>(IsForceReload);
+            if (currentCategoryLookupId == null)
+                return _itemCategorys;
+            if (currentCategoryLookupId == null)
+                return _itemCategorys;  // no item selected 
+            // 1.
+            var _usedItems = ModelItemCategories.Where(mic => (mic.ItemCategoryLookupId != currentCategoryLookupId));
+            // 2. 
+            var _unselectedItems = _itemCategorys.Where(iav => !_usedItems.Any(miav => (miav.ItemCategoryLookupId == iav.ItemCategoryLookupId)));
+            return _unselectedItems.ToList();
+        }
 
         // Interface Stuff
         void OnNewItemCategoryDefaultSetter(ItemCategory newItem)
@@ -99,8 +124,12 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
             }
             await _DataGrid.Reload();
         }
-
-        private async Task<ItemCategory> SetUoMValues(ItemCategory sourceItemCategory)
+        /// <summary>
+        /// Sets the child list to the items changed, either killing the list or updating it
+        /// </summary>
+        /// <param name="sourceItemCategory">the source item's category</param>
+        /// <returns>updated item Category</returns>
+        private async Task<ItemCategory> SetCategoryUoMValues(ItemCategory sourceItemCategory)
         {
             if ((sourceItemCategory.UoMBaseId != null))
             {
@@ -124,9 +153,25 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
                 }
             }
             return sourceItemCategory;
-
         }
-
+        /// <summary>
+        /// Sets the Item's child Category Lookup to the correct data we have in memory
+        /// </summary>
+        /// <param name="updatedItemCategory">Item category to update, used as source and is modified and returned</param>
+        /// <returns>upated item category with updated item</returns>
+        private ItemCategory SetCategoryDetail(ItemCategory updatedItemCategory)
+        {
+            if (updatedItemCategory.ItemCategoryLookupId == Guid.Empty)
+            {
+                updatedItemCategory.ItemCategoryDetail = null; /// force it null, cannot dispose?
+            }
+            else
+            {
+                var _ItemCats = GetListOfCategories();
+                updatedItemCategory.ItemCategoryDetail = _ItemCats.FirstOrDefault(ic => ic.ItemCategoryLookupId == updatedItemCategory.ItemCategoryLookupId);
+            }
+            return updatedItemCategory;
+        }
         //async Task OnRowUpdatingAsync(CancellableRowChange<ItemCategory, Dictionary<string, object>> updatingItem) 
         /// <summary>
         /// Handle the grid update
@@ -150,7 +195,8 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
                 }
                 else
                 {
-                    _updatedItemCategory = await SetUoMValues(_updatedItemCategory);
+                    _updatedItemCategory = await SetCategoryUoMValues(_updatedItemCategory);
+                    _updatedItemCategory = SetCategoryDetail(_updatedItemCategory);
                     _Mapper.Map(_updatedItemCategory, _currentItemCategory);
                     var _result = await _ItemCategoryGridViewRepository.UpdateViewRowAsync(_currentItemCategory, _currentItemCategory.ItemCategoryDetail.CategoryName);
                     if (_AppUnitOfWork.IsInErrorState() || (_result <= 0))
@@ -163,49 +209,49 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
             StateHasChanged();
         }
         /*   Old update code before using mapper.
-        //_updatedItemCategory.ItemCategoryDetail = await _ItemCategoryGridViewRepository.GetItemCategoryByIdAsync(_updatedItemCategory.ItemCategoryLookupId);
-        //if (_updatedItemCategory.ItemCategoryDetail == null)
-        //{
-        //    _ItemCategoryGridViewRepository._GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, "Error finding Category in lookup table!");
-        //}
-        //else
-        //{
-        //    if ((_updatedItemCategory.UoMBaseId != null))
-        //    {
-        //        // have they removed the UoM or added item, if it = Guid.Empty it may have been removed?
-        //        if (_updatedItemCategory.UoMBaseId == Guid.Empty)
-        //        {
-        //            if (_updatedItemCategory.ItemUoMBase != null)
-        //            {
-        //                // if we get here they have removed their UoM, so kill it.
-        //                _updatedItemCategory.UoMBaseId = null;
-        //                _updatedItemCategory.ItemUoMBase = null;
-        //            }
-        //        }
-        //        else
-        //        {
-        //            _updatedItemCategory.ItemUoMBase = await _ItemCategoryGridViewRepository.GetItemUoMByIdAsync((Guid)_updatedItemCategory.UoMBaseId);
-        //            if (_updatedItemCategory.ItemUoMBase == null)
-        //            {
-        //                PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, "Error finding Unit of Measure in lookup table!");
-        //            }
-        //        }
-        //    }
-        //ItemCategory _currentItemCategory = await _ItemCategoryGridViewRepository.GetEntityByIdAsync(_updatedItemCategory.ItemCategoryId);
-        //if (_currentItemCategory != null)
-        //{
-        //    _currentItemCategory = _updatedItemCategory;
-        //var _result = await _ItemCategoryGridViewRepository.UpdateViewRowAsync(_updatedItemCategory, _updatedItemCategory.ItemCategoryDetail.CategoryName);
-                var _result = await _ItemCategoryGridViewRepository.UpdateViewRowAsync(_currentItemCategory, _currentItemCategory.ItemCategoryDetail.CategoryName);
-                //}
-        */
+//_updatedItemCategory.ItemCategoryDetail = await _ItemCategoryGridViewRepository.GetItemCategoryByIdAsync(_updatedItemCategory.ItemCategoryLookupId);
+//if (_updatedItemCategory.ItemCategoryDetail == null)
+//{
+//    _ItemCategoryGridViewRepository._GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, "Error finding Category in lookup table!");
+//}
+//else
+//{
+//    if ((_updatedItemCategory.UoMBaseId != null))
+//    {
+//        // have they removed the UoM or added item, if it = Guid.Empty it may have been removed?
+//        if (_updatedItemCategory.UoMBaseId == Guid.Empty)
+//        {
+//            if (_updatedItemCategory.ItemUoMBase != null)
+//            {
+//                // if we get here they have removed their UoM, so kill it.
+//                _updatedItemCategory.UoMBaseId = null;
+//                _updatedItemCategory.ItemUoMBase = null;
+//            }
+//        }
+//        else
+//        {
+//            _updatedItemCategory.ItemUoMBase = await _ItemCategoryGridViewRepository.GetItemUoMByIdAsync((Guid)_updatedItemCategory.UoMBaseId);
+//            if (_updatedItemCategory.ItemUoMBase == null)
+//            {
+//                PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, "Error finding Unit of Measure in lookup table!");
+//            }
+//        }
+//    }
+//ItemCategory _currentItemCategory = await _ItemCategoryGridViewRepository.GetEntityByIdAsync(_updatedItemCategory.ItemCategoryId);
+//if (_currentItemCategory != null)
+//{
+//    _currentItemCategory = _updatedItemCategory;
+//var _result = await _ItemCategoryGridViewRepository.UpdateViewRowAsync(_updatedItemCategory, _updatedItemCategory.ItemCategoryDetail.CategoryName);
+       var _result = await _ItemCategoryGridViewRepository.UpdateViewRowAsync(_currentItemCategory, _currentItemCategory.ItemCategoryDetail.CategoryName);
+       //}
+*/
 
-        void OnRowRemoving(CancellableRowChange<ItemCategory> modelItem)
+        async Task OnRowRemovingAsync(CancellableRowChange<ItemCategory> modelItem)
         {
             // set the Selected Item Attribute for use later
             SeletectedItemCategory = modelItem.Item;
             var deleteItem = modelItem;
-            _ItemCategoryGridViewRepository._GridSettings.DeleteConfirmation.ShowModal("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.ItemCategoryDetail.CategoryName}?");  //,"Delete","Cancel"); - passed in on init
+            await _ItemCategoryGridViewRepository._GridSettings.DeleteConfirmation.ShowModalAsync("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.ItemCategoryDetail.CategoryName}?");  //,"Delete","Cancel"); - passed in on init
         }
         /// <summary>
         /// Confirm Delete Click is called when the user confirms they want to delete.

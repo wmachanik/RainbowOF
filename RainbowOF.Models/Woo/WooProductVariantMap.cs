@@ -21,7 +21,7 @@ namespace RainbowOF.Models.Woo
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid WooProductVariantMapId { get; set; }
         public Guid ItemVariantId { get; set; }
-        public int WooProductVariantId { get; set; }
+        public int WooProductVariantId { get; set; }  // changed to ulong from v 0.8.4 - changed back to 0.8.3
         [DefaultValue(true)]
         [DisplayName("Can Update?")]
         public bool CanUpdate { get; set; }

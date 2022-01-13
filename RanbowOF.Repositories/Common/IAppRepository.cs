@@ -17,7 +17,9 @@ namespace RainbowOF.Repositories.Common
         TEntity GetById(object Id);
         Task<TEntity> GetByIdAsync(object Id);
         IEnumerable<TEntity> GetAll();
+        IEnumerable<TEntity> GetAllOrderBy(Func<TEntity, object> orderByExpression, bool sortDesc = false);
         Task<IEnumerable<TEntity>> GetAllAsync();
+        Task<IEnumerable<TEntity>> GetAllOrderByAsync<TKey>(Expression<Func<TEntity, TKey>> orderByExpression, bool sortDesc = false);
         Task<IEnumerable<TEntity>> GetAllEagerAsync(params Expression<Func<TEntity, object>>[] properties);
         Task<IEnumerable<TEntity>> GetPagedEagerAsync(int startPage, int currentPageSize, params Expression<Func<TEntity, object>>[] properties);
         IEnumerable<TEntity> GetBy(Expression<Func<TEntity, bool>> predicate);
@@ -29,8 +31,8 @@ namespace RainbowOF.Repositories.Common
         int Add(TEntity newEntity);
         Task<TEntity> AddAsync(TEntity newEntity);
         Task<int> AddRangeAsync(List<TEntity> newEntities);
-        int DeleteById(object sourceId);
-        Task<int> DeleteByIdAsync(object sourceId);
+        int DeleteByPrimaryId(object sourceId);
+        Task<int> DeleteByPrimaryIdAsync(object sourceId);
         int DeleteBy(Expression<Func<TEntity, bool>> predicate);
         Task<int> DeleteByAsync(Expression<Func<TEntity, bool>> predicate);
         int Update(TEntity updatedEntity);

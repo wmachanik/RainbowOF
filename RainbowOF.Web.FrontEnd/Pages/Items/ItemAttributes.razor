@@ -101,8 +101,8 @@
                               @bind-SelectedRows="@SelectedItemAttributeLookups"
                               DetailRowTrigger="@((item) => (item.ItemAttributeVarietyLookups?.Count > 0 && item.ItemAttributeLookupId == seletectedItem?.ItemAttributeLookupId))"
                               RowInserted="@OnRowInsertingAsync"
-                              RowUpdated="@OnRowUpdatingAsync"
-                              RowRemoving="@OnRowRemoving"
+                              RowUpdated="@OnRowUpdatedAsync"
+                              RowRemoving="@OnRowRemovingAsync"
                               RowRemoved="@OnRowRemovedAsync"
                               Narrow="@_AttributeWooLinkedViewRepository._WooLinkedGridSettings.IsNarrow" Filterable="@_AttributeWooLinkedViewRepository._WooLinkedGridSettings.IsFilterable"
                               UseInternalEditing="true"
@@ -181,7 +181,7 @@
                                         @if ((attribItem.ItemAttributeVarietyLookups == null) || (attribItem.ItemAttributeVarietyLookups.Count == 0))   // no variety exists so ask if they want to add one
                                         {
                                             <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups.NewItemAttributeVarietyLookupComponent @ref="@NewAttributeVariety" PopUpRef="_AttributeWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef" AddItemToWoo="_AttributeWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive" />
-                                            <Button Color="Color.Primary" Clicked="@(() => NewAttributeVariety.ShowModal(attribItem.ItemAttributeLookupId))">
+                                            <Button Color="Color.Primary" Clicked="@(() => NewAttributeVariety.ShowModalAsync(attribItem.ItemAttributeLookupId))">
                                                 Add Variety
                                             </Button>
                                         }

@@ -12,7 +12,7 @@ namespace RainbowOF.Components.Modals
 {
     public partial class PopUpAndLogNotification : ComponentBase
     {
-
+        #region Internal classes and vars
         public enum NotificationType
         {
             Info,
@@ -21,8 +21,10 @@ namespace RainbowOF.Components.Modals
             Error,
             Debug
         }
-
+        #endregion
+        #region Parameters
         [Parameter]
+        [EditorRequired]
         public string NotificationTitle { get; set; } = "";
         [Parameter]
         public string NotificationMessage { get; set; } = "Message";
@@ -30,49 +32,40 @@ namespace RainbowOF.Components.Modals
         public Blazored.Toast.Configuration.ToastPosition NotificationPosition { get; set; } = Blazored.Toast.Configuration.ToastPosition.TopRight;
         [Parameter]
         public int NotificationTimeout { get; set; } = 10;
-
-        public PopUpAndLogNotification PopUpRef;
+        #endregion
+        #region Injections
         [Inject]
         public ILoggerManager NotificationLogger { get; set; }
         [Inject]
         public IToastService NotificationToastService { get; set; }
-
+        #endregion
+        #region Public vars
+        public PopUpAndLogNotification PopUpRef;
+        #endregion
+        #region Exposed Routines
         public void ShowNotification(NotificationType pNotificationType)
         {
             switch (pNotificationType)
             {
                 case NotificationType.Info:
-                    NotificationToastService.ShowInfo(NotificationMessage, NotificationTitle );
-                    if (String.IsNullOrEmpty(NotificationTitle))
-                        NotificationLogger.LogInfo($"Info: {NotificationMessage}");
-                    else
-                        NotificationLogger.LogInfo($"{NotificationTitle}: {NotificationMessage}");
+                    NotificationToastService.ShowInfo(NotificationMessage, NotificationTitle);
+                    NotificationLogger.LogInfo( $"Info: {NotificationMessage}");
                     break;
                 case NotificationType.Success:
                     NotificationToastService.ShowSuccess(NotificationMessage, NotificationTitle);
-                    if (String.IsNullOrEmpty(NotificationTitle))
-                        NotificationLogger.LogInfo($"Success: {NotificationMessage}");
-                    else NotificationLogger.LogInfo($"{NotificationTitle}: {NotificationMessage}");
+                    NotificationLogger.LogInfo($"Success: {NotificationMessage}");
                     break;
                 case NotificationType.Warning:
                     NotificationToastService.ShowWarning(NotificationMessage, NotificationTitle);
-                    if (String.IsNullOrEmpty(NotificationTitle))
-                        NotificationLogger.LogWarn($"Warning: {NotificationMessage}");
-                    else
-                        NotificationLogger.LogWarn($"{NotificationTitle}: {NotificationMessage}");
+                    NotificationLogger.LogWarn($"Warning: {NotificationMessage}");
                     break;
                 case NotificationType.Error:
                     NotificationToastService.ShowError(NotificationMessage, NotificationTitle);
-                    if (String.IsNullOrEmpty(NotificationTitle))
-                        NotificationLogger.LogError($"Error: {NotificationMessage}");
-                    else NotificationLogger.LogError($"{NotificationTitle}: {NotificationMessage}");
+                    NotificationLogger.LogError($"Error: {NotificationMessage}");
                     break;
                 default:     // assume this is debug
                     NotificationToastService.ShowToast(ToastLevel.Info, NotificationMessage, NotificationTitle);
-                    if (String.IsNullOrEmpty(NotificationTitle))
-                        NotificationLogger.LogDebug($"Debug: {NotificationMessage}");
-                    else
-                        NotificationLogger.LogDebug($"{NotificationTitle}: {NotificationMessage}");
+                    NotificationLogger.LogDebug($"Debug: {NotificationMessage}");
                     break;
             }
         }
@@ -98,5 +91,6 @@ namespace RainbowOF.Components.Modals
             NotificationTitle = "";
             ShowNotification(pNotificationType);
         }
+        #endregion
     }
 }

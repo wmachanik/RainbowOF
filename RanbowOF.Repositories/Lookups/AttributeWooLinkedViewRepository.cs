@@ -37,7 +37,7 @@ namespace RainbowOF.Repositories.Lookups
         {
             IAppRepository<ItemAttributeLookup> _itemAttributeLookupRepository = _AppUnitOfWork.Repository<ItemAttributeLookup>();
 
-            var _recsDelete = await _itemAttributeLookupRepository.DeleteByIdAsync(deleteViewEntity.ItemAttributeLookupId);     //DeleteByAsync(ial => ial.ItemAttributeLookupId == SelectedItemAttributeLookup.ItemAttributeLookupId);
+            var _recsDelete = await _itemAttributeLookupRepository.DeleteByPrimaryIdAsync(deleteViewEntity.ItemAttributeLookupId);     //DeleteByAsync(ial => ial.ItemAttributeLookupId == SelectedItemAttributeLookup.ItemAttributeLookupId);
 
             if (_recsDelete == AppUnitOfWork.CONST_WASERROR)
                 _WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, $"Attribute: {deleteViewEntity.AttributeName} is no longer found, was it deleted?");
@@ -362,7 +362,7 @@ namespace RainbowOF.Repositories.Lookups
             int _result = 0;
             IAppRepository<WooProductAttributeMap> _wooProductAttributeMapRepo = _AppUnitOfWork.Repository<WooProductAttributeMap>();
 
-            _result = await _wooProductAttributeMapRepo.DeleteByIdAsync(deleteWooProductAttributeMap.WooProductAttributeMapId);
+            _result = await _wooProductAttributeMapRepo.DeleteByPrimaryIdAsync(deleteWooProductAttributeMap.WooProductAttributeMapId);
 
             return _result;
         }

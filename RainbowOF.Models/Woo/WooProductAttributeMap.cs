@@ -17,7 +17,5 @@ namespace RainbowOF.Models.Woo
         [DefaultValue(true)]
         [DisplayName("Can Update?")]
         public bool CanUpdate { get; set; }
-
-
     }
 }

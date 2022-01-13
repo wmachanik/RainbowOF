@@ -2,45 +2,46 @@
     -------------------------------------------------------------
     Component to view Categories in a grid for an item
     Parameters:
-        > PopUpAndLogNotification PopUpRef to display the results of the add
-        > List<ItemCategory> SourceItemCategories
+    > PopUpAndLogNotification PopUpRef to display the results of the add
+    > List<ItemCategory> SourceItemCategories
     Uses:
-        IAppUnitOfWork _appUnitOfWork
+    IAppUnitOfWork _appUnitOfWork
     -------------------------------------------------------------
 *@
 @using RainbowOF.Models.Items
+@using RainbowOF.Models.Lookups
 
 
 @if (_ItemCategoryGridViewRepository == null)
 {
     <Badge Color="Color.Primary" Pill="true">loading...</Badge>
 }
-else if ((ModelItemCategories == null) || (ModelItemCategories.Count == 0))
-{
-    <Badge Color="Color.Primary" Pill="true">Item has no categories</Badge>
-}
 else
 {
+    if ((ModelItemCategories == null) || (ModelItemCategories.Count == 0))
+    {
+        <Badge Color="Color.Primary" Pill="true">Item has no categories. To add one click the plus button.</Badge>
+    }
     <DataGrid @ref="_DataGrid"
-              TItem="ItemCategory" Data="@ModelItemCategories"
-              Sortable="true" Editable="true"
-              Striped="true"
-              Hoverable="true"
-              Responsive="true"
-              EditMode="DataGridEditMode.Popup"
-              TotalItems="ModelItemCategories.Count"
-              PageSize="25"
-              @bind-SelectedRow="@SeletectedItemCategory"
-              Bordered="true"
-              Narrow="true"
-              Filterable="@_ItemCategoryGridViewRepository._GridSettings.IsFilterable"
-              UseInternalEditing="true"
-              NewItemDefaultSetter="@OnNewItemCategoryDefaultSetter"
-              RowInserted="@OnRowInsertingAsync"
-              RowUpdated="@OnRowUpdatedAsync"
-              RowRemoving="@OnRowRemoving"
-              RowRemoved="@OnRowRemovedAsync"
-              Padding="Padding.Is0">
+          TItem="ItemCategory" Data="@ModelItemCategories"
+          Sortable="true" Editable="true"
+          Striped="true"
+          Hoverable="true"
+          Responsive="true"
+          EditMode="DataGridEditMode.Popup"
+          TotalItems="ModelItemCategories.Count"
+          PageSize="25"
+          @bind-SelectedRow="@SeletectedItemCategory"
+          Bordered="true"
+          Narrow="true"
+          Filterable="@_ItemCategoryGridViewRepository._GridSettings.IsFilterable"
+          UseInternalEditing="true"
+          NewItemDefaultSetter="@OnNewItemCategoryDefaultSetter"
+          RowInserted="@OnRowInsertingAsync"
+          RowUpdated="@OnRowUpdatedAsync"
+          RowRemoving="@OnRowRemovingAsync"
+          RowRemoved="@OnRowRemovedAsync"
+          Padding="Padding.Is0">
         <EmptyTemplate>
             @if (ModelItemCategories == null)
             {
@@ -55,37 +56,38 @@ else
             </Row>
         </LoadingTemplate>
         <DataGridColumns>
-            <DataGridColumn TItem="ItemCategory" Field="@nameof(ItemCategory.ItemCategoryLookupId)" TextAlignment="TextAlignment.Left" Context="itemCategoryData" Caption="Category" Editable="true" Sortable="true">
+            <DataGridColumn TItem="ItemCategory" Field="@nameof(ItemCategory.ItemCategoryLookupId)" TextAlignment="TextAlignment.Start" Context="itemCategoryData" Caption="Category" Editable="true" Sortable="true">
                 <DisplayTemplate>
                     @{
                         var _itemCategory = (itemCategoryData as ItemCategory);
-                        @(((_itemCategory != null) && (_itemCategory.ItemCategoryDetail != null)) ?
-                              @_itemCategory.ItemCategoryDetail.FullCategoryName
+                        @(((_itemCategory != null) && (_itemCategory.ItemCategoryDetail != null)) 
+                            ? @_itemCategory.ItemCategoryDetail.FullCategoryName
                             : "n/a")
                     }
                 </DisplayTemplate>
                 <EditTemplate>
                     @{
-                        Dictionary<Guid, string> _Categories = GetListOfCategories();
-                        @*---- Need to remove the categories that are in the database for insert ----*@
+                        ///--> cannot edit this since it means linking the wrong attributes to the wrong variants.
                         var _itemCategory = (itemCategoryData.Item as ItemCategory);
-
+                        List<ItemCategoryLookup> _Categories = GetListOfCategories(_itemCategory.ItemCategoryLookupId);
+                        @*---- Need to remove the categories that are in the database for insert ----*@
                         <Select TValue="Guid" SelectedValue="@((Guid)itemCategoryData.CellValue)" SelectedValueChanged="@((v) => itemCategoryData.CellValue = v)">
+                            <SelectItem TValue="Guid" Value="Guid.Empty">--- Select a category ---</SelectItem>
                             @foreach (var item in _Categories)
                             {
-                                <SelectItem TValue="Guid" Value="@item.Key">@item.Value</SelectItem>
+                                <SelectItem TValue="Guid" Value="@item.ItemCategoryLookupId">@item.FullCategoryName</SelectItem>
                             }
                         </Select>
                     }
                 </EditTemplate>
             </DataGridColumn>
-            <DataGridColumn TItem="ItemCategory" Field="@nameof(ItemCategory.UsedForPrediction)" TextAlignment="TextAlignment.Left" Context="itemCategoryData" Caption="Used 4 Prediction" Editable="true">
+            <DataGridColumn TItem="ItemCategory" Field="@nameof(ItemCategory.UsedForPrediction)" TextAlignment="TextAlignment.Start" Context="itemCategoryData" Caption="Used 4 Prediction" Editable="true">
                 <DisplayTemplate>
                     @{
                         var _itemCategory = (itemCategoryData as ItemCategory);
-                        @(((_itemCategory != null) && (_itemCategory.UsedForPrediction )) 
-                             ? "yes"
-                             : "no")
+                        @(((_itemCategory != null) && (_itemCategory.UsedForPrediction ))
+                ? "yes"
+                : "no")
                     }
                 </DisplayTemplate>
                 <EditTemplate>
@@ -99,28 +101,32 @@ else
                     </Check>
                 </EditTemplate>
             </DataGridColumn>
-            <DataGridColumn TItem="ItemCategory" Field="@nameof(ItemCategory.UoMBaseId)" TextAlignment="TextAlignment.Left" Context="itemCategoryData" Caption="Base UoM" Editable="true">
+            <DataGridColumn TItem="ItemCategory" Field="@nameof(ItemCategory.UoMBaseId)" TextAlignment="TextAlignment.Start" Context="itemCategoryData" Caption="Base UoM" Editable="true">
                 <DisplayTemplate>
                     @{
                         var _itemCategory = (itemCategoryData as ItemCategory);
 
                         @*var ItemsUoM = (itemCategoryData as ItemCategory).UoM;
 
-                        if ((_itemCategory.UoMBaseId != null) && (_itemCategory.ItemUoMBase != null))
-                        {
+                            if ((_itemCategory.UoMBaseId != null) && (_itemCategory.ItemUoMBase != null))
+                            {
                             @_itemCategory.ItemUoMBase.UoMName
-                        }
-                        else
-                        {
+                            }
+                            else
+                            {
                             <span>n/a</span>
-                        }*@
+                            }*@
 
-                        @((_itemCategory.ItemUoMBase == null) ? "n/a" : _itemCategory.ItemUoMBase.UoMSymbol);
+                        @((_itemCategory.ItemUoMBase == null) ? "n/a" : _itemCategory.ItemUoMBase.UoMSymbol)
+                        ;
 
                     }
                 </DisplayTemplate>
                 <EditTemplate>
-                    <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups.UoMLookupSelectListComponent PopUpRef="PopUpRef" SourceUoMId="(Guid?)itemCategoryData.CellValue" UoMIdChangedEvent="@((u) => itemCategoryData.CellValue = u)" />
+                    <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups.UoMLookupSelectListComponent 
+                                            PopUpRef="PopUpRef" 
+                                            SourceUoMId="(Guid?)itemCategoryData.CellValue" 
+                                            UoMIdChangedEvent="@((u) => itemCategoryData.CellValue = u)" />
                 </EditTemplate>
             </DataGridColumn>
             <DataGridCommandColumn TItem="ItemCategory" Width="6.5em">
@@ -182,10 +188,10 @@ else
     @*<RainbowOF.Components.Modals.ConfirmModal @ref="_ItemCategoryGridViewRepository._GridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_ClickAsync" />*@
 
 
-                        <RainbowOF.Components.Modals.ConfirmModal @ref="_ItemCategoryGridViewRepository._GridSettings.DeleteConfirmation"
-                                                                  ConfirmationClicked="ConfirmDelete_ClickAsync"
-                                                                  ConfirmationMessage=@($"Are you sure you want to delete ?")
-                                                                  ConfirmButtonText="Delete"
-                                                                  CancelButtonText="Cancel" />
+    <RainbowOF.Components.Modals.ConfirmModal @ref="_ItemCategoryGridViewRepository._GridSettings.DeleteConfirmation"
+                                          ConfirmationClicked="ConfirmDelete_ClickAsync"
+                                          ConfirmationMessage=@($"Are you sure you want to delete ?")
+                                          ConfirmButtonText="Delete"
+                                          CancelButtonText="Cancel" />
 
-                    }
+}

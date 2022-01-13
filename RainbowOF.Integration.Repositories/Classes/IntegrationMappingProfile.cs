@@ -53,8 +53,11 @@ namespace RainbowOF.Integration.Repositories.Classes
                     return ItemTypes.Variable;
                 case "virtual":
                     return ItemTypes.VirtualItem;
-                default:    // all others are simple
+                case "simple":
                     return ItemTypes.Simple;
+
+                default:    // there are lots of others depending on the plugins
+                    return ItemTypes.Other;
             }
         }
         public string MapItemTypeToWooType(ItemTypes sourceItemType)
@@ -67,8 +70,10 @@ namespace RainbowOF.Integration.Repositories.Classes
                     return "external";
                 case ItemTypes.Variable:
                     return "variable";
-                default:    // all others are simple
+                case ItemTypes.Simple:
                     return "simple";
+                default:    // all others are simple
+                    return "other";
             }
         }
         static bool MapObjectToBool(object sourceObject)
@@ -89,7 +94,7 @@ namespace RainbowOF.Integration.Repositories.Classes
                 .ForMember(dest => dest.ItemType, act => act.MapFrom(src => MapWooTypeToItemType((src._virtual ?? false) ? "virtual" : src.type)));
 
             CreateMap<Item, Product>()
-                .ForMember(dest => dest.name, act => act.MapFrom(src => src.ItemName))
+                .ForMember(dest => dest.name, act => act.MapFrom(src => String.IsNullOrEmpty(src.ItemName) ? "N/A" : src.ItemName))
                 .ForMember(dest => dest.sku, act => act.MapFrom(src => src.SKU))
                 .ForMember(dest => dest.stock_status, act => act.MapFrom(src => src.IsEnabled ? CONST_WooItemInStock : CONST_WooItemOutOfStock))
                 .ForMember(dest => dest.short_description, act => act.MapFrom(src => src.ItemDetail))
@@ -102,9 +107,12 @@ namespace RainbowOF.Integration.Repositories.Classes
             // cannot do this since we need to lookup the woo item.
 
             CreateMap<Variation, ItemVariant>()
-                .ForMember(dest => dest.ItemVariantName, act => act.MapFrom(src => Truncate(StripHTML(src.description), 100)))
-                .ForMember(dest => dest.SKU, act => act.MapFrom(src => Truncate(src.sku, 50)))
-                .ForMember(dest => dest.ItemVariantAbbreviation, act => act.MapFrom(src => MakeAbbriviation(src.sku)))
+                .ForMember(dest => dest.ItemVariantName, act =>
+                                   act.MapFrom(src => String.IsNullOrEmpty(src.description) ? "N/A" : Truncate(StripHTML(src.description), 100)))
+                .ForMember(dest => dest.SKU, act =>
+                                   act.MapFrom(src => String.IsNullOrEmpty(src.sku) ? "NoSKU" : Truncate(src.sku, 50)))
+                .ForMember(dest => dest.ItemVariantAbbreviation, act => 
+                                   act.MapFrom(src => String.IsNullOrEmpty(src.sku) ? "ChangeMe" : MakeAbbriviation(src.sku)))
                 .ForMember(dest => dest.IsEnabled, act => act.MapFrom(src => (src.stock_status != CONST_WooItemOutOfStock)))
                 .ForMember(dest => dest.SortOrder, act => act.MapFrom(src => Convert.ToInt32(src.menu_order)))
                 .ForMember(dest => dest.BasePrice, act => act.MapFrom(src => Convert.ToDecimal(src.price == null ? 0.0 : src.price)))

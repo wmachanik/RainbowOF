@@ -45,6 +45,7 @@ namespace RainbowOF.Integration.Repositories.Woo
             _AppUnitOfWork = appUnitOfWork;
             _Logger = logger;
             _AppWooSettings = appWooSettings;
+            _Logger.LogDebug("WooImportProductCategory initialised.");
         }
         #endregion
         #region Methods
@@ -52,7 +53,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// Get all the categories from Woo, using the woo app settings we got from the constructor
         /// </summary>
         /// <returns>List of Product Categories from Woo</returns>
-        public async Task<List<ProductCategory>> GetWooEntityDataAsync(bool InStock = false)  // dont us the instock here.
+        public async Task<List<ProductCategory>> GetWooEntityDataAsync(bool InStock = false)  // don't use the instock here.
         {
             WooAPISettings _wooAPISettings = new WooAPISettings(_AppWooSettings);
             IWooProductCategory _WooProductCategory = new WooProductCategory(_wooAPISettings, _Logger);

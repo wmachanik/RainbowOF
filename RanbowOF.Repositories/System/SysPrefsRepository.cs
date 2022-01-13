@@ -33,6 +33,7 @@ namespace RainbowOF.Repositories.System
             _AppUnitOfWork = sourceAppUnitOfWork;
             _SysPrefsRepo = sourceAppUnitOfWork.Repository<SysPrefs>();
             _WooSettingsRepo = sourceAppUnitOfWork.Repository<WooSettings>();
+            _Logger.LogDebug("SysPrefgsRepository initialised.");
         }
 
         public SysPrefsModel GetSysPrefs()

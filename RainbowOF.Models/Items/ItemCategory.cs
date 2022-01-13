@@ -17,7 +17,5 @@ namespace RainbowOF.Models.Items
         public ItemCategoryLookup ItemCategoryDetail { get; set; }
         [ForeignKey("UoMBaseId")]
         public ItemUoMLookup ItemUoMBase { get; set; }
-
-
     }
 }

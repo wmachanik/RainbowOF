@@ -213,18 +213,18 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             await _DataGrid.Reload();
             return _result;
         }
-        async Task OnRowUpdating(SavedRowItem<ItemCategoryLookupView, Dictionary<string, object>> updatedCatViewItem)
+        async Task OnRowUpdated(SavedRowItem<ItemCategoryLookupView, Dictionary<string, object>> updatedCatViewItem)
         {
             await _CategoryWooLinkedViewRepository.UpdateRowAsync(updatedCatViewItem.Item);
             await _DataGrid.Reload();
 
         }
-        void OnRowRemoving(CancellableRowChange<ItemCategoryLookupView> modelItem)
+        async Task OnRowRemovingAsync(CancellableRowChange<ItemCategoryLookupView> modelItem)
         {
             // set the Selected Item Category for use later
             SelectedItemCategoryLookup = modelItem.Item;
             var deleteItem = modelItem;
-            _CategoryWooLinkedViewRepository._WooLinkedGridSettings.DeleteConfirmationWithOption.ShowModal("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.CategoryName}?", SelectedItemCategoryLookup.HasECommerceCategoryMap);  //,"Delete","Cancel"); - passed in on init
+            await _CategoryWooLinkedViewRepository._WooLinkedGridSettings.DeleteConfirmationWithOption.ShowModalAsync("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.CategoryName}?", SelectedItemCategoryLookup.HasECommerceCategoryMap);  //,"Delete","Cancel"); - passed in on init
         }
         //
         async Task ConfirmAddWooItem_Click(bool confirm)
@@ -251,7 +251,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             {
                 // if there is a WooCategory and we have to delete it, then delete that first.
                 if (confirmationOption == ConfirmModalWithOption.ConfirmResults.confirmWithOption)
-                    _CategoryWooLinkedViewRepository._WooLinkedGridSettings.DeleteWooItemConfirmation.ShowModal("Are you sure?", $"Delete {SelectedItemCategoryLookup.CategoryName} from Woo too?", "Delete", "Cancel");
+                    await _CategoryWooLinkedViewRepository._WooLinkedGridSettings.DeleteWooItemConfirmation.ShowModalAsync("Are you sure?", $"Delete {SelectedItemCategoryLookup.CategoryName} from Woo too?", "Delete", "Cancel");
                 else
                     await _CategoryWooLinkedViewRepository.DeleteRowAsync(SelectedItemCategoryLookup);
 

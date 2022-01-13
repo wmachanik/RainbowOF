@@ -46,7 +46,14 @@ namespace RainbowOF.Repositories.Items
                 return false;
             // here we need to check if the Attribute is the same, as we cannot haver duplicate names
             IAppRepository<ItemAttribute> _itemAttributeRepository = _AppUnitOfWork.Repository<ItemAttribute>();
-            var _result = await _itemAttributeRepository.FindFirstByAsync(ic => (ic.ItemAttributeId == checkEntity.ItemAttributeId) && (ic.ItemAttributeLookupId == checkEntity.ItemAttributeLookupId));
+            var _result = await _itemAttributeRepository.FindFirstByAsync(
+                                    checkEntity.ItemAttributeId == Guid.Empty ?
+                                        (ia => (ia.ItemId == checkEntity.ItemId)
+                                            && (ia.ItemAttributeLookupId == checkEntity.ItemAttributeLookupId)) :
+                                        (ia => (ia.ItemId == checkEntity.ItemId)
+                                            && (ia.ItemAttributeId != checkEntity.ItemAttributeId)
+                                            && (ia.ItemAttributeLookupId == checkEntity.ItemAttributeLookupId))
+                                      );
             return (_result != null);
         }
         /// <summary>

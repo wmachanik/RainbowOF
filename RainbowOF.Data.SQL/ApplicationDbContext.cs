@@ -86,9 +86,9 @@ namespace RainbowOF.Data.SQL
             modelBuilder.ApplyConfiguration<ItemAttributeVariety>(new ItemAttributeVarietyModelConfig());
             modelBuilder.Entity<ItemVariant>().ToTable(nameof(ItemVariants));
             modelBuilder.ApplyConfiguration<ItemVariant>(new ItemVariantModelConfig());
-            //modelBuilder.Entity<ItemGroup>().ToTable(nameof(ItemGroups));
+            //modelBuilder.Entity<ItemGroup>().ToTable(name of(ItemGroups));
             //modelBuilder.ApplyConfiguration<ItemGroup>(new ItemGroupModelConfig());
-            ////modelBuilder.Entity<UsedItemGroup>().ToTable(nameof(UsedItemGroups));
+            ////modelBuilder.Entity<UsedItemGroup>().ToTable(name of(UsedItemGroups));
             #endregion
             #region Lookups
             modelBuilder.Entity<ItemCategoryLookup>().ToTable(nameof(ItemCategoriesLookups));

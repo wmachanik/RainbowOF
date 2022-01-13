@@ -29,22 +29,6 @@ namespace RainbowOF.Web.FrontEnd.Pages.Sys
             await LoadSysPrefs();
             //return base.OnInitializedAsync();
         }
-/*
- *      public string ModalTitle = "Saving Status";
-        public string ModalMessage = "System Preferences Saved";
-
-        private Modal modalRef;
-
-        private void ShowModal()
-        {
-            modalRef.Show();
-        }
-
-        private void HideModal()
-        {
-            modalRef.Hide();
-        }
-*/
         private async Task LoadSysPrefs()
         {
             ISysPrefsRepository _SysPref = _AppUnitOfWork.sysPrefsRepository();
@@ -53,7 +37,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Sys
             IsSaved = false;
             StateHasChanged();
         }
-        public async void HandleValidSubmit()
+        public async Task HandleValidSubmit()
         {
             if (SysPrefsModel != null)
             {
@@ -65,10 +49,10 @@ namespace RainbowOF.Web.FrontEnd.Pages.Sys
                 if (!_Saved)
                     ShowSavedStatus.UpdateModalMessage("Error saving preferences");
                 else
-                    ShowSavedStatus.ShowModal();
+                    await ShowSavedStatus.ShowModalAsync();
 
                 HideSaving();
-                //ShowModal();
+                //await ShowModalAsync();
                 StateHasChanged();
             }
         }

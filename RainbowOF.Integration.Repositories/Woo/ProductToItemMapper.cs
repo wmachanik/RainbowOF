@@ -57,9 +57,17 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// <returns></returns>
         public Item MapWooProductInfo(Product sourceWooProd, Item currItem) //, ref List<WooItemWithParent> currWooProductsWithParents)
         {
+            string _oldAbrv = string.Empty;
             if (currItem == null)
                 currItem = new Item();
+            else
+                _oldAbrv = currItem.ItemAbbreviatedName;
+            ////? if it is not a new one should we update abbreviation? 
+
             _Mapper.Map(sourceWooProd, currItem);
+
+            if (!_oldAbrv.Equals(string.Empty))
+                currItem.ItemAbbreviatedName = _oldAbrv; // copy the old abbreviation across, if it was not blank.
 
             //currItem.ItemName = _StringTools.Truncate(sourceWooProd.name, 100);  // max length is 100
             //currItem.SKU = _StringTools.Truncate(sourceWooProd.sku, 50);  // max length is 50

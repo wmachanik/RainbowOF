@@ -1,0 +1,146 @@
+﻿@*
+    -------------------------------------------------------------
+    Component to view Item Variants in a grid for an item
+    Parameters:
+    > PopUpAndLogNotification PopUpRef to display the results of the add
+    > Source ItemId
+    Uses:
+    IAppUnitOfWork _appUnitOfWork
+    -------------------------------------------------------------
+*@
+@using RainbowOF.Models.Items
+
+@if (_ItemVariantGridViewRepository == null)
+{
+    <Badge Color="Color.Primary" Pill="true">loading...</Badge>
+}
+else
+{
+    if (ModelItemVariants == null)
+    {
+        <Blazorise.Badge Color="Color.Info">Item has no variants</Blazorise.Badge>
+    }
+    else
+    {
+        <DataGrid  @ref="_ItemVariantsDataGrid"
+          TItem="ItemVariant" Data="@ModelItemVariants"
+          Sortable="true" Editable="true"
+          Striped="true"
+          Hoverable="true"
+          Responsive="true"
+          EditMode="DataGridEditMode.Popup"
+          TotalItems="ModelItemVariants.Count"
+          PageSize="10" ShowPager="true"
+          @bind-SelectedRow="@SeletectedItemVariant"
+          PageSizes="@(new int[] { 5, 10, 15, 25, 50, 100 })"
+          ShowPageSizes="true" PagerPosition="DataGridPagerPosition.TopAndBottom"
+          Bordered="true"
+          Narrow="true" Filterable="@_ItemVariantGridViewRepository._GridSettings.IsFilterable"
+          UseInternalEditing="true"
+          ValidationsSummaryLabel="Error validating data. Following error occurs..."
+          ShowValidationsSummary="true"
+          ShowValidationFeedback="true"
+          Padding="Padding.Is0">
+            <EmptyTemplate>
+                @{
+                    if (ModelItemVariants == null)
+                    {
+                        <Blazorise.Badge Color="Color.Primary">Loading...</Blazorise.Badge>
+                    }
+                }
+            </EmptyTemplate>
+            <LoadingTemplate>
+                <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
+                    <Column>
+                        <span class="alert-info">Loading</span>
+                    </Column>
+                </Row>
+            </LoadingTemplate>
+            <DataGridColumns>
+                <DataGridColumn TItem="ItemVariant" Field="@nameof(ItemVariant.ItemVariantName)" Caption="Item Name" Sortable="true" Editable="true" ValidationPattern="^\S.{2,100}">
+                </DataGridColumn>
+                <DataGridColumn TItem="ItemVariant" Field="@nameof(ItemVariant.SKU)" Caption="SKU" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,100}">
+                    </DataGridColumn>
+                    <DataGridColumn TItem="ItemVariant" Field="@nameof(ItemVariant.IsEnabled)" Caption="Enabled?" Sortable="true" Editable="true">
+                    <DisplayTemplate>
+                    @{
+                    var rowItem = (context as ItemVariant);
+                    @(rowItem.IsEnabled ? "yes" : "no")
+                    ;
+                    }
+                    </DisplayTemplate>
+                    <EditTemplate>
+                    <Tooltip Text="Is this item enabled?">
+                    @{
+                    <Blazorise.Check TValue="bool" Checked="@((bool)context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)">Is Enabled</Blazorise.Check>
+                    }
+                    </Tooltip>
+                    </EditTemplate>
+                @*<FilterTemplate>
+                    @{
+                    <Select TValue="string" SelectedValue="@(string.IsNullOrEmpty(context.SearchValue) ? String.Empty : (context.SearchValue) )"
+                    SelectedValueChanged="@((e) => context.TriggerFilterChange(string.IsNullOrEmpty(e) ? "" : e.ToString()))">
+                    <SelectItem Value="@String.Empty">none</SelectItem>
+                    <SelectItem Value="@($"enabled")">enabled</SelectItem>
+                    <SelectItem Value="@($"disabled")">disabled</SelectItem>
+                    </Select>
+                    }
+                    </FilterTemplate>*@
+                </DataGridColumn>
+                <DataGridColumn TItem="ItemVariant" Field="@nameof(ItemVariant.ItemVariantAbbreviation)" Caption="Abrv" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,10}">
+                </DataGridColumn>
+            <DataGridCommandColumn TItem="ItemVariant" Width="6.5em">
+                <NewCommandTemplate>
+                    <Tooltip Text="New Item Variant" Style="z-index:99" Placement="TooltipPlacement.Bottom">
+                        <Button Color="Color.Success" Clicked="@context.Clicked">
+                            <Icon Name="IconName.Add" />
+                        </Button>
+                    </Tooltip>
+                    <Tooltip Text="Filter by Column" Style="z-index:99" Placement="TooltipPlacement.Left">
+                        <Button Color="Color.Info" 
+                                Clicked="@(()=>_ItemVariantGridViewRepository._GridSettings.IsFilterable= !_ItemVariantGridViewRepository._GridSettings.IsFilterable)">
+                            <Icon Name="@((_ItemVariantGridViewRepository._GridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" />
+                        </Button>
+                    </Tooltip>
+                </NewCommandTemplate>
+                <EditCommandTemplate>
+                    <Tooltip Text="Edit Item Variant">
+                        <Button Color="Color.Primary" Clicked="@context.Clicked">
+                            <Icon Name="IconName.Edit" />
+                        </Button>
+                    </Tooltip>
+                </EditCommandTemplate>
+                <DeleteCommandTemplate>
+                    <Tooltip Text="Delete Item Variant">
+                        <Button Color="Color.Danger" Clicked="@context.Clicked">
+                            <Icon Name="IconName.Delete" />
+                        </Button>
+                    </Tooltip>
+                </DeleteCommandTemplate>
+                <SaveCommandTemplate>
+                    <Tooltip Text="Save">
+                        <Button Color="Color.Primary" Clicked="@context.Clicked">
+                            <Icon Name="IconName.CheckCircle" />
+                        </Button>
+                    </Tooltip>
+                </SaveCommandTemplate>
+                <CancelCommandTemplate>
+                    <Tooltip Text="Undo changes">
+                        <Button Color="Color.Secondary" Clicked="@context.Clicked">
+                            <Icon Name="IconName.Undo" />
+                        </Button>
+                    </Tooltip>
+                </CancelCommandTemplate>
+                <ClearFilterCommandTemplate>
+                    <Tooltip Text="Clear Filter" Style="z-index:99" Placement="TooltipPlacement.Left">
+                        <Button Color="Color.Info" Outline="true" Clicked="@context.Clicked">
+                            <Icon Name="IconName.Clear" />
+                        </Button>
+                    </Tooltip>
+                </ClearFilterCommandTemplate>
+            </DataGridCommandColumn>
+
+            </DataGridColumns>
+        </DataGrid>
+    }
+}

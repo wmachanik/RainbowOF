@@ -30,8 +30,8 @@ namespace RainbowOF.Repositories.Items
 
             newEntity.ItemAttributeId = ParentId;
             newEntity.IsDefault = false;
-            newEntity.UoMId = Guid.Empty;
-            newEntity.UoMQtyPerItem = 1;
+            //newEntity.UoMId = Guid.Empty;
+            //newEntity.UoMQtyPerItem = 1;
             newEntity.ItemAttributeVarietyLookupId = Guid.Empty;
             return newEntity;
         }
@@ -48,7 +48,16 @@ namespace RainbowOF.Repositories.Items
                 return false;
             // here we need to check if the AttributeVariety is the same, as we cannot haver duplicate names
             IAppRepository<ItemAttributeVariety> _itemAttributeVarietyRepository = _AppUnitOfWork.Repository<ItemAttributeVariety>();
-            var _result = await _itemAttributeVarietyRepository.FindFirstByAsync(ic => (ic.ItemAttributeVarietyId == checkEntity.ItemAttributeVarietyId) && (ic.ItemAttributeVarietyLookupId == checkEntity.ItemAttributeVarietyLookupId));
+            var _result = await _itemAttributeVarietyRepository.FindFirstByAsync(
+                checkEntity.ItemAttributeVarietyId == Guid.Empty ?
+                  (iav => 
+                        (iav.ItemAttributeId == checkEntity.ItemAttributeId) 
+                     && (iav.ItemAttributeVarietyLookupId == checkEntity.ItemAttributeVarietyLookupId) ) :
+                  (iav =>
+                        (iav.ItemAttributeVarietyId != checkEntity.ItemAttributeVarietyId) 
+                     && (iav.ItemAttributeId == checkEntity.ItemAttributeId) 
+                     && (iav.ItemAttributeVarietyLookupId == checkEntity.ItemAttributeVarietyLookupId))
+                );
             return (_result != null);
         }
         /// <summary>

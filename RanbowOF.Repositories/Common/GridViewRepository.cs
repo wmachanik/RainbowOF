@@ -26,6 +26,7 @@ namespace RainbowOF.Repositories.Common
         {
             _Logger = sourceLogger;
             _AppUnitOfWork = sourceAppUnitOfWork;
+            _Logger.LogDebug($"GridViewRepository of type {typeof(TEntity).Name} initialised.");
             //_Mapper = sourceMapper;
         }
         #endregion
@@ -136,7 +137,7 @@ namespace RainbowOF.Repositories.Common
         public async Task<int> DeleteViewRowByIdAsync(object Id, string deletedEntityDescription)
         {
             IAppRepository<TEntity> appRepository = _AppUnitOfWork.Repository<TEntity>();
-            var _result = await appRepository.DeleteByIdAsync(Id);
+            var _result = await appRepository.DeleteByPrimaryIdAsync(Id);
             if (_result == null)
                 _GridSettings.PopUpRef.ShowNotification(Components.Modals.PopUpAndLogNotification.NotificationType.Error, $"Error deleting: {deletedEntityDescription}.");
             else
