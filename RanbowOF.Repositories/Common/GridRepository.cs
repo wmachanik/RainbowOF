@@ -10,23 +10,24 @@ using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Common
 {
-    public class GridViewRepository<TEntity> : IGridViewRepository<TEntity> where TEntity : class
+    public class GridRepository<TEntity> : IGridRepository<TEntity> where TEntity : class
     {
         #region Common variables
-        public GridSettings _GridSettings { get; set; } = new();
+        public GridSettings gridSettings { get; set; } = new();
         #endregion
         #region passed in variables
-        public ILoggerManager _Logger { get; set; }
-        public IAppUnitOfWork _AppUnitOfWork { get; set; }
+        public ILoggerManager appLoggerManager { get; set; }
+        public IUnitOfWork appUnitOfWork { get; set; }
         //        public IMapper _Mapper { get; set; }
         #endregion
         #region initialisation routine
-        public GridViewRepository(ILoggerManager sourceLogger,
-                               IAppUnitOfWork sourceAppUnitOfWork) //, IMapper sourceMapper)
+        public GridRepository(ILoggerManager sourceLogger,
+                              IUnitOfWork sourceAppUnitOfWork) //, IMapper sourceMapper)
         {
-            _Logger = sourceLogger;
-            _AppUnitOfWork = sourceAppUnitOfWork;
-            _Logger.LogDebug($"GridViewRepository of type {typeof(TEntity).Name} initialised.");
+            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"GridRepository of type {typeof(TEntity)} initialising.");
+            appLoggerManager = sourceLogger;
+            appUnitOfWork = sourceAppUnitOfWork;
+            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"GridRepository of type {typeof(TEntity)} initialised.");
             //_Mapper = sourceMapper;
         }
         #endregion
@@ -78,7 +79,7 @@ namespace RainbowOF.Repositories.Common
         #region Generic routines       
         public async Task<TEntity> GetEntityByIdAsync(object Id)
         {
-            IAppRepository<TEntity> appRepository = _AppUnitOfWork.Repository<TEntity>();
+            IRepository<TEntity> appRepository = appUnitOfWork.Repository<TEntity>();
             var _result = await appRepository.GetByIdAsync(Id);
             return _result;
         }
@@ -88,10 +89,10 @@ namespace RainbowOF.Repositories.Common
         /// </summary>
         /// <param name="predicate"></param>
         /// <returns></returns>
-        public async Task<TEntity> FidnFirstByAsync(Expression<Func<TEntity, bool>> predicate)
+        public async Task<TEntity> FindFirstByAsync(Expression<Func<TEntity, bool>> predicate)
         {
-            IAppRepository<TEntity> appRepository = _AppUnitOfWork.Repository<TEntity>();
-            var _result = await appRepository.FindFirstByAsync(predicate);
+            IRepository<TEntity> appRepository = appUnitOfWork.Repository<TEntity>();
+            var _result = await appRepository.GetByIdAsync(predicate);
             return _result;
         }
         /// <summary>
@@ -107,23 +108,23 @@ namespace RainbowOF.Repositories.Common
             {
                 if (await IsDuplicateAsync(newEntity))
                 {
-                    _GridSettings.PopUpRef.ShowNotification(Components.Modals.PopUpAndLogNotification.NotificationType.Error, $"A duplicate of {newEntityDescription} was found in the database.");
+                    gridSettings.PopUpRef.ShowNotificationAsync(Components.Modals.PopUpAndLogNotification.NotificationType.Error, $"A duplicate of {newEntityDescription} was found in the database.");
                     return null;
                 }
                 else
                 {
-                    IAppRepository<TEntity> appRepository = _AppUnitOfWork.Repository<TEntity>();
+                    IRepository<TEntity> appRepository = appUnitOfWork.Repository<TEntity>();
                     var _result = await appRepository.AddAsync(newEntity);
                     if (_result == null)
-                        _GridSettings.PopUpRef.ShowNotification(Components.Modals.PopUpAndLogNotification.NotificationType.Error, $"Error adding: {newEntityDescription}.");
+                        gridSettings.PopUpRef.ShowNotificationAsync(Components.Modals.PopUpAndLogNotification.NotificationType.Error, $"Error adding: {newEntityDescription}.");
                     else
-                        _GridSettings.PopUpRef.ShowNotification(Components.Modals.PopUpAndLogNotification.NotificationType.Success, $"{newEntityDescription} added.");
+                        gridSettings.PopUpRef.ShowNotificationAsync(Components.Modals.PopUpAndLogNotification.NotificationType.Success, $"{newEntityDescription} added.");
                     return _result;
                 }
             }
             else
             {
-                _GridSettings.PopUpRef.ShowNotification(Components.Modals.PopUpAndLogNotification.NotificationType.Error, $"{newEntityDescription} is not valid.");
+                gridSettings.PopUpRef.ShowNotificationAsync(Components.Modals.PopUpAndLogNotification.NotificationType.Error, $"{newEntityDescription} is not valid.");
                 return null;
             }
         }
@@ -136,12 +137,12 @@ namespace RainbowOF.Repositories.Common
         /// <returns></returns>
         public async Task<int> DeleteViewRowByIdAsync(object Id, string deletedEntityDescription)
         {
-            IAppRepository<TEntity> appRepository = _AppUnitOfWork.Repository<TEntity>();
+            IRepository<TEntity> appRepository = appUnitOfWork.Repository<TEntity>();
             var _result = await appRepository.DeleteByPrimaryIdAsync(Id);
             if (_result == null)
-                _GridSettings.PopUpRef.ShowNotification(Components.Modals.PopUpAndLogNotification.NotificationType.Error, $"Error deleting: {deletedEntityDescription}.");
+                gridSettings.PopUpRef.ShowNotificationAsync(Components.Modals.PopUpAndLogNotification.NotificationType.Error, $"Error deleting: {deletedEntityDescription}.");
             else
-                _GridSettings.PopUpRef.ShowNotification(Components.Modals.PopUpAndLogNotification.NotificationType.Success, $"{deletedEntityDescription} deleted.");
+                gridSettings.PopUpRef.ShowNotificationAsync(Components.Modals.PopUpAndLogNotification.NotificationType.Success, $"{deletedEntityDescription} deleted.");
             return _result;
         }
         /// <summary>
@@ -155,27 +156,19 @@ namespace RainbowOF.Repositories.Common
         {
             if (IsValid(updatedEntity))
             {
-               // dup check is not correct here, need to do it somewhere else.
-                if (await IsDuplicateAsync(updatedEntity))
-                {
-                    _GridSettings.PopUpRef.ShowNotification(Components.Modals.PopUpAndLogNotification.NotificationType.Error, $"A duplicate of {updatedEntityDescription} was found in the database.");
-                    return AppUnitOfWork.CONST_WASERROR;
-                }
+                // no need to do a duplicate check since it is an update
+                IRepository<TEntity> _appRepository = appUnitOfWork.Repository<TEntity>();
+                var _result = await _appRepository.UpdateAsync(updatedEntity);
+                if (appUnitOfWork.IsInErrorState())
+                    gridSettings.PopUpRef.ShowNotificationAsync(Components.Modals.PopUpAndLogNotification.NotificationType.Error, $"Error updating: {updatedEntityDescription} - {appUnitOfWork.GetErrorMessage()}.");
                 else
-                {
-                    IAppRepository<TEntity> _appRepository = _AppUnitOfWork.Repository<TEntity>();
-                    var _result = await _appRepository.UpdateAsync(updatedEntity);
-                    if (_AppUnitOfWork.IsInErrorState())
-                        _GridSettings.PopUpRef.ShowNotification(Components.Modals.PopUpAndLogNotification.NotificationType.Error, $"Error updating: {updatedEntityDescription} - {_AppUnitOfWork.GetErrorMessage()}.");
-                    else
-                        _GridSettings.PopUpRef.ShowNotification(Components.Modals.PopUpAndLogNotification.NotificationType.Success, $"{updatedEntityDescription} updated.");
-                    return _result;
-               }
+                    gridSettings.PopUpRef.ShowNotificationAsync(Components.Modals.PopUpAndLogNotification.NotificationType.Success, $"{updatedEntityDescription} updated.");
+                return _result;
             }
             else
             {
-                _GridSettings.PopUpRef.ShowNotification(Components.Modals.PopUpAndLogNotification.NotificationType.Error, $"{updatedEntityDescription} is not valid.");
-                return AppUnitOfWork.CONST_WASERROR;
+                gridSettings.PopUpRef.ShowNotificationAsync(Components.Modals.PopUpAndLogNotification.NotificationType.Error, $"{updatedEntityDescription} is not valid.");
+                return UnitOfWork.CONST_WASERROR;
             }
         }
         #endregion

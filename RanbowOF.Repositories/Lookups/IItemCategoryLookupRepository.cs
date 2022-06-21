@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Lookups
 {
-    public interface IItemCategoryLookupRepository : IAppRepository<ItemCategoryLookup>
+    public interface IItemCategoryLookupRepository : IRepository<ItemCategoryLookup>
     {
         Task<List<ItemCategoryLookup>> GetAllEagerLoadingAsync();
         Task<DataGridItems<ItemCategoryLookup>> GetPagedDataEagerWithFilterAndOrderByAsync(DataGridParameters currentDataGridParameters);  // (int startPage, int currentPageSize);

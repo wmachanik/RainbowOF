@@ -1,5 +1,6 @@
 ﻿@page "/"
 
+
 <h1>Welcome to Rainbow OF</h1>
 
 Welcome to Rainbow Order Fulfilment manager.
@@ -15,13 +16,23 @@ Welcome to Rainbow Order Fulfilment manager.
         </NavLink>
         <ul>
             <li>
-                <NavLink class="nav-link" href="/itemedit/3565948d-d1d5-477a-6682-08d9bf00293d">
-                    Edit  Simple Item
+                <NavLink class="nav-link" href="/itemedit/15a7881e-1d5d-44c2-5e43-08da290e8fdc">
+                    Edit Simple Item
                 </NavLink>
             </li>
             <li>
-                <NavLink class="nav-link" href="/itemedit/0b6fe32e-265a-4ad0-6677-08d9bf00293d">
+                <NavLink class="nav-link" href="/itemedit/e87fed9a-b410-423d-da48-08da277fad0e">
+                    Edit Sudan R
+                </NavLink>
+            </li>
+            <li>
+                <NavLink class="nav-link" href="/itemedit/e5cfcec3-4637-4887-5e37-08da290e8fdc">
                     Edit Green hnOrg
+                </NavLink>
+            </li>
+                        <li>
+                <NavLink class="nav-link" href="/itemedit/0159cc56-392c-42f1-5e4b-08da290e8fdc">
+                    Edit Armonizar
                 </NavLink>
             </li>
         </ul>
@@ -85,6 +96,11 @@ Welcome to Rainbow Order Fulfilment manager.
 
 <label class="alert-info">@myValue</label>
 
+<hr />
+<h2>Toast</h2>
+<Button Color="Color.Dark" Clicked="(() => ShowToast())"><Icon Name="IconName.ArrowUp"></Icon>Toast</Button>
+<RainbowOF.Components.Modals.PopUpAndLogNotification @ref="_toastPopup" NotificationMessage="Testing Toast" NotificationTitle="Test" />
+
 @code {
     public string myColour { get; set; } = "#F5a590";
     public string myFGColour { get; set; } = "#000000";
@@ -96,6 +112,8 @@ Welcome to Rainbow Order Fulfilment manager.
 
     private RainbowOF.Components.Modals.ConfirmModalWithOption _confirmModalWithOption { get; set; }
 
+    private RainbowOF.Components.Modals.PopUpAndLogNotification _toastPopup { get; set; }
+
     void OnColorChanged(string value)
     {
         myColour = value;
@@ -105,6 +123,11 @@ Welcome to Rainbow Order Fulfilment manager.
     {
         await _confirmModalWithOption.ShowModalAsync("This is a confirmation", "Are you sure you want to confirm?", "Please Confirm", myShowOption);
         //StateHasChanged();
+    }
+
+    async Task ShowToast()
+    {
+      await   _toastPopup.ShowNotificationAsync(Components.Modals.PopUpAndLogNotification.NotificationType.Info, "Toasted pop-up");
     }
 
     void ConfirmPopUp_Click(RainbowOF.Components.Modals.ConfirmModalWithOption.ConfirmResults confirmationOption)

@@ -14,34 +14,34 @@ using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Lookups
 {
-    public class ItemCategoryLookupRepository : AppRepository<ItemCategoryLookup>, IItemCategoryLookupRepository
+    public class ItemCategoryLookupRepository : Repository<ItemCategoryLookup>, IItemCategoryLookupRepository
     {
         #region Private vars of parameters
-        private ApplicationDbContext _Context = null;
-        private ILoggerManager _Logger { get; set; }
-        private IAppUnitOfWork _AppUnitOfWork { get; set; }
+        //private ApplicationDbContext appContext = null;
+        //private ILoggerManager appLoggerManager { get; set; }
+        //private IUnitOfWork appUnitOfWork { get; set; }
         #endregion
-        public ItemCategoryLookupRepository(ApplicationDbContext sourceDbContext, ILoggerManager sourceLogger, IAppUnitOfWork sourceAppUnitOfWork) : base(sourceDbContext, sourceLogger, sourceAppUnitOfWork)
+        public ItemCategoryLookupRepository(ApplicationDbContext sourceDbContext, ILoggerManager sourceLogger, IUnitOfWork sourceAppUnitOfWork) : base(sourceDbContext, sourceLogger, sourceAppUnitOfWork)
         {
-            _Context = sourceDbContext;
-            _Logger = sourceLogger;
-            _AppUnitOfWork = sourceAppUnitOfWork;
-            _Logger.LogDebug("ItemCategoryLookupRepository initialised...");
+            //appContext = sourceDbContext;
+            //appLoggerManager = sourceLogger;
+            //appUnitOfWork = sourceAppUnitOfWork;
+            if (sourceLogger.IsDebugEnabled()) sourceLogger.LogDebug("ItemCategoryLookupRepository initialised...");
         }
 
         public async Task<List<ItemCategoryLookup>> GetAllEagerLoadingAsync()
         {
             List<ItemCategoryLookup> _items = null;
-            DbSet<ItemCategoryLookup> _table = _Context.Set<ItemCategoryLookup>();
+            DbSet<ItemCategoryLookup> _table = appContext.Set<ItemCategoryLookup>();
 
             try
             {
-                _Logger.LogDebug($"Getting all records with eager loading of ItemCategoryLookup");
+                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Getting all records with eager loading of ItemCategoryLookup");
                 _items = await _table.Include(icl => icl.ParentCategory).ToListAsync();
             }
             catch (Exception ex)
             {
-                _AppUnitOfWork.LogAndSetErrorMessage( $"!!!Error Getting all records from ItemCategoryLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
+                appUnitOfWork.LogAndSetErrorMessage( $"!!!Error Getting all records from ItemCategoryLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -118,11 +118,11 @@ namespace RainbowOF.Repositories.Lookups
         public async Task<DataGridItems<ItemCategoryLookup>> GetPagedDataEagerWithFilterAndOrderByAsync(DataGridParameters currentDataGridParameters) // (int startPage, int currentPageSize)
         {
             DataGridItems<ItemCategoryLookup> _dataGridData = null;
-            DbSet<ItemCategoryLookup> _table = _Context.Set<ItemCategoryLookup>();
+            DbSet<ItemCategoryLookup> _table = appContext.Set<ItemCategoryLookup>();
 
             try
             {
-                _Logger.LogDebug( $"Getting all records with eager loading of ItemCategoryLookup order by an filter Data Grid Parameters: {currentDataGridParameters.ToString()}");
+                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug( $"Getting all records with eager loading of ItemCategoryLookup order by an filter Data Grid Parameters: {currentDataGridParameters.ToString()}");
                 // get a list of Order bys and filters
                 List<OrderByParameter<ItemCategoryLookup>> _orderByExpressions = GetOrderByExpressions(currentDataGridParameters.SortParams);
                 List<Expression<Func<ItemCategoryLookup, bool>>> _filterByExpressions = GetFilterByExpressions(currentDataGridParameters.FilterParams);
@@ -191,7 +191,7 @@ namespace RainbowOF.Repositories.Lookups
             }
             catch (Exception ex)
             {
-                _AppUnitOfWork.LogAndSetErrorMessage( $"!!!Error Getting all records from ItemCategoryLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
+                appUnitOfWork.LogAndSetErrorMessage( $"!!!Error Getting all records from ItemCategoryLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif

@@ -20,49 +20,54 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         public bool IsSaving = false;
         public bool IsChanged = false;
         public WooSettings modelWooSettings { get; set; } = null;
-        //for saving
-        protected ShowModalMessage ShowSavedStatus { get; set; }
-        //for changing
-        protected ShowModalMessage ShowChangedStatus { get; set; }
+        ////for saving
+        //protected ShowModalMessage ShowSavedStatus { get; set; }
+        ////for changing
+        //protected ShowModalMessage ShowChangedStatus { get; set; }
+        //protected PopUpAndLogNotification PopSavedStatus { get; set; }
+        protected PopUpAndLogNotification PopChangedStatus { get; set; }
+
         [Inject]
-        private IAppUnitOfWork _AppUnitOfWork { get; set; }
+        private IUnitOfWork appUnitOfWork { get; set; }
         [Inject]
-        private ILoggerManager _Logger { get; set; }
+        private ILoggerManager appLoggerManager { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
-            StateHasChanged();
+            await base.OnInitializedAsync();
+
+            //   PopChangedStatus.ShowNotification(PopUpAndLogNotification.NotificationType.Info, "loading preferences");
             await LoadWooPrefs();
-            //return base.OnInitializedAsync();
         }
 
         private async Task LoadWooPrefs()
         {
-            IAppRepository<WooSettings> _wooPrefs = _AppUnitOfWork.Repository<WooSettings>();
+            IRepository<WooSettings> _wooPrefs = appUnitOfWork.Repository<WooSettings>();
 
-            StateHasChanged();
+            //            StateHasChanged();
 
-             modelWooSettings = await _wooPrefs.FindFirstAsync();
+            modelWooSettings =  _wooPrefs.FindFirst(); // await _wooPrefs.FindFirstAsync();
             if (modelWooSettings == null)
             {
                 modelWooSettings = new WooSettings();   // if nothing send back a empty record
             }
 
             IsSaved = false;
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
+            // StateHasChanged();
         }
         public async Task HandleValidSubmitAsync()
         {
             if (modelWooSettings != null)
             {
                 ShowSaving();
-                IAppRepository<WooSettings> _WooSettingsRepo = _AppUnitOfWork.Repository<WooSettings>();
+                IRepository<WooSettings> _WooSettingsRepo = appUnitOfWork.Repository<WooSettings>();
                 // save
                 // run this update regardless 
-                if (modelWooSettings.WooSettingsId > 0)
+                if (modelWooSettings.WooSettingsId> 0)
                 {
                     // it means that there was a record in the database.
-                    IsSaved =  (await _WooSettingsRepo.UpdateAsync(modelWooSettings)) > 0;
+                    IsSaved =  (await _WooSettingsRepo.UpdateAsync(modelWooSettings))> 0;
                 }
                 else
                 {
@@ -70,11 +75,11 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                     IsSaved = (await _WooSettingsRepo.AddAsync(modelWooSettings)) != null;
                 }
                 IsChanged = false;
-                if (IsSaved) ShowChangedStatus.UpdateModalMessage("Woo settings have been saved.");
-                else ShowChangedStatus.UpdateModalMessage("Error saving Woo settings. Please check database access.");
+                if (IsSaved) await PopChangedStatus.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Success,"Woo settings have been saved.");
+                else await PopChangedStatus.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, "Error saving Woo settings. Please check database access.");
                 HideSaving();
-                await ShowChangedStatus.ShowModalAsync();
-                StateHasChanged();
+                //await ShowChangedStatus.ShowModalAsync();
+                //StateHasChanged();
             }
         }
         public void ShowSaving()

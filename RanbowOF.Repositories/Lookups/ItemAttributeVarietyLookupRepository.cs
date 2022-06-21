@@ -16,17 +16,17 @@ using System.Threading.Tasks;
 namespace RainbowOF.Repositories.Lookups
 {
 
-    public class ItemAttributeVarietyLookupRepository : AppRepository<ItemAttributeVarietyLookup>, IItemAttributeVarietyLookupRepository
+    public class ItemAttributeVarietyLookupRepository : Repository<ItemAttributeVarietyLookup>, IItemAttributeVarietyLookupRepository
     {
-        private ApplicationDbContext _Context = null;
-        private ILoggerManager _Logger { get; set; }
-        private IAppUnitOfWork _AppUnitOfWork { get; set; }
-        public ItemAttributeVarietyLookupRepository(ApplicationDbContext sourceDbContext, ILoggerManager sourceLogger, IAppUnitOfWork sourceAppUnitOfWork) : base(sourceDbContext, sourceLogger, sourceAppUnitOfWork)
+        //private ApplicationDbContext appContext = null;
+        //private ILoggerManager appLoggerManager { get; set; }
+        //private IUnitOfWork appUnitOfWork { get; set; }
+        public ItemAttributeVarietyLookupRepository(ApplicationDbContext sourceDbContext, ILoggerManager sourceLogger, IUnitOfWork sourceAppUnitOfWork) : base(sourceDbContext, sourceLogger, sourceAppUnitOfWork)
         {
-            _Context = sourceDbContext;
-            _Logger = sourceLogger;
-            _AppUnitOfWork = sourceAppUnitOfWork;
-            _Logger.LogDebug("ItemAttributeVarietyLookupRepository initialised.");
+            //appContext = sourceDbContext;
+            //appLoggerManager = sourceLogger;
+            //appUnitOfWork = sourceAppUnitOfWork;
+            if (sourceLogger.IsDebugEnabled()) sourceLogger.LogDebug("ItemAttributeVarietyLookupRepository initialised.");
         }
 
         List<OrderByParameter<ItemAttributeVarietyLookup>> GetOrderByExpressions(List<SortParam> currentSortParams)
@@ -135,13 +135,13 @@ namespace RainbowOF.Repositories.Lookups
         public async Task<DataGridItems<ItemAttributeVarietyLookup>> GetPagedDataEagerWithFilterAndOrderByAsync(DataGridParameters currentDataGridParameters, Guid sourceParentItemAttributeLookupId) // (int startPage, int currentPageSize)
         {
             DataGridItems<ItemAttributeVarietyLookup> _dataGridData = null;
-            DbSet<ItemAttributeVarietyLookup> _table = _Context.Set<ItemAttributeVarietyLookup>();
+            DbSet<ItemAttributeVarietyLookup> _table = appContext.Set<ItemAttributeVarietyLookup>();
 
             try
             {
-                _Logger.LogDebug($"Getting all records with eager loading of ItemAttributeVarietyLookup order by an filter Data Grid Parameters: {currentDataGridParameters.ToString()}");
-                if (_AppUnitOfWork.DBTransactionIsStillRunning())
-                    _Logger.LogDebug("Second transaction started before current transaction completed!");
+                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Getting all records with eager loading of ItemAttributeVarietyLookup order by an filter Data Grid Parameters: {currentDataGridParameters.ToString()}");
+                if (appUnitOfWork.DBTransactionIsStillRunning())
+                    if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("Second transaction started before current transaction completed!");
 
                 // get a list of Order bys and filters
                 List<OrderByParameter<ItemAttributeVarietyLookup>> _orderByExpressions = GetOrderByExpressions(currentDataGridParameters.SortParams);
@@ -200,7 +200,7 @@ namespace RainbowOF.Repositories.Lookups
             }
             catch (Exception ex)
             {
-                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all records from ItemAttributeVarietyLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
+                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all records from ItemAttributeVarietyLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif

@@ -33,19 +33,19 @@ namespace RainbowOF.Integration.Repositories.Woo
     public class WooImportProductCategory : IWooImportWithParents<ItemCategoryLookup, ProductCategory, WooCategoryMap>
     {
         #region Variables
-        public IAppUnitOfWork _AppUnitOfWork { get; set; }
-        public ILoggerManager _Logger { get; set; }
-        public WooSettings _AppWooSettings { get; set; }
+        public IUnitOfWork appUnitOfWork { get; set; }
+        public ILoggerManager appLoggerManager { get; set; }
+        public WooSettings appWooSettings { get; set; }
         public ImportCounters CurrImportCounters { get; set; } = new();
         public List<WooItemWithParent> EntityWithParents { get; set; } = new List<WooItemWithParent>();
         #endregion
         #region Constructor
-        public WooImportProductCategory(IAppUnitOfWork appUnitOfWork, ILoggerManager logger, WooSettings appWooSettings)
+        public WooImportProductCategory(IUnitOfWork appUnitOfWork, ILoggerManager logger, WooSettings appWooSettings)
         {
-            _AppUnitOfWork = appUnitOfWork;
-            _Logger = logger;
-            _AppWooSettings = appWooSettings;
-            _Logger.LogDebug("WooImportProductCategory initialised.");
+            this.appUnitOfWork = appUnitOfWork;
+            appLoggerManager = logger;
+            this.appWooSettings = appWooSettings;
+            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("WooImportProductCategory initialised.");
         }
         #endregion
         #region Methods
@@ -55,8 +55,8 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// <returns>List of Product Categories from Woo</returns>
         public async Task<List<ProductCategory>> GetWooEntityDataAsync(bool InStock = false)  // don't use the instock here.
         {
-            WooAPISettings _wooAPISettings = new WooAPISettings(_AppWooSettings);
-            IWooProductCategory _WooProductCategory = new WooProductCategory(_wooAPISettings, _Logger);
+            WooAPISettings _wooAPISettings = new WooAPISettings(appWooSettings);
+            IWooProductCategory _WooProductCategory = new WooProductCategory(_wooAPISettings, appLoggerManager);
             return await _WooProductCategory.GetAllProductCategoriesAsync();
         }
         //        public async Task<Guid> GetCategoryById(int sourceWooCategoryId)
@@ -69,9 +69,9 @@ namespace RainbowOF.Integration.Repositories.Woo
         public async Task<Guid> GetWooMappedEntityIdByIdAsync(uint sourceWooEntityId)
         {
             // using the category woo category mapping find the associated ID
-            IAppRepository<WooCategoryMap> _wooCatrgoryMapRepository = _AppUnitOfWork.Repository<WooCategoryMap>();
+            IRepository<WooCategoryMap> _wooCatrgoryMapRepository = appUnitOfWork.Repository<WooCategoryMap>();
 
-            WooCategoryMap _wooCategoryMap = await _wooCatrgoryMapRepository.FindFirstByAsync(wc => wc.WooCategoryId == sourceWooEntityId);
+            WooCategoryMap _wooCategoryMap = await _wooCatrgoryMapRepository.GetByIdAsync(wc => wc.WooCategoryId == sourceWooEntityId);
             return (_wooCategoryMap == null)
                 ? Guid.Empty
                 : _wooCategoryMap.ItemCategoryLookupId;
@@ -85,9 +85,9 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// <returns>Guid based Id from the systems lookup table that matches found or created Category, Guid.Empty for error</returns>
         public async Task<Guid> AddOrGetEntityIDAsync(ProductCategory sourceEntity)
         {
-            IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
+            IRepository<ItemCategoryLookup> _itemCategoryLookupRepository = appUnitOfWork.Repository<ItemCategoryLookup>();
 
-            ItemCategoryLookup _itemCategoryLookup = await _itemCategoryLookupRepository.FindFirstByAsync(ic => ic.CategoryName == sourceEntity.name);
+            ItemCategoryLookup _itemCategoryLookup = await _itemCategoryLookupRepository.GetByIdAsync(ic => ic.CategoryName == sourceEntity.name);
             if (_itemCategoryLookup == null)
             {
                 ItemCategoryLookup _newItemCategoryLookup = new ItemCategoryLookup
@@ -123,9 +123,9 @@ namespace RainbowOF.Integration.Repositories.Woo
         public async Task<Guid> AddOrUpdateEntityAsync(ProductCategory sourceEntity, Guid sourceWooMappedEntityId)
         {
             Guid _itemCategoryLookupId = Guid.Empty;
-            IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
+            IRepository<ItemCategoryLookup> _itemCategoryLookupRepository = appUnitOfWork.Repository<ItemCategoryLookup>();
             // check if the category exists
-            ItemCategoryLookup _itemCategoryLookup = await _itemCategoryLookupRepository.FindFirstByAsync(ic => ic.ItemCategoryLookupId == sourceWooMappedEntityId);
+            ItemCategoryLookup _itemCategoryLookup = await _itemCategoryLookupRepository.GetByIdAsync(ic => ic.ItemCategoryLookupId == sourceWooMappedEntityId);
             if (_itemCategoryLookup != null)
             {
                 _itemCategoryLookupId = await UpdateEntityAsync(sourceEntity, _itemCategoryLookup); //--, sourceCategoriesWithParents);
@@ -145,7 +145,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         public async Task<Guid> AddEntityAsync(ProductCategory newWooEntity)
         {
             Guid _itemCategoryLookupId = Guid.Empty;
-            IAppRepository<WooCategoryMap> _wooCategoryMapRepository = _AppUnitOfWork.Repository<WooCategoryMap>();
+            IRepository<WooCategoryMap> _wooCategoryMapRepository = appUnitOfWork.Repository<WooCategoryMap>();
 
             // Add Item Category if it does not exist
             _itemCategoryLookupId = await AddOrGetEntityIDAsync(newWooEntity); //--  , newCategoriesWithParents);
@@ -196,11 +196,11 @@ namespace RainbowOF.Integration.Repositories.Woo
         {
             Guid _itemCategoryLookupId = Guid.Empty;
             // Get repository for each database we are accessing. ItemCategoryLookup. WooProductCategoryMap & WooSyncLog
-            IAppRepository<WooCategoryMap> _wooCategoryMapRepository = _AppUnitOfWork.Repository<WooCategoryMap>();
+            IRepository<WooCategoryMap> _wooCategoryMapRepository = appUnitOfWork.Repository<WooCategoryMap>();
             // Import the category and set sync data
             ///first check if it exists in the mapping, just in case there has been a name change
-            WooCategoryMap _wooCategoryMap = await _wooCategoryMapRepository.FindFirstByAsync(wpc => wpc.WooCategoryId == sourceEntity.id);
-            if (!_AppUnitOfWork.IsInErrorState())
+            WooCategoryMap _wooCategoryMap = await _wooCategoryMapRepository.GetByIdAsync(wpc => wpc.WooCategoryId == sourceEntity.id);
+            if (!appUnitOfWork.IsInErrorState())
             {
                 if (_wooCategoryMap != null)                  // the id exists so update
                 {
@@ -228,15 +228,15 @@ namespace RainbowOF.Integration.Repositories.Woo
             bool _IsUpdated = false;
             if ((sourceChildWooCategoryId != Guid.Empty) && (sourceParentWooCategoryId != Guid.Empty))
             {
-                IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
+                IRepository<ItemCategoryLookup> _itemCategoryLookupRepository = appUnitOfWork.Repository<ItemCategoryLookup>();
 
-                ItemCategoryLookup _itemCategoryLookup = await _itemCategoryLookupRepository.FindFirstByAsync(ic => ic.ItemCategoryLookupId == sourceChildWooCategoryId);
+                ItemCategoryLookup _itemCategoryLookup = await _itemCategoryLookupRepository.GetByIdAsync(ic => ic.ItemCategoryLookupId == sourceChildWooCategoryId);
                 if (_itemCategoryLookup == null)
                     _IsUpdated = false;
                 else
                 {     // found so update
                     _itemCategoryLookup.ParentCategoryId = sourceParentWooCategoryId;
-                    _IsUpdated = (await _itemCategoryLookupRepository.UpdateAsync(_itemCategoryLookup)) != AppUnitOfWork.CONST_WASERROR;
+                    _IsUpdated = (await _itemCategoryLookupRepository.UpdateAsync(_itemCategoryLookup)) != UnitOfWork.CONST_WASERROR;
                 }
             }
             return _IsUpdated;
@@ -249,7 +249,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// <returns></returns>
         public async Task<Guid> UpdateEntityAsync(ProductCategory updatedWooEntity, ItemCategoryLookup updatedEntity)
         {
-            IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
+            IRepository<ItemCategoryLookup> _itemCategoryLookupRepository = appUnitOfWork.Repository<ItemCategoryLookup>();
             updatedEntity.CategoryName = updatedWooEntity.name;
             //-> don't update this, updatedEntity.UsedForPrediction = (updatedWooEntity.parent == null) || (updatedWooEntity.parent == 0);
             // do not set parent Id here since it could cause database problems - if it is already null then it will be updated later.
@@ -263,7 +263,7 @@ namespace RainbowOF.Integration.Repositories.Woo
                 });
             }
             updatedEntity.Notes = $"Updated Woo Category ID {updatedWooEntity.id}";
-            bool _success = await _itemCategoryLookupRepository.UpdateAsync(updatedEntity) != AppUnitOfWork.CONST_WASERROR;
+            bool _success = await _itemCategoryLookupRepository.UpdateAsync(updatedEntity) != UnitOfWork.CONST_WASERROR;
             return (_success) ? updatedEntity.ItemCategoryLookupId : Guid.Empty;
         }
         /// <summary>
@@ -275,7 +275,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         public async Task<Guid> UpdateWooMappingEntityAsync(ProductCategory updatedEntity, WooCategoryMap targetWooMap)
         {
             Guid _itemCategoryLookupId = Guid.Empty;
-            IAppRepository<WooCategoryMap> _wooCategoryMapRepository = _AppUnitOfWork.Repository<WooCategoryMap>();
+            IRepository<WooCategoryMap> _wooCategoryMapRepository = appUnitOfWork.Repository<WooCategoryMap>();
             // copy data across
             targetWooMap.WooCategoryName = updatedEntity.name;
             targetWooMap.WooCategorySlug = updatedEntity.slug;
@@ -284,7 +284,7 @@ namespace RainbowOF.Integration.Repositories.Woo
             if (_itemCategoryLookupId != Guid.Empty)
             {
                 /// Now update the woo categorY using the _itemCategoryLookupId returned.
-                if (await _wooCategoryMapRepository.UpdateAsync(targetWooMap) == AppUnitOfWork.CONST_WASERROR)
+                if (await _wooCategoryMapRepository.UpdateAsync(targetWooMap) == UnitOfWork.CONST_WASERROR)
                 {
                     // did not updated so set _itemCategoryLookupId to ItemCategoryLookupID to Guid.Empty = error
                     _itemCategoryLookupId = Guid.Empty;

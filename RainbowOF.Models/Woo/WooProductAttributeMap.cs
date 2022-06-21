@@ -12,6 +12,7 @@ namespace RainbowOF.Models.Woo
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid WooProductAttributeMapId { get; set; }
+        // Changed to ulong 13 Jan after nuget update - was an issue
         public int WooProductAttributeId { get; set; }
         public Guid ItemAttributeLookupId { get; set; }
         [DefaultValue(true)]

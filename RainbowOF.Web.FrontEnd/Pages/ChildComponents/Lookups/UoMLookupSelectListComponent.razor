@@ -3,15 +3,15 @@
     Component to display Units of Measure in a select list. Can pass in the source UoMId or if null will allow selection of one
     ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
      Parameters:
-       > PopUpAndLogNotification PopUpRef - to display the notifications (and log them)
-       > Guid Source - the Unite of Measure GUID Id
+      > PopUpAndLogNotification PopUpRef - to display the notifications (and log them)
+      > Guid Source - the Unite of Measure GUID Id
 *@
 
 
 <Fields>
     <Field Style="display: inline-flex">
         @{
-            if ((_ListOfUoMSymbols != null) && (_ListOfUoMSymbols.Count > 0))
+            if ((_ListOfUoMSymbols != null) && (_ListOfUoMSymbols.Count> 0))
             {
             <Select TValue="Guid" SelectedValue="@_SelectedUoMId" SelectedValueChanged="@((v) => OnUoMIdChanged(v))">
                 <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>

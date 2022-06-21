@@ -1,0 +1,111 @@
+﻿@using Blazorise.Localization
+
+<Bar @bind-Visible="@topbarVisible" Breakpoint="Breakpoint.Desktop" Background="Background.Dark" ThemeContrast="ThemeContrast.Dark">
+    <BarBrand>
+        <BarItem>
+            <BarLink To="">
+                Rainbow OF
+            </BarLink>
+        </BarItem>
+    </BarBrand>
+    <BarToggler />
+    <BarMenu>
+        <BarStart>
+            <BarItem>
+                <BarLink To="/">Home</BarLink>
+            </BarItem>
+            <BarItem>
+                <BarDropdown>
+                    <BarDropdownToggle>Items</BarDropdownToggle>
+                    <BarDropdownMenu>
+                        <BarDropdownItem To="/Items">
+                            Items
+                        </BarDropdownItem>
+                        <BarDropdownDivider />
+                        <BarDropdown>
+                            <BarDropdownToggle>Lookups</BarDropdownToggle>
+                            <BarDropdownMenu>
+                                <BarDropdownItem To="/ItemCategories">
+                                    Categories
+                                </BarDropdownItem>
+                                <BarDropdownItem To="/ItemAttributes">
+                                    Attributes
+                                </BarDropdownItem>
+                                <BarDropdownItem To="/ItemAttributeVarieties">
+                                    Attribute Varieties
+                                </BarDropdownItem>
+                            </BarDropdownMenu>
+                        </BarDropdown>
+                    </BarDropdownMenu>
+                </BarDropdown>
+            </BarItem>
+
+        </BarStart>
+        <BarEnd>
+            <BarItem>
+                <BarDropdown RightAligned="true">
+                    <BarDropdownToggle>
+                        <BarIcon IconName="IconName.Compass" />
+                        System
+                    </BarDropdownToggle>
+                    <BarDropdownMenu>
+                        <BarDropdownItem To="/Users">
+                            Users
+                        </BarDropdownItem>
+                        <BarDropdownItem To="/SystemTools">
+                            Tools
+                        </BarDropdownItem>
+                    </BarDropdownMenu>
+                </BarDropdown>
+            </BarItem>>
+        </BarEnd>
+    </BarMenu>
+</Bar>
+
+@code {
+        private bool topbarVisible = true;
+
+}
+
+@*
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await SelectCulture("en-US");
+
+        await base.OnInitializedAsync();
+    }
+
+    Task SelectCulture(string name)
+    {
+        LocalizationService.ChangeLanguage(name);
+
+        return Task.CompletedTask;
+    }
+
+    private bool topbarVisible = false;
+
+    Task OnLayoutTypeChecked(string layoutType)
+    {
+        LayoutType = layoutType;
+
+        return LayoutTypeChanged.InvokeAsync(layoutType);
+    }
+
+    [Parameter] public EventCallback<bool> ThemeEnabledChanged { get; set; }
+
+    [Parameter] public EventCallback<bool> ThemeGradientChanged { get; set; }
+
+    [Parameter] public EventCallback<bool> ThemeRoundedChanged { get; set; }
+
+    [Parameter] public EventCallback<string> ThemeColorChanged { get; set; }
+
+    [Parameter] public string LayoutType { get; set; }
+
+    [Parameter] public EventCallback<string> LayoutTypeChanged { get; set; }
+
+    [Inject] protected ITextLocalizerService LocalizationService { get; set; }
+
+    [CascadingParameter] protected Theme Theme { get; set; }
+}*@

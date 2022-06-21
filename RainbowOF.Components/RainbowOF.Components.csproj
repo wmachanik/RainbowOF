@@ -1,15 +1,15 @@
-<Project Sdk="Microsoft.NET.Sdk.Razor">
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="Modals\ShowModalMessage.razor" />
+    <Compile Remove="Modals\GivingErrorsShowModalMessage.razor.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Modals\ShowModalMessage.razor" />
+    <Content Remove="Modals\GivvingErrorsShowModalMessage.razor" />
   </ItemGroup>
   
   <ItemGroup>
@@ -17,10 +17,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Blazored.Toast" Version="3.2.2" />
-    <PackageReference Include="Blazorise" Version="0.9.5" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="6.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.0" />
+    <PackageReference Include="Blazorise" Version="1.0.4" />
+    <PackageReference Include="Blazorise.Snackbar" Version="1.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="6.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.5" />
   </ItemGroup>
 
   <ItemGroup>

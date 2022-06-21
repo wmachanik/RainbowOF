@@ -5,14 +5,14 @@
     > PopUpAndLogNotification PopUpRef to display the results of the add
     > List<ItemCategory> SourceItemCategories
     Uses:
-    IAppUnitOfWork _appUnitOfWork
+    IAppUnitOfWork appUnitOfWork
     -------------------------------------------------------------
 *@
 @using RainbowOF.Models.Items
 @using RainbowOF.Models.Lookups
 
 
-@if (_ItemCategoryGridViewRepository == null)
+@if (_ItemCategoryGridRepository == null)
 {
     <Badge Color="Color.Primary" Pill="true">loading...</Badge>
 }
@@ -34,13 +34,17 @@ else
           @bind-SelectedRow="@SeletectedItemCategory"
           Bordered="true"
           Narrow="true"
-          Filterable="@_ItemCategoryGridViewRepository._GridSettings.IsFilterable"
+          Filterable="@_ItemCategoryGridRepository.gridSettings.IsFilterable"
           UseInternalEditing="true"
           NewItemDefaultSetter="@OnNewItemCategoryDefaultSetter"
           RowInserted="@OnRowInsertingAsync"
           RowUpdated="@OnRowUpdatedAsync"
           RowRemoving="@OnRowRemovingAsync"
           RowRemoved="@OnRowRemovedAsync"
+          UseValidation="true"
+          ShowValidationsSummary="true"
+          ValidationsSummaryLabel="Error validating data. Following error occurs..."
+          ShowValidationFeedback="true"
           Padding="Padding.Is0">
         <EmptyTemplate>
             @if (ModelItemCategories == null)
@@ -60,9 +64,9 @@ else
                 <DisplayTemplate>
                     @{
                         var _itemCategory = (itemCategoryData as ItemCategory);
-                        @(((_itemCategory != null) && (_itemCategory.ItemCategoryDetail != null)) 
-                            ? @_itemCategory.ItemCategoryDetail.FullCategoryName
-                            : "n/a")
+                        @(((_itemCategory != null) && (_itemCategory.ItemCategoryDetail != null))
+                ? @_itemCategory.ItemCategoryDetail.FullCategoryName
+                : "n/a")
                     }
                 </DisplayTemplate>
                 <EditTemplate>
@@ -123,10 +127,9 @@ else
                     }
                 </DisplayTemplate>
                 <EditTemplate>
-                    <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups.UoMLookupSelectListComponent 
-                                            PopUpRef="PopUpRef" 
-                                            SourceUoMId="(Guid?)itemCategoryData.CellValue" 
-                                            UoMIdChangedEvent="@((u) => itemCategoryData.CellValue = u)" />
+                    <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups.UoMLookupSelectListComponent PopUpRef="PopUpRef"
+                                                                                                   SourceUoMId="(Guid?)itemCategoryData.CellValue"
+                                                                                                   UoMIdChangedEvent="@((u) => itemCategoryData.CellValue = u)" />
                 </EditTemplate>
             </DataGridColumn>
             <DataGridCommandColumn TItem="ItemCategory" Width="6.5em">
@@ -137,8 +140,8 @@ else
                         </Button>
                     </Tooltip>
                     <Tooltip Text="Filter by Column" Style="z-index:99" Placement="TooltipPlacement.Left">
-                        <Button Color="Color.Info" Clicked="@(()=>_ItemCategoryGridViewRepository._GridSettings.IsFilterable= !_ItemCategoryGridViewRepository._GridSettings.IsFilterable)">
-                            <Icon Name="@((_ItemCategoryGridViewRepository._GridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" />
+                        <Button Color="Color.Info" Clicked="@(()=>_ItemCategoryGridRepository.gridSettings.IsFilterable= !_ItemCategoryGridRepository.gridSettings.IsFilterable)">
+                            <Icon Name="@((_ItemCategoryGridRepository.gridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" />
                         </Button>
                     </Tooltip>
                 </NewCommandTemplate>
@@ -183,12 +186,12 @@ else
     </DataGrid>
 
 
-    @*<RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage=" Item Message" NotificationTitle="" @ref="@_ItemCategoryGridViewRepository._GridSettings.PopUpRef" />*@
+    @*<RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage=" Item Message" NotificationTitle="" @ref="@_ItemCategoryGridRepository._GridSettings.PopUpRef" />*@
 
-    @*<RainbowOF.Components.Modals.ConfirmModal @ref="_ItemCategoryGridViewRepository._GridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_ClickAsync" />*@
+    @*<RainbowOF.Components.Modals.ConfirmModal @ref="_ItemCategoryGridRepository._GridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_ClickAsync" />*@
 
 
-    <RainbowOF.Components.Modals.ConfirmModal @ref="_ItemCategoryGridViewRepository._GridSettings.DeleteConfirmation"
+    <RainbowOF.Components.Modals.ConfirmModal @ref="_ItemCategoryGridRepository.gridSettings.DeleteConfirmation"
                                           ConfirmationClicked="ConfirmDelete_ClickAsync"
                                           ConfirmationMessage=@($"Are you sure you want to delete ?")
                                           ConfirmButtonText="Delete"

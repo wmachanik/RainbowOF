@@ -20,7 +20,7 @@ namespace RainbowOF.Woo.REST.Repositories
             _Woo = new WooBase(wooAPISettings, logger);
 
             //_WooAPISettings = wooAPISettings;
-            // this._Logger = logger;
+            // this.appLoggerManager = logger;
         }
         #endregion
         //private RestAPI GetJSONRestAPI

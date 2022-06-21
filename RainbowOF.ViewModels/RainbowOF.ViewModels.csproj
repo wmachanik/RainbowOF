@@ -8,12 +8,13 @@
 
 
     <ItemGroup>
+      <Compile Remove="Lookups\AttributeLookup.cs" />
       <Compile Remove="Lookups\ECommerceOption.cs" />
     </ItemGroup>
 
 
     <ItemGroup>
-      <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.1" />
+      <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
     </ItemGroup>
 
     <ItemGroup>

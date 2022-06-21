@@ -13,7 +13,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
     public partial class UoMLookupSelectListComponent : ComponentBase
     {
         [Inject]
-        IAppUnitOfWork _AppUnitOfWork { get; set; }
+        IUnitOfWork appUnitOfWork { get; set; }
         [Parameter]
         public PopUpAndLogNotification PopUpRef { get; set; }
         [Parameter]
@@ -28,9 +28,10 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
 
         protected override async Task OnInitializedAsync()
         {
+            await base.OnInitializedAsync();
             _SelectedUoMId = ((SourceUoMId ?? Guid.Empty) == Guid.Empty) ? Guid.Empty : (Guid)SourceUoMId;  // store in a local var to keep state until modal closed. If not Select list changes to original value
             if (_ListOfUoMSymbols == null)
-                _ListOfUoMSymbols = _AppUnitOfWork.GetListOfUoMSymbols();
+                _ListOfUoMSymbols = appUnitOfWork.GetListOfUoMSymbols();
             await InvokeAsync(StateHasChanged);
 
         }
@@ -38,7 +39,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
         //{
 
         //    Dictionary<Guid, string> _listOfUoMSymbols = new Dictionary<Guid, string>();
-        //    IAppRepository<ItemUoM> _UoMRepository = _appUnitOfWork.Repository<ItemUoM>();
+        //    IAppRepository<ItemUoM> _UoMRepository = appUnitOfWork.Repository<ItemUoM>();
 
         //    List<ItemUoM> _itemUoMs = (await _UoMRepository.GetAllAsync()).ToList();
         //    if (_itemUoMs != null)
@@ -65,7 +66,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
         {
             if (_ListOfUoMSymbols != null) 
                 _ListOfUoMSymbols.Clear();
-            _ListOfUoMSymbols = _AppUnitOfWork.GetListOfUoMSymbols();
+            _ListOfUoMSymbols = appUnitOfWork.GetListOfUoMSymbols(true);
             await InvokeAsync(StateHasChanged);
         }
         protected async Task OnUoMIdChanged(Guid newUoMId)

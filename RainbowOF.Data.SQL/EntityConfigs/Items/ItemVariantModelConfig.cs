@@ -13,7 +13,11 @@ namespace RainbowOF.Data.SQL.EntityConfigs.Items
         {
             itemVariantModelBuilder.HasIndex(iv => new { iv.ItemVariantId, iv.ItemId })
                 .IsUnique();
-///--> this keeps creating a new column
+            itemVariantModelBuilder.HasMany(iv => iv.ItemVariantAssociatedLookups)
+                .WithOne()
+                .OnDelete(DeleteBehavior.ClientCascade);
+
+            ///--> this keeps creating a new column
             //itemVariantModelBuilder.HasOne(iv => iv.Item)
             //    .WithMany()
             //    .HasForeignKey(i => i.ItemId)

@@ -12,7 +12,7 @@ namespace RainbowOF.Woo.REST.Repositories
     public class WooBase : IWooBase
     {
         private WooAPISettings _WooAPISettings;
-        private ILoggerManager _Logger;
+        private ILoggerManager appLoggerManager;
 
         public WooBase(WooAPISettings wooAPISettings, ILoggerManager logger)
         {
@@ -24,7 +24,7 @@ namespace RainbowOF.Woo.REST.Repositories
             //    wooAPISettings.ConsumerKey,
             //    wooAPISettings.ConsumerSecret, !wooAPISettings.IsSecureURL);
 
-            this._Logger = logger;
+            this.appLoggerManager = logger;
         }
 
         public WooAPISettings WooAPISettings
@@ -35,8 +35,8 @@ namespace RainbowOF.Woo.REST.Repositories
 
         public ILoggerManager Logger
         {
-            get { return _Logger; }
-            set { _Logger = value; }
+            get { return appLoggerManager; }
+            set { appLoggerManager = value; }
         }
 
         public RestAPI GetJSONRestAPI

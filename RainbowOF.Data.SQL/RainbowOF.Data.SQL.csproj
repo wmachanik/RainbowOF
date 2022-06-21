@@ -6,13 +6,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Blazorise" Version="0.9.5" />
-    <PackageReference Include="Blazorise.Bootstrap" Version="0.9.5" />
-    <PackageReference Include="Blazorise.DataGrid" Version="0.9.5" />
-    <PackageReference Include="Blazorise.Icons.FontAwesome" Version="0.9.5" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.0">
+    <Compile Remove="Migrations.old\**" />
+    <EmbeddedResource Remove="Migrations.old\**" />
+    <None Remove="Migrations.old\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blazorise" Version="1.0.4" />
+    <PackageReference Include="Blazorise.Bootstrap" Version="1.0.4" />
+    <PackageReference Include="Blazorise.DataGrid" Version="1.0.4" />
+    <PackageReference Include="Blazorise.Icons.FontAwesome" Version="1.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

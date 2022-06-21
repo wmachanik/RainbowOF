@@ -1,7 +1,20 @@
-﻿@using Blazored.Toast
-@using Blazored.Toast.Services
+﻿@using Blazorise.Snackbar
+
+<SnackbarStack @ref="popupSnackBar"
+          Color="@popupColour" 
+          DelayCloseOnClickInterval="@NotificationTimeout" 
+          Location="@NotificationPosition"
+          Float="Blazorise.Float.End"
+          Style="z-index: 999"
+          Multiline="true" >
+@*    <SnackbarHeader>
+        @NotificationTitle
+    </SnackbarHeader>
+    <SnackbarBody>
+        @NotificationMessage
+         <SnackbarAction Clicked="@(()=>popupSnackBar.Dispose())">[X]</SnackbarAction>
+    </SnackbarBody>
+*@
+</SnackbarStack>
 
 
-<BlazoredToasts Position="@NotificationPosition"
-                Timeout="@NotificationTimeout"
-                ShowProgressBar="true" />

@@ -16,11 +16,13 @@ namespace RainbowOF.Data.SQL
     public class ApplicationDbContext : DbContext
     {
 
+        public Type classContextType;
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
-         //   Configuration.LazyLoadingEnabled = true;
+//            classContextType = options.ContextType;
         }
+        // Table definitions
         #region system stuff
         //        public virtual DbSet<Party> Parties { get; set; }
         public virtual DbSet<SysPrefs> SysPrefs { get; set; }
@@ -36,6 +38,7 @@ namespace RainbowOF.Data.SQL
         public virtual DbSet<ItemAttributeVariety> ItemAttributeVarieties { get; set; }
         public virtual DbSet<ItemImage> ItemImages { get; set; }
         public virtual DbSet<ItemVariant> ItemVariants { get; set; }
+        public virtual DbSet<ItemVariantAssociatedLookup> ItemVariantAssociatedLookups { get; set; }
 
         //public DbSet<ItemUnit> ItemUnits { get; set; }
         //public DbSet<Packaging> Packagings { get; set; }
@@ -86,7 +89,8 @@ namespace RainbowOF.Data.SQL
             modelBuilder.ApplyConfiguration<ItemAttributeVariety>(new ItemAttributeVarietyModelConfig());
             modelBuilder.Entity<ItemVariant>().ToTable(nameof(ItemVariants));
             modelBuilder.ApplyConfiguration<ItemVariant>(new ItemVariantModelConfig());
-            //modelBuilder.Entity<ItemGroup>().ToTable(name of(ItemGroups));
+            modelBuilder.Entity<ItemVariantAssociatedLookup>().ToTable(nameof(ItemVariantAssociatedLookups));
+            modelBuilder.ApplyConfiguration<ItemVariantAssociatedLookup>(new ItemVariantAssociatedLookupModelConfig());
             //modelBuilder.ApplyConfiguration<ItemGroup>(new ItemGroupModelConfig());
             ////modelBuilder.Entity<UsedItemGroup>().ToTable(name of(UsedItemGroups));
             #endregion

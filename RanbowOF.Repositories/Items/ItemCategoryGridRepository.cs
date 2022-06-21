@@ -10,11 +10,12 @@ using RainbowOF.Models.Lookups;
 
 namespace RainbowOF.Repositories.Items
 {
-    public class ItemCategoryGridViewRepository : GridViewRepository<ItemCategory>, IItemCategoryGridViewRepository
+    public class ItemCategoryGridRepository : GridRepository<ItemCategory>, IItemCategoryGridRepository
     {
-        public ItemCategoryGridViewRepository(ILoggerManager sourceLogger, IAppUnitOfWork sourceAppUnitOfWork) : base(sourceLogger, sourceAppUnitOfWork)
+        public ItemCategoryGridRepository(ILoggerManager sourceLogger, IUnitOfWork sourceAppUnitOfWork) : base(sourceLogger, sourceAppUnitOfWork)
         {
             // base initialises
+            if (sourceLogger.IsDebugEnabled()) sourceLogger.LogDebug("ItemCategoryGridRepository initialised...");
         }
         #region Recommended Over writable Grid Classes
         /// <summary>
@@ -45,8 +46,8 @@ namespace RainbowOF.Repositories.Items
             if (checkEntity.ItemCategoryLookupId == Guid.Empty)
                 return false;
             // here we need to check if the category is the same, as we cannot haver duplicate names
-            IAppRepository<ItemCategory> _itemCategoryRepository = _AppUnitOfWork.Repository<ItemCategory>();
-            var _result = await _itemCategoryRepository.FindFirstByAsync(
+            IRepository<ItemCategory> _itemCategoryRepository = appUnitOfWork.Repository<ItemCategory>();
+            var _result = await _itemCategoryRepository.GetByIdAsync(
                                     checkEntity.ItemCategoryId == Guid.Empty ?
                                         (ic => (ic.ItemId == checkEntity.ItemId)
                                             && (ic.ItemCategoryLookupId == checkEntity.ItemCategoryLookupId)) :
@@ -76,7 +77,7 @@ namespace RainbowOF.Repositories.Items
         /// <returns>ItemCategoryLookup item, if found or null</returns>
         public async Task<ItemCategoryLookup> GetItemCategoryByIdAsync(Guid sourceItemCategoryLookupId)
         {
-            IAppRepository<ItemCategoryLookup> _itemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
+            IRepository<ItemCategoryLookup> _itemCategoryLookupRepository = appUnitOfWork.Repository<ItemCategoryLookup>();
             ItemCategoryLookup _itemCategoryLookup = await _itemCategoryLookupRepository.GetByIdAsync(sourceItemCategoryLookupId);
             return _itemCategoryLookup;
         }
@@ -87,7 +88,7 @@ namespace RainbowOF.Repositories.Items
         /// <returns>UoM Lookup item, if found or null</returns>
         public async Task<ItemUoMLookup> GetItemUoMByIdAsync(Guid sourceItemUoMLookupId)
         {
-            IAppRepository<ItemUoMLookup> _itemUoMLookupRepository = _AppUnitOfWork.Repository<ItemUoMLookup>();
+            IRepository<ItemUoMLookup> _itemUoMLookupRepository = appUnitOfWork.Repository<ItemUoMLookup>();
             ItemUoMLookup _itemUoMLookup = await _itemUoMLookupRepository.GetByIdAsync(sourceItemUoMLookupId);
             return _itemUoMLookup;
         }

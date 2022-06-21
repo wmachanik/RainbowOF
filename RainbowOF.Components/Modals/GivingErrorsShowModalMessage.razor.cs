@@ -11,12 +11,17 @@ namespace RainbowOF.Components.Modals
         [Parameter]
         public string ModalMessage { get; set; } = "Message";
 
-        public Modal modalRef;
-        public async Task ShowModalAsync()
-          =>  await modalRef.Show();
-        public async Task HideModalAsync()
-          => await modalRef.Hide();
-       
+        private Modal modalRef;
+
+        public Task ShowModalAsync()
+        {
+            return modalRef.Show();
+        }
+        public Task HideModalAsync()
+        {
+            return modalRef.Hide();
+        }
+
         public void UpdateModalTitle(string pTitle)
         {
             ModalTitle = pTitle;

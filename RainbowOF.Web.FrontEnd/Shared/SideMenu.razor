@@ -1,0 +1,269 @@
+﻿
+<Bar Breakpoint="Breakpoint.Desktop" NavigationBreakpoint="Breakpoint.Tablet" ThemeContrast="ThemeContrast.Dark"
+     Mode="@currentBarMode" CollapseMode="BarCollapseMode.Small" @ref="SideMenuBar" >
+    <BarBrand> 
+        <BarItem>
+            <BarLink To="">
+                <BarIcon IconName="@("fa-duotone fa-rainbow")" />
+                &nbsp;Rainbow OF
+            </BarLink>
+        </BarItem>
+    </BarBrand>
+    <BarToggler /> @*Clicked="SwitchBarTogglerMode_Click" />*@
+    <BarMenu>
+        <BarStart>
+            <BarItem>
+                <BarLink To="">
+                    <BarIcon IconName="IconName.Dashboard" />
+                    Dashboard
+                </BarLink>
+            </BarItem>
+            <BarItem>
+                <BarDropdown @bind-Visible="@showContactsMenu">
+                    <BarDropdownToggle>
+                        <BarIcon IconName="@("far fa-address-book")" />
+                        Contacts
+                    </BarDropdownToggle>
+                    <BarDropdownMenu>
+                        <BarDropdownItem To="/Contacts">
+                            All
+                        </BarDropdownItem>
+                        <BarDropdownItem To="/Contacts/Preferences">
+                            Preferences
+                        </BarDropdownItem>
+                        <BarDropdownItem To="tests/cards">
+                            Cards
+                        </BarDropdownItem>
+                    </BarDropdownMenu>
+                </BarDropdown>
+            </BarItem>
+            <BarItem>
+                <BarDropdown @bind-Visible="@showItemsMenu">
+                    <BarDropdownToggle>
+                        <BarIcon IconName="IconName.List" />
+                        Items
+                    </BarDropdownToggle>
+                    <BarDropdownMenu>
+                        <BarDropdownItem To="/Items">
+                            Items
+                        </BarDropdownItem>
+                        <BarDropdownItem To="/ItemGroups">
+                            Item Groups
+                        </BarDropdownItem>
+                        <BarDropdownItem To="/ItemPreferences">
+                            Preferences
+                        </BarDropdownItem>
+                        <BarDropdownItem To="/ItemPrices">
+                            Item Prices
+                        </BarDropdownItem>
+                        <BarDropdown>
+                            <BarDropdownToggle>
+                                Lookups
+                            </BarDropdownToggle>
+                            <BarDropdownMenu>
+                                <BarDropdownItem To="/ItemCategories">
+                                    Categories
+                                </BarDropdownItem>
+                                <BarDropdownItem To="/ItemAttributes">
+                                    Attributes
+                                </BarDropdownItem>
+                                <BarDropdownItem To="/ItemAttributeVarieties">
+                                    Attribute Varieties
+                                </BarDropdownItem>
+                            </BarDropdownMenu>
+                        </BarDropdown>
+                    </BarDropdownMenu>
+                </BarDropdown>
+            </BarItem>
+            <BarItem>
+                <BarDropdown @bind-Visible="@showOrdersMenu">
+                    <BarDropdownToggle>
+                        <BarIcon IconName="IconName.ShoppingCart" />
+                        Orders
+                    </BarDropdownToggle>
+                    <BarDropdownMenu>
+                        <BarDropdownItem To="/Orders">
+                            View
+                        </BarDropdownItem>
+                        <BarDropdownItem To="/RecurringOrders">
+                            Recurring
+                        </BarDropdownItem>
+                        <BarDropdownItem To="/Returns">
+                            Returns
+                        </BarDropdownItem>
+                        <BarDropdownItem To="/OrderPreferences">
+                            Preferences
+                        </BarDropdownItem>
+                    </BarDropdownMenu>
+                </BarDropdown>
+            </BarItem>
+            <BarItem>
+                <BarDropdown @bind-Visible="@showNotificaitonsMenu">
+                    <BarDropdownToggle>
+                        <BarIcon IconName="IconName.StickyNote" />
+                        Notifications
+                    </BarDropdownToggle>
+                    <BarDropdownMenu>
+                        <BarDropdownItem To="/Notifications">
+                            View
+                        </BarDropdownItem>
+                        <BarDropdownItem To="/NotifcationPreferences">
+                            Preferences
+                        </BarDropdownItem>
+                    </BarDropdownMenu>
+                </BarDropdown>
+            </BarItem>
+            <BarItem>
+                <BarDropdown @bind-bind-Visible="@showRepairsSubMenu">
+                    <BarDropdownToggle>
+                        <BarIcon IconName="IconName.Wrench" />
+                        Repairs
+                    </BarDropdownToggle>
+                    <BarDropdownMenu>
+                        <BarDropdownItem To="/Repairs">
+                            View
+                        </BarDropdownItem>
+                        <BarDropdownItem To="/RepairsPreferences">
+                            Preferences
+                        </BarDropdownItem>
+                    </BarDropdownMenu>
+                </BarDropdown>
+            </BarItem>
+            <BarItem>
+                <BarDropdown @bind-Visible="@showIntegrationMenu">
+                    <BarDropdownToggle>
+                        <BarIcon IconName="IconName.Cloud" />
+                        Integration
+                    </BarDropdownToggle>
+                    <BarDropdownMenu>
+                        <BarDropdown>
+                            <BarDropdownToggle>
+                                Import
+                            </BarDropdownToggle>
+                            <BarDropdownMenu>
+                                <BarDropdownItem To="/CSVImport">
+                                    from CSV
+                                </BarDropdownItem>
+                                <BarDropdownItem To="/WooImport">
+                                    from Woo
+                                </BarDropdownItem>
+                                <BarDropdownItem To="/ViewWooSyncLog">
+                                    View Log
+                                </BarDropdownItem>
+                            </BarDropdownMenu>
+                        </BarDropdown>
+                        <BarDropdown>
+                            <BarDropdownToggle>
+                                Export
+                            </BarDropdownToggle>
+                            <BarDropdownMenu>
+                                <BarDropdownItem To="/CSVExport">
+                                    from CSV
+                                </BarDropdownItem>
+                                <BarDropdownItem To="/WooExport">
+                                    from Woo
+                                </BarDropdownItem>
+                                <BarDropdownItem To="/ViewWooSyncLog">
+                                    View Log
+                                </BarDropdownItem>
+                            </BarDropdownMenu>
+                        </BarDropdown>
+                        <BarDropdownItem To="/IntegrationPreferences">
+                            Preferences
+                        </BarDropdownItem>
+                        <BarDropdownItem To="/ExternalForms">
+                            External forms
+                        </BarDropdownItem>
+                    </BarDropdownMenu>
+                </BarDropdown>
+            </BarItem>
+            <BarItem>
+                <BarLink To="/reports">
+                    <BarIcon IconName="IconName.Print" />
+                    Reports
+                </BarLink>
+            </BarItem>
+        </BarStart>
+        <BarEnd>
+            <BarItem>
+                <BarDropdown @bind-Visible="showSystemSubMenu">
+                    <BarDropdownToggle>
+                        <BarIcon IconName="IconName.Compass" />
+                        System
+                    </BarDropdownToggle>
+                    <BarDropdownMenu>
+                        <BarDropdownItem To="/Users">
+                            Users
+                        </BarDropdownItem>
+                        <BarDropdownItem To="/SystemTools">
+                            Tools
+                        </BarDropdownItem>
+                    </BarDropdownMenu>
+                </BarDropdown>
+            </BarItem>
+            <BarItem>
+                <BarDropdown @bind-Visible="showSettingsSubMenu">
+                    <BarDropdownToggle>
+                        <BarIcon IconName="@("fa-cogs")" />
+                        Settings
+                    </BarDropdownToggle>
+                    <BarDropdownMenu>
+                        <BarDropdownItem To="/SystemPreferences">
+                            Company Prefs
+                        </BarDropdownItem>
+                        <BarDropdownItem To="/SupportTables">
+                            Support Lists
+                        </BarDropdownItem>
+                        <BarDropdownItem To="/Test">
+                            Test
+                        </BarDropdownItem>
+                    </BarDropdownMenu>
+                </BarDropdown>
+            </BarItem>
+        </BarEnd>
+    </BarMenu>
+</Bar>
+
+@code {
+    //    private bool collapseNavMenu = true;
+    private bool showContactsMenu = false;
+    private bool showItemsMenu = false;
+    private bool showOrdersMenu = false;
+    private bool showNotificaitonsMenu = false;
+    private bool showIntegrationMenu = false;
+    private bool showRepairsSubMenu = false;
+    //    private bool showReportsSubMenu = false;
+    private bool showSystemSubMenu = false;
+    private bool showSettingsSubMenu = false;
+
+    Bar SideMenuBar;
+    BarMode currentBarMode = BarMode.VerticalSmall; // VerticalInline;
+
+    //protected override async Task OnAfterRenderAsync(bool firstRender)
+    //{
+    //    if (firstRender && (await localStorage.ContainKeyAsync("MenuBarMode")))
+    //    {
+    //        var isInLine = await localStorage.GetItemAsync<bool>("MenuBarMode");
+    //        currentBarMode = isInLine ? BarMode.VerticalInline : BarMode.VerticalSmall;
+    //        await InvokeAsync(StateHasChanged);
+    //    }
+    //}
+
+    //async Task SwitchBarTogglerMode_Click()
+    //{
+    //    var x = SideMenuBar;
+    //    currentBarMode = (currentBarMode.Equals(BarMode.VerticalInline)) ? BarMode.VerticalSmall : BarMode.VerticalInline;
+    //    await localStorage.SetItemAsync<bool>("MenuBarMode", currentBarMode == BarMode.VerticalInline);
+    //        await InvokeAsync(StateHasChanged);
+    //}
+
+    //    private bool uiElementsVisible = true;
+    //    private bool utilitiesVisible = false;
+    //    private bool extensionsVisible = false;
+    //    private bool formsVisible = false;
+    //    private bool datagridVisible = false;
+
+    //    RenderFragment customIcon =@
+    //    <img src="/brand-logo.png" style="width:32px; height: 32px" />
+    //;
+    }

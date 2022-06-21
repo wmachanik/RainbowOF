@@ -3,9 +3,9 @@
      Main page to display Item Attributes
 
      Uses:
-         IAppUnitOfWork _appUnitOfWork
-         ApplicationState _appState
-         ILoggerManager _logger
+         IAppUnitOfWork appUnitOfWork
+         ApplicationState appState
+         ILoggerManager appLoggerManager
     -------------------------------------------------------------
 *@
 
@@ -82,6 +82,7 @@
                     </Fields>
                 </CardSubtitle>
                 <CardBody Padding="Padding.IsAuto">
+                //--- !!! items have changed
                     <DataGrid @ref="_DataGrid"
                               TItem="ItemAttributeLookupView" Data="@dataModels"
                               ReadData="HandleReadDataAsync"
@@ -99,7 +100,7 @@
                               SelectionMode="DataGridSelectionMode.Multiple"
                               @bind-SelectedRow="@seletectedItem"
                               @bind-SelectedRows="@SelectedItemAttributeLookups"
-                              DetailRowTrigger="@((item) => (item.ItemAttributeVarietyLookups?.Count > 0 && item.ItemAttributeLookupId == seletectedItem?.ItemAttributeLookupId))"
+                              DetailRowTrigger="@((item) => (item.Item.ItemAttributeVarietyLookups?.Count> 0 && item.Item.ItemAttributeLookupId == seletectedItem?.ItemAttributeLookupId))"
                               RowInserted="@OnRowInsertingAsync"
                               RowUpdated="@OnRowUpdatedAsync"
                               RowRemoving="@OnRowRemovingAsync"
@@ -155,7 +156,7 @@
                         <DataGridColumns>
                             <DataGridMultiSelectColumn TItem="ItemAttributeLookupView" Caption="[X]" Sortable="false" TextAlignment="TextAlignment.Center" Width="1em">
                             </DataGridMultiSelectColumn>
-                            <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.AttributeName)" Context="dataModels" Caption="Attribute Name" Sortable="true" Editable="true" ValidationPattern="^\S.{2,100}">
+                            <DataGridColumn TItem="ItemAttributeLookupView" Field="@nameof(ItemAttributeLookupView.AttributeName)" Context="dataModels" Caption="Attribute Name" Sortable="true" Editable="true">
                                 <DisplayTemplate Context="dataModels">
                                     @{
                                         var attribItem = (dataModels as ItemAttributeLookupView);
@@ -196,7 +197,7 @@
                                                         @(attribItem.ItemAttributeVarietyLookups[i].VarietyName)
                                                         @(i < (attribItem.ItemAttributeVarietyLookups.Count - 1) ? ", " : ". ");
                                                     }
-                                                    @if (attribItem.ItemAttributeVarietyLookups.Count == RainbowOF.Repositories.Common.AppUnitOfWork.CONST_MAX_DETAIL_PAGES)   //we  are at max so assume only max loaded
+                                                    @if (attribItem.ItemAttributeVarietyLookups.Count == RainbowOF.Repositories.Common.UnitOfWork.CONST_MAX_DETAIL_PAGES)   //we  are at max so assume only max loaded
                                                     {
                                                         <Blazorise.Badge Color="Color.Info">Click to see all...</Blazorise.Badge>
                                                     }
@@ -346,7 +347,7 @@
                             }
                             else
                             {
-                                @("Create Attrbiute")
+                                @("Create Attribute")
                             }
                         </PopupTitleTemplate>
                     </DataGrid>

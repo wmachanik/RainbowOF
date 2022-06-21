@@ -1,5 +1,5 @@
-﻿using Blazored.Toast.Services;
-using Blazored.Toast;
+﻿
+using Blazorise.Snackbar;
 using Microsoft.AspNetCore.Components;
 using RainbowOF.Tools;
 using System;
@@ -25,71 +25,71 @@ namespace RainbowOF.Components.Modals
         #region Parameters
         [Parameter]
         [EditorRequired]
-        public string NotificationTitle { get; set; } = "";
+        public string NotificationTitle { get; set; } = "Title";
         [Parameter]
         public string NotificationMessage { get; set; } = "Message";
         [Parameter]
-        public Blazored.Toast.Configuration.ToastPosition NotificationPosition { get; set; } = Blazored.Toast.Configuration.ToastPosition.TopRight;
+        public SnackbarStackLocation NotificationPosition { get; set; } = SnackbarStackLocation.End;
         [Parameter]
-        public int NotificationTimeout { get; set; } = 10;
+        public int NotificationTimeout { get; set; } = 10000;
         #endregion
         #region Injections
         [Inject]
         public ILoggerManager NotificationLogger { get; set; }
-        [Inject]
-        public IToastService NotificationToastService { get; set; }
+        //[Inject]
+        //public IToastService NotificationToastService { get; set; }
         #endregion
         #region Public vars
-        public PopUpAndLogNotification PopUpRef;
+        public SnackbarStack popupSnackBar { get; set; }
+        public SnackbarColor popupColour { get; set; } = SnackbarColor.Primary;
+        //public PopUpAndLogNotification PopUpRef;
         #endregion
         #region Exposed Routines
-        public void ShowNotification(NotificationType pNotificationType)
+        public async Task ShowNotificationAsync(NotificationType pNotificationType)
         {
             switch (pNotificationType)
             {
                 case NotificationType.Info:
-                    NotificationToastService.ShowInfo(NotificationMessage, NotificationTitle);
+                    await popupSnackBar.PushAsync(NotificationMessage, SnackbarColor.Info);
+//                    NotificationToastService.ShowInfo(NotificationMessage, NotificationTitle);
                     NotificationLogger.LogInfo( $"Info: {NotificationMessage}");
                     break;
                 case NotificationType.Success:
-                    NotificationToastService.ShowSuccess(NotificationMessage, NotificationTitle);
+                    await popupSnackBar.PushAsync(NotificationMessage, SnackbarColor.Success);
                     NotificationLogger.LogInfo($"Success: {NotificationMessage}");
                     break;
                 case NotificationType.Warning:
-                    NotificationToastService.ShowWarning(NotificationMessage, NotificationTitle);
+                    await popupSnackBar.PushAsync(NotificationMessage, SnackbarColor.Warning);
                     NotificationLogger.LogWarn($"Warning: {NotificationMessage}");
                     break;
                 case NotificationType.Error:
-                    NotificationToastService.ShowError(NotificationMessage, NotificationTitle);
+                    await popupSnackBar.PushAsync(NotificationMessage, SnackbarColor.Danger);
                     NotificationLogger.LogError($"Error: {NotificationMessage}");
                     break;
                 default:     // assume this is debug
-                    NotificationToastService.ShowToast(ToastLevel.Info, NotificationMessage, NotificationTitle);
+                    await popupSnackBar.PushAsync(NotificationMessage, SnackbarColor.Primary);
                     NotificationLogger.LogDebug($"Debug: {NotificationMessage}");
                     break;
             }
         }
-
-        public void ShowNotification(NotificationType pNotificationType, string pMessage)
+        public async Task ShowNotificationAsync(NotificationType pNotificationType, string pMessage)
         {
             NotificationMessage = pMessage;
             NotificationTitle = "";
-            ShowNotification(pNotificationType);
+            await ShowNotificationAsync(pNotificationType);
         }
-
-        public void ShowNotification(NotificationType pNotificationType, string pMessage, string pTtitle)
+        public async Task ShowNotificationAsync(NotificationType pNotificationType, string pMessage, string pTtitle)
         {
             NotificationMessage = pMessage;
             NotificationTitle = pTtitle;
-            ShowNotification(pNotificationType);
+            await ShowNotificationAsync(pNotificationType);
         }
-
-        public void ShowQuickNotification(NotificationType pNotificationType, string pMessage)
+        public async Task ShowQuickNotificationAsync(NotificationType pNotificationType, string pMessage)
         {
-            NotificationTimeout = 5;  // not sure were to send this
+            NotificationTimeout = 5000;  // not sure were to send this
             NotificationMessage = pMessage;
             NotificationTitle = "";
-            ShowNotification(pNotificationType);
+            await ShowNotificationAsync(pNotificationType);
         }
         #endregion
     }

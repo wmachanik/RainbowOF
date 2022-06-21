@@ -1,4 +1,4 @@
-﻿@page  "/WooImport"
+﻿@page "/WooImport"
 
 <h3>Woo Import</h3>
 
@@ -27,14 +27,18 @@ else
                         <Blazorise.Button Clicked="@(() => collapseWooVisible = !collapseWooVisible)">
                             Woo Settings &nbsp;&nbsp;
                             @if (collapseWooVisible)
-                            {<i class="oi oi-caret-top"></i>}
+                            {
+                                <i class="oi oi-caret-top"></i>
+                            }
                             else
-                            {<i class="oi oi-caret-bottom"></i>}
+                            {
+                                <i class="oi oi-caret-bottom"></i>
+                            }
                         </Blazorise.Button>
                     </Blazorise.Heading>
                 </Blazorise.CollapseHeader>
                 <Blazorise.CollapseBody>
-                    <WooPreferencesComponent WooSettingsModel="modelWooSettings" Logger="_Logger" />
+                    <WooPreferencesComponent WooSettingsModel="modelWooSettings" Logger="appLoggerManager" />
                     <hr />
                     <div class="form-group row justify-content-center">
                         <div class=" col-md-6justify-content-center">
@@ -51,27 +55,25 @@ else
                         <Blazorise.Button Clicked="@(() => collapseWooCategoriesImport = !collapseWooCategoriesImport)">
                             Woo Categories Import &nbsp;&nbsp;
                             @if (collapseWooCategoriesImport)
-                            {<i class="oi oi-caret-top"></i>}
+                            {
+                                <i class="oi oi-caret-top"></i>
+                            }
                             else
-                            {<i class="oi oi-caret-bottom"></i>}
+                            {
+                                <i class="oi oi-caret-bottom"></i>
+                            }
                         </Blazorise.Button>
                     </Blazorise.Heading>
                 </Blazorise.CollapseHeader>
                 <Blazorise.CollapseBody>
-                    <WooImportItemsComponent AppWooSettings="modelWooSettings"  />
+                    <WooImportItemsComponent AppWooSettings="modelWooSettings" />
                 </Blazorise.CollapseBody>
             </Blazorise.Collapse>
         </Blazorise.Accordion>
     </EditForm>
+
+    <RainbowOF.Components.Modals.PopUpAndLogNotification @ref="PopChangedStatus" NotificationTitle="Woo Preferences not Saved please save first." NotificationMessage="Woo Settings must be saved" />
+
 }
-<!--------
 
 
-    Need to add the logic of the import here, the Items view is "done" as is the log, so perhaps do an items import as per the design - need to look at the packaging settings.
-
-
-
-
-    -->
-<RainbowOF.Components.Modals.ShowModalMessage @ref="ShowSavedStatus" ModalMessage="Woo Preferences Saved" ModalTitle="Saving Status" />
-<RainbowOF.Components.Modals.ShowModalMessage @ref="ShowChangedStatus" ModalMessage="Woo Preferences not Saved please save first." ModalTitle="Woo Settngs must be saved" />

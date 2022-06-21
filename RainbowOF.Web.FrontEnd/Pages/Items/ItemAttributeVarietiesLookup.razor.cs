@@ -17,20 +17,18 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
 
         public Dictionary<Guid, string> _ItemAttributes = null;
         [Inject]
-        IAppUnitOfWork _AppUnitOfWork { get; set; }
+        IUnitOfWork appUnitOfWork { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
-            IAppRepository<ItemAttributeLookup> _appRepository = _AppUnitOfWork.Repository<ItemAttributeLookup>();
-
+            await base.OnInitializedAsync();
+            IRepository<ItemAttributeLookup> _appRepository = appUnitOfWork.Repository<ItemAttributeLookup>();
             var _itemAttributeVarieties = await _appRepository.GetAllAsync();
-
             _ItemAttributes = new Dictionary<Guid, string>();
             foreach (var item in _itemAttributeVarieties)
             {
                 _ItemAttributes.Add(item.ItemAttributeLookupId, item.AttributeName);
             }
-
             //await LoadData();
             await InvokeAsync(StateHasChanged);
         }

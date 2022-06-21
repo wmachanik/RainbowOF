@@ -5,142 +5,282 @@
     > PopUpAndLogNotification PopUpRef to display the results of the add
     > Source ItemId
     Uses:
-    IAppUnitOfWork _appUnitOfWork
+    IAppUnitOfWork appUnitOfWork
     -------------------------------------------------------------
 *@
 @using RainbowOF.Models.Items
+@using RainbowOF.Models.Lookups
 
-@if (_ItemVariantGridViewRepository == null)
+@if (ItemVariantViewRepository == null)
 {
     <Badge Color="Color.Primary" Pill="true">loading...</Badge>
 }
 else
 {
-    if (ModelItemVariants == null)
+    if (ItemVariants == null)
     {
         <Blazorise.Badge Color="Color.Info">Item has no variants</Blazorise.Badge>
     }
     else
     {
-        <DataGrid  @ref="_ItemVariantsDataGrid"
-          TItem="ItemVariant" Data="@ModelItemVariants"
-          Sortable="true" Editable="true"
-          Striped="true"
-          Hoverable="true"
-          Responsive="true"
-          EditMode="DataGridEditMode.Popup"
-          TotalItems="ModelItemVariants.Count"
-          PageSize="10" ShowPager="true"
-          @bind-SelectedRow="@SeletectedItemVariant"
-          PageSizes="@(new int[] { 5, 10, 15, 25, 50, 100 })"
-          ShowPageSizes="true" PagerPosition="DataGridPagerPosition.TopAndBottom"
-          Bordered="true"
-          Narrow="true" Filterable="@_ItemVariantGridViewRepository._GridSettings.IsFilterable"
-          UseInternalEditing="true"
-          ValidationsSummaryLabel="Error validating data. Following error occurs..."
-          ShowValidationsSummary="true"
-          ShowValidationFeedback="true"
-          Padding="Padding.Is0">
-            <EmptyTemplate>
-                @{
-                    if (ModelItemVariants == null)
-                    {
-                        <Blazorise.Badge Color="Color.Primary">Loading...</Blazorise.Badge>
-                    }
-                }
-            </EmptyTemplate>
-            <LoadingTemplate>
-                <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
-                    <Column>
-                        <span class="alert-info">Loading</span>
-                    </Column>
-                </Row>
-            </LoadingTemplate>
-            <DataGridColumns>
-                <DataGridColumn TItem="ItemVariant" Field="@nameof(ItemVariant.ItemVariantName)" Caption="Item Name" Sortable="true" Editable="true" ValidationPattern="^\S.{2,100}">
-                </DataGridColumn>
-                <DataGridColumn TItem="ItemVariant" Field="@nameof(ItemVariant.SKU)" Caption="SKU" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,100}">
-                    </DataGridColumn>
-                    <DataGridColumn TItem="ItemVariant" Field="@nameof(ItemVariant.IsEnabled)" Caption="Enabled?" Sortable="true" Editable="true">
-                    <DisplayTemplate>
-                    @{
-                    var rowItem = (context as ItemVariant);
-                    @(rowItem.IsEnabled ? "yes" : "no")
-                    ;
-                    }
-                    </DisplayTemplate>
-                    <EditTemplate>
-                    <Tooltip Text="Is this item enabled?">
-                    @{
-                    <Blazorise.Check TValue="bool" Checked="@((bool)context.CellValue)" CheckedChanged="@((v) => context.CellValue = v)">Is Enabled</Blazorise.Check>
-                    }
-                    </Tooltip>
-                    </EditTemplate>
-                @*<FilterTemplate>
-                    @{
-                    <Select TValue="string" SelectedValue="@(string.IsNullOrEmpty(context.SearchValue) ? String.Empty : (context.SearchValue) )"
-                    SelectedValueChanged="@((e) => context.TriggerFilterChange(string.IsNullOrEmpty(e) ? "" : e.ToString()))">
-                    <SelectItem Value="@String.Empty">none</SelectItem>
-                    <SelectItem Value="@($"enabled")">enabled</SelectItem>
-                    <SelectItem Value="@($"disabled")">disabled</SelectItem>
-                    </Select>
-                    }
-                    </FilterTemplate>*@
-                </DataGridColumn>
-                <DataGridColumn TItem="ItemVariant" Field="@nameof(ItemVariant.ItemVariantAbbreviation)" Caption="Abrv" Sortable="true" Editable="true" Filterable="true" ValidationPattern="^\S.{2,10}">
-                </DataGridColumn>
-            <DataGridCommandColumn TItem="ItemVariant" Width="6.5em">
-                <NewCommandTemplate>
-                    <Tooltip Text="New Item Variant" Style="z-index:99" Placement="TooltipPlacement.Bottom">
-                        <Button Color="Color.Success" Clicked="@context.Clicked">
-                            <Icon Name="IconName.Add" />
-                        </Button>
-                    </Tooltip>
-                    <Tooltip Text="Filter by Column" Style="z-index:99" Placement="TooltipPlacement.Left">
-                        <Button Color="Color.Info" 
-                                Clicked="@(()=>_ItemVariantGridViewRepository._GridSettings.IsFilterable= !_ItemVariantGridViewRepository._GridSettings.IsFilterable)">
-                            <Icon Name="@((_ItemVariantGridViewRepository._GridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" />
-                        </Button>
-                    </Tooltip>
-                </NewCommandTemplate>
-                <EditCommandTemplate>
-                    <Tooltip Text="Edit Item Variant">
-                        <Button Color="Color.Primary" Clicked="@context.Clicked">
-                            <Icon Name="IconName.Edit" />
-                        </Button>
-                    </Tooltip>
-                </EditCommandTemplate>
-                <DeleteCommandTemplate>
-                    <Tooltip Text="Delete Item Variant">
-                        <Button Color="Color.Danger" Clicked="@context.Clicked">
-                            <Icon Name="IconName.Delete" />
-                        </Button>
-                    </Tooltip>
-                </DeleteCommandTemplate>
-                <SaveCommandTemplate>
-                    <Tooltip Text="Save">
-                        <Button Color="Color.Primary" Clicked="@context.Clicked">
-                            <Icon Name="IconName.CheckCircle" />
-                        </Button>
-                    </Tooltip>
-                </SaveCommandTemplate>
-                <CancelCommandTemplate>
-                    <Tooltip Text="Undo changes">
-                        <Button Color="Color.Secondary" Clicked="@context.Clicked">
-                            <Icon Name="IconName.Undo" />
-                        </Button>
-                    </Tooltip>
-                </CancelCommandTemplate>
-                <ClearFilterCommandTemplate>
-                    <Tooltip Text="Clear Filter" Style="z-index:99" Placement="TooltipPlacement.Left">
-                        <Button Color="Color.Info" Outline="true" Clicked="@context.Clicked">
-                            <Icon Name="IconName.Clear" />
-                        </Button>
-                    </Tooltip>
-                </ClearFilterCommandTemplate>
-            </DataGridCommandColumn>
-
-            </DataGridColumns>
-        </DataGrid>
+        // ---- Busy with this
+        // have a panel per attribute collection
+        foreach (var itemVariantView in ItemVariantViews)
+        {
+            // Add an edit form per item variant
+            <Validations Mode="ValidationMode.Manual" Model="@itemVariantView">
+                <Blazorise.Accordion>
+                    <Blazorise.Collapse Visible="@itemVariantView.TabIsExpanded" Margin="Margin.Is0" Padding="Padding.Is0">
+                        <Blazorise.CollapseHeader Margin="Margin.Is0" Padding="Padding.Is0">
+                            <Blazorise.Heading Size="Blazorise.HeadingSize.Is1" Margin="Margin.Is0" Padding="Padding.Is0" Background="Background.Light" Class="h2">
+                                <Fields>
+                                    @{
+                                        @foreach(var thisAttribute in itemVariantView.ItemVariant.ItemVariantAssociatedLookups)
+                                        {
+                                            //string selectedId = @thisAttribute?.AssociatedAttributeVarietyLookupId.ToString() ?? "XallX";
+                                            //<span style="font-size:xx-small">@selectedId</span>
+                                            List<ItemAttributeVariety> _AttributeVarieties =
+                                                  GetListOfAttributeAvailableVarieties(thisAttribute.AssociatedAttributeLookupId, thisAttribute?.AssociatedAttributeVarietyLookupId ?? Guid.Empty);
+                                            <Field ColumnSize="ColumnSize.IsAuto">
+                                                <Select TValue="Guid" SelectedValue="@((Guid)(thisAttribute?.AssociatedAttributeVarietyLookupId ?? Guid.Empty))"
+                                                                      SelectedValueChanged="@((v) => thisAttribute.AssociatedAttributeVarietyLookupId = SetChangedAttribute(v, itemVariantView) )">
+                                                    <SelectItem TValue="Guid" Value="Guid.Empty">- Any @thisAttribute.AssociatedAttributeLookup.AttributeName -</SelectItem>
+                                                    @foreach (var item in _AttributeVarieties)
+                                                    {
+                                                        <SelectItem TValue="Guid" Value="@item.ItemAttributeVarietyLookupId">@item.ItemAttributeVarietyDetail.VarietyName</SelectItem>
+                                                    }
+                                                </Select>
+                                            </Field>
+                                         }
+                                        <Field>
+                                            <Blazorise.Button Clicked="@(()=>itemVariantView.TabIsExpanded = !itemVariantView.TabIsExpanded)">
+                                                <Icon IconStyle="IconStyle.Solid" Name="@(itemVariantView.TabIsExpanded ? IconName.AngleDown : IconName.AngleUp )" Padding="Padding.Is2.FromStart" Float="Float.End" />
+                                            </Blazorise.Button>
+                                        </Field>
+                                    }
+                                    <Field Horizontal="true" ColumnSize="ColumnSize.Is1" TextAlignment="TextAlignment.End" VerticalAlignment="VerticalAlignment.Middle" Padding="Padding.Is1" >
+                                        <Blazorise.Button Color="Color.Danger" Outline="true" Padding="Padding.Is1"  @onclick="@(()=>RemoveItemVariant_CLick(itemVariantView))" ><Icon Name="IconName.Delete" /> Delete Variant</Blazorise.Button>
+                                    </Field>
+                                </Fields>
+                            </Blazorise.Heading>
+                        </Blazorise.CollapseHeader>
+                        <Blazorise.CollapseBody Margin="Margin.Is0" Padding="Padding.Is0">
+                            <Row>
+                                <Column ColumnSize="ColumnSize.IsHalf.OnDesktop">
+                                    <Validation>
+                                        <Field Horizontal="true" Margin="Margin.Is0" Padding="Padding.Is1">
+                                            <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is3.OnDesktop">SKU</FieldLabel>
+                                            <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is5.OnDesktop">
+                                                <TextEdit Placeholder="Variant name" @bind-Text="@itemVariantView.ItemVariant.SKU"
+                                                       @onchange="(()=>itemVariantView.IsModified = true)">
+                                                    <Feedback>
+                                                        <ValidationError />
+                                                    </Feedback>
+                                                </TextEdit>
+                                            </FieldBody>
+                                        </Field>
+                                    </Validation>
+                                </Column>
+                                <Column ColumnSize="ColumnSize.IsHalf.OnDesktop">
+                                    <Validation>
+                                        <Field Horizontal="true" Margin="Margin.Is0" Padding="Padding.Is1">
+                                            <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is3.OnDesktop">Variant Name</FieldLabel>
+                                            <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is9.OnDesktop">
+                                                <TextEdit Placeholder="Variant name" @bind-Text="@itemVariantView.ItemVariant.ItemVariantName"
+                                                       @onchange="(()=>itemVariantView.IsModified = true)">
+                                                    <Feedback>
+                                                        <ValidationError />
+                                                    </Feedback>
+                                                </TextEdit>
+                                            </FieldBody>
+                                        </Field>
+                                    </Validation>
+                                </Column>
+                            </Row>
+                            <Row>
+                                <Column ColumnSize="ColumnSize.IsHalf.OnDesktop">
+                                    <Validation>
+                                        <Field Horizontal="true" Margin="Margin.Is0" Padding="Padding.Is1">
+                                            <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is3.OnDesktop">Enabled?</FieldLabel>
+                                            <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is9.OnDesktop">
+                                                <Check @bind-Checked="@itemVariantView.ItemVariant.IsEnabled">
+                                                    <ChildContent>
+                                                        Is Enabled
+                                                    </ChildContent>
+                                                    <Feedback>
+                                                        <ValidationError />
+                                                    </Feedback>
+                                                </Check>
+                                            </FieldBody>
+                                        </Field>
+                                    </Validation>
+                                </Column>
+                                <Column ColumnSize="ColumnSize.IsHalf.OnDesktop">
+                                    <Validation>
+                                        <Field Horizontal="true" Margin="Margin.Is0" Padding="Padding.Is1">
+                                            <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is3.OnDesktop">Abbreviation</FieldLabel>
+                                            <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is5.OnDesktop">
+                                                <TextEdit Placeholder="Variant name" @bind-Text="@itemVariantView.ItemVariant.ItemVariantAbbreviation"
+                                                       @onchange="(()=>itemVariantView.IsModified = true)">
+                                                    <Feedback>
+                                                        <ValidationError />
+                                                    </Feedback>
+                                                </TextEdit>
+                                            </FieldBody>
+                                        </Field>
+                                    </Validation>
+                                </Column>
+                            </Row>
+                            <Row>
+                                <Column ColumnSize="ColumnSize.IsHalf.OnDesktop">
+                                    <Validation>
+                                        <Field Horizontal="true" Margin="Margin.Is0" Padding="Padding.Is1">
+                                            <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is3.OnDesktop">Base Price</FieldLabel>
+                                            <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is5.OnDesktop">
+                                                <NumericEdit TValue="decimal" Placeholder="Item variant's Base Price (standard price)" @bind-Value="@itemVariantView.ItemVariant.BasePrice"
+                                                       @onchange="(()=>itemVariantView.IsModified = true)">
+                                                    <Feedback>
+                                                        <ValidationError />
+                                                    </Feedback>
+                                                </NumericEdit>
+                                            </FieldBody>
+                                        </Field>
+                                    </Validation>
+                                </Column>
+                                <Column ColumnSize="ColumnSize.IsHalf.OnDesktop">
+                                    <Validation>
+                                        <Field Horizontal="true" Margin="Margin.Is0" Padding="Padding.Is1">
+                                            <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is3.OnDesktop">Sort Order</FieldLabel>
+                                            <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is5.OnDesktop">
+                                                <NumericEdit TValue="int" Placeholder="Item sort order" @bind-Value="@itemVariantView.ItemVariant.SortOrder"
+                                                       @onchange="(()=>itemVariantView.IsModified = true)">
+                                                    <Feedback>
+                                                        <ValidationError />
+                                                    </Feedback>
+                                                </NumericEdit>
+                                            </FieldBody>
+                                        </Field>
+                                    </Validation>
+                                </Column>
+                            </Row>
+                            <Row>
+                                <Column ColumnSize="ColumnSize.IsHalf.OnDesktop">
+                                    <Validation>
+                                        <Field Horizontal="true" Margin="Margin.Is0" Padding="Padding.Is1">
+                                            <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is3.OnDesktop">Manage Stock?</FieldLabel>
+                                            <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is8.OnDesktop">
+                                                <Check @bind-Checked="@itemVariantView.ItemVariant.ManageStock"
+                                                       @onchange="(()=>itemVariantView.IsModified = true)">
+                                                    <ChildContent>
+                                                        Stock is managed
+                                                    </ChildContent>
+                                                    <Feedback>
+                                                        <ValidationError />
+                                                    </Feedback>
+                                                </Check>
+                                            </FieldBody>
+                                        </Field>
+                                    </Validation>
+                                </Column>
+                                <Column ColumnSize="ColumnSize.IsHalf.OnDesktop">
+                                    <Validation>
+                                        <Field Horizontal="true" Margin="Margin.Is0" Padding="Padding.Is1">
+                                            <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is3.OnDesktop">Qty in Stock</FieldLabel>
+                                            <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is6.OnDesktop">
+                                                <NumericEdit TValue="int" Placeholder="Qty of item in stock" @bind-Value="@itemVariantView.ItemVariant.QtyInStock"
+                                                       @onchange="(()=>itemVariantView.IsModified = true)">
+                                                    <Feedback>
+                                                        <ValidationError />
+                                                    </Feedback>
+                                                </NumericEdit>
+                                            </FieldBody>
+                                        </Field>
+                                    </Validation>
+                                </Column>
+                            </Row>
+                        </Blazorise.CollapseBody>
+                    </Blazorise.Collapse>
+                </Blazorise.Accordion>
+            </Validations>
+        }
+        // add a Save button at the bottom
+        <Row Height="Height.Is100.Min">
+            <Column Margin="Margin.Is4.FromTop" ColumnSize="ColumnSize.IsFull">
+                <Card Margin="Margin.Is2.FromTop">
+                    <CardBody VerticalAlignment="VerticalAlignment.Middle">
+                        <Tooltip Text="Add/remove a variant(s)">
+                            <Dropdown Direction="Direction.Up" Display="Display.InlineBlock">
+                                <DropdownToggle Color="Color.Secondary" Outline="true">Add/remove variant(s)&nbsp;</DropdownToggle>
+                                <DropdownMenu>
+                                    <DropdownHeader>Add</DropdownHeader>
+                                    <DropdownItem @onclick="@AddItemVariant_CLick">Add a Variant</DropdownItem>
+                                    <DropdownItem @onclick="@AddAllItemsVariants_CLick">Add all Variants</DropdownItem>
+                                    <DropdownDivider />
+                                    <DropdownHeader>Remove</DropdownHeader>
+                                    <DropdownItem @onclick="@RemoveAllItemsVariants_CLick">Remove all variants</DropdownItem>
+                                </DropdownMenu>
+                            </Dropdown>
+                        </Tooltip>
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <Tooltip Text="Save changes">
+                            <Blazorise.Button Color="Color.Primary" Outline="true" Loading="IsItemVariantSaveBusy"
+                                      @onclick="@SaveItemVariants_Click" 
+                                      Padding="Padding.Is1"><Icon Name="IconName.Save" /> Save</Blazorise.Button>
+                        </Tooltip>
+                        <Tooltip Text="Cancel changes">
+                            <Blazorise.Button Color="Color.Warning" Outline="true" Padding="Padding.Is1"><Icon Name="IconName.Undo" /> Cancel </Blazorise.Button>
+                        </Tooltip>
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <Tooltip Text="Pull from E-commerce platforms">
+                            <Blazorise.Button  Outline="true" Color="Color.Dark" Loading="IsItemVariantImportBusy"
+                                      @onclick="@ImportItemVariants_Click"
+                                      Padding="Padding.Is1"><Icon Name="IconName.ChevronRight" /> Refresh from Woo</Blazorise.Button>
+                        </Tooltip>
+                        <Tooltip Text="Save to with E-commerce platforms">
+                            <Button Color="Color.Secondary" Outline="true" Padding="Padding.Is1"><Icon Name="IconName.ChevronLeft" /> Save to Woo</Button>
+                        </Tooltip>
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <Tooltip Text="Expand all">
+                            <Blazorise.Button Color="Color.Info" @onclick="@(() => ExpandAll_Click(true))" Outline="true" Padding="Padding.Is1">
+                                <Icon Name="IconName.Expand" IconSize="IconSize.ExtraSmall" /> Expand all
+                            </Blazorise.Button>
+                        </Tooltip>
+                        <Tooltip Text="Collapse all">
+                            <Blazorise.Button Color="Color.Info" @onclick="@(() => ExpandAll_Click(false))"
+                                    Outline="true" Padding="Padding.Is1">
+                                <Icon Name="IconName.Compress" IconSize="IconSize.ExtraSmall" /> Collapse all
+                            </Blazorise.Button>
+                        </Tooltip>
+                    </CardBody>
+                </Card>
+            </Column>
+        </Row>
     }
+
+<RainbowOF.Components.Modals.ConfirmModal @ref="ItemVariantViewRepository.formSettings.DeleteConfirmation"
+                                          ConfirmationClicked="DeleteItemVariantAsync"
+                                          ConfirmationMessage=@($"Are you sure you want to delete this variant?")
+                                          ConfirmButtonText="Delete"
+                                          CancelButtonText="Cancel" />
+
+<RainbowOF.Components.Modals.ConfirmModal @ref="AddAllItemVariantsConfirmationModal"
+                                          ConfirmationClicked="AddAllItemsVariantsAsync"
+                                          ConfirmationMessage=@($"Are you sure you want to add all variants of this item?")
+                                          ConfirmButtonText="Add"
+                                          CancelButtonText="Cancel" />
+
+<RainbowOF.Components.Modals.ConfirmModal @ref="DeleteAllItemVariantsConfirmationModal"
+                                          ConfirmationClicked="DeleteAllItemVariantsAsync"
+                                          ConfirmationMessage=@($"Are you sure you want to delete all variants?")
+                                          ConfirmButtonText="Delete"
+                                          CancelButtonText="Cancel" />
+
 }
+
+<RainbowOF.Components.Modals.ConfirmModal @ref="ImportVariantsConfirmationModal"
+                                          ConfirmationClicked="ImportVariantAsync"
+                                          ConfirmationMessage=@($"Are you sure you want to import?")
+                                          ConfirmButtonText="Import"
+                                          CancelButtonText="Cancel" />
+
+

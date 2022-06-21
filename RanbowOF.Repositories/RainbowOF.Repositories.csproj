@@ -10,6 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Items\IItemAttributeRepository.cs" />
+    <Compile Remove="Items\ItemAttributeRepository.cs" />
     <Compile Remove="Lookups\CategoryWooLinkedView_old.cs" />
     <Compile Remove="Lookups\ICategoryWooLinkedView_old.cs" />
     <Compile Remove="Lookups\IItemCategoryLookup.cs" />
@@ -25,13 +27,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Blazorise.Bootstrap" Version="0.9.5" />
-    <PackageReference Include="Blazorise.DataGrid" Version="0.9.5" />
-    <PackageReference Include="Blazorise.Icons.FontAwesome" Version="0.9.5" />
-    <PackageReference Include="LinqKit" Version="1.1.27" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.0">
+    <PackageReference Include="Blazorise.Bootstrap" Version="1.0.4" />
+    <PackageReference Include="Blazorise.DataGrid" Version="1.0.4" />
+    <PackageReference Include="Blazorise.Icons.FontAwesome" Version="1.0.4" />
+    <PackageReference Include="LinqKit" Version="1.2.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

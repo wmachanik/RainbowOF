@@ -14,7 +14,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
     public partial class NewUoMLookupComponent : ComponentBase
     {
         [Inject]
-        IAppUnitOfWork _AppUnitOfWork { get; set; }
+        IUnitOfWork appUnitOfWork { get; set; }
         [Parameter]
         public PopUpAndLogNotification PopUpRef { get; set; }
         [Parameter]
@@ -27,9 +27,10 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
 
         protected override async Task OnInitializedAsync()
         {
+            await base.OnInitializedAsync();
             //SelectedUoMId = ((SourceUoMId ?? Guid.Empty) == Guid.Empty) ? Guid.Empty : (Guid)SourceUoMId;  // store in a local var to keep state until modal closed. If not Select list changes to original value
             if (_ListOfUoMSymbols == null)
-                _ListOfUoMSymbols =  _AppUnitOfWork.GetListOfUoMSymbols();
+                _ListOfUoMSymbols =  appUnitOfWork.GetListOfUoMSymbols();
             await InvokeAsync(StateHasChanged);
         }
 
@@ -47,14 +48,14 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
         {
             if (IsSaveClicked)
             {
-                IAppRepository<ItemUoMLookup> appRepository = _AppUnitOfWork.Repository<ItemUoMLookup>();
+                IRepository<ItemUoMLookup> appRepository = appUnitOfWork.Repository<ItemUoMLookup>();
                 if (appRepository != null)
                 {
                     var _result = await appRepository.AddAsync(_NewItemUoM);
                     if (_result == null)
-                        PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Error adding new Unit of Measure: {_NewItemUoM.UoMName}");
+                        await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Error adding new Unit of Measure: {_NewItemUoM.UoMName}");
                     else
-                        PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Unit of Measure: {_NewItemUoM.UoMName} added.");
+                        await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Success, $"Unit of Measure: {_NewItemUoM.UoMName} added.");
                 }
             }
             await NewUoMModalRef.Hide();

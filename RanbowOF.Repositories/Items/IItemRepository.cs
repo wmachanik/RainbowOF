@@ -1,4 +1,5 @@
 ﻿using RainbowOF.Models.Items;
+using RainbowOF.Models.Lookups;
 using RainbowOF.Repositories.Common;
 using RainbowOF.ViewModels.Common;
 using System;
@@ -10,8 +11,9 @@ using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Items
 {
-    public interface IItemRepository : IAppRepository<Item>
+    public interface IItemRepository : IRepository<Item>
     {
+        #region Basic CRUD stuff
         //Task<List<Item>> GetAllItemData(Expression<Func<Item, bool>> predicate);
         /// <summary>
         /// Get a List of DataGridItems using data grid data passed in
@@ -37,5 +39,60 @@ namespace RainbowOF.Repositories.Items
         /// <param name="newItem">New item to add</param>
         /// <returns>Number of records added or Error (AppUnitOfWork.CONST_WASERROR)</returns>
         Task<Item> AddItemAsync(Item newItem);
+        Task<bool> DetachItemById(Guid sourceItemId);
+
+        #endregion
+        #region Lists and Lookup ups
+        List<Item> GetSimilarItems(Guid sourceItemId, Guid? sourceItemPrimaryCategoryId);
+        List<ItemCategoryLookup> GetEagerItemsCategoryLookupsByItemId(Guid sourceItemId);
+        // These work with Attributes and Attribute varieties, they cold be in a separate interface but as they are relate to the Item, they are here
+        /// <summary>
+        /// Get all the Attributes for an Item by ItemId
+        /// </summary>
+        /// <param name="ItemId">The Item's Id</param>
+        /// <returns>List of Item Attributes</returns>
+        List<ItemAttribute> GetEagerItemVariableAttributeByItemId(Guid sourceItemId);
+        Task<List<ItemAttribute>> GetEagerItemAttributeByItemIdAsync(Guid sourceItemId);
+        List<ItemAttributeVariety> GetEagerItemAttributeVarietiesByItemIdAndAttributeLookupId(Guid sourceItemId, Guid sourceItemAttributeLookupId);
+        Task<List<ItemAttributeVariety>> GetEagerItemAttributeVarietiesByItemIdAndAttributeLookupIdAsync(Guid sourceItemId, Guid sourceItemAttributeLookupId);
+        Task<bool> DoesThisItemHaveVariableAttributes(Guid currentItemId);
+        #endregion
+        #region ItemAttribute related routines
+        Task<bool> IsUniqueItemAttributeAsync(ItemAttribute sourceItemAttribute);
+        List<ItemAttributeVariety> GetAssociatedVarients(Guid sourceAttributeLookupId);
+        Task<List<ItemAttributeVariety>> GetAssociatedVarientsAsync(Guid sourceAttributeLookupId);
+        Task<ItemAttribute> GetByIdNoTrackingAsync(Guid sourceItemnAttributeId);
+        Task<int> UpdateItemAttributeAsync(ItemAttribute sourceItemAttribute);
+        #endregion
+        //List<ItemAttribute> GetAllItemVariableAttributesByItemId(Guid sourceItemId);
+        #region ItemVariants of an item and supporting routines
+        /// <summary>
+        /// Get all the Item Variants and all the associated lookup tables based on sourceItemId
+        /// </summary>
+        /// <param name="sourceItemId">The ItemId of the parent item</param>
+        /// <returns></returns>
+        Task<List<ItemVariant>> GetAllItemVariantsEagerByItemIdAsync(Guid sourceItemId);
+        /// <summary>
+        /// Get the Item variant and all the related tables / Lists for the Item Variant whose Id is passed in
+        /// </summary>
+        /// <param name="sourceItemVariant">Id of the ItemVariant to be returned</param>
+        /// <returns>The Item variant with all related lists retrieved.</returns>
+        Task<ItemVariant> GetItemVariantEagerByItemVariantIdAsync(Guid sourceItemVariantId);
+        ///// <summary>
+        ///// Get all the variants that the item has an attribute marked as variable 
+        ///// </summary>
+        ///// <param name="sourceItemId">The ItemId of the parent Item</param>
+        ///// <returns></returns>
+        //Task<List<ItemAttributeVariety>> GetAllPossibleVariants(Guid sourceItemId);
+
+        /// <summary>
+        /// Delete all the variants of this item
+        /// </summary>
+        /// <param name="sourceItemId">The Id of the item whose variants we wont to delete</param>
+        /// <returns>true of successful</returns>
+        Task<bool> DeleteAllItemsVariantsAsync(Guid sourceItemId);
+
+
+        #endregion
     }
 }

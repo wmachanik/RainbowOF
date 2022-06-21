@@ -14,21 +14,21 @@ using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Lookups
 {
-    public class ItemAttributeLookupRepository : AppRepository<ItemAttributeLookup>, IItemAttributeLookupRepository
+    public class ItemAttributeLookupRepository : Repository<ItemAttributeLookup>, IItemAttributeLookupRepository
     {
         #region Injected Items
-        private ApplicationDbContext _Context = null;
-        private ILoggerManager _Logger { get; set; }
-        private IAppUnitOfWork _AppUnitOfWork { get; set; }
+        //private ApplicationDbContext appContext = null;
+        //private ILoggerManager appLoggerManager { get; set; }
+        //private IUnitOfWork appUnitOfWork { get; set; }
         #endregion
 
         #region Initialisation
-        public ItemAttributeLookupRepository(ApplicationDbContext sourceDbContext, ILoggerManager sourceLogger, IAppUnitOfWork sourceAppUnitOfWork) : base(sourceDbContext, sourceLogger, sourceAppUnitOfWork)
+        public ItemAttributeLookupRepository(ApplicationDbContext sourceDbContext, ILoggerManager sourceLogger, IUnitOfWork sourceAppUnitOfWork) : base(sourceDbContext, sourceLogger, sourceAppUnitOfWork)
         {
-            _Context = sourceDbContext;
-            _Logger = sourceLogger;
-            _AppUnitOfWork = sourceAppUnitOfWork;
-            _Logger.LogDebug("ItemAttributeLookupRepository initialised.");
+            //appContext = sourceDbContext;
+            //appLoggerManager = sourceLogger;
+            //appUnitOfWork = sourceAppUnitOfWork;
+            if (sourceLogger.IsDebugEnabled()) sourceLogger.LogDebug("ItemAttributeLookupRepository initialised.");
         }
         #endregion
 
@@ -103,17 +103,17 @@ namespace RainbowOF.Repositories.Lookups
         public async Task<DataGridItems<ItemAttributeLookup>> GetPagedDataEagerWithFilterAndOrderByAsync(DataGridParameters currentDataGridParameters) // (int startPage, int currentPageSize)
         {
             DataGridItems<ItemAttributeLookup> _dataGridData = null;
-            DbSet<ItemAttributeLookup> _table = _Context.Set<ItemAttributeLookup>();
+            DbSet<ItemAttributeLookup> _table = appContext.Set<ItemAttributeLookup>();
 
             try
             {
-                _Logger.LogDebug($"Getting all records with eager loading of ItemAttributeLookup order by an filter Data Grid Parameters: {currentDataGridParameters.ToString()}");
+                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Getting all records with eager loading of ItemAttributeLookup order by an filter Data Grid Parameters: {currentDataGridParameters.ToString()}");
                 // get a list of Order bys and filters
                 List<OrderByParameter<ItemAttributeLookup>> _orderByExpressions = GetOrderByExpressions(currentDataGridParameters.SortParams);
                 List<Expression<Func<ItemAttributeLookup, bool>>> _filterByExpressions = GetFilterByExpressions(currentDataGridParameters.FilterParams);
 
                 // start with a basic Linq Query with Eager loading
-                IQueryable<ItemAttributeLookup> _query = _table.Include(ial => ial.ItemAttributeVarietyLookups.Take(AppUnitOfWork.CONST_MAX_DETAIL_PAGES));    //only take the first 50
+                IQueryable<ItemAttributeLookup> _query = _table.Include(ial => ial.ItemAttributeVarietyLookups.Take(UnitOfWork.CONST_MAX_DETAIL_PAGES));    //only take the first 50
                 if ((_orderByExpressions != null) && (_orderByExpressions.Count > 0))
                 {
                     // add order bys
@@ -163,7 +163,7 @@ namespace RainbowOF.Repositories.Lookups
             }
             catch (Exception ex)
             {
-                _AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all records from ItemAttributeLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
+                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all records from ItemAttributeLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif

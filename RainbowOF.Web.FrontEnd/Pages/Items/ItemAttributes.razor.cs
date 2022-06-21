@@ -40,17 +40,18 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
 
         public List<ItemAttributeLookupView> SelectedItemAttributeLookups;
         [Inject]
-        public IAppUnitOfWork _AppUnitOfWork { get; set; }
+        public IUnitOfWork appUnitOfWork { get; set; }
         [Inject]
         public ApplicationState _AppState { get; set; }
         [Inject]
-        public ILoggerManager _Logger { get; set; }
+        public ILoggerManager appLoggerManager { get; set; }
         [Inject]
         public IMapper _Mapper { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
-            _AttributeWooLinkedViewRepository = new AttributeWooLinkedViewRepository(_Logger, _AppUnitOfWork, /*_WooLinkedGridSettings, */_Mapper);
+            await base.OnInitializedAsync();
+            _AttributeWooLinkedViewRepository = new AttributeWooLinkedViewRepository(appLoggerManager, appUnitOfWork, /*_WooLinkedGridSettings, */_Mapper);
             //await LoadData();
             await InvokeAsync(StateHasChanged);
         }
@@ -91,7 +92,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             }
             catch (Exception ex)
             {
-                _Logger.LogError($"Error running async tasks: {ex.Message}");
+                appLoggerManager.LogError($"Error running async tasks: {ex.Message}");
                 throw;
             }
             finally
@@ -116,17 +117,17 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             }
             catch (Exception ex)
             {
-                _Logger.LogError($"Error running async tasks: {ex.Message}");
+                appLoggerManager.LogError($"Error running async tasks: {ex.Message}");
                 throw;
             }
             //restore the old items that were selected.
-            SelectedItemAttributeLookups = _AttributeWooLinkedViewRepository.PopSelectedItems(dataModels);
+            SelectedItemAttributeLookups =  _AttributeWooLinkedViewRepository.PopSelectedItems(dataModels);
             StateHasChanged();
         }
 
         //private async Task<List<ItemAttributeLookup>> GetAllItemAttributeLookups()
         //{
-        //    IAppRepository<ItemAttributeLookup> _ItemAttributeLookupRepository = _appUnitOfWork.Repository<ItemAttributeLookup>();
+        //    IAppRepository<ItemAttributeLookup> _ItemAttributeLookupRepository = appUnitOfWork.Repository<ItemAttributeLookup>();
         //    List<ItemAttributeLookup> _ItemAttributeLookups = (await _ItemAttributeLookupRepository.GetAllEagerAsync(ial => ial.ItemAttributeVarietyLookups))
         //        .OrderBy(ial => ial.OrderBy)
         //        .ToList();
@@ -137,7 +138,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         async Task HandleCustomerSearchOnKeyUpAsync(KeyboardEventArgs kbEventHandler)
         {
             var key = (string)kbEventHandler.Key;   // not using this but just in case
-                                                    //if ( _AttributeWooLinkedViewRepository._WooLinkedGridSettings.CustomFilterValue.Length > 2)
+                                                    //if ( _AttributeWooLinkedViewRepository._WooLinkedGridSettings.CustomFilterValue.Length> 2)
                                                     //{
             await _DataGrid.Reload();
             //}
@@ -232,18 +233,18 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             //if (SelectedBulkAction == BulkAction.none)
             //    return;   ----> button should be disabled 
 
-             _AttributeWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Info, "Applying the bulk action as requested");
+             await _AttributeWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Info, "Applying the bulk action as requested");
 
             int done = 0;
             int failed = 0;
             foreach (var item in SelectedItemAttributeLookups)
             {
-                if (await _AttributeWooLinkedViewRepository.DoGroupActionAsync(item, SelectedBulkAction) > 0)
+                if (await _AttributeWooLinkedViewRepository.DoGroupActionAsync(item, SelectedBulkAction)> 0)
                     done++;
                 else
                     failed++;
             }
-             _AttributeWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Info, $"Bulk Action applied to {done} items and not applied to {failed} items.");
+            await _AttributeWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Info, $"Bulk Action applied to {done} items and not applied to {failed} items.");
             await _DataGrid.Reload();
         }
         async Task ReloadAsync()

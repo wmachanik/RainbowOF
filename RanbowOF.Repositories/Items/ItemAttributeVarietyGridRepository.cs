@@ -10,12 +10,15 @@ using RainbowOF.Models.Lookups;
 
 namespace RainbowOF.Repositories.Items
 {
-    public class ItemAttributeVarietyGridViewRepository : GridViewRepository<ItemAttributeVariety>, IItemAttributeVarietyGridViewRepository
+    public class ItemAttributeVarietyGridRepository : GridRepository<ItemAttributeVariety>, IItemAttributeVarietyGridRepository
     {
-        public ItemAttributeVarietyGridViewRepository(ILoggerManager sourceLogger, IAppUnitOfWork sourceAppUnitOfWork) : base(sourceLogger, sourceAppUnitOfWork)
+        public ItemAttributeVarietyGridRepository(ILoggerManager sourceLogger, IUnitOfWork sourceAppUnitOfWork) : base(sourceLogger, sourceAppUnitOfWork)
         {
             // base initialises
+            if (sourceLogger.IsDebugEnabled()) sourceLogger.LogDebug("ItemAttributeVarietyGridRepository initialised...");
+
         }
+
         #region Recommended Over writable Grid Classes
         /// <summary>
         /// Used to create a new entity when the add item button is pressed, this needs to be overwritten at a class specific level.
@@ -47,8 +50,8 @@ namespace RainbowOF.Repositories.Items
             if (checkEntity.ItemAttributeVarietyLookupId == Guid.Empty)
                 return false;
             // here we need to check if the AttributeVariety is the same, as we cannot haver duplicate names
-            IAppRepository<ItemAttributeVariety> _itemAttributeVarietyRepository = _AppUnitOfWork.Repository<ItemAttributeVariety>();
-            var _result = await _itemAttributeVarietyRepository.FindFirstByAsync(
+            IRepository<ItemAttributeVariety> _itemAttributeVarietyRepository = appUnitOfWork.Repository<ItemAttributeVariety>();
+            var _result = await _itemAttributeVarietyRepository.GetByIdAsync(
                 checkEntity.ItemAttributeVarietyId == Guid.Empty ?
                   (iav => 
                         (iav.ItemAttributeId == checkEntity.ItemAttributeId) 
@@ -80,7 +83,7 @@ namespace RainbowOF.Repositories.Items
         /// <returns>ItemAttributeVarietyLookup item, if found or null</returns>
         public async Task<ItemAttributeVarietyLookup> GetItemAttributeVarietyByIdAsync(Guid sourceItemAttributeVarietyLookupId)
         {
-            IAppRepository<ItemAttributeVarietyLookup> _itemAttributeVarietyLookupRepository = _AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
+            IRepository<ItemAttributeVarietyLookup> _itemAttributeVarietyLookupRepository = appUnitOfWork.Repository<ItemAttributeVarietyLookup>();
             ItemAttributeVarietyLookup _itemAttributeVarietyLookup = await _itemAttributeVarietyLookupRepository.GetByIdAsync(sourceItemAttributeVarietyLookupId);
             return _itemAttributeVarietyLookup;
         }
@@ -91,7 +94,7 @@ namespace RainbowOF.Repositories.Items
         /// <returns>UoM Lookup item, if found or null</returns>
         public async Task<ItemUoMLookup> GetItemUoMByIdAsync(Guid sourceItemUoMLookupId)
         {
-            IAppRepository<ItemUoMLookup> _itemUoMLookupRepository = _AppUnitOfWork.Repository<ItemUoMLookup>();
+            IRepository<ItemUoMLookup> _itemUoMLookupRepository = appUnitOfWork.Repository<ItemUoMLookup>();
             ItemUoMLookup _itemUoMLookup = await _itemUoMLookupRepository.GetByIdAsync(sourceItemUoMLookupId);
             return _itemUoMLookup;
         }

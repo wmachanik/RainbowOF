@@ -10,7 +10,6 @@ using RainbowOF.Repositories.Common;
 using Blazorise;
 using Blazorise.Bootstrap;
 using Blazorise.Icons.FontAwesome;
-using Blazored.Toast;
 using RainbowOF.Tools.Services;
 using RainbowOF.ViewModels;
 using Blazorise.RichTextEdit;
@@ -34,18 +33,19 @@ namespace RainbowOF.Web.FrontEnd
             services.AddRazorPages();
             services.AddServerSideBlazor();
 
-            /// Blazorise stuff
-            services.AddBlazorise(options =>
-                  {
-                      options.ChangeTextOnKeyPress = true; // optional
-                  })
-                  .AddBootstrapProviders()
-                  .AddFontAwesomeIcons();
-            services.AddBlazoriseRichTextEdit(options =>
-            {
-                options.UseShowTheme = true;
-                options.UseBubbleTheme = true;
-            });
+            ///// Blazorise stuff from https://blazorise.com/docs/start
+            //services.AddBlazorise(options =>
+            //      {
+            //          options.Immediate = true;
+            //      })
+            //      .AddBootstrapProviders()
+            //      .AddFontAwesomeIcons();
+
+            //services.AddBlazoriseRichTextEdit(options =>
+            //{
+            //    options.UseShowTheme = true;
+            //    options.UseBubbleTheme = true;
+            //});
             // Auto mapper stuff
             services.AddAutoMapper(typeof(ViewMappingProfile), typeof(IntegrationMappingProfile));
 
@@ -63,8 +63,6 @@ namespace RainbowOF.Web.FrontEnd
             services.AddScoped<ApplicationState>();         //-> used to store any global states
             services.AddLogging();
             services.AddSingleton<ILoggerManager, LoggerManager>();
-
-            services.AddBlazoredToast();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -87,14 +85,12 @@ namespace RainbowOF.Web.FrontEnd
             //    .UseBootstrapProviders()
             //    .UseFontAwesomeIcons();
 
-
-
             // Blazorise
             //            app.ApplicationServices.
             //  .UseBootstrapProviders()
             //  .UseFontAwesomeIcons();
 
-
+            // Blazorise
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapBlazorHub();

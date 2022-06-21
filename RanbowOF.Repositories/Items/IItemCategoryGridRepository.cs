@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Items
 {
-    public interface IItemAttributeVarietyGridViewRepository : IGridViewRepository<ItemAttributeVariety>
+    public interface IItemCategoryGridRepository : IGridRepository<ItemCategory>
     {
         // over writables are inherited
         #region Interface specific routines
-        Task<ItemAttributeVarietyLookup> GetItemAttributeVarietyByIdAsync(Guid sourceItemAttributeVarietyLookupId);
+        Task<ItemCategoryLookup> GetItemCategoryByIdAsync(Guid sourceItemCategoryLookupId);
         Task<ItemUoMLookup> GetItemUoMByIdAsync(Guid sourceItemUoMLookupId);
         #endregion
     }

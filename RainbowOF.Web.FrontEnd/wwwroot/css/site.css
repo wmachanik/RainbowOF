@@ -36,7 +36,7 @@ app {
         justify-content: flex-end;
     }
 
-        .main .top-row > a, .main .top-row .btn-link {
+        .main .top-row> a, .main .top-row .btn-link {
             white-space: nowrap;
             margin-left: 1.5rem;
         }
@@ -167,7 +167,7 @@ app {
         top: 0;
     }
 
-    .main > div {
+    .main> div {
         padding-left: 2rem !important;
         padding-right: 1.5rem !important;
     }

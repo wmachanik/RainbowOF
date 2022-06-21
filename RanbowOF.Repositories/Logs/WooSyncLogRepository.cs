@@ -11,21 +11,21 @@ using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Logs
 {
-    public class WooSyncLogRepository : AppRepository<WooSyncLog>, IWooSyncLogRepository
+    public class WooSyncLogRepository : Repository<WooSyncLog>, IWooSyncLogRepository
     {
 
-        private ApplicationDbContext _Context = null;
-        private ILoggerManager _Logger { get; set; }
-        private IAppUnitOfWork _AppUnitOfWork { get; set; }
-        public WooSyncLogRepository(ApplicationDbContext sourceContext, ILoggerManager sourceLogger, IAppUnitOfWork sourceAppUnitOfWork) : base (sourceContext, sourceLogger, sourceAppUnitOfWork)
+        //private ApplicationDbContext appContext = null;
+        //private ILoggerManager appLoggerManager { get; set; }
+        //private IUnitOfWork appUnitOfWork { get; set; }
+        public WooSyncLogRepository(ApplicationDbContext sourceContext, ILoggerManager sourceLogger, IUnitOfWork sourceAppUnitOfWork) : base (sourceContext, sourceLogger, sourceAppUnitOfWork)
         {
-            _Context = sourceContext;
-            _Logger = sourceLogger;
-            _AppUnitOfWork = sourceAppUnitOfWork;
+            //appContext = sourceContext;
+            //appLoggerManager = sourceLogger;
+            //appUnitOfWork = sourceAppUnitOfWork;
         }
-        public async Task<List<DateTime>> GetDistinctLogDates()
+        public async Task<List<DateTime>> GetDistinctLogDatesAsync()
         {
-            return await _Context.WooSyncLogs.Select(wsl => wsl.WooSyncDateTime).Distinct().OrderByDescending(dt=>dt).ToListAsync();
+            return await appContext.WooSyncLogs.Select(wsl => wsl.WooSyncDateTime).Distinct().OrderByDescending(dt=>dt).ToListAsync();
         }
     }
 }

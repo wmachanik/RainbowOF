@@ -25,24 +25,21 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         public List<WooSyncLog> WooSyncLogRows;
 
         [Inject]
-        IAppUnitOfWork _AppUnitOfWork { get; set; }
+        IUnitOfWork appUnitOfWork { get; set; }
         protected override async Task OnInitializedAsync()
         {
+            await base.OnInitializedAsync();
             await LoadWooSyncLogAsync();
         }
 
         private async Task<List<DateTime>> GetAllUniqueLogDatesAsync()
         {
-            IWooSyncLogRepository _WooSyncLogRepository = _AppUnitOfWork.wooSyncLogRepository();
-
-            return await _WooSyncLogRepository.GetDistinctLogDates();
+            return await appUnitOfWork.wooSyncLogRepository.GetDistinctLogDatesAsync();
         }
 
         private async Task<List<WooSyncLog>> GetSyncLogRowsByDateAsync(DateTime selectedDateTimeInLog)
         {
-            IWooSyncLogRepository _WooSyncLogRepository = _AppUnitOfWork.wooSyncLogRepository();
-
-            return (List<WooSyncLog>)await _WooSyncLogRepository.GetByAsync(wsl => wsl.WooSyncDateTime == selectedDateTimeInLog);
+            return (List<WooSyncLog>)await appUnitOfWork.wooSyncLogRepository.GetByAsync(wsl => wsl.WooSyncDateTime == selectedDateTimeInLog);
         }
 
 

@@ -6,19 +6,24 @@
 }
 else
 {
+    //--- !!!!! items have changed
     <DataGrid TItem="ItemCategoryLookup" Data="@ModelItemCategoryLookups"
-              Sortable="true" Editable="false"
-              Striped="true"
-              Hoverable="true"
-              Responsive="true"
-              EditMode="DataGridEditMode.Popup"
-              TotalItems="ModelItemCategoryLookups.Count"
-              PageSize="25"
-              @bind-SelectedRow="@SeletectedItemCategoryLookup"
-              DetailRowTrigger="@((catItem)=>((catItem.ItemCategoryLookupId == SeletectedItemCategoryLookup?.ItemCategoryLookupId)))"
-              Bordered="true"
-              UseInternalEditing="true"
-              Padding="Padding.Is0">
+          Sortable="true" Editable="false"
+          Striped="true"
+          Hoverable="true"
+          Responsive="true"
+          EditMode="DataGridEditMode.Popup"
+          TotalItems="ModelItemCategoryLookups.Count"
+          PageSize="25"
+          @bind-SelectedRow="@SeletectedItemCategoryLookup"
+          DetailRowTrigger="@((catItem)=>((catItem.Item.ItemCategoryLookupId == SeletectedItemCategoryLookup?.ItemCategoryLookupId)))"
+          Bordered="true"
+          UseInternalEditing="true"
+          UseValidation="true"
+          ShowValidationsSummary="true"
+          ValidationsSummaryLabel="Error validating data. Following error occurs..."
+          ShowValidationFeedback="true"
+          Padding="Padding.Is0">
         <EmptyTemplate>
             @if (ModelItemCategoryLookups == null)
             {

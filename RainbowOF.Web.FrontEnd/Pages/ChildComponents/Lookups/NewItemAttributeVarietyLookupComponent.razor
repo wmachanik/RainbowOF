@@ -3,10 +3,10 @@
     Component to add a new Attribute Variety
 
     Parameters:
-        > PopUpAndLogNotification PopUpRef to display the results of the add
-        > bool AddItemToWoo optional default is false;
+       > PopUpAndLogNotification PopUpRef to display the results of the add
+       > bool AddItemToWoo optional default is false;
     Uses:
-        IAppUnitOfWork _appUnitOfWork
+        IAppUnitOfWork appUnitOfWork
     -------------------------------------------------------------
 *@
 <Modal @ref="NewAttributeVarietyLookupModalRef">
@@ -33,7 +33,7 @@
             </Field>
             <Field>
                 <FieldLabel>Add To Woo</FieldLabel>
-                <Blazorise.Check TValue="bool" Checked="@(_NewItemAttributeVarietyLookupView.CanUpdateECommerceMap?? false)" CheckedChanged="((cv) => _NewItemAttributeVarietyLookupView.CanUpdateECommerceMap = cv)" ></Blazorise.Check>
+                <Blazorise.Check TValue="bool" Checked="@(_NewItemAttributeVarietyLookupView.CanUpdateECommerceMap?? false)" CheckedChanged="((cv) => _NewItemAttributeVarietyLookupView.CanUpdateECommerceMap = cv)"></Blazorise.Check>
             </Field>
             <Field>
                 <FieldLabel>Notes</FieldLabel>

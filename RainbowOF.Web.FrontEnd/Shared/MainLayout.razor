@@ -1,15 +1,37 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="sidebar">
-    <NavMenu />
-</div>
+<PageTitle>Rainbow OF</PageTitle>
 
-<div class="main">
+<Layout Sider>
+    <LayoutSider>
+        <LayoutSiderContent>
+            <SideMenu />
+        </LayoutSiderContent>
+    </LayoutSider>
+    <Layout>
+        <LayoutHeader Fixed>
+            <TopMenu />
+        </LayoutHeader>
+        <LayoutContent Padding="Padding.Is4.OnX">
+            @Body
+        </LayoutContent>
+    </Layout>
+</Layout>
+
+
+
+
+@*<div class="sidebar">
+    <NavMenu />
+    </div>
+
+    <div class="main">
     <div class="top-row px-4">
-        <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+    <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
     </div>
 
     <div class="content px-4">
-        @Body
+    @Body
     </div>
-</div>
+    </div>
+*@

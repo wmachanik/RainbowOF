@@ -16,7 +16,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
         ItemCategoryLookup SeletectedItemCategoryLookup;
 
         [Inject]
-        IAppUnitOfWork _AppUnitOfWork { get; set; }
+        IUnitOfWork appUnitOfWork { get; set; }
         [Parameter]
         public Guid? SourceParentCategoryId { get; set; }
         [Parameter]
@@ -24,7 +24,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
 
         protected override async Task OnInitializedAsync()
         {
-            base.OnInitialized();
+            await base.OnInitializedAsync();
             ModelItemCategoryLookups = await GetItemCategoryLookupsAsync(SourceParentCategoryId, CanUseAsync);
 //            await InvokeAsync(StateHasChanged);
         }
@@ -33,16 +33,12 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
         {
             if (IsBusy) return null;
             IsBusy = true;
-            var repo = _AppUnitOfWork.itemCategoryLookupRepository();
-
             List<ItemCategoryLookup> _gotItemCategoryLookups   = null;
 
             if (IsAsyncCall)
-                _gotItemCategoryLookups = (await repo.GetByAsync(icl => icl.ParentCategoryId == sourceParentId)).ToList();
+                _gotItemCategoryLookups = (await appUnitOfWork.itemCategoryLookupRepository.GetByAsync(icl => icl.ParentCategoryId == sourceParentId)).ToList();
             else
-                _gotItemCategoryLookups = repo.GetBy(icl => icl.ParentCategoryId == sourceParentId).ToList();
-            //await InvokeAsync(StateHasChanged);
-
+                _gotItemCategoryLookups = appUnitOfWork.itemCategoryLookupRepository.GetBy(icl => icl.ParentCategoryId == sourceParentId).ToList();
             IsBusy = false;
             return _gotItemCategoryLookups;
         }

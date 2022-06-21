@@ -22,7 +22,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Sys
         public bool ShowSecret = false;
         public string WooStatus = "none";
         public bool Waiting = false;
-        protected ShowModalMessage ShowModalStatus { get; set; }
+        public PopUpAndLogNotification PopUpStatus { get; set; }
         public async Task CheckWooStatusAsync()
         {
             Waiting = true;
@@ -40,15 +40,15 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Sys
             WooProduct _WooProducts = new WooProduct(_WooAPISettings, Logger);
 
             //int _count = await Task.Run(() => _WooProducts.GetProductCount());    //CheckProductLink())
-            //WooStatus = ((_count > 0) ? $"Success - product count: {_count}" : "Failed");
+            //WooStatus = ((_count> 0) ? $"Success - product count: {_count}" : "Failed");
 
             bool _success = await Task.Run(() => _WooProducts.CheckProductLinkAsync());   // GetProductCount());    //
             WooStatus = (_success ? $"Success" : "Failed");
 
             Waiting = false;
             StateHasChanged();
-            ShowModalStatus.UpdateModalMessage($"Woo API call status: {Environment.NewLine}{Environment.NewLine}  {WooStatus}");
-            await ShowModalStatus.ShowModalAsync();
+            await PopUpStatus.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Info, $"Woo API call status: {Environment.NewLine}{Environment.NewLine}  {WooStatus}");
+            //await ShowModalStatus.ShowModalAsync();
         }
 
         protected void StatusClosed_Click()

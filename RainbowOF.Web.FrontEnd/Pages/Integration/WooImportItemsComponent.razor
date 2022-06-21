@@ -17,7 +17,7 @@
     </Blazorise.CardTitle>
 
     <Blazorise.CardBody>
-        @if (IsImporting() && (currImportCounters.MaxRecs > 0))
+        @if (IsImporting() && (currImportCounters.MaxRecs> 0))
         {
             <Blazorise.Progress Margin="Margin.Is3.FromBottom" Size="Size.Medium">
                 <Blazorise.ProgressBar Background="Background.Info" Max="100" Animated="true" Min="0" Value="currImportCounters.PercentOfRecsImported" Striped="true">@currImportCounters.PercentOfRecsImported%</Blazorise.ProgressBar>
@@ -52,5 +52,4 @@
 
 <RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage="Import Message" NotificationTitle="" @ref="@componentPopUpRef" />
 
-@*<RainbowOF.Components.Modals.ShowModalMessage @ref="componentShowModalStatus" ModalMessage="Woo Categories Imported" ModalTitle="Woo Categories Import" />*@
 

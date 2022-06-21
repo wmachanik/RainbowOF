@@ -1,4 +1,4 @@
-﻿namespace RainbowOF.Models
+﻿namespace RainbowOF.Models.Logs
 {
     public enum WooResults
     {

@@ -5,7 +5,7 @@ namespace RainbowOF.Tools
 {
     public class LoggerManager : ILoggerManager
     {
-        private static ILogger _Logger = LogManager.GetCurrentClassLogger();
+        private static ILogger appLoggerManager = LogManager.GetCurrentClassLogger();
         #region Init
         public LoggerManager()
         {
@@ -22,19 +22,23 @@ namespace RainbowOF.Tools
         #region Interface routines
         public void LogDebug(string message)
         {
-            _Logger.Debug(CleanMessage(message));
+            appLoggerManager.Debug(CleanMessage(message));
         }
         public void LogError(string message)
         {
-            _Logger.Error(CleanMessage(message));
+            appLoggerManager.Error(CleanMessage(message));
         }
         public void LogInfo(string message)
         {
-            _Logger.Info(CleanMessage(message));
+            appLoggerManager.Info(CleanMessage(message));
         }
         public void LogWarn(string message)
         {
-            _Logger.Warn(CleanMessage(message));
+            appLoggerManager.Warn(CleanMessage(message));
+        }
+        public bool IsDebugEnabled()
+        {
+            return appLoggerManager.IsDebugEnabled;
         }
         #endregion
     }

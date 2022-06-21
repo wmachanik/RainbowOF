@@ -48,17 +48,18 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
 
         public List<ItemCategoryLookupView> SelectedItemCategoryLookups;
         [Inject]
-        private IAppUnitOfWork _AppUnitOfWork { get; set; }
+        private IUnitOfWork appUnitOfWork { get; set; }
         [Inject]
-        private ApplicationState _AppState { get; set; }
+        private ApplicationState appState { get; set; }
         [Inject]
-        public ILoggerManager _Logger { get; set; }
+        public ILoggerManager appLoggerManager { get; set; }
         [Inject]
-        public IMapper _Mapper { get; set; }
+        public IMapper appMapper { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
-            _CategoryWooLinkedViewRepository = new CategoryWooLinkedViewRepository(_Logger, _AppUnitOfWork, /*_WooLinkedGridSettings,*/ _Mapper);
+            await base.OnInitializedAsync();
+            _CategoryWooLinkedViewRepository = new CategoryWooLinkedViewRepository(appLoggerManager, appUnitOfWork, /*_WooLinkedGridSettings,*/ appMapper);
             //await LoadData();
             await InvokeAsync(StateHasChanged);
         }
@@ -92,13 +93,13 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
                 try
                 {
                     await SetLoadStatusAsync("Checking Woo status");
-                    _CategoryWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive = await _CategoryWooLinkedViewRepository.WooIsActiveAsync(_AppState);
+                    _CategoryWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive = await _CategoryWooLinkedViewRepository.WooIsActiveAsync(appState);
                     await SetLoadStatusAsync("Loading categories");
                     await LoadItemCategoryLookupListAsync(_dataGridParameters); // inputDataGridReadData.Page - 1, inputDataGridReadData.PageSize, inputDataGridReadData.Columns);
                 }
                 catch (Exception ex)
                 {
-                    _Logger.LogError($"Error running async tasks: {ex.Message}");
+                    appLoggerManager.LogError($"Error running async tasks: {ex.Message}");
                     throw;
                 }
 
@@ -108,7 +109,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
                 //await Task.WhenAll(_WooIsActiveTask, _LoadGridDataTask);
 
                 //var _loadTasks = new List<Task> { _WooIsActiveTask, _LoadGridDataTask };
-                //while (_loadTasks.Count > 0)
+                //while (_loadTasks.Count> 0)
                 //{
                 //    Task finishedTask = await Task.WhenAny(_loadTasks);
                 //    if (finishedTask == _WooIsActiveTask)
@@ -149,7 +150,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             }
             catch (Exception ex)
             {
-                _Logger.LogError($"Error running async tasks: {ex.Message}");
+                appLoggerManager.LogError($"Error running async tasks: {ex.Message}");
                 throw;
             }
             //restore the old items that were selected.
@@ -159,7 +160,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
 
         //private async Task<List<ItemCategoryLookup>> GetAllItemCategoryLookups()
         //{
-        //    IAppRepository<ItemCategoryLookup> _ItemCategoryLookupRepository = _AppUnitOfWork.Repository<ItemCategoryLookup>();
+        //    IAppRepository<ItemCategoryLookup> _ItemCategoryLookupRepository = appUnitOfWork.Repository<ItemCategoryLookup>();
         //    List<ItemCategoryLookup> _ItemCategoryLookups = (await _ItemCategoryLookupRepository.GetAllEagerAsync(icl => icl.ParentCategory))
         //        .OrderBy(icl => icl.ParentCategoryId)
         //        .ThenBy(icl => icl.CategoryName).ToList();
@@ -170,7 +171,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         async Task HandleCustomerSearchOnKeyUp(KeyboardEventArgs kbEventHandler)
         {
             var key = (string)kbEventHandler.Key;   // not using this but just in case
-                                                    //if (_CategoryWooLinkedViewRepository._WooLinkedGridSettings.CustomFilterValue.Length > 2)
+                                                    //if (_CategoryWooLinkedViewRepository._WooLinkedGridSettings.CustomFilterValue.Length> 2)
                                                     //{
             await _DataGrid.Reload();
             //}
@@ -207,13 +208,13 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         {
             newItem = _CategoryWooLinkedViewRepository.NewItemDefaultSetter(newItem);
         }
-        async Task<int> UpdateItemCategoryLookup(ItemCategoryLookupView updatedCatItemView)
+        async Task<int> UpdateItemCategoryLookupAsync(ItemCategoryLookupView updatedCatItemView)
         {
             int _result = await _CategoryWooLinkedViewRepository.UpdateItemAsync(updatedCatItemView);
             await _DataGrid.Reload();
             return _result;
         }
-        async Task OnRowUpdated(SavedRowItem<ItemCategoryLookupView, Dictionary<string, object>> updatedCatViewItem)
+        async Task OnRowUpdatedAsync(SavedRowItem<ItemCategoryLookupView, Dictionary<string, object>> updatedCatViewItem)
         {
             await _CategoryWooLinkedViewRepository.UpdateRowAsync(updatedCatViewItem.Item);
             await _DataGrid.Reload();
@@ -227,7 +228,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             await _CategoryWooLinkedViewRepository._WooLinkedGridSettings.DeleteConfirmationWithOption.ShowModalAsync("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.CategoryName}?", SelectedItemCategoryLookup.HasECommerceCategoryMap);  //,"Delete","Cancel"); - passed in on init
         }
         //
-        async Task ConfirmAddWooItem_Click(bool confirm)
+        async Task ConfirmAddWooItem_ClickAsync(bool confirm)
         {
             if (confirm)
             {
@@ -236,7 +237,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
                 await _DataGrid.Reload();
             }
         }
-        async Task ConfirmDeleteWooItem_Click(bool confirm)
+        async Task ConfirmDeleteWooItem_ClickAsync(bool confirm)
         {
             // they want to delete the item to Woo 
             await _CategoryWooLinkedViewRepository.DeleteWooItemAsync(SelectedItemCategoryLookup.ItemCategoryLookupId, confirm);
@@ -245,7 +246,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             await _DataGrid.Reload();
         }
         //protected async Task
-        async Task ConfirmDelete_Click(ConfirmModalWithOption.ConfirmResults confirmationOption)
+        async Task ConfirmDelete_ClickAsync(ConfirmModalWithOption.ConfirmResults confirmationOption)
         {
             if ((confirmationOption == ConfirmModalWithOption.ConfirmResults.confirm) || (confirmationOption == ConfirmModalWithOption.ConfirmResults.confirmWithOption))
             {
@@ -254,11 +255,10 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
                     await _CategoryWooLinkedViewRepository._WooLinkedGridSettings.DeleteWooItemConfirmation.ShowModalAsync("Are you sure?", $"Delete {SelectedItemCategoryLookup.CategoryName} from Woo too?", "Delete", "Cancel");
                 else
                     await _CategoryWooLinkedViewRepository.DeleteRowAsync(SelectedItemCategoryLookup);
-
             }
             await _DataGrid.Reload();
         }
-        public async Task OnRowRemoved(ItemCategoryLookupView modelItem)
+        public async Task OnRowRemovedAsync(ItemCategoryLookupView modelItem)
         {
             await InvokeAsync(StateHasChanged);
             await _DataGrid.Reload();  // reload the list so the latest item is displayed - not working here I think because of the awaits so move to confirm_clicks
@@ -275,8 +275,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             if (_ListOfParents == null)
             {
                 _ListOfParents = new Dictionary<Guid, string>();
-                IItemCategoryLookupRepository _itemCategoryLookupRepository = _AppUnitOfWork.itemCategoryLookupRepository();
-                List<ItemCategoryLookup> _itemCategoryLookups = _itemCategoryLookupRepository.GetAll()
+                List<ItemCategoryLookup> _itemCategoryLookups = appUnitOfWork.itemCategoryLookupRepository.GetAll()
                     .OrderBy(icl => icl.FullCategoryName)
                     .ToList();
                 foreach (var model in _itemCategoryLookups)
@@ -289,30 +288,26 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             }
             return _ListOfParents;
         }
-
-
-        async Task DoGroupAction()
+        async Task DoGroupActionAsync()
         {
             //if (SelectedBulkAction == BulkAction.none)
             //    return;   ----> button should be disabled 
-
-            _CategoryWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Info, "Applying the bulk action as requested");
+            await _CategoryWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Info, "Applying the bulk action as requested");
 
             int _done = 0;
             int _failed = 0;
             foreach (var item in SelectedItemCategoryLookups)
             {
-                if (await _CategoryWooLinkedViewRepository.DoGroupActionAsync(item, SelectedBulkAction) > 0)
+                if (await _CategoryWooLinkedViewRepository.DoGroupActionAsync(item, SelectedBulkAction)> 0)
                     _done++;
                 else
                     _failed++;
             }
-            _CategoryWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Info, $"Bulk Action applied to {_done} items and not applied to {_failed} items.");
+            await _CategoryWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Info, $"Bulk Action applied to {_done} items and not applied to {_failed} items.");
             ///SelectedItemCategoryLookups.Clear();  // need to do this since we are reloading
             await _DataGrid.Reload();
             // await LoadItemCategoryLookupList();   // reload the list so the latest item is displayed
         }
-
         async Task ReloadAsync()
         {
             _CategoryWooLinkedViewRepository._WooLinkedGridSettings.CurrentPage = 1;

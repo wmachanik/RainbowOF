@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RainbowOF.Data.SQL;
 
@@ -11,13 +12,14 @@ using RainbowOF.Data.SQL;
 namespace RainbowOF.Data.SQL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220331104158_Mar2022Reset")]
+    partial class Mar2022Reset
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.0")
+                .HasAnnotation("ProductVersion", "6.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
@@ -207,12 +209,6 @@ namespace RainbowOF.Data.SQL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("AssocatedAttributeLookupId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("AssociatedAttributeVarietyLookupId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<decimal>("BasePrice")
                         .HasColumnType("decimal(18,4)");
 
@@ -259,6 +255,32 @@ namespace RainbowOF.Data.SQL.Migrations
                         .IsUnique();
 
                     b.ToTable("ItemVariants", (string)null);
+                });
+
+            modelBuilder.Entity("RainbowOF.Models.Items.ItemVariantAssociatedLookup", b =>
+                {
+                    b.Property<Guid>("ItemVariantAssociatedLookupId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AssociatedAttributeLookupId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("AssociatedAttributeVarietyLookupId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ItemVariantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("ItemVariantAssociatedLookupId");
+
+                    b.HasIndex("AssociatedAttributeLookupId");
+
+                    b.HasIndex("AssociatedAttributeVarietyLookupId");
+
+                    b.HasIndex("ItemVariantId");
+
+                    b.ToTable("ItemVariantAssociatedLookups", (string)null);
                 });
 
             modelBuilder.Entity("RainbowOF.Models.Logs.WooSyncLog", b =>
@@ -784,6 +806,30 @@ namespace RainbowOF.Data.SQL.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("RainbowOF.Models.Items.ItemVariantAssociatedLookup", b =>
+                {
+                    b.HasOne("RainbowOF.Models.Lookups.ItemAttributeLookup", "AssociatedAttributeLookup")
+                        .WithMany()
+                        .HasForeignKey("AssociatedAttributeLookupId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("RainbowOF.Models.Lookups.ItemAttributeVarietyLookup", "AssociatedAttributeVarietyLookup")
+                        .WithMany()
+                        .HasForeignKey("AssociatedAttributeVarietyLookupId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("RainbowOF.Models.Items.ItemVariant", null)
+                        .WithMany("ItemVariantAssociatedLookups")
+                        .HasForeignKey("ItemVariantId")
+                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .IsRequired();
+
+                    b.Navigation("AssociatedAttributeLookup");
+
+                    b.Navigation("AssociatedAttributeVarietyLookup");
+                });
+
             modelBuilder.Entity("RainbowOF.Models.Lookups.ItemAttributeVarietyLookup", b =>
                 {
                     b.HasOne("RainbowOF.Models.Lookups.ItemAttributeLookup", null)
@@ -844,6 +890,11 @@ namespace RainbowOF.Data.SQL.Migrations
             modelBuilder.Entity("RainbowOF.Models.Items.ItemAttribute", b =>
                 {
                     b.Navigation("ItemAttributeVarieties");
+                });
+
+            modelBuilder.Entity("RainbowOF.Models.Items.ItemVariant", b =>
+                {
+                    b.Navigation("ItemVariantAssociatedLookups");
                 });
 
             modelBuilder.Entity("RainbowOF.Models.Lookups.ItemAttributeLookup", b =>

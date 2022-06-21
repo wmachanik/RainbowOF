@@ -1,16 +1,16 @@
-﻿@using Blazorise;
+﻿@using Blazorise
 
-<Modal @ref="modalRef">
+<Modal @ref="modalRef" IsAnimated="true" >
     <ModalContent IsCentered="true" Size="ModalSize.Large">
         <ModalHeader>
             <ModalTitle>@ModalTitle</ModalTitle>
-            <CloseButton Clicked="@HideModal" />
+            <CloseButton Clicked="@HideModalAsync" />
         </ModalHeader>
         <ModalBody>
             @ModalMessage
         </ModalBody>
         <ModalFooter>
-            <Button Color="Color.Secondary" Clicked="@HideModal">Close</Button>
+            <Button Color="Color.Secondary" Clicked="@HideModalAsync">Close</Button>
         </ModalFooter>
     </ModalContent>
 </Modal>

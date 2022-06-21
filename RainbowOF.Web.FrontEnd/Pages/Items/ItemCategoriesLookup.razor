@@ -40,7 +40,8 @@
                                 <Tooltip Text="Select a Bulk Action to do on selected rows">
                                     <Select TValue="BulkAction" SelectedValue="SelectedBulkAction" SelectedValueChanged="@((v) => SelectedBulkAction = v)" style="max-width:12em">
                                         <SelectItem Value="BulkAction.none">none</SelectItem>
-                                        @{ if (_CategoryWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive)
+                                        @{
+                                            if (_CategoryWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive)
                                             {
                                                 <SelectItem Value="BulkAction.AllowWooSync">Allow Woo Sync</SelectItem>
                                                 <SelectItem Value="BulkAction.DisallowWooSync">Disallow Woo Sync</SelectItem>
@@ -52,7 +53,7 @@
                             <FieldBody>
                                 &nbsp;&nbsp;&nbsp;&nbsp;
                                 <Tooltip Text="Perform group actions on categories" Placement="TooltipPlacement.Right">
-                                    <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Disabled="((SelectedBulkAction == BulkAction.none) || (SelectedItemCategoryLookups == null) || (SelectedItemCategoryLookups?.Count == 0))" Clicked="DoGroupAction">Group Action(s)</Blazorise.Button>
+                                    <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Disabled="((SelectedBulkAction == BulkAction.none) || (SelectedItemCategoryLookups == null) || (SelectedItemCategoryLookups?.Count == 0))" Clicked="DoGroupActionAsync">Group Action(s)</Blazorise.Button>
                                 </Tooltip>
                             </FieldBody>
                         </Field>
@@ -72,31 +73,35 @@
                 </CardSubtitle>
                 <CardBody Padding="Padding.IsAuto">
                     <DataGrid @ref="_DataGrid"
-                              TItem="ItemCategoryLookupView" Data="@dataModels"
-                              ReadData="HandleReadDataAsync"
-                              Sortable="true" Editable="true"
-                              Striped="true"
-                              Hoverable="true"
-                              Responsive="true"
-                              EditMode="DataGridEditMode.Popup"
-                              PageSize="@_CategoryWooLinkedViewRepository._WooLinkedGridSettings.PageSize" ShowPager="true"
-                              PageSizes="@(new int[] { 5, 10, 15, 25, 50, 100 })"
-                              ShowPageSizes="true" PagerPosition="DataGridPagerPosition.TopAndBottom"
-                              TotalItems="_CategoryWooLinkedViewRepository._WooLinkedGridSettings.TotalItems"
-                              Bordered="true"
-                              CustomFilter="@OnCustomFilter"
-                              NewItemDefaultSetter="@OnItemCategoryLookupNewItemDefaultSetter"
-                              SelectionMode="DataGridSelectionMode.Multiple"
-                              @bind-SelectedRows="@SelectedItemCategoryLookups"
-                              RowInserted="@OnRowInserting"
-                              RowUpdated="@OnRowUpdated"
-                              RowRemoving="@OnRowRemovingAsync"
-                              RowRemoved="@OnRowRemoved"
-                              Narrow="@_CategoryWooLinkedViewRepository._WooLinkedGridSettings.IsNarrow" Filterable="@_CategoryWooLinkedViewRepository._WooLinkedGridSettings.IsFilterable"
-                              UseInternalEditing="true"
-                              CurrentPage="_CategoryWooLinkedViewRepository._WooLinkedGridSettings.CurrentPage"
-                              PageChanged="(e) => _CategoryWooLinkedViewRepository._WooLinkedGridSettings.CurrentPage = e.Page"
-                              Padding="Padding.Is0">
+                          TItem="ItemCategoryLookupView" Data="@dataModels"
+                          ReadData="HandleReadDataAsync"
+                          Sortable="true" Editable="true"
+                          Striped="true"
+                          Hoverable="true"
+                          Responsive="true"
+                          EditMode="DataGridEditMode.Popup"
+                          PageSize="@_CategoryWooLinkedViewRepository._WooLinkedGridSettings.PageSize" ShowPager="true"
+                          PageSizes="@(new int[] { 5, 10, 15, 25, 50, 100 })"
+                          ShowPageSizes="true" PagerPosition="DataGridPagerPosition.TopAndBottom"
+                          TotalItems="_CategoryWooLinkedViewRepository._WooLinkedGridSettings.TotalItems"
+                          Bordered="true"
+                          CustomFilter="@OnCustomFilter"
+                          NewItemDefaultSetter="@OnItemCategoryLookupNewItemDefaultSetter"
+                          SelectionMode="DataGridSelectionMode.Multiple"
+                          @bind-SelectedRows="@SelectedItemCategoryLookups"
+                          RowInserted="@OnRowInserting"
+                          RowUpdated="@OnRowUpdatedAsync"
+                          RowRemoving="@OnRowRemovingAsync"
+                          RowRemoved="@OnRowRemovedAsync"
+                          Narrow="@_CategoryWooLinkedViewRepository._WooLinkedGridSettings.IsNarrow" Filterable="@_CategoryWooLinkedViewRepository._WooLinkedGridSettings.IsFilterable"
+                          UseInternalEditing="true"
+                          CurrentPage="_CategoryWooLinkedViewRepository._WooLinkedGridSettings.CurrentPage"
+                          PageChanged="(e) => _CategoryWooLinkedViewRepository._WooLinkedGridSettings.CurrentPage = e.Page"
+                          UseValidation="true"
+                          ShowValidationsSummary="true"
+                          ValidationsSummaryLabel="Error validating data. Following error occurs..."
+                          ShowValidationFeedback="true"
+                          Padding="Padding.Is0">
                         <EmptyTemplate>
                             @if (string.IsNullOrEmpty(_Status))
                             {
@@ -157,7 +162,8 @@
                                     @{
                                         var catItem = (context as ItemCategoryLookupView);
 
-                                        @((catItem.ParentCategory == null) ? "n/a" : catItem.ParentCategory.FullCategoryName);
+                                        @((catItem.ParentCategory == null) ? "n/a" : catItem.ParentCategory.FullCategoryName)
+                                        ;
                                     }
                                 </DisplayTemplate>
                                 <EditTemplate>
@@ -165,7 +171,7 @@
                                         var listOfParents = GetListOfParentCategories();
                                         var catItem = (context.Item as ItemCategoryLookupView);
 
-                                        if ((listOfParents != null) && (listOfParents.Count > 0))
+                                        if ((listOfParents != null) && (listOfParents.Count> 0))
                                         {
                                             <Select TValue="Guid" SelectedValue="@(context.CellValue == null ? Guid.Empty : (Guid)context.CellValue)" SelectedValueChanged="@((v) => context.CellValue = v)">
                                                 <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
@@ -188,7 +194,8 @@
                                     @{
                                         var catItem = (context as ItemCategoryLookupView);
 
-                                        @( ((catItem.UsedForPrediction) ? "enable" : "disabled")) ;
+                                        @( ((catItem.UsedForPrediction) ? "enable" : "disabled"))
+                                        ;
                                     }
                                 </DisplayTemplate>
                                 <EditTemplate>
@@ -201,7 +208,7 @@
                                 <FilterTemplate>
                                     @{
                                         <Select TValue="string" SelectedValue="@(string.IsNullOrEmpty((string)context.SearchValue) ? String.Empty : (string)(context.SearchValue) )"
-                                                SelectedValueChanged="@((e) => context.TriggerFilterChange(string.IsNullOrEmpty(e) ? "" : e.ToString()))">
+                                        SelectedValueChanged="@((e) => context.TriggerFilterChange(string.IsNullOrEmpty(e) ? "" : e.ToString()))">
                                             <SelectItem Value="@String.Empty">none</SelectItem>
                                             <SelectItem Value="@disabledStr">disabled</SelectItem>
                                             <SelectItem Value="@enabledStr">enabled</SelectItem>
@@ -216,7 +223,8 @@
                                         {
                                             var wooItem = (context as ItemCategoryLookupView);
 
-                                            @( (wooItem.CanUpdateECommerceMap == null) ? "n/a" : ((bool)wooItem.CanUpdateECommerceMap ? "yes"  : "no" )) ;
+                                            @( (wooItem.CanUpdateECommerceMap == null) ? "n/a" : ((bool)wooItem.CanUpdateECommerceMap ? "yes"  : "no" ))
+                                            ;
                                         }
                                         else
                                         {
@@ -249,7 +257,7 @@
                                 </EditTemplate>
                             </DataGridColumn>
                             <DataGridColumn TItem="ItemCategoryLookupView" Field="@nameof(ItemCategoryLookupView.Notes)" Caption="Notes" Sortable="true"
-                                            Editable="true" HeaderCellClass="desktop-only" CellClass="@((item)=>"desktop-only")">
+                                        Editable="true" HeaderCellClass="desktop-only" CellClass="@((item)=>"desktop-only")">
                                 <DisplayTemplate>
                                     @{
                                         var itemNotes = (context as ItemCategoryLookupView).Notes;
@@ -327,7 +335,7 @@
                                     @{
                                         string IconColor = _CategoryWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive ? "green" : "red";
                                         <Icon Name="@( _CategoryWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive ? IconName.CheckCircle : IconName.MinusCircle)"
-                                              Style="@($"color: {IconColor}; display: inline-flex")" />
+                                      Style="@($"color: {IconColor}; display: inline-flex")" />
 
                                     }
                                 </Column>
@@ -344,15 +352,15 @@
 
     <RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage=" Category Message" NotificationTitle="" @ref="@_CategoryWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef" />
 
-    <RainbowOF.Components.Modals.ConfirmModal @ref="_CategoryWooLinkedViewRepository._WooLinkedGridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_Click" />
+    <RainbowOF.Components.Modals.ConfirmModal @ref="_CategoryWooLinkedViewRepository._WooLinkedGridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_ClickAsync" />
 
-    <RainbowOF.Components.Modals.ConfirmModal @ref="_CategoryWooLinkedViewRepository._WooLinkedGridSettings.DeleteWooItemConfirmation" ConfirmationClicked="ConfirmDeleteWooItem_Click" />
+    <RainbowOF.Components.Modals.ConfirmModal @ref="_CategoryWooLinkedViewRepository._WooLinkedGridSettings.DeleteWooItemConfirmation" ConfirmationClicked="ConfirmDeleteWooItem_ClickAsync" />
 
     <RainbowOF.Components.Modals.ConfirmModalWithOption @ref="_CategoryWooLinkedViewRepository._WooLinkedGridSettings.DeleteConfirmationWithOption"
-                                                        ConfirmationClicked="ConfirmDelete_Click"
-                                                        ConfirmationMessage=@($"Are you sure you want to delete ?")
-                                                        ConfirmButtonText="Delete"
-                                                        ConfirmOptionCheckText="Delete from Woo Too"
-                                                        ShowConfirmOption="true"
-                                                        CancelButtonText="Cancel" />
+                                                    ConfirmationClicked="ConfirmDelete_ClickAsync"
+                                                    ConfirmationMessage=@($"Are you sure you want to delete ?")
+                                                    ConfirmButtonText="Delete"
+                                                    ConfirmOptionCheckText="Delete from Woo Too"
+                                                    ShowConfirmOption="true"
+                                                    CancelButtonText="Cancel" />
 }

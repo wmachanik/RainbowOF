@@ -9,9 +9,8 @@ using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Items
 {
-    public  interface IItemAttributeRepository : IAppRepository<ItemAttribute>
+    public  interface IItemAttributeRepository : IRepository<ItemAttribute>
     {
-        List<ItemAttributeVariety> GetAssociatedVarients(Guid sourceAttributeLookupId);
-        Task<List<ItemAttributeVariety>> GetAssociatedVarientsAsync(Guid sourceAttributeLookupId);
+
     }
 }

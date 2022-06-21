@@ -1,0 +1,135 @@
+﻿@page "/"
+
+<h1>Welcome to Rainbow OF</h1>
+
+Welcome to Rainbow Order Fulfilment manager.
+
+<h2>
+    Currently Testing:
+</h2>
+
+<ul class="nav flex-column">
+    <li class="nav-item px-2">
+        <NavLink class="nav-link" href="/Items">
+            <span class="oi oi-list-rich" aria-hidden="true"></span> Items
+        </NavLink>
+        <ul>
+            <li>
+                <NavLink class="nav-link" href="/itemedit/3565948d-d1d5-477a-6682-08d9bf00293d">
+                    Edit  Simple Item
+                </NavLink>
+            </li>
+            <li>
+                <NavLink class="nav-link" href="/itemedit/0b6fe32e-265a-4ad0-6677-08d9bf00293d">
+                    Edit Green hnOrg
+                </NavLink>
+            </li>
+                        <li>
+                <NavLink class="nav-link" href="/itemedit/4e268e3d-9b2a-48fe-668c-08d9bf00293d">
+                    Edit Armonizar
+                </NavLink>
+            </li>
+        </ul>
+    </li>
+    <li class="nav-item px-2">
+        <NavLink class="nav-link" href="/ItemCategories">
+            <span class="oi oi-tags" aria-hidden="true"></span> Categories
+        </NavLink>
+    </li>
+    <li class="nav-item px-2">
+        <NavLink class="nav-link" href="/ItemAttributes">
+            <span class="oi oi-badge" aria-hidden="true"></span> Attributes
+        </NavLink>
+    </li>
+    <li class="nav-item px-2">
+        <NavLink class="nav-link" href="/ItemAttributeVarieties">
+            <span class="oi oi-badge" aria-hidden="true"></span> Attribute Varieties
+        </NavLink>
+    </li>
+</ul>
+
+
+<Blazorise.Divider />
+<ul>
+    <li class="nav-item">
+        <NavLink class="nav-link" href="/WooImport">
+            <span class="oi oi-cloud-upload" aria-hidden="true"></span> from Woo
+        </NavLink>
+    </li>
+    <li class="nav-item">
+        <NavLink class="nav-link" href="/Test">
+            <span class="oi oi-badge" aria-hidden="true" /> Test
+        </NavLink>
+    </li>
+</ul>
+
+<Blazorise.Divider />
+<label style="background-color: @myColour; color: @myFGColour">@myColour</label>
+<Button Color="Color.Secondary" Clicked="(() => colorSelector.ShowModalAsync())"><Icon Name="IconName.PaintRoller"></Icon></Button>
+<Button Color="Color.Secondary" Clicked="(() => colorFGSelector.ShowModalAsync())"><Icon Name="IconName.PaintBrush"></Icon></Button>
+
+<RainbowOF.Components.Modals.ColorSelector @ref="colorSelector" ColourValue="@myColour" ColourValueChanged="@((bg)=> myColour = bg)" />
+<RainbowOF.Components.Modals.ColorSelector @ref="colorFGSelector" ColourValue="@myFGColour" ColourValueChanged="@((v) => myFGColour = v)" />
+
+
+<hr />
+
+
+<Check TValue="bool" Checked="@(myShowOption)" CheckedChanged="@((v) => myShowOption = v)">Show Confirm Option</Check>
+
+<Button Color="Color.Light" Clicked="(() => ShowConfirmAsync())"><Icon Name="IconName.Bell"></Icon>Confirmation</Button>
+
+
+<RainbowOF.Components.Modals.ConfirmModalWithOption @ref="_confirmModalWithOption"
+                                                    ConfirmationClicked="ConfirmPopUp_Click"
+                                                    ConfirmationMessage=@($"Are you sure?")
+                                                    ConfirmButtonText="Yes"
+                                                    ConfirmOptionCheckText="Maybe"
+                                                    ShowConfirmOption="false"
+                                                    CancelButtonText="Cancel" />
+
+<label class="alert-info">@myValue</label>
+
+<hr />
+<h2>Toast</h2>
+<Button Color="Color.Dark" Clicked="(() => ShowToast())"><Icon Name="IconName.ArrowUp"></Icon>Toast</Button>
+@*
+<RainbowOF.Components.Modals.PopUpAndLogNotification @ref="_toastPopup" NotificationMessage="Testing Toast" NotificationTitle="Test" />
+*@
+@code {
+    public string myColour { get; set; } = "#F5a590";
+    public string myFGColour { get; set; } = "#000000";
+    RainbowOF.Components.Modals.ColorSelector colorSelector { get; set; }
+    RainbowOF.Components.Modals.ColorSelector colorFGSelector { get; set; }
+
+    private string myValue = "";
+    private bool myShowOption = true;
+
+    private RainbowOF.Components.Modals.ConfirmModalWithOption _confirmModalWithOption { get; set; }
+
+    private RainbowOF.Components.Modals.PopUpAndLogNotification _toastPopup { get; set; }
+
+    void OnColorChanged(string value)
+    {
+        myColour = value;
+    }
+
+    async Task ShowConfirmAsync()
+    {
+        await _confirmModalWithOption.ShowModalAsync("This is a confirmation", "Are you sure you want to confirm?", "Please Confirm", myShowOption);
+        //StateHasChanged();
+    }
+
+    async Task ShowToast()
+    {
+      await   _toastPopup.ShowNotificationAsync(Components.Modals.PopUpAndLogNotification.NotificationType.Info, "Toasted pop-up");
+    }
+
+    void ConfirmPopUp_Click(RainbowOF.Components.Modals.ConfirmModalWithOption.ConfirmResults confirmationOption)
+    {
+        myValue = $"Clicked: {confirmationOption.ToString()}";
+        StateHasChanged();
+    }
+
+
+}

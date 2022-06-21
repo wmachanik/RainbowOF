@@ -17,23 +17,22 @@ namespace RainbowOF.Web.FrontEnd.Pages.Sys
         public bool collapseSysVisible = true;
         public bool collapseWooVisible = true;
         //bool collapse3Visible = false;
-        protected ShowModalMessage ShowSavedStatus { get; set; }
+        protected PopUpAndLogNotification PopSavedStatus { get; set; }
         [Inject]
-        private IAppUnitOfWork _AppUnitOfWork { get; set; }
+        private IUnitOfWork appUnitOfWork { get; set; }
         [Inject]
-        private ILoggerManager _Logger { get; set; }
+        private ILoggerManager appLoggerManager { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
+            await base.OnInitializedAsync();
             StateHasChanged();
             await LoadSysPrefs();
-            //return base.OnInitializedAsync();
         }
         private async Task LoadSysPrefs()
         {
-            ISysPrefsRepository _SysPref = _AppUnitOfWork.sysPrefsRepository();
             StateHasChanged();
-            await Task.Run(() => SysPrefsModel = _SysPref.GetSysPrefs());
+            await Task.Run(() => SysPrefsModel = appUnitOfWork.sysPrefsRepository.GetSysPrefs());
             IsSaved = false;
             StateHasChanged();
         }
@@ -42,14 +41,13 @@ namespace RainbowOF.Web.FrontEnd.Pages.Sys
             if (SysPrefsModel != null)
             {
                 ShowSaving();
-                ISysPrefsRepository _SysPref = _AppUnitOfWork.sysPrefsRepository();
                 // save
-                bool _Saved = await _SysPref.UpdateSysPreferencesAsync(SysPrefsModel);
+                bool _Saved = await appUnitOfWork.sysPrefsRepository.UpdateSysPreferencesAsync(SysPrefsModel);
 
                 if (!_Saved)
-                    ShowSavedStatus.UpdateModalMessage("Error saving preferences");
+                    await PopSavedStatus.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, "Error saving preferences!");
                 else
-                    await ShowSavedStatus.ShowModalAsync();
+                    await PopSavedStatus.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Info,"Preferences saved.");
 
                 HideSaving();
                 //await ShowModalAsync();

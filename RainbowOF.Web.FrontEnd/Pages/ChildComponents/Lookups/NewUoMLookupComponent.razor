@@ -2,7 +2,7 @@
     -------------------------------------------------------------
      Component to add a new Unit of Measure
      Parameter:
-       > PopUpAndLogNotification PopUpRef - to display the notifications (and log them)
+      > PopUpAndLogNotification PopUpRef - to display the notifications (and log them)
     -------------------------------------------------------------
 *@
 
@@ -27,7 +27,7 @@
             <Field>
                 <FieldLabel>UoM Base</FieldLabel>
                 @{
-                    if ((_ListOfUoMSymbols != null) && (_ListOfUoMSymbols.Count > 0))
+                    if ((_ListOfUoMSymbols != null) && (_ListOfUoMSymbols.Count> 0))
                     {
                         {
                             <Select TValue="Guid" SelectedValue="@(_NewItemUoM.BaseUoMId == null ? Guid.Empty : (Guid)_NewItemUoM.BaseUoMId)" SelectedValueChanged="@((v) => _NewItemUoM.BaseUoMId = v)">

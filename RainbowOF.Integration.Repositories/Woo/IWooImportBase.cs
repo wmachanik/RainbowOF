@@ -12,12 +12,11 @@ namespace RainbowOF.Integration.Repositories.Woo
 {
     public interface IWooImportBase<TWooEntity> where TWooEntity : class
     {
-        IAppUnitOfWork _AppUnitOfWork { get; set; }
-        ILoggerManager _Logger { get; set; }
-        WooSettings _AppWooSettings { get; set; }
+        IUnitOfWork appUnitOfWork { get; set; }
+        ILoggerManager appLoggerManager { get; set; }
+        WooSettings appWooSettings { get; set; }
         ImportCounters CurrImportCounters { get; set; }
         Task<Guid> GetWooMappedEntityIdByIdAsync(uint sourceWooEntityId);
-
 //---> no sure if this should exists - as it interfaces with the UI
 ////Task<int> ImportWooEntityData(List<TWooEntity> sourceWooEntities);
 

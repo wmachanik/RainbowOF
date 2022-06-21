@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Logs
 {
-    public interface IWooSyncLogRepository : IAppRepository<WooSyncLog>
+    public interface IWooSyncLogRepository : IRepository<WooSyncLog>
     {
-        Task<List<DateTime>> GetDistinctLogDates();
+        Task<List<DateTime>> GetDistinctLogDatesAsync();
     }
 }

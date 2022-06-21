@@ -14,7 +14,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
     public partial class NewItemAttributeVarietyComponent : ComponentBase
     {
         [Inject]
-        IAppUnitOfWork _AppUnitOfWork { get; set; }
+        IUnitOfWork appUnitOfWork { get; set; }
         [Parameter]
         public PopUpAndLogNotification PopUpRef { get; set; }
 
@@ -40,14 +40,14 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         {
             if (SaveClicked)
             {
-                IAppRepository<ItemAttributeVarietyLookup> _appRepository = _AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
+                IRepository<ItemAttributeVarietyLookup> _appRepository = appUnitOfWork.Repository<ItemAttributeVarietyLookup>();
                 if (_appRepository != null)
                 {
                     var _result = await _appRepository.AddAsync(_NewItemAttributeVarietyLookupView);
                     if (_result == null)
-                        PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Error, $"Error adding new attribute variety: {_NewItemAttributeVarietyLookupView.VarietyName}");
+                        await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Error adding new attribute variety: {_NewItemAttributeVarietyLookupView.VarietyName}");
                     else
-                        PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Success, $"Attribute variety: {_NewItemAttributeVarietyLookupView.VarietyName} added.");
+                        await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Success, $"Attribute variety: {_NewItemAttributeVarietyLookupView.VarietyName} added.");
                 }
             }
             await NewAttributeVarietyModalRef.Hide();

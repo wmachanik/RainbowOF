@@ -15,25 +15,25 @@ namespace RainbowOF.Repositories.System
 {
     public class SysPrefsRepository : ISysPrefsRepository
     {
-        private IAppRepository<SysPrefs> _SysPrefsRepo;
-        private IAppRepository<WooSettings> _WooSettingsRepo;
+        private IRepository<SysPrefs> _SysPrefsRepo;
+        private IRepository<WooSettings> _WooSettingsRepo;
 
-        private ApplicationDbContext _Context = null;
+        private ApplicationDbContext appContext = null;
         private DbSet<SysPrefs> _SysPrefsTable = null;
         private DbSet<WooSettings> _WooSettingsTable = null;
-        private ILoggerManager _Logger { get; }
-        private IAppUnitOfWork _AppUnitOfWork { get; set; }
-        public SysPrefsRepository(ApplicationDbContext sourceDbContext, ILoggerManager sourceLogger, IAppUnitOfWork sourceAppUnitOfWork) :
+        private ILoggerManager appLoggerManager { get; }
+        private IUnitOfWork appUnitOfWork { get; set; }
+        public SysPrefsRepository(ApplicationDbContext sourceDbContext, ILoggerManager sourceLogger, IUnitOfWork sourceAppUnitOfWork) :
             base() //(dbContext, logger, unitOfWork)
         {
-            _Context = sourceDbContext;
-            _SysPrefsTable = _Context.Set<SysPrefs>();
-            _WooSettingsTable = _Context.Set<WooSettings>();
-            _Logger = sourceLogger;
-            _AppUnitOfWork = sourceAppUnitOfWork;
+            appContext = sourceDbContext;
+            _SysPrefsTable = appContext.Set<SysPrefs>();
+            _WooSettingsTable = appContext.Set<WooSettings>();
+            appLoggerManager = sourceLogger;
+            appUnitOfWork = sourceAppUnitOfWork;
             _SysPrefsRepo = sourceAppUnitOfWork.Repository<SysPrefs>();
             _WooSettingsRepo = sourceAppUnitOfWork.Repository<WooSettings>();
-            _Logger.LogDebug("SysPrefgsRepository initialised.");
+            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("SysPrefgsRepository initialised.");
         }
 
         public SysPrefsModel GetSysPrefs()

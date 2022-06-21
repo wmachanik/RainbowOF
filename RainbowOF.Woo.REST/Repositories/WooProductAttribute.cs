@@ -17,7 +17,7 @@ namespace RainbowOF.Woo.REST.Repositories
         {
             _Woo = new WooBase(wooAPISettings, logger);
         }
-        private async Task<List<ProductAttribute>> GetAll(Dictionary<string, string> ProductAttributeParams)
+        private async Task<List<ProductAttribute>> GetAllAsync(Dictionary<string, string> ProductAttributeParams)
         {
             RestAPI _RestAPI = _Woo.GetJSONRestAPI;
             List<ProductAttribute> _WooProductAttributes = null;
@@ -36,7 +36,7 @@ namespace RainbowOF.Woo.REST.Repositories
         }
         public async Task<List<ProductAttribute>> GetAllProductAttributesAsync()
         {
-            return await GetAll(null);
+            return await GetAllAsync(null);
         }
 
         public async Task<bool> CheckProductAttributeLinkAsync()
@@ -59,7 +59,7 @@ namespace RainbowOF.Woo.REST.Repositories
 
         public async Task<List<ProductAttribute>> GetProductAttributesOfTypeAsync(string pProductAttributeType)
         {
-            return await GetAll(new Dictionary<string, string>() { { "type", pProductAttributeType } });
+            return await GetAllAsync(new Dictionary<string, string>() { { "type", pProductAttributeType } });
         }
 
         public async Task<int> GetProductAttributeCountAsync()
@@ -101,24 +101,6 @@ namespace RainbowOF.Woo.REST.Repositories
             }
             return _productAttribute;
         }
-
-        public async Task<ProductAttribute> DeleteProductAttributeById(int wooProductAttributeId)
-        {
-            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
-            ProductAttribute _productAttribute = null;
-            try
-            {
-                WCObject _WC = new WCObject(_RestAPI);
-                _productAttribute = await _WC.Attribute.Delete(wooProductAttributeId);
-            }
-            catch (Exception ex)
-            {
-                if (_Woo.Logger != null)
-                    _Woo.Logger.LogError("Error calling WOO REST JSON API: " + ex.Message);
-            }
-            return _productAttribute;
-        }
-
         public async Task<ProductAttribute> DeleteProductAttributeByIdAsync(int deleteWooProductAttributeId)
         {
             ProductAttribute _ProductAttribute = null;
@@ -135,7 +117,6 @@ namespace RainbowOF.Woo.REST.Repositories
             }
             return _ProductAttribute;
         }
-
         public async Task<ProductAttribute> AddProductAttributeAsync(ProductAttribute addWooProductAttribute)
         {
             ProductAttribute _ProductAttribute = null;
@@ -152,8 +133,6 @@ namespace RainbowOF.Woo.REST.Repositories
             }
             return _ProductAttribute;
         }
-
-
         public async Task<ProductAttribute> UpdateProductAttributeAsync(ProductAttribute updateWooProductAttribute)
         {
             ProductAttribute _ProductAttribute = null;

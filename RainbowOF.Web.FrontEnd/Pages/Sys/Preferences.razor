@@ -127,7 +127,7 @@ else
                     </Blazorise.Heading>
                 </Blazorise.CollapseHeader>
                 <Blazorise.CollapseBody>
-                    <WooPreferencesComponent WooSettingsModel="SysPrefsModel.WooSettings" Logger="_Logger" />
+                    <WooPreferencesComponent WooSettingsModel="SysPrefsModel.WooSettings" Logger="appLoggerManager" />
                 </Blazorise.CollapseBody>
             </Blazorise.Collapse>
         </Blazorise.Accordion>
@@ -140,9 +140,6 @@ else
         </div>
         <div class="small text-right">@SysPrefsModel.SysPrefs.SysPrefsId</div>
     </EditForm>
-
-
-    <RainbowOF.Components.Modals.ShowModalMessage @ref="ShowSavedStatus" ModalMessage="System Preferences Saved" ModalTitle="Saving Status" />
-
 }
 
+<RainbowOF.Components.Modals.PopUpAndLogNotification @ref="PopSavedStatus" NotificationTitle="Saving Status"  NotificationMessage="System Preferences Saved" />

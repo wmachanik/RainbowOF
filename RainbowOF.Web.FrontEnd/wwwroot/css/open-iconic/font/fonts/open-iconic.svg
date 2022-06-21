@@ -1,5 +1,5 @@
 <?xml version="1.0" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" >
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <!--
 2014-7-1: Created.
 -->
@@ -10,7 +10,7 @@ Created by FontForge 20120731 at Tue Jul  1 20:39:22 2014
 Created by P.J. Onori with FontForge 2.0 (http://fontforge.sf.net)
 </metadata>
 <defs>
-<font id="open-iconic" horiz-adv-x="800" >
+<font id="open-iconic" horiz-adv-x="800">
   <font-face 
     font-family="Icons"
     font-weight="400"

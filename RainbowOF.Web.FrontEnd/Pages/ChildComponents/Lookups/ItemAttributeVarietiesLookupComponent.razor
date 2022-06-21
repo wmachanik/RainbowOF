@@ -3,14 +3,14 @@
     Component to add Display a grid of Attribute Variety
 
     Parameter:
-    > Guid ParentItemAttributeLookupId the ItemAttribute that variety is associated to default = Guid.Empty;
-    > int StartingPageSize starting page size of grid default is 5;
-    > bool IsSubGrid is it a sub grid (i.e. change the colours) default = false;
+   > Guid ParentItemAttributeLookupId the ItemAttribute that variety is associated to default = Guid.Empty;
+   > int StartingPageSize starting page size of grid default is 5;
+   > bool IsSubGrid is it a sub grid (i.e. change the colours) default = false;
 
     Uses:
-    IAppUnitOfWork _appUnitOfWork
+    IAppUnitOfWork appUnitOfWork
     ApplicationState _appState
-    ILoggerManager _logger
+    ILoggerManager appLoggerManager
     -------------------------------------------------------------
 *@
 
@@ -91,6 +91,10 @@
                           UseInternalEditing="true"
                           CurrentPage="_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.CurrentPage"
                           PageChanged="(e) => _AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.CurrentPage = e.Page"
+                          UseValidation="true"
+                          ShowValidationsSummary="true"
+                          ValidationsSummaryLabel="Error validating data. Following error occurs..."
+                          ShowValidationFeedback="true"
                           Padding="Padding.Is0">
                         <EmptyTemplate>
                             @{
@@ -165,7 +169,8 @@
                                 <DisplayTemplate Context="VarietyDataModels">
                                     @{
                                         var ItemsUoM = VarietyDataModels.UoM;
-                                        @((ItemsUoM == null) ? "n/a" : ItemsUoM.UoMSymbol );
+                                        @((ItemsUoM == null) ? "n/a" : ItemsUoM.UoMSymbol )
+                                        ;
                                     }
                                 </DisplayTemplate>
                                 <EditTemplate Context="VarietyDataModels">
@@ -371,11 +376,11 @@
 
     <RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage=" Attribute Message" NotificationTitle="" @ref="_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef" />
 
-    <RainbowOF.Components.Modals.ConfirmModal @ref="_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.AddToWooConfirmation" 
-                                 ConfirmationClicked="ConfirmVarietyAddWooItem_Click" />
+    <RainbowOF.Components.Modals.ConfirmModal @ref="_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.AddToWooConfirmation"
+                                          ConfirmationClicked="ConfirmVarietyAddWooItem_Click" />
 
     <RainbowOF.Components.Modals.ConfirmModal @ref="_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.DeleteWooItemConfirmation"
-                                 ConfirmationClicked="ConfirmVarietyDeleteWooItem_Click" />
+                                          ConfirmationClicked="ConfirmVarietyDeleteWooItem_Click" />
 
     <RainbowOF.Components.Modals.ConfirmModalWithOption @ref="_AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.DeleteConfirmationWithOption"
                                                     ConfirmationClicked="ConfirmVarietyDelete_Click"

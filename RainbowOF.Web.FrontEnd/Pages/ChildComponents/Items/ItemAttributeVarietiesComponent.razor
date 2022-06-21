@@ -2,16 +2,16 @@
     -------------------------------------------------------------
     Component to view AttributeVarieties in a grid for an item
     Parameters:
-    > PopUpAndLogNotification PopUpRef to display the results of the add
-    > List<ItemAttributeVariety> SourceItemAttributeVarieties
+   > PopUpAndLogNotification PopUpRef to display the results of the add
+   > List<ItemAttributeVariety> SourceItemAttributeVarieties
     Uses:
-    IAppUnitOfWork _appUnitOfWork
+    IAppUnitOfWork appUnitOfWork
     -------------------------------------------------------------
 *@
 @using RainbowOF.Models.Items
 @using RainbowOF.Models.Lookups
 
-@if (_ItemAttributeVarietyGridViewRepository == null)
+@if (_ItemAttributeVarietyGridRepository == null)
 {
     <Badge Color="Color.Primary" Pill="true">loading...</Badge>
 }
@@ -38,13 +38,17 @@ else
           @bind-SelectedRow="@SeletectedItemAttributeVariety"
           Bordered="true"
           Narrow="true"
-          Filterable="@_ItemAttributeVarietyGridViewRepository._GridSettings.IsFilterable"
+          Filterable="@_ItemAttributeVarietyGridRepository.gridSettings.IsFilterable"
           UseInternalEditing="true"
           NewItemDefaultSetter="@OnNewItemAttributeVarietyDefaultSetter"
           RowInserted="@OnRowInsertingAsync"
           RowUpdated="@OnRowUpdatedAsync"
           RowRemoving="@OnRowRemovingAsync"
           RowRemoved="@OnRowRemovedAsync"
+          UseValidation="true"
+          ShowValidationsSummary="true"
+          ValidationsSummaryLabel="Error validating data. Following error occurs..."
+          ShowValidationFeedback="true"
           Padding="Padding.Is0">
         <EmptyTemplate>
             @if (ModelItemAttributeVarieties == null)
@@ -84,7 +88,7 @@ else
                 <EditTemplate>
                     @{
                         var _itemAttributeVariety = (itemAttributeVarietyData.Item as ItemAttributeVariety);
-                        List<ItemAttributeVarietyLookup> _AttributeVarieties = GetListOfAttributeVarieties(SourceItemAttribute.ItemAttributeLookupId, _itemAttributeVariety.ItemAttributeVarietyLookupId);
+                        List<ItemAttributeVarietyLookup> _AttributeVarieties = GetListOfAttributeAvailableVarieties(SourceItemAttribute.ItemAttributeLookupId, _itemAttributeVariety.ItemAttributeVarietyLookupId);
                         @*---- Should to remove the AttributeVarieties that are in the database for insert ----*@
                         <Select TValue="Guid" SelectedValue="@((Guid)itemAttributeVarietyData.CellValue)" SelectedValueChanged="@((v) => itemAttributeVarietyData.CellValue = v)">
                             <SelectItem TValue="Guid" Value="Guid.Empty">--- Select a variety ---</SelectItem>
@@ -165,8 +169,8 @@ else
                         </Button>
                     </Tooltip>
                     <Tooltip Text="Filter by Column" Style="z-index:99" Placement="TooltipPlacement.Left">
-                        <Button Color="Color.Info" Clicked="@(()=>_ItemAttributeVarietyGridViewRepository._GridSettings.IsFilterable= !_ItemAttributeVarietyGridViewRepository._GridSettings.IsFilterable)">
-                            <Icon Name="@((_ItemAttributeVarietyGridViewRepository._GridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" />
+                        <Button Color="Color.Info" Clicked="@(()=>_ItemAttributeVarietyGridRepository.gridSettings.IsFilterable= !_ItemAttributeVarietyGridRepository.gridSettings.IsFilterable)">
+                            <Icon Name="@((_ItemAttributeVarietyGridRepository.gridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" />
                         </Button>
                     </Tooltip>
                 </NewCommandTemplate>
@@ -209,7 +213,7 @@ else
         </DataGridColumns>
     </DataGrid>
 
-    <RainbowOF.Components.Modals.ConfirmModal @ref="_ItemAttributeVarietyGridViewRepository._GridSettings.DeleteConfirmation"
+    <RainbowOF.Components.Modals.ConfirmModal @ref="_ItemAttributeVarietyGridRepository.gridSettings.DeleteConfirmation"
                                           ConfirmationClicked="ConfirmDelete_ClickAsync"
                                           ConfirmationMessage=@($"Are you sure you want to delete ?")
                                           ConfirmButtonText="Delete"

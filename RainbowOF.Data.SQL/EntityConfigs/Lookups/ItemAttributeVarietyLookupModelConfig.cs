@@ -10,9 +10,9 @@ namespace RainbowOF.Data.SQL.EntityConfigs.Lookups
         {
             ItemAttributeVarietyModelBuilder.Property(iav => iav.ItemAttributeLookupId)
                 .IsRequired();
-            ItemAttributeVarietyModelBuilder.HasIndex(iav => new { iav.VarietyName, iav.ItemAttributeLookupId })
+            ItemAttributeVarietyModelBuilder.HasIndex(iav => new { iav.VarietyName, iav.ItemAttributeLookupId } )
                 .IsUnique();
-            ItemAttributeVarietyModelBuilder.HasIndex(iav => new { iav.VarietyName, iav.SortOrder});
+            ItemAttributeVarietyModelBuilder.HasIndex(iav => new { iav.VarietyName, iav.SortOrder} );
 
             //ItemAttributeVarietyModelBuilder.HasOne(i=>i.ReplacementItem)
             //    .WithMany()

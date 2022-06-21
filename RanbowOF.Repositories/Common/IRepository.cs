@@ -9,10 +9,9 @@ using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Common
 {
-    public interface IAppRepository<TEntity> where TEntity : class
+    public interface IRepository<TEntity> where TEntity : class
     {
-        ApplicationDbContext GetAppDbContext();
-
+        ApplicationDbContext AppDbContext { get; }
         Task<int> CountAsync();
         TEntity GetById(object Id);
         Task<TEntity> GetByIdAsync(object Id);
@@ -27,7 +26,7 @@ namespace RainbowOF.Repositories.Common
         TEntity FindFirst();
         TEntity FindFirstBy(Expression<Func<TEntity, bool>> predicate);
         Task<TEntity> FindFirstAsync();
-        Task<TEntity> FindFirstByAsync(Expression<Func<TEntity, bool>> predicate);
+        Task<TEntity> GetByIdAsync(Expression<Func<TEntity, bool>> predicate);
         int Add(TEntity newEntity);
         Task<TEntity> AddAsync(TEntity newEntity);
         Task<int> AddRangeAsync(List<TEntity> newEntities);

@@ -29,6 +29,7 @@ namespace RainbowOF.Components.Modals
         #endregion
         protected override void OnInitialized()
         {
+            base.OnInitialized();
             _ConfirmationTitle = ConfirmationTitle;
             _ConfirmationMessage = ConfirmationMessage;
             _ConfirmColor = ConfirmColor;

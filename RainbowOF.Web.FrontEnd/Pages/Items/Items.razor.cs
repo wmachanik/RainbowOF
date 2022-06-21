@@ -41,11 +41,11 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         #endregion
         #region Injected classes
         [Inject]
-        IAppUnitOfWork _AppUnitOfWork { get; set; }
+        IUnitOfWork appUnitOfWork { get; set; }
         [Inject]
         ApplicationState _AppState { get; set; }
         [Inject]
-        public ILoggerManager _Logger { get; set; }
+        public ILoggerManager appLoggerManager { get; set; }
         [Inject]
         public IMapper _Mapper { get; set; }
         #endregion
@@ -57,7 +57,8 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         /// <returns>void</returns>
         protected override async Task OnInitializedAsync()
         {
-            _ItemWooLinkedViewRepository = new ItemWooLinkedViewRepository(_Logger, _AppUnitOfWork,/* _WooLinkedGridSettings,*/ _Mapper);
+            await base.OnInitializedAsync();
+            _ItemWooLinkedViewRepository = new ItemWooLinkedViewRepository(appLoggerManager, appUnitOfWork,/* _WooLinkedGridSettings,*/ _Mapper);
             //await LoadData();
             await InvokeAsync(StateHasChanged);
         }
@@ -69,7 +70,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         private async Task SetLoadStatusAsync(string statusString)
         {
             _Status = statusString;
-            _Logger.LogDebug($"Items - Status changed to: {statusString}");
+            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Items - Status changed to: {statusString}");
             await InvokeAsync(StateHasChanged);
         }
         /// <summary>
@@ -93,7 +94,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
             }
             catch (Exception ex)
             {
-                _Logger.LogError( $"Items - Error running async tasks: {ex.Message}");
+                appLoggerManager.LogError( $"Items - Error running async tasks: {ex.Message}");
                 throw;
             }
             //restore the old items that were selected.
@@ -144,7 +145,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
                 }
                 catch (Exception ex)
                 {
-                    _Logger.LogError($"Items - Error running async tasks: {ex.Message}");
+                    appLoggerManager.LogError($"Items - Error running async tasks: {ex.Message}");
                     throw;
                 }
                 _Status = string.Empty;
@@ -159,7 +160,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         async Task HandleCustomerSearchOnKeyUpAsync(KeyboardEventArgs kbEventHandler)
         {
             var key = (string)kbEventHandler.Key;   // not using this but just in case
-                                                    //if (_ItemWooLinkedViewRepository._WooLinkedGridSettings.CustomFilterValue.Length > 2)
+                                                    //if (_ItemWooLinkedViewRepository._WooLinkedGridSettings.CustomFilterValue.Length> 2)
                                                     //{
             await _DataGrid.Reload();
             //}
@@ -203,7 +204,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         /// Update the item that is passed in.
         /// </summary>
         /// <param name="updatedCatItemView">the ItemView to be updated</param>
-        /// <returns>int value > 0 for success or -1 for error </returns>
+        /// <returns>int value> 0 for success or -1 for error </returns>
         async Task<int> UpdateItemAsync(ItemView updatedCatItemView)
         {
             int _result = await _ItemWooLinkedViewRepository.UpdateItemAsync(updatedCatItemView);
@@ -294,17 +295,17 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
         /// <returns>void</returns>
         async Task DoGroupAction()
         {
-            _ItemWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Info, "Applying the bulk action as requested");
+            await _ItemWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Info, "Applying the bulk action as requested");
             int done = 0;
             int failed = 0;
             foreach (var item in SelectedItemRows)
             {
-                if (await _ItemWooLinkedViewRepository.DoGroupActionAsync(item, SelectedBulkAction) > 0)
+                if (await _ItemWooLinkedViewRepository.DoGroupActionAsync(item, SelectedBulkAction)> 0)
                     done++;
                 else
                     failed++;
             }
-            _ItemWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Info, $"Bulk Action applied to {done} items and not applied to {failed} items.");
+            await _ItemWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Info, $"Bulk Action applied to {done} items and not applied to {failed} items.");
             await _DataGrid.Reload();
         }
         #endregion

@@ -41,9 +41,9 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
         [Inject]
         ApplicationState _AppState { get; set; }
         [Inject]
-        public ILoggerManager _Logger { get; set; }
+        public ILoggerManager appLoggerManager { get; set; }
         [Inject]
-        IAppUnitOfWork _AppUnitOfWork { get; set; }
+        IUnitOfWork appUnitOfWork { get; set; }
         [Inject]
         public IMapper _Mapper { get; set; }
 
@@ -69,9 +69,10 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
         }
         protected override async Task OnInitializedAsync()
         {
+            await base.OnInitializedAsync();
             if (ParentItemAttributeLookupId != Guid.Empty)
             {
-                _AttributeVarietyWooLinkedViewRepository = new AttributeVarietyWooLinkedViewRepository(_Logger, _AppUnitOfWork, /* _VarietiesGridSettings, */_Mapper, ParentItemAttributeLookupId);
+                _AttributeVarietyWooLinkedViewRepository = new AttributeVarietyWooLinkedViewRepository(appLoggerManager, appUnitOfWork, /* _VarietiesGridSettings, */_Mapper, ParentItemAttributeLookupId);
                 _AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.PageSize = StartingPageSize;
                 //await LoadData();
             }
@@ -114,7 +115,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
             }
             catch (Exception ex)
             {
-                _Logger.LogError($"Error running async tasks: {ex.Message}");
+                appLoggerManager.LogError($"Error running async tasks: {ex.Message}");
                 throw;
             }
             finally
@@ -139,7 +140,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
             }
             catch (Exception ex)
             {
-                _Logger.LogError($"Error running async tasks: {ex.Message}");
+                appLoggerManager.LogError($"Error running async tasks: {ex.Message}");
                 throw;
             }
             //restore the old items that were selected.
@@ -149,7 +150,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
         async Task HandleCustomerSearchOnKeyUp(KeyboardEventArgs kbEventHandler)
         {
             var key = (string)kbEventHandler.Key;   // not using this but just in case
-                                                    //if (_WooLinkedGridSettings.CustomFilterValue.Length > 2)
+                                                    //if (_WooLinkedGridSettings.CustomFilterValue.Length> 2)
                                                     //{
             await _VarietiesDataGrid.Reload();
             //}
@@ -255,18 +256,18 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
             //if (SelectedBulkAction == BulkAction.none)
             //    return;   ----> button should be disabled 
 
-            _AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef.ShowQuickNotification(PopUpAndLogNotification.NotificationType.Info, "Applying the bulk action as requested");
+            await  _AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Info, "Applying the bulk action as requested");
 
             int _done = 0;
             int _failed = 0;
             foreach (var item in SelectedItemAttributeVarietyLookups)
             {
-                if (await _AttributeVarietyWooLinkedViewRepository.DoGroupActionAsync(item, SelectedBulkAction) > 0)
+                if (await _AttributeVarietyWooLinkedViewRepository.DoGroupActionAsync(item, SelectedBulkAction)> 0)
                     _done++;
                 else
                     _failed++;
             }
-            _AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Info, $"Bulk Action applied to {_done} items and not applied to {_failed} items.");
+            await _AttributeVarietyWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Info, $"Bulk Action applied to {_done} items and not applied to {_failed} items.");
             await _VarietiesDataGrid.Reload();
         }
         async Task ReloadAsync()

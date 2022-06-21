@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Common
 {
-    public interface IGridViewRepository<TEntity> where TEntity : class
+    public interface IGridRepository<TEntity> where TEntity : class
     {
         #region Common variables
-        public GridSettings _GridSettings { get; set; }
+        public GridSettings gridSettings { get; set; }
         #endregion
         #region Recommended Over writable Grid Classes
         TEntity NewViewEntityDefaultSetter(TEntity newEntity, Guid Parent); //-> needs to be implemented at a grid class level.
@@ -21,7 +21,7 @@ namespace RainbowOF.Repositories.Common
         #endregion
         #region Generically implemented interfaces
         Task<TEntity> GetEntityByIdAsync(object Id);
-        Task<TEntity> FidnFirstByAsync(Expression<Func<TEntity, bool>> predicate);
+        Task<TEntity> FindFirstByAsync(Expression<Func<TEntity, bool>> predicate);
         Task<TEntity> InsertViewRowAsync(TEntity newEntity, string newEntityDescription);
         Task<int> DeleteViewRowByIdAsync(object Id, string deletedEntityDescription);
         Task<int> UpdateViewRowAsync(TEntity updatedEntity, string updatedEnityDescription);
