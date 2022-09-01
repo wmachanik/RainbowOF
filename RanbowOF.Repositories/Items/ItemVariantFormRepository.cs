@@ -1,12 +1,10 @@
 ﻿using RainbowOF.Models.Items;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using RainbowOF.Models.Lookups;
 using RainbowOF.Repositories.Common;
 using RainbowOF.Tools;
-using RainbowOF.Models.Lookups;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Items
 {
@@ -31,7 +29,7 @@ namespace RainbowOF.Repositories.Items
             // this should look for the number Attributes at are marked at variable attributes and then add a list per item
             newEntity = NewBasicViewEntityDefaultSetter(newEntity, ParentId);
             // now add the possible variants
-            var possibleVariables = appUnitOfWork.GetListOfAnItemsVariableAttributes(ParentId);
+            var possibleVariables = AppUnitOfWork.GetListOfAnItemsVariableAttributes(ParentId);
             foreach (var variable in possibleVariables)
             {
                 newEntity.ItemVariantAssociatedLookups.Add(new ItemVariantAssociatedLookup
@@ -43,23 +41,20 @@ namespace RainbowOF.Repositories.Items
             }
             return newEntity;
         }
-
         public ItemVariant NewBasicViewEntityDefaultSetter(ItemVariant newEntity, Guid ParentId)
         {
             if (newEntity == null)
                 newEntity = new ItemVariant();
 
-            newEntity = new ItemVariant
-            {
-                ItemId = ParentId,
-                ItemVariantName = "new variant",
-                IsEnabled = true,
-                ItemVariantAbbreviation = "Abrv0",
-                ManageStock = false,
-                QtyInStock = 0,
-                SKU = "SKAnother",
-                ItemVariantAssociatedLookups = new List<ItemVariantAssociatedLookup>()
-            };
+            newEntity.ItemId = ParentId;
+            newEntity.ItemVariantName = "new variant";
+            newEntity.IsEnabled = true;
+            newEntity.ItemVariantAbbreviation = "Abrv0";
+            newEntity.ManageStock = false;
+            newEntity.QtyInStock = 0;
+            newEntity.SKU = "SKAnother";
+            newEntity.ItemVariantAssociatedLookups = new();
+
             return newEntity;
         }
 
@@ -75,28 +70,26 @@ namespace RainbowOF.Repositories.Items
             if (checkEntity.ItemVariantAssociatedLookups.Exists(ival => ival.AssociatedAttributeVarietyLookupId == Guid.Empty))
                 return false;
             // here we need to check if the Variant is the same, as we cannot haver duplicate names
-            IRepository<ItemVariant> _itemVariantRepository = appUnitOfWork.Repository<ItemVariant>();
+            IRepository<ItemVariant> _itemVariantRepository = AppUnitOfWork.Repository<ItemVariant>();
 
-            // If ItemVariantIOd = Empty then it is new and check if there is not one with the same assocaited lookups. so need to use xists and any
+            // If ItemVariantIOd = Empty then it is new and check if there is not one with the same associated lookups. so need to use exists and any
             // sample??
-            var _testresult = await _itemVariantRepository.GetByIdAsync(iav => iav.ItemVariantAssociatedLookups.Exists(iavl =>  checkEntity.ItemVariantAssociatedLookups.Any(ce => ce.AssociatedAttributeLookupId == iavl.AssociatedAttributeLookupId )));
-
-
+            var _testresult = await _itemVariantRepository.GetByIdAsync(iav => iav.ItemVariantAssociatedLookups.Exists(iavl => checkEntity.ItemVariantAssociatedLookups.Any(ce => ce.AssociatedAttributeLookupId == iavl.AssociatedAttributeLookupId)));
 
             var _result = await _itemVariantRepository.GetByIdAsync(
                         checkEntity.ItemVariantId == Guid.Empty ?
-                            (iav => 
+                            (iav =>
                                (
                                       (iav.ItemId == checkEntity.ItemId)
                                    && (iav.ItemVariantAssociatedLookups.Exists(ival => checkEntity.ItemVariantAssociatedLookups.Any(ce => ce.AssociatedAttributeLookupId == ival.AssociatedAttributeLookupId)))
                                 )
-                            ) 
+                            )
                             :
-                            (iav => 
+                            (iav =>
                                 (
                                     (iav.ItemId == checkEntity.ItemId)
-                                &&  (iav.ItemVariantId != checkEntity.ItemVariantId)
-                                &&  (iav.ItemVariantAssociatedLookups.Exists(ival => checkEntity.ItemVariantAssociatedLookups.Any(ce => ce.AssociatedAttributeLookupId == ival.AssociatedAttributeLookupId)))
+                                && (iav.ItemVariantId != checkEntity.ItemVariantId)
+                                && (iav.ItemVariantAssociatedLookups.Exists(ival => checkEntity.ItemVariantAssociatedLookups.Any(ce => ce.AssociatedAttributeLookupId == ival.AssociatedAttributeLookupId)))
                                 )
                             )
                             );
@@ -122,7 +115,7 @@ namespace RainbowOF.Repositories.Items
         /// <returns>ItemVariantLookup item, if found or null</returns>
         public async Task<ItemAttributeVarietyLookup> GetItemVariantByIdAsync(Guid sourceItemVariantLookupId)
         {
-            IRepository<ItemAttributeVarietyLookup> _itemAttributeVariantLookupRepository = appUnitOfWork.Repository<ItemAttributeVarietyLookup>();
+            IRepository<ItemAttributeVarietyLookup> _itemAttributeVariantLookupRepository = AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
             ItemAttributeVarietyLookup _itemVariantLookup = await _itemAttributeVariantLookupRepository.GetByIdAsync(sourceItemVariantLookupId);
             return _itemVariantLookup;
         }

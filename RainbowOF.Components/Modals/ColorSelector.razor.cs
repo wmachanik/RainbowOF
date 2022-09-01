@@ -1,15 +1,12 @@
 ﻿using Blazorise;
 using Microsoft.AspNetCore.Components;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RainbowOF.Components.Modals
 {
     public partial class ColorSelector : ComponentBase
     {
+        private string _value;
         [Parameter]
         public string ColourValue
         {
@@ -32,7 +29,6 @@ namespace RainbowOF.Components.Modals
         [Parameter]
         public EventCallback<string> ColourValueChanged { get; set; }
 
-        private string _value;
 
         Task OnClick(string value)
         {
@@ -41,7 +37,7 @@ namespace RainbowOF.Components.Modals
             return Task.CompletedTask;
         }
 
-        private Modal modalRef;
+        private Modal modalRef { get; set; }
 
         public async Task ShowModalAsync()  //ModalSize modalSize, int? maxHeight = null, bool centered = false)
         {
@@ -54,6 +50,6 @@ namespace RainbowOF.Components.Modals
 
         public async Task HideModalAsync()
             => await modalRef.Hide();
-       
+
     }
 }

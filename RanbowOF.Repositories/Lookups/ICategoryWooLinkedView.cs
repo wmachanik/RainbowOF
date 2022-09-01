@@ -1,7 +1,7 @@
 ﻿using RainbowOF.Models.Lookups;
 using RainbowOF.Models.Woo;
-using RainbowOF.ViewModels.Lookups;
 using RainbowOF.Repositories.Integrations;
+using RainbowOF.ViewModels.Lookups;
 
 namespace RainbowOF.Repositories.Lookups
 {

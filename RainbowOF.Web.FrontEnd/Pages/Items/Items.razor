@@ -16,8 +16,9 @@
 @using RainbowOF.Models.Items
 @using RainbowOF.ViewModels.Items
 @using RainbowOF.ViewModels.Common
+@inject NavigationManager currentNavigationManager   // for us to navigate
 
-@if (_ItemWooLinkedViewRepository != null)
+@if (itemWooLinkedViewRepository != null)
 {
     <Row Style="z-index: 0" Margin="Margin.Is0">
         <Column>
@@ -32,7 +33,7 @@
                                 Custom Search
                             </FieldLabel>
                             <FieldBody Style="width:80%">
-                                <TextEdit @bind-Text="@_ItemWooLinkedViewRepository._WooLinkedGridSettings.CustomFilterValue" @onkeyup="HandleCustomerSearchOnKeyUpAsync" />
+                                <TextEdit @bind-Text="@itemWooLinkedViewRepository.CurrWooLinkedGridSettings.CustomFilterValue" @onkeyup="HandleCustomerSearchOnKeyUpAsync" />
                             </FieldBody>
                         </Field>
                     </Fields>
@@ -51,10 +52,10 @@
                         <Field Style="display: inline-flex;" Margin="Margin.Is1" JustifyContent="JustifyContent.Start">
                             <FieldBody>
                                 <Tooltip Text="Select a Bulk Action to do on selected rows">
-                                    <Select TValue="BulkAction" SelectedValue="SelectedBulkAction" SelectedValueChanged="@((v) => SelectedBulkAction = v)" style="max-width:12em">
+                                    <Select TValue="BulkAction" SelectedValue="selectedBulkAction" SelectedValueChanged="@((v) => selectedBulkAction = v)" style="max-width:12em">
                                         <SelectItem Value="BulkAction.none">none</SelectItem>
                                         @{
-                                            if (_ItemWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive)
+                                            if (itemWooLinkedViewRepository.CurrWooLinkedGridSettings.WooIsActive)
                                             {
                                                 <SelectItem Value="BulkAction.AllowWooSync">Allow Woo Sync</SelectItem>
                                                 <SelectItem Value="BulkAction.DisallowWooSync">Disallow Woo Sync</SelectItem>
@@ -66,20 +67,20 @@
                             <FieldBody>
                                 &nbsp;&nbsp;&nbsp;&nbsp;
                                 <Tooltip Text="Perform group actions on Attributes" Placement="TooltipPlacement.Right">
-                                    <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Disabled="((SelectedBulkAction == BulkAction.none) || (SelectedItemRows == null) || (SelectedItemRows?.Count == 0))" Clicked="DoGroupAction">Group Action(s)</Blazorise.Button>
+                                    <Blazorise.Button Type="ButtonType.Button" Color="Color.Info" Disabled="((selectedBulkAction == BulkAction.none) || (selectedItemRows == null) || (selectedItemRows?.Count == 0))" Clicked="DoGroupAction">Group Action(s)</Blazorise.Button>
                                 </Tooltip>
                             </FieldBody>
                         </Field>
                         <Field Style="display: inline-block;" Margin="Margin.Is1">
                             <FieldBody>
-                                <Blazorise.Check TValue="bool" Checked="@(_ItemWooLinkedViewRepository._WooLinkedGridSettings.IsNarrow)" CheckedChanged="@((v) => _ItemWooLinkedViewRepository._WooLinkedGridSettings.IsNarrow = v)">Narrow Grid?</Blazorise.Check>
-                                <Blazorise.Check TValue="bool" Checked="@_ShowItemDetail" CheckedChanged="@((v) => _ShowItemDetail = v)">Show Item Detail?</Blazorise.Check>
+                                <Blazorise.Check TValue="bool" Checked="@(itemWooLinkedViewRepository.CurrWooLinkedGridSettings.IsNarrow)" CheckedChanged="@((v) => itemWooLinkedViewRepository.CurrWooLinkedGridSettings.IsNarrow = v)">Narrow Grid?</Blazorise.Check>
+                                <Blazorise.Check TValue="bool" Checked="@showItemDetail" CheckedChanged="@((v) => showItemDetail = v)">Show Item Detail?</Blazorise.Check>
                             </FieldBody>
                         </Field>
                         <Field Style="display: inline-block;" Margin="Margin.Is1">
                             <FieldBody>
-                                <Blazorise.Check TValue="bool" Checked="@_ShowReplaceItem" CheckedChanged="@((v) => _ShowReplaceItem = v)">Show Replacement</Blazorise.Check>
-                                <Blazorise.Check TValue="bool" Checked="@_ShowWooLinked" CheckedChanged="@((v) => _ShowWooLinked = v)">Show Is Woo Linked?</Blazorise.Check>
+                                <Blazorise.Check TValue="bool" Checked="@showReplaceItem" CheckedChanged="@((v) => showReplaceItem = v)">Show Replacement</Blazorise.Check>
+                                <Blazorise.Check TValue="bool" Checked="@showWooLinked" CheckedChanged="@((v) => showWooLinked = v)">Show Is Woo Linked?</Blazorise.Check>
                             </FieldBody>
                         </Field>
                         <Field Margin="Margin.Is1" JustifyContent="JustifyContent.End">
@@ -92,7 +93,7 @@
                     </Fields>
                 </CardSubtitle>
                 <CardBody Padding="Padding.IsAuto">
-                    <DataGrid @ref="_DataGrid"
+                    <DataGrid @ref="dataGrid"
                           TItem="ItemView" Data="@dataModels"
                           ReadData="HandleReadDataAsync"
                           Sortable="true" Editable="true"
@@ -100,23 +101,23 @@
                           Hoverable="true"
                           Responsive="true"
                           EditMode="DataGridEditMode.Popup"
-                          PageSize="@_ItemWooLinkedViewRepository._WooLinkedGridSettings.PageSize" ShowPager="true"
+                          PageSize="@itemWooLinkedViewRepository.CurrWooLinkedGridSettings.PageSize" ShowPager="true"
                           PageSizes="@(new int[] { 5, 10, 15, 25, 50, 100 })"
                           ShowPageSizes="true" PagerPosition="DataGridPagerPosition.TopAndBottom"
-                          TotalItems="_ItemWooLinkedViewRepository._WooLinkedGridSettings.TotalItems"
+                          TotalItems="itemWooLinkedViewRepository.CurrWooLinkedGridSettings.TotalItems"
                           Bordered="true"
                           NewItemDefaultSetter="@OnItemNewItemDefaultSetter"
                           SelectionMode="DataGridSelectionMode.Multiple"
                           @bind-SelectedRow="@seletectedItem"
-                          @bind-SelectedRows="@SelectedItemRows"
+                          @bind-SelectedRows="@selectedItemRows"
                           RowInserted="@OnRowInsertingAsync"
                           RowUpdated="@OnRowUpdatedAsync"
                           RowRemoving="@OnRowRemovingAsync"
                           RowRemoved="@OnRowRemoved"
-                          Narrow="@_ItemWooLinkedViewRepository._WooLinkedGridSettings.IsNarrow" Filterable="@_ItemWooLinkedViewRepository._WooLinkedGridSettings.IsFilterable"
+                          Narrow="@itemWooLinkedViewRepository.CurrWooLinkedGridSettings.IsNarrow" Filterable="@itemWooLinkedViewRepository.CurrWooLinkedGridSettings.IsFilterable"
                           UseInternalEditing="true"
-                          CurrentPage="_ItemWooLinkedViewRepository._WooLinkedGridSettings.CurrentPage"
-                          PageChanged="(e) => _ItemWooLinkedViewRepository._WooLinkedGridSettings.CurrentPage = e.Page"
+                          CurrentPage="itemWooLinkedViewRepository.CurrWooLinkedGridSettings.CurrentPage"
+                          PageChanged="(e) => itemWooLinkedViewRepository.CurrWooLinkedGridSettings.CurrentPage = e.Page"
                           UseValidation="true"
                           ShowValidationsSummary="true"
                           ValidationsSummaryLabel="Error validating data. Following error occurs..."
@@ -124,9 +125,9 @@
                           Padding="Padding.Is0">
                         <EmptyTemplate>
                             @{
-                                if (string.IsNullOrEmpty(_Status))
+                                if (string.IsNullOrEmpty(status))
                                 {
-                                    if (_IsLoading)
+                                    if (isLoading)
                                     {
                                         <Blazorise.Badge Color="Color.Primary">Loading...</Blazorise.Badge>
                                     }
@@ -139,7 +140,7 @@
                                 {
                                     <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
                                         <Column>
-                                            <span class="alert-info">@_Status</span>
+                                            <span class="alert-info">@status</span>
                                         </Column>
                                         <Column>
                                             <div class="spinner-border m-5" role="status">
@@ -153,7 +154,7 @@
                         <LoadingTemplate>
                             <Row Style="display: inline-flex;" Padding="Padding.IsAuto">
                                 <Column>
-                                    <span class="alert-info">@_Status</span>
+                                    <span class="alert-info">@status</span>
                                 </Column>
                                 <Column>
                                     <div class="spinner-border m-5" role="status">
@@ -220,7 +221,7 @@
                                 </FilterTemplate>
                             </DataGridColumn>
                             <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ItemDetail)" Caption="Item Detail" Sortable="true" Editable="true" Filterable="true"
-                                        HeaderCellClass="desktop-only" CellClass="@((item) => "desktop-only")" Displayable="_ShowItemDetail">
+                                        HeaderCellClass="desktop-only" CellClass="@((item) => "desktop-only")" Displayable="showItemDetail">
                             </DataGridColumn>
                             <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ItemCategories)" Caption="Item Categories" Sortable="true" Editable="true" Filterable="true"
                                         HeaderCellClass="desktop-only" CellClass="@((item) => "desktop-only")">
@@ -280,7 +281,7 @@
                                 </DisplayTemplate>
                             </DataGridColumn>
                             <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.ReplacementItemId)" Caption="Replace By" Sortable="true" Editable="true" Filterable="true"
-                                        HeaderCellClass="desktop-only" CellClass="@((item) => "desktop-only")" Displayable="_ShowReplaceItem">
+                                        HeaderCellClass="desktop-only" CellClass="@((item) => "desktop-only")" Displayable="showReplaceItem">
                                 <EditTemplate>
                                     <Select TValue="Guid" SelectedValue="@(context.CellValue == null ? Guid.Empty : (Guid)context.CellValue)" SelectedValueChanged="@((v) => context.CellValue = v)">
                                         <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
@@ -300,11 +301,11 @@
                             </DataGridColumn>
                             <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.SortOrder)" Caption="Sort Order" Sortable="true" Editable="true" Filterable="true" DisplayFormat="{0:N}" ValidationPattern="\[0-9]+">
                             </DataGridColumn>
-                            <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.CanUpdateECommerceMap)" Caption="Woo Linked" Sortable="false" Filterable="false" Editable="@(_ItemWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive)" Displayable="_ShowWooLinked"
+                            <DataGridColumn TItem="ItemView" Field="@nameof(ItemView.CanUpdateECommerceMap)" Caption="Woo Linked" Sortable="false" Filterable="false" Editable="@(itemWooLinkedViewRepository.CurrWooLinkedGridSettings.WooIsActive)" Displayable="showWooLinked"
                                         HeaderCellClass="desktop-only" CellClass="@((item) => "desktop-only")">
                                 <DisplayTemplate>
                                     @{
-                                        if (_ItemWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive)
+                                        if (itemWooLinkedViewRepository.CurrWooLinkedGridSettings.WooIsActive)
                                         {
                                             var wooItem = (context as ItemView);
                                             @((wooItem.CanUpdateECommerceMap == null) ? "n/a" : ((bool)wooItem.CanUpdateECommerceMap ? "yes" : "no"))
@@ -318,7 +319,7 @@
                                 </DisplayTemplate>
                                 <EditTemplate>
                                     @{
-                                        @if (_ItemWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive)
+                                        @if (itemWooLinkedViewRepository.CurrWooLinkedGridSettings.WooIsActive)
                                         {
                                             <Tooltip Text="Is this Attribute synchronised with Woo Items?">
                                                 @if (context.CellValue == null)
@@ -348,8 +349,8 @@
                                         </Button>
                                     </Tooltip>
                                     <Tooltip Text="Filter by Column" Style="z-index:99" Placement="TooltipPlacement.Left">
-                                        <Button Color="Color.Info" Clicked="@(() => _ItemWooLinkedViewRepository._WooLinkedGridSettings.IsFilterable = !_ItemWooLinkedViewRepository._WooLinkedGridSettings.IsFilterable)">
-                                            <Icon Name="@((_ItemWooLinkedViewRepository._WooLinkedGridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" />
+                                        <Button Color="Color.Info" Clicked="@(() => itemWooLinkedViewRepository.CurrWooLinkedGridSettings.IsFilterable = !itemWooLinkedViewRepository.CurrWooLinkedGridSettings.IsFilterable)">
+                                            <Icon Name="@((itemWooLinkedViewRepository.CurrWooLinkedGridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" />
                                         </Button>
                                     </Tooltip>
                                 </NewCommandTemplate>
@@ -423,8 +424,8 @@
                                 </Column>
                                 <Column ColumnSize="ColumnSize.IsAuto">
                                     @{
-                                        string IconColor = _ItemWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive ? "green" : "red";
-                                        <Icon Name="@( _ItemWooLinkedViewRepository._WooLinkedGridSettings.WooIsActive ? IconName.CheckCircle : IconName.MinusCircle)"
+                                        string IconColor = itemWooLinkedViewRepository.CurrWooLinkedGridSettings.WooIsActive ? "green" : "red";
+                                        <Icon Name="@( itemWooLinkedViewRepository.CurrWooLinkedGridSettings.WooIsActive ? IconName.CheckCircle : IconName.MinusCircle)"
                                       Style="@($"color: { IconColor}; display: inline - flex")" />
 
                                     }
@@ -441,13 +442,13 @@
     </Row>
 
 
-    <RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage=" Attribute Message" NotificationTitle="" @ref="@_ItemWooLinkedViewRepository._WooLinkedGridSettings.PopUpRef" />
+    <RainbowOF.Components.Modals.PopUpAndLogNotification NotificationMessage=" Attribute Message" NotificationTitle="" @ref="@itemWooLinkedViewRepository.CurrWooLinkedGridSettings.PopUpRef" />
 
-    <RainbowOF.Components.Modals.ConfirmModal @ref="_ItemWooLinkedViewRepository._WooLinkedGridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_ClickAsync" />
+    <RainbowOF.Components.Modals.ConfirmModal @ref="itemWooLinkedViewRepository.CurrWooLinkedGridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_ClickAsync" />
 
-    <RainbowOF.Components.Modals.ConfirmModal @ref="_ItemWooLinkedViewRepository._WooLinkedGridSettings.DeleteWooItemConfirmation" ConfirmationClicked="ConfirmDeleteWooItem_ClickAsync" />
+    <RainbowOF.Components.Modals.ConfirmModal @ref="itemWooLinkedViewRepository.CurrWooLinkedGridSettings.DeleteWooItemConfirmation" ConfirmationClicked="ConfirmDeleteWooItem_ClickAsync" />
 
-    <RainbowOF.Components.Modals.ConfirmModalWithOption @ref="_ItemWooLinkedViewRepository._WooLinkedGridSettings.DeleteConfirmationWithOption"
+    <RainbowOF.Components.Modals.ConfirmModalWithOption @ref="itemWooLinkedViewRepository.CurrWooLinkedGridSettings.DeleteConfirmationWithOption"
                                                     ConfirmationClicked="ConfirmDeleteItem_Click"
                                                     ConfirmationMessage=@($"Are you sure you want to delete ?")
                                                     ConfirmButtonText="Delete"
@@ -456,10 +457,6 @@
                                                     CancelButtonText="Cancel" />
 }
 
-@code {
-    [Inject] private NavigationManager currentNavigationManager { get; set; }
-
-}
 
 @*<Row>
     <Column>

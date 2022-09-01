@@ -2,13 +2,13 @@
 {
     public class StringTools
     {
-        public string Truncate(string sourceString, int targetLength)
+        public static string Truncate(string sourceString, int targetLength)
         {
             return (sourceString.Length > targetLength) ?
-                sourceString.Substring(0, targetLength) :
+                sourceString[..targetLength] :
                 sourceString;
         }
-        public string MakeAbbriviation(string priginalName)
+        public static string MakeAbbriviation(string priginalName)
         {
             string _newName = string.Empty;
             string _vowels = "AEIOUaeiou -+:%$&*@.";  // remove vowels and spaces and symbols
@@ -23,7 +23,7 @@
             }
             return _newName;
         }
-        public string StripHTML(string originalHTML)
+        public static string StripHTML(string originalHTML)
         {
             return System.Text.RegularExpressions.Regex.Replace(originalHTML, @"<(.|\n)*?>", string.Empty);
         }

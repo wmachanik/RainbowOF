@@ -2,8 +2,6 @@
 using RainbowOF.Woo.REST.Models;
 using System;
 using System.Collections.Generic;
-using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
 using WooCommerceNET;
 using WooCommerceNET.WooCommerce.v3;
@@ -12,36 +10,36 @@ namespace RainbowOF.Woo.REST.Repositories
 {
     public class WooProductVariation : IWooProductVariation
     {
-        private readonly IWooBase _Woo;
+        private readonly IWooBase _wooBase;
 
         public WooProductVariation(WooAPISettings wooAPISettings, ILoggerManager logger)
         {
-            _Woo = new WooBase(wooAPISettings, logger);
+            _wooBase = new WooBase(wooAPISettings, logger);
         }
 
-        private WCObject _wcObject = null;
-        private WCObject GetWCObject
+        private WCObject _localWCObject = null;
+        private WCObject getWCObject
         {
             get
             {
-                if (_wcObject == null)
+                if (_localWCObject == null)
                 {
-                    RestAPI _RestAPI = _Woo.GetJSONRestAPI;
+                    RestAPI _RestAPI = _wooBase.GetJSONRestAPI;
                     try
                     {
-                        _wcObject = new WCObject(_RestAPI);
+                        _localWCObject = new WCObject(_RestAPI);
                     }
                     catch (Exception ex)
                     {
-                        if (_Woo.Logger != null)
-                            _Woo.Logger.LogError("Error setting up WOO REST API: " + ex.Message);
+                        if (_wooBase.Logger != null)
+                            _wooBase.Logger.LogError("Error setting up WOO REST API: " + ex.Message);
                     }
                 }
-                return _wcObject;
+                return _localWCObject;
             }
             set
             {
-                _wcObject = value;
+                _localWCObject = value;
             }
         }
         /// <summary>
@@ -51,19 +49,19 @@ namespace RainbowOF.Woo.REST.Repositories
         /// <returns>List of Product Variations found or null if not</returns>
         public async Task<List<Variation>> GetProductVariationsByProductIdAsync(uint parentProductId)
         {
-            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
-            List<Variation> _WooVariations = null;
+            RestAPI _RestAPI = _wooBase.GetJSONRestAPI;
+            List<Variation> wooBaseVariations = null;
             try
             {
-                WCObject _WC = new WCObject(_RestAPI);
-                _WooVariations = await _WC.Product.Variations.GetAll(parentProductId);
+                WCObject _WC = new(_RestAPI);
+                wooBaseVariations = await _WC.Product.Variations.GetAll(parentProductId);
             }
             catch (Exception ex)
             {
-                if (_Woo.Logger != null)
-                    _Woo.Logger.LogError("Error calling WOO REST API: " + ex.Message);
+                if (_wooBase.Logger != null)
+                    _wooBase.Logger.LogError("Error calling WOO REST API: " + ex.Message);
             }
-            return _WooVariations;
+            return wooBaseVariations;
         }
         /// <summary>
         /// Get the Product Variation by variation id of the Product with parent Id
@@ -73,17 +71,17 @@ namespace RainbowOF.Woo.REST.Repositories
         /// <returns>Product Variation found or null if not</returns>
         public async Task<Variation> GetProductVariationByIdAsync(uint sourceWooEntityId, uint parentWooVariantId)
         {
-            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
+            RestAPI _RestAPI = _wooBase.GetJSONRestAPI;
             Variation _Variation = null;
             try
             {
-                WCObject _WC = new WCObject(_RestAPI);
-                _Variation = await _WC.Product.Variations.Get((int)sourceWooEntityId,(int)parentWooVariantId);
+                WCObject _WC = new(_RestAPI);
+                _Variation = await _WC.Product.Variations.Get((int)sourceWooEntityId, (int)parentWooVariantId);
             }
             catch (Exception ex)
             {
-                if (_Woo.Logger != null)
-                    _Woo.Logger.LogError("Error calling WOO REST JSON API: " + ex.Message);
+                if (_wooBase.Logger != null)
+                    _wooBase.Logger.LogError("Error calling WOO REST JSON API: " + ex.Message);
             }
             return _Variation;
         }
@@ -96,7 +94,7 @@ namespace RainbowOF.Woo.REST.Repositories
         public async Task<Variation> AddProductVariationAsync(Variation addWooProductVariant, uint parentWooProductId)
         {
             Variation _Variation = null;
-            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
+            RestAPI _RestAPI = _wooBase.GetJSONRestAPI;
             try
             {
                 WCObject _WC = new(_RestAPI);
@@ -104,8 +102,8 @@ namespace RainbowOF.Woo.REST.Repositories
             }
             catch (Exception ex)
             {
-                if (_Woo.Logger != null)
-                    _Woo.Logger.LogError($"Error calling Add ProductVariantAsync for product: {addWooProductVariant.description}. Error:  {ex.Message}");
+                if (_wooBase.Logger != null)
+                    _wooBase.Logger.LogError($"Error calling Add ProductVariantAsync for product: {addWooProductVariant.description}. Error:  {ex.Message}");
             }
             return _Variation;
         }
@@ -118,16 +116,16 @@ namespace RainbowOF.Woo.REST.Repositories
         public async Task<string> DeleteProductVariationByIdAsync(uint deleteWooVariantId, uint parentWooProductId)
         {
             string _Variation = null;
-            WCObject _WC = GetWCObject;
+            WCObject _WC = getWCObject;
             try
             {
                 // looks like it may need a force parameter, is this a good thing?
-                _Variation = await _WC.Product.Variations.Delete((int) deleteWooVariantId, (int)parentWooProductId, true);   // force = true
+                _Variation = await _WC.Product.Variations.Delete((int)deleteWooVariantId, (int)parentWooProductId, true);   // force = true
             }
             catch (Exception ex)
             {
-                if (_Woo.Logger != null)
-                    _Woo.Logger.LogError($"Error calling deleting product category by id: {deleteWooVariantId} Async. Error:  {ex.Message}");
+                if (_wooBase.Logger != null)
+                    _wooBase.Logger.LogError($"Error calling deleting product category by id: {deleteWooVariantId} Async. Error:  {ex.Message}");
             }
             return _Variation;
         }
@@ -140,7 +138,7 @@ namespace RainbowOF.Woo.REST.Repositories
         public async Task<Variation> UpdateProductVariationAsync(Variation updateWooProductVariant, uint parentProductId)
         {
             Variation _Variation = null;
-            WCObject _WC = GetWCObject;
+            WCObject _WC = getWCObject;
             try
             {
                 // looks like it may need a force parameter, is this a good thing?
@@ -148,8 +146,8 @@ namespace RainbowOF.Woo.REST.Repositories
             }
             catch (Exception ex)
             {
-                if (_Woo.Logger != null)
-                    _Woo.Logger.LogError($"Error calling deleting product category by id: {updateWooProductVariant} Async. Error:  {ex.Message}");
+                if (_wooBase.Logger != null)
+                    _wooBase.Logger.LogError($"Error calling deleting product category by id: {updateWooProductVariant} Async. Error:  {ex.Message}");
             }
             return _Variation;
         }

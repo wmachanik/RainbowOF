@@ -1,10 +1,7 @@
-﻿using RainbowOF.Models.Items;
-using RainbowOF.Models.Lookups;
+﻿using RainbowOF.Models.Lookups;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 
 namespace RainbowOF.Models.Woo
 {
@@ -23,7 +20,7 @@ namespace RainbowOF.Models.Woo
         [DefaultValue(true)]
         [DisplayName("Can Update?")]
         public bool CanUpdate { get; set; }
-        public Guid ItemCategoryLookupId {get;set;}
+        public Guid ItemCategoryLookupId { get; set; }
 
         public ItemCategoryLookup ItemCategoryLookup { get; set; }
     }

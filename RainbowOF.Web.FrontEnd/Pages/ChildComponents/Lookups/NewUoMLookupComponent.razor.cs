@@ -1,66 +1,67 @@
 ﻿using Blazorise;
 using Microsoft.AspNetCore.Components;
 using RainbowOF.Components.Modals;
-using RainbowOF.Models.Items;
 using RainbowOF.Models.Lookups;
 using RainbowOF.Repositories.Common;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
 {
     public partial class NewUoMLookupComponent : ComponentBase
     {
+        #region Injected and parameter variables
         [Inject]
-        IUnitOfWork appUnitOfWork { get; set; }
+        public IUnitOfWork AppUnitOfWork { get; set; }
         [Parameter]
         public PopUpAndLogNotification PopUpRef { get; set; }
         [Parameter]
         public EventCallback<bool> UoMAddedEvent { get; set; }
-
-        private Modal NewUoMModalRef;
-
-        public ItemUoMLookup _NewItemUoM = new();
-        private Dictionary<Guid, string> _ListOfUoMSymbols = null;
-
+        #endregion
+        #region Private variables
+        private Modal newUoMModalRef { get; set; }
+        private ItemUoMLookup newItemUoM { get; set; } = new();
+        private Dictionary<Guid, string> _listOfUoMSymbols = null;
+        #endregion
+        #region Initialisation
         protected override async Task OnInitializedAsync()
         {
             await base.OnInitializedAsync();
             //SelectedUoMId = ((SourceUoMId ?? Guid.Empty) == Guid.Empty) ? Guid.Empty : (Guid)SourceUoMId;  // store in a local var to keep state until modal closed. If not Select list changes to original value
-            if (_ListOfUoMSymbols == null)
-                _ListOfUoMSymbols =  appUnitOfWork.GetListOfUoMSymbols();
+            if (_listOfUoMSymbols == null)
+                _listOfUoMSymbols = AppUnitOfWork.GetListOfUoMSymbols();
             await InvokeAsync(StateHasChanged);
         }
-
+        #endregion
+        #region Component back end methods
         public async Task ShowModalAsync()
         {
-            _NewItemUoM.UoMName = "each";
-            _NewItemUoM.UoMSymbol = "@";
-            _NewItemUoM.BaseUoMId = null;
-            _NewItemUoM.BaseConversationFactor = 1;
-            _NewItemUoM.RoundTo = 2;
-            await NewUoMModalRef.Show();
+            newItemUoM.UoMName = "each";
+            newItemUoM.UoMSymbol = "@";
+            newItemUoM.BaseUoMId = null;
+            newItemUoM.BaseConversationFactor = 1;
+            newItemUoM.RoundTo = 2;
+            await newUoMModalRef.Show();
         }
-
         private async Task HideModal(bool IsSaveClicked)
         {
             if (IsSaveClicked)
             {
-                IRepository<ItemUoMLookup> appRepository = appUnitOfWork.Repository<ItemUoMLookup>();
+                IRepository<ItemUoMLookup> appRepository = AppUnitOfWork.Repository<ItemUoMLookup>();
                 if (appRepository != null)
                 {
-                    var _result = await appRepository.AddAsync(_NewItemUoM);
+                    var _result = await appRepository.AddAsync(newItemUoM);
                     if (_result == null)
-                        await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Error adding new Unit of Measure: {_NewItemUoM.UoMName}");
+                        await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Error adding new Unit of Measure: {newItemUoM.UoMName}");
                     else
-                        await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Success, $"Unit of Measure: {_NewItemUoM.UoMName} added.");
+                        await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Success, $"Unit of Measure: {newItemUoM.UoMName} added.");
                 }
             }
-            await NewUoMModalRef.Hide();
+            await newUoMModalRef.Hide();
             await UoMAddedEvent.InvokeAsync(IsSaveClicked);   // tell the parent if we saved or not -> We could change SavedClicked if there was an error.
         }
+        #endregion
 
     }
 }

@@ -72,10 +72,10 @@ Welcome to Rainbow Order Fulfilment manager.
 <Blazorise.Divider />
 <label style="background-color: @myColour; color: @myFGColour">@myColour</label>
 <Button Color="Color.Secondary" Clicked="(() => colorSelector.ShowModalAsync())"><Icon Name="IconName.PaintRoller"></Icon></Button>
-<Button Color="Color.Secondary" Clicked="(() => colorFGSelector.ShowModalAsync())"><Icon Name="IconName.PaintBrush"></Icon></Button>
+<Button Color="Color.Secondary" Clicked="(() => ColorFGSelector.ShowModalAsync())"><Icon Name="IconName.PaintBrush"></Icon></Button>
 
 <RainbowOF.Components.Modals.ColorSelector @ref="colorSelector" ColourValue="@myColour" ColourValueChanged="@((bg)=> myColour = bg)" />
-<RainbowOF.Components.Modals.ColorSelector @ref="colorFGSelector" ColourValue="@myFGColour" ColourValueChanged="@((v) => myFGColour = v)" />
+<RainbowOF.Components.Modals.ColorSelector @ref="ColorFGSelector" ColourValue="@myFGColour" ColourValueChanged="@((v) => myFGColour = v)" />
 
 
 <hr />
@@ -105,7 +105,7 @@ Welcome to Rainbow Order Fulfilment manager.
     public string myColour { get; set; } = "#F5a590";
     public string myFGColour { get; set; } = "#000000";
     RainbowOF.Components.Modals.ColorSelector colorSelector { get; set; }
-    RainbowOF.Components.Modals.ColorSelector colorFGSelector { get; set; }
+    RainbowOF.Components.Modals.ColorSelector ColorFGSelector { get; set; }
 
     private string myValue = "";
     private bool myShowOption = true;

@@ -6,10 +6,10 @@
        > PopUpAndLogNotification PopUpRef to display the results of the add
        > bool AddItemToWoo optional default is false;
     Uses:
-        IAppUnitOfWork appUnitOfWork
+        IAppUnitOfWork AppUnitOfWork
     -------------------------------------------------------------
 *@
-<Modal @ref="NewAttributeVarietyLookupModalRef">
+<Modal @ref="newAttributeVarietyLookupModalRef">
     <ModalContent Size="Blazorise.ModalSize.Default" Centered="true">
         <ModalHeader>
             <ModalTitle>
@@ -21,23 +21,23 @@
         <ModalBody>
             <Field>
                 <FieldLabel>Variety Name</FieldLabel>
-                <TextEdit Autofocus="true" Text="@_NewItemAttributeVarietyLookupView.VarietyName" TextChanged="((vn) => _NewItemAttributeVarietyLookupView.VarietyName = vn)" Placeholder="Enter variety name..." />
+                <TextEdit Autofocus="true" Text="@newItemAttributeVarietyLookupView.VarietyName" TextChanged="((vn) => newItemAttributeVarietyLookupView.VarietyName = vn)" Placeholder="Enter variety name..." />
             </Field>
             <Field>
                 <FieldLabel>UoM</FieldLabel>
-                <UoMLookupSelectListComponent PopUpRef="PopUpRef" SourceUoMId="_NewItemAttributeVarietyLookupView.UoMId" UoMIdChangedEvent="@((u) => _NewItemAttributeVarietyLookupView.UoMId = u)"></UoMLookupSelectListComponent>
+                <UoMLookupSelectListComponent PopUpRef="PopUpRef" SourceUoMId="newItemAttributeVarietyLookupView.UoMId" UoMIdChangedEvent="@((u) => newItemAttributeVarietyLookupView.UoMId = u)"></UoMLookupSelectListComponent>
             </Field>
             <Field>
                 <FieldLabel>Sort Order</FieldLabel>
-                <TextEdit TextChanged="((sv) => _NewItemAttributeVarietyLookupView.SortOrder = Convert.ToInt32(sv))" InputMode="TextInputMode.Numeric" Text="@_NewItemAttributeVarietyLookupView.SortOrder.ToString()" Placeholder="Enter variety sort order..." />
+                <TextEdit TextChanged="((sv) => newItemAttributeVarietyLookupView.SortOrder = Convert.ToInt32(sv))" InputMode="TextInputMode.Numeric" Text="@newItemAttributeVarietyLookupView.SortOrder.ToString()" Placeholder="Enter variety sort order..." />
             </Field>
             <Field>
                 <FieldLabel>Add To Woo</FieldLabel>
-                <Blazorise.Check TValue="bool" Checked="@(_NewItemAttributeVarietyLookupView.CanUpdateECommerceMap?? false)" CheckedChanged="((cv) => _NewItemAttributeVarietyLookupView.CanUpdateECommerceMap = cv)"></Blazorise.Check>
+                <Blazorise.Check TValue="bool" Checked="@(newItemAttributeVarietyLookupView.CanUpdateECommerceMap?? false)" CheckedChanged="((cv) => newItemAttributeVarietyLookupView.CanUpdateECommerceMap = cv)"></Blazorise.Check>
             </Field>
             <Field>
                 <FieldLabel>Notes</FieldLabel>
-                <TextEdit Text="@_NewItemAttributeVarietyLookupView.Notes" TextChanged="((nv) => _NewItemAttributeVarietyLookupView.Notes = nv)" Placeholder="Any notes..." />
+                <TextEdit Text="@newItemAttributeVarietyLookupView.Notes" TextChanged="((nv) => newItemAttributeVarietyLookupView.Notes = nv)" Placeholder="Any notes..." />
             </Field>
         </ModalBody>
         <ModalFooter>

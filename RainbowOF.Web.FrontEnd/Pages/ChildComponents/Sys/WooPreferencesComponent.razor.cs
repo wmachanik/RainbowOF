@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Components;
+using RainbowOF.Components.Modals;
 using RainbowOF.Models.System;
 using RainbowOF.Tools;
-using RainbowOF.Components.Modals;
 using RainbowOF.Woo.REST.Models;
 using RainbowOF.Woo.REST.Repositories;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Sys
@@ -27,7 +25,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Sys
         {
             Waiting = true;
             StateHasChanged();
-            WooAPISettings _WooAPISettings = new WooAPISettings(WooSettingsModel);
+            WooAPISettings _WooAPISettings = new(WooSettingsModel);
             //{
             //    ConsumerKey = WooSettingsModel.ConsumerKey,
             //    ConsumerSecret = WooSettingsModel.ConsumerSecret,
@@ -37,7 +35,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Sys
             //    RootAPIPostFix = WooSettingsModel.RootAPIPostFix
             //};
 
-            WooProduct _WooProducts = new WooProduct(_WooAPISettings, Logger);
+            WooProduct _WooProducts = new(_WooAPISettings, Logger);
 
             //int _count = await Task.Run(() => _WooProducts.GetProductCount());    //CheckProductLink())
             //WooStatus = ((_count> 0) ? $"Success - product count: {_count}" : "Failed");

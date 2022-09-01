@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
 
 namespace RainbowOF.Models.Lookups
 {
@@ -38,7 +36,7 @@ namespace RainbowOF.Models.Lookups
         [NotMapped]    ///-> we want to do the work.
         public string FullCategoryName => (ParentCategory == null) ? CategoryName : ParentCategory.FullCategoryName + "—>" + CategoryName;
         [NotMapped]    ///-> we want to do the work.
-        public string CategoryIndent=> (ParentCategory == null) ? string.Empty : ParentCategory.CategoryIndent+ " —";
+        public string CategoryIndent => (ParentCategory == null) ? string.Empty : ParentCategory.CategoryIndent + " —";
 
     }
 }

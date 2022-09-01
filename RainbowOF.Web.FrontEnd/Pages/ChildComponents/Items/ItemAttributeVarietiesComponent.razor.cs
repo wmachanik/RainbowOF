@@ -7,7 +7,6 @@ using RainbowOF.Models.Lookups;
 using RainbowOF.Repositories.Common;
 using RainbowOF.Repositories.Items;
 using RainbowOF.Tools;
-using RainbowOF.ViewModels.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,19 +20,19 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         #endregion
         #region Grid Variables
         // Interface Stuff
-        List<ItemAttributeVariety> ModelItemAttributeVarieties = null;
-        ItemAttributeVariety SeletectedItemAttributeVariety;
-        DataGrid<ItemAttributeVariety> _DataGrid;
+        private List<ItemAttributeVariety> modelItemAttributeVarieties { get; set; } = null;
+        private ItemAttributeVariety seletectedItemAttributeVariety { get; set; }
+        private DataGrid<ItemAttributeVariety> currDataGrid { get; set; }
         // All there workings are here
-        IItemAttributeVarietyGridRepository _ItemAttributeVarietyGridRepository = null;
+        private IItemAttributeVarietyGridRepository itemAttributeVarietyGridRepository { get; set; } = null;
         #endregion
         #region Injected Variables
         [Inject]
-        IUnitOfWork appUnitOfWork { get; set; }
+        public IUnitOfWork AppUnitOfWork { get; set; }
         [Inject]
-        public ILoggerManager appLoggerManager { get; set; }
+        public ILoggerManager AppLoggerManager { get; set; }
         [Inject]
-        public IMapper _Mapper { get; set; }
+        public IMapper AppMapper { get; set; }
         #endregion
         #region Parameters
         [Parameter]
@@ -47,17 +46,17 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         #region Initialisation
         protected override async Task OnInitializedAsync()
         {
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("ItemAttributeVarietiesComponent initialising...");
+            if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug("ItemAttributeVarietiesComponent initialising...");
             await base.OnInitializedAsync();
-            ModelItemAttributeVarieties = await LoadItemAttributeVariablesAsync(SourceItemAttribute.ItemAttributeId);   // SourceItemAttribute.ItemAttributeVarieties?? new();
+            modelItemAttributeVarieties = await LoadItemAttributeVariablesAsync(SourceItemAttribute.ItemAttributeId);   // SourceItemAttribute.ItemAttributeVarieties?? new();
             // call this now so that it exists in memory
-            await Task.Run(() => { appUnitOfWork.GetListOfAttributeVarieties(SourceItemAttribute.ItemAttributeLookupId, true); }); //
+            await Task.Run(() => { AppUnitOfWork.GetListOfAttributeVarieties(SourceItemAttribute.ItemAttributeLookupId, true); }); //
             //!! Init grid vars after all async's
-            _ItemAttributeVarietyGridRepository = new ItemAttributeVarietyGridRepository(appLoggerManager, appUnitOfWork);
-            _ItemAttributeVarietyGridRepository.gridSettings.PopUpRef = PopUpRef;
+            itemAttributeVarietyGridRepository = new ItemAttributeVarietyGridRepository(AppLoggerManager, AppUnitOfWork);
+            itemAttributeVarietyGridRepository.CurrGridSettings.PopUpRef = PopUpRef;
             //            _ItemAttributeVarietyGridRepository._GridSettings.DeleteConfirmation = DeleteConfirmation;  //---> needs to be local otherwise delete the wrong thing
             await InvokeAsync(StateHasChanged);
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("ItemAttributeVarietiesComponent initialised...");
+            if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug("ItemAttributeVarietiesComponent initialised...");
         }
         #endregion
         #region BackEnd Routines
@@ -68,7 +67,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         /// <returns>List of ItemAttributeVarieties associated to the Parent ItemAttributeId </returns>
         private async Task<List<ItemAttributeVariety>> LoadItemAttributeVariablesAsync(Guid sourceItemAttributeParentId)
         {
-            IRepository<ItemAttributeVariety> _itemAttributeVarietyRepository = appUnitOfWork.Repository<ItemAttributeVariety>();
+            IRepository<ItemAttributeVariety> _itemAttributeVarietyRepository = AppUnitOfWork.Repository<ItemAttributeVariety>();
             var _result = await _itemAttributeVarietyRepository.GetByAsync(iav => iav.ItemAttributeId == sourceItemAttributeParentId);
             return _result.ToList();
         }
@@ -78,11 +77,12 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         /// <returns></returns>
         private async Task ReloadDataInGrid()
         {
-            if (ModelItemAttributeVarieties != null)
+            if (modelItemAttributeVarieties != null)
             {
-                ModelItemAttributeVarieties.Clear(); // would prefer to dispose, but at least kill it
+                modelItemAttributeVarieties.Clear(); // would prefer to dispose, but at least kill it
             }
-            ModelItemAttributeVarieties = await LoadItemAttributeVariablesAsync(SourceItemAttribute.ItemAttributeId);
+            modelItemAttributeVarieties = await LoadItemAttributeVariablesAsync(SourceItemAttribute.ItemAttributeId);
+            await currDataGrid.Reload();  //not sure we need this
             await InvokeAsync(StateHasChanged);
         }
         /// <summary>
@@ -99,35 +99,36 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
                                                                                      Guid currentAttributeVarityLookupId,
                                                                                      bool mustForce = false)
         {
-            List<ItemAttributeVarietyLookup> _itemAttributeVarietyLookups = appUnitOfWork.GetListOfAttributeVarieties(parentAttributeLookupId, mustForce);
+            List<ItemAttributeVarietyLookup> _itemAttributeVarietyLookups = AppUnitOfWork.GetListOfAttributeVarieties(parentAttributeLookupId, mustForce);
             // 1.
-            var _usedItems = ModelItemAttributeVarieties.Where(miav => (miav.ItemAttributeVarietyLookupId != currentAttributeVarityLookupId));
+            var _usedItems = modelItemAttributeVarieties.Where(miav => (miav.ItemAttributeVarietyLookupId != currentAttributeVarityLookupId));
             // 2. 
             var _unselectedItems = _itemAttributeVarietyLookups.Where(iav => !_usedItems.Any(miav => (miav.ItemAttributeVarietyLookupId == iav.ItemAttributeVarietyLookupId)));
             return _unselectedItems.ToList();
         }
-#region oldcode that uses a loop
+        #region oldcode that uses a loop
 
-//List<ItemAttributeVarietyLookup> _unselectedItems = new List<ItemAttributeVarietyLookup>(_itemAttributeVarietyLookups); // clone this list
-//// manually delete those we have besides the one we re on
-//foreach (var _availableVarietty in _itemAttributeVarietyLookups)
-//{
-//    foreach (var _modelItem in ModelItemAttributeVarieties)
-//    {
-//        if ((_availableVarietty.ItemAttributeVarietyLookupId != currentAttributeVarityLookupId) &&(_availableVarietty.ItemAttributeVarietyLookupId == _modelItem.ItemAttributeVarietyLookupId))
-//        {
-//            _unselectedItems.Remove(_availableVarietty);
-//        }
-//    }
-//}
+        //List<ItemAttributeVarietyLookup> _unselectedItems = new List<ItemAttributeVarietyLookup>(_itemAttributeVarietyLookups); // clone this list
+        //// manually delete those we have besides the one we re on
+        //foreach (var _availableVarietty in _itemAttributeVarietyLookups)
+        //{
+        //    foreach (var _modelItem in ModelItemAttributeVarieties)
+        //    {
+        //        if ((_availableVarietty.ItemAttributeVarietyLookupId != currentAttributeVarityLookupId) &&(_availableVarietty.ItemAttributeVarietyLookupId == _modelItem.ItemAttributeVarietyLookupId))
+        //        {
+        //            _unselectedItems.Remove(_availableVarietty);
+        //        }
+        //    }
+        //}
 
-//var result = peopleList2.Where(p => !peopleList1.Any(p2 => p2.ID == p.ID));
-#endregion
+        //var result = peopleList2.Where(p => !peopleList1.Any(p2 => p2.ID == p.ID));
+        #endregion
 
         // Interface Stuff
         void OnNewItemAttributeVarietyDefaultSetter(ItemAttributeVariety newItem)
         {
-            newItem = _ItemAttributeVarietyGridRepository.NewViewEntityDefaultSetter(newItem, SourceItemAttribute.ItemAttributeId);
+            //newItem =
+            itemAttributeVarietyGridRepository.NewViewEntityDefaultSetter(newItem, SourceItemAttribute.ItemAttributeId);
         }
         /// <summary>
         /// Handle the grid insert 
@@ -139,15 +140,15 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
             var newItemAttributeVariety = insertedItemAttributeVariety.Item;
             if (newItemAttributeVariety.ItemAttributeVarietyLookupId == Guid.Empty)
             {
-                await _ItemAttributeVarietyGridRepository.gridSettings.PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, "Item's attribute variety cannot be blank!");
+                await itemAttributeVarietyGridRepository.CurrGridSettings.PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, "Item's attribute variety cannot be blank!");
             }
             else
             {
-                await _ItemAttributeVarietyGridRepository.gridSettings.PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Info, "Adding attribute variety to item.");
-                newItemAttributeVariety.ItemAttributeVarietyDetail = await _ItemAttributeVarietyGridRepository.GetItemAttributeVarietyByIdAsync(newItemAttributeVariety.ItemAttributeVarietyLookupId);
+                await itemAttributeVarietyGridRepository.CurrGridSettings.PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Info, "Adding attribute variety to item.");
+                newItemAttributeVariety.ItemAttributeVarietyDetail = await itemAttributeVarietyGridRepository.GetItemAttributeVarietyByIdAsync(newItemAttributeVariety.ItemAttributeVarietyLookupId);
                 if (newItemAttributeVariety.ItemAttributeVarietyDetail == null)
                 {
-                    await _ItemAttributeVarietyGridRepository.gridSettings.PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, "Error finding attribute variety in lookup table!");
+                    await itemAttributeVarietyGridRepository.CurrGridSettings.PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, "Error finding attribute variety in lookup table!");
                 }
                 else
                 {
@@ -159,7 +160,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
                     //        _ItemAttributeVarietyGridRepository._GridSettings.PopUpRef.ShowNotification(PopUpAndLogNotification.NotificationType.Error, "Error finding Unit of Measure in lookup table!");
                     //    }
                     //}
-                    await _ItemAttributeVarietyGridRepository.InsertViewRowAsync(newItemAttributeVariety, "Attribute variety");
+                    await itemAttributeVarietyGridRepository.InsertViewRowAsync(newItemAttributeVariety, "Attribute variety");
 
                 }
             }
@@ -176,28 +177,30 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
             var _updatedItemAttributeVariety = updatedItem.Item;
             if (_updatedItemAttributeVariety.ItemAttributeVarietyDetail == null)
             {
-                await _ItemAttributeVarietyGridRepository.gridSettings.PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, "Item's attribute variety cannot be blank...");
+                await itemAttributeVarietyGridRepository.CurrGridSettings.PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, "Item's attribute variety cannot be blank...");
             }
             else
             {
                 // load item for database to see it exists, could later add a check using row version to see if it has changed.
-                await _ItemAttributeVarietyGridRepository.gridSettings.PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Info, "Updating attribute variety in item.");
-                var _currentItemAttributeVariety = await _ItemAttributeVarietyGridRepository.GetEntityByIdAsync(_updatedItemAttributeVariety.ItemAttributeVarietyId);
+                await itemAttributeVarietyGridRepository.CurrGridSettings.PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Info, "Updating attribute variety in item.");
+                var _currentItemAttributeVariety = await itemAttributeVarietyGridRepository.GetEntityByIdAsync(_updatedItemAttributeVariety.ItemAttributeVarietyId);
                 if (_currentItemAttributeVariety == null)
                 {
-                    await _ItemAttributeVarietyGridRepository.gridSettings.PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, "Error updating attribute variety, it could not be found in the table.");
+                    await itemAttributeVarietyGridRepository.CurrGridSettings.PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, "Error updating attribute variety, it could not be found in the table.");
                 }
                 else
                 {
                     //_updatedItemAttributeVariety = await SetAttributeVarietyUoMValues(_updatedItemAttributeVariety);
-                    _Mapper.Map(_updatedItemAttributeVariety, _currentItemAttributeVariety);
-                    var _result = await _ItemAttributeVarietyGridRepository.UpdateViewRowAsync(_currentItemAttributeVariety, _currentItemAttributeVariety.ItemAttributeVarietyDetail.VarietyName);
-                    if (appUnitOfWork.IsInErrorState())
+                    AppMapper.Map(_updatedItemAttributeVariety, _currentItemAttributeVariety);
+                    //var _result =
+                    await itemAttributeVarietyGridRepository.UpdateViewRowAsync(_currentItemAttributeVariety, _currentItemAttributeVariety.ItemAttributeVarietyDetail.VarietyName);
+                    if (AppUnitOfWork.IsInErrorState())
                     {
-                        await _ItemAttributeVarietyGridRepository.gridSettings.PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Error updating attribute variety {appUnitOfWork.GetErrorMessage()}, it could not be found in the table.");
+                        await itemAttributeVarietyGridRepository.CurrGridSettings.PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Error updating attribute variety {AppUnitOfWork.GetErrorMessage()}, it could not be found in the table.");
                     }
                     // update in memory item to reflect changes, done after saving, we could read it back from the database, but since we have the stuff in memory we update it here after the db update.
-                    _updatedItemAttributeVariety = SetAttributeVarietyDetail(_updatedItemAttributeVariety);
+                    //_updatedItemAttributeVariety =
+                    SetAttributeVarietyDetail(_updatedItemAttributeVariety);
                 }
             }
             //await _DataGrid.Reload();
@@ -217,18 +220,17 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
             }
             else
             {
-                var _ItemAtts = appUnitOfWork.GetListOfAttributeVarieties(SourceItemAttribute.ItemAttributeLookupId);
+                var _ItemAtts = AppUnitOfWork.GetListOfAttributeVarieties(SourceItemAttribute.ItemAttributeLookupId);
                 updatedItemAttributeVariety.ItemAttributeVarietyDetail = _ItemAtts.FirstOrDefault(ic => ic.ItemAttributeVarietyLookupId == updatedItemAttributeVariety.ItemAttributeVarietyLookupId);
             }
             return updatedItemAttributeVariety;
         }
-
         async Task OnRowRemovingAsync(CancellableRowChange<ItemAttributeVariety> modelItem)
         {
             // set the Selected Item AttributeVariety for use later
-            SeletectedItemAttributeVariety = modelItem.Item;
+            seletectedItemAttributeVariety = modelItem.Item;
             var deleteItem = modelItem;
-            await _ItemAttributeVarietyGridRepository.gridSettings.DeleteConfirmation.ShowModalAsync("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.ItemAttributeVarietyDetail.VarietyName}?");  //,"Delete","Cancel"); - passed in on init
+            await itemAttributeVarietyGridRepository.CurrGridSettings.DeleteConfirmation.ShowModalAsync("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.ItemAttributeVarietyDetail.VarietyName}?");  //,"Delete","Cancel"); - passed in on init
             await ReloadDataInGrid();
         }
         /// <summary>
@@ -240,7 +242,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         {
             if (confirmationOption)
             {
-                await _ItemAttributeVarietyGridRepository.DeleteViewRowByIdAsync(SeletectedItemAttributeVariety.ItemAttributeVarietyId, SeletectedItemAttributeVariety.ItemAttributeVarietyDetail.VarietyName);
+                await itemAttributeVarietyGridRepository.DeleteViewRowByEntityAsync(seletectedItemAttributeVariety, seletectedItemAttributeVariety.ItemAttributeVarietyDetail.VarietyName);
             }
             //IsLoading = false;
             // await _DataGrid.Reload();
@@ -258,7 +260,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         //{
         //    if (IsBusy) return null;
         //    IsBusy = true;
-        //    var repo = appUnitOfWork.itemAttributeVarietiesRepository();
+        //    var repo = AppUnitOfWork.itemAttributeVarietiesRepository();
 
         //    List<ItemAttributeVarieties> _gotItemAttributeVarietiess = null;
 

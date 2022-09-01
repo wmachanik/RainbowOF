@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace RainbowOF.Models.System
@@ -23,7 +22,7 @@ namespace RainbowOF.Models.System
         [DisplayName("Root API Postfix")]
         [StringLength(100)]
         [DefaultValue("wc-api/v3")]
-        public string RootAPIPostFix {get;set; } = "wc-api/v3";
+        public string RootAPIPostFix { get; set; } = "wc-api/v3";
         [DisplayName("WCObj Postfix")]
         [StringLength(100)]
         [DefaultValue("wp-json/wc/v3")]

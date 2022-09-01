@@ -24,15 +24,15 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         #endregion
         #region Injections
         [Inject]
-        public ILoggerManager appLoggerManager { get; set; }
+        public ILoggerManager AppLoggerManager { get; set; }
         [Inject]
-        public IUnitOfWork appUnitOfWork { get; set; }
+        public IUnitOfWork AppUnitOfWork { get; set; }
         [Inject]
-        public NavigationManager appUriHelper { get; set; }
+        public NavigationManager ApUriHelper { get; set; }
         [Inject]
-        private ApplicationState appState { get; set; }
+        public ApplicationState AppState { get; set; }
         [Inject]
-        private IMapper appMapper { get; set; }
+        public IMapper AppMapper { get; set; }
         #endregion
         #region UI variables
         public bool IsCatImportBusy = false;
@@ -43,11 +43,11 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         public string ImportingThis = String.Empty;
         #endregion
         #region Private and class variables
-        private ImportCounters currImportCounters = new ImportCounters();
+        private ImportCounters currImportCounters { get; set; } = new();
         //public ShowModalMessage componentShowModalStatus { get; set; }
-        protected PopUpAndLogNotification componentPopUpRef;
+        private PopUpAndLogNotification componentPopUpRef { get; set; }
         // Private variables
-        private DateTime _LogDate = DateTime.Now;
+        private DateTime logDate { get; set; } = DateTime.Now;
         //private StringTools _StringTools = new StringTools();
         #endregion
         #region GenericRoutines
@@ -61,17 +61,17 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         // Log the status of the import
         async Task LogImport(int? importedId, string sourceParameter, WooSections importedSection)
         {
-            IRepository<WooSyncLog> _WooSyncLogRepository = appUnitOfWork.Repository<WooSyncLog>();
+            IRepository<WooSyncLog> _WooSyncLogRepository = AppUnitOfWork.Repository<WooSyncLog>();
             await _WooSyncLogRepository.AddAsync(new WooSyncLog
             {
                 // add the parameters
-                WooSyncDateTime = _LogDate,
+                WooSyncDateTime = logDate,
                 Result = (importedId != null) ? WooResults.Success : (importedId == null) ? WooResults.none : WooResults.Error,
                 Parameters = sourceParameter,
                 Section = (RainbowOF.Models.WooSections)importedSection,
-                Notes = (importedId != null) && (importedId> 0) ? $"Imported id: {importedId}, DT: {DateTime.Now:d}" : $"DT: { DateTime.Now:d}"
+                Notes = (importedId != null) && (importedId > 0) ? $"Imported id: {importedId}, DT: {DateTime.Now:d}" : $"DT: { DateTime.Now:d}"
             });
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Import logged, section: {importedSection.ToString()}, source: {sourceParameter}");
+            if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"Import logged, section: {importedSection}, source: {sourceParameter}");
         }
         private void InitWooImport(ref bool taskIsWiaiting, string importThis)
         {
@@ -79,29 +79,29 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             // Should each one be a class. The issues with that is that, to update the screen is  problem
             taskIsWiaiting = true;
             currImportCounters.Reset();   // reset all counters
-            _LogDate = DateTime.Now; // set here so all records for this import are the same DateTime.
+            logDate = DateTime.Now; // set here so all records for this import are the same DateTime.
             ImportingThis = importThis;
             StateHasChanged();
-            appLoggerManager.LogInfo($"Import started {_LogDate}: {importThis}");
+            AppLoggerManager.LogInfo($"Import started {logDate}: {importThis}");
         }
         private void FinWooImport(ref bool taskWasBusy, string finishedStatus)
         {
             taskWasBusy = false;
             ImportingThis = finishedStatus;
-            appLoggerManager.LogInfo($"Import complete {DateTime.Now}: {finishedStatus}.");
+            AppLoggerManager.LogInfo($"Import complete {DateTime.Now}: {finishedStatus}.");
             StateHasChanged();
         }
         async Task SetAndLogStatusString(bool isError, string successString, RainbowOF.Models.Logs.WooSections imprtedSection)
         {
             string _StatusMessage = isError ?
-                $"Error Importing: {appUnitOfWork.GetErrorMessage()}" : // returned in there was an error importing
+                $"Error Importing: {AppUnitOfWork.GetErrorMessage()}" : // returned in there was an error importing
                 successString;
             await LogImport(isError ? null : 0, _StatusMessage, imprtedSection);
             await componentPopUpRef.ShowQuickNotificationAsync(isError ? PopUpAndLogNotification.NotificationType.Error : PopUpAndLogNotification.NotificationType.Info, _StatusMessage);
         }
         #endregion
         #region ImportCategories
-        string ProductCatToString(ProductCategory sourcePC, Guid importedId) => $"Product Category {sourcePC.name}, id: {sourcePC.id}, imported and Category Id is {importedId}";
+        static string ProductCatToString(ProductCategory sourcePC, Guid importedId) => $"Product Category {sourcePC.name}, id: {sourcePC.id}, imported and Category Id is {importedId}";
         /// <summary>
         /// Cycle through categories and add to database if they do not exists.
         /// Store a WooReultsDate so we can filter the results later.
@@ -123,14 +123,14 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                 currWooImportProductCategories.CurrImportCounters = currImportCounters;
                 ImportingThis = $"Importing Category ({currImportCounters.TotalImported}/{currImportCounters.MaxRecs}): {pc.name}";
                 // Import the categories that have count > 0
-                if (pc.count> 0)
+                if (pc.count > 0)
                 {
                     // set the values as per
                     _importedId = await currWooImportProductCategories.ImportAndMapWooEntityDataAsync(pc);
                     _numImported++;
                     await LogImport((int)pc.id, ProductCatToString(pc, _importedId), WooSections.ProductCategories);
                 }
-                if (appUnitOfWork.IsInErrorState())
+                if (AppUnitOfWork.IsInErrorState())
                     return 0;
                 // need to copy data across
                 currImportCounters = currWooImportProductCategories.CurrImportCounters;
@@ -146,7 +146,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                     $"Setting of Parent of Child Category id: {CategoryWithAParent.ChildId} " +
                     $"to Parent Id {CategoryWithAParent.ParentId} status: {_isDone}",
                     WooSections.ProductCategories);
-                if (appUnitOfWork.IsInErrorState())   // was there an error that was database related?
+                if (AppUnitOfWork.IsInErrorState())   // was there an error that was database related?
                     return UnitOfWork.CONST_WASERROR;
             }
             return _numImported;
@@ -157,21 +157,21 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             // cycle through categories and add to database if they do not exists
             InitWooImport(ref IsCatImportBusy, "Categories: Checking Woo");
             await LogImport(0, "Import of Woo Categories - Initialising", WooSections.ProductCategories);
-            WooImportProductCategory _wooImportProductCategories = new WooImportProductCategory(appUnitOfWork, appLoggerManager, AppWooSettings);
-            List<ProductCategory> _WooProductCategories = await _wooImportProductCategories.GetWooEntityDataAsync();
+            WooImportProductCategory CurrWooImportProductCategories = new(AppUnitOfWork, AppLoggerManager, AppWooSettings);
+            List<ProductCategory> _WooProductCategories = await CurrWooImportProductCategories.GetWooEntityDataAsync();
             if (_WooProductCategories == null)
             {
-                appState.WooIsActive = false; // there was an error so save the status for the rest of the app.
+                AppState.WooIsActive = false; // there was an error so save the status for the rest of the app.
                 await componentPopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Error retrieving Woo Categories. Please checkWoo API settings, or if there are any Woo Categories. View log for details.");
                 await LogImport(null, "Import of Woo Categories - Failed. No products retrieved. Please check Woo API settings. View log for details.", WooSections.ProductCategories);
             }
             else
             {
-                appState.WooIsActive = true; // this means the query to Woo had success so WooMustBeActive.
+                AppState.WooIsActive = true; // this means the query to Woo had success so WooMustBeActive.
                 currImportCounters.MaxRecs = _WooProductCategories.Count;
                 StateHasChanged();
-                int _recsImported = await ImportCategoryDataAsync(_wooImportProductCategories, _WooProductCategories);
-                await SetAndLogStatusString((_recsImported == UnitOfWork.CONST_WASERROR) && (appUnitOfWork.IsInErrorState()),
+                int _recsImported = await ImportCategoryDataAsync(CurrWooImportProductCategories, _WooProductCategories);
+                await SetAndLogStatusString((_recsImported == UnitOfWork.CONST_WASERROR) && (AppUnitOfWork.IsInErrorState()),
                                 $"Woo categories imported: {Environment.NewLine}{Environment.NewLine} Total Records imported: {currImportCounters.TotalImported} of {_WooProductCategories.Count} of which {_recsImported} have products." +
                                     $"{Environment.NewLine}{Environment.NewLine} Total Added: {currImportCounters.TotalAdded}. Total Updated: {currImportCounters.TotalUpdated}",
                                 WooSections.ProductCategories);
@@ -180,42 +180,40 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         }
         #endregion
         #region ImportAttributes
-        WooImportProductAttribute _wooImportProductAttributes { get; set; } = null;
-        WooImportProductAttribute CurrentWooImportProductAttributes
+        private WooImportProductAttribute localWooImportProductAttributes { get; set; } = null;
+        private WooImportProductAttribute currentWooImportProductAttributes
         {
             get
             {
-                if (_wooImportProductAttributes == null)
-                    _wooImportProductAttributes = new WooImportProductAttribute(appUnitOfWork, appLoggerManager, AppWooSettings);
-                return _wooImportProductAttributes;
+                if (localWooImportProductAttributes == null)
+                    localWooImportProductAttributes = new WooImportProductAttribute(AppUnitOfWork, AppLoggerManager, AppWooSettings);
+                return localWooImportProductAttributes;
             }
             set
             {
-                _wooImportProductAttributes = value;
+                localWooImportProductAttributes = value;
             }
         }
-        string ProductAttributeToString(ProductAttribute pPA, Guid pImportedId) => $"Product Attribute {pPA.name}, id: {pPA.id}, imported and Attribute Id is {pImportedId}";
+        static string ProductAttributeToString(ProductAttribute pPA, Guid pImportedId) => $"Product Attribute {pPA.name}, id: {pPA.id}, imported and Attribute Id is {pImportedId}";
         async Task<bool> ImportAttributeDataAsync(List<ProductAttribute> pWooProductAttributes)
         {
             // copy our current counter data to the counter used by the async tasks, we will get the data back later.
-            CurrentWooImportProductAttributes.CurrImportCounters = currImportCounters;
-            Guid _IdImported = Guid.Empty;
+            currentWooImportProductAttributes.CurrImportCounters = currImportCounters;
             // cycle through attributes and add to database if they do not exists
             foreach (var pa in pWooProductAttributes)
             {
-                ImportingThis = $"Importing Attribute ({CurrentWooImportProductAttributes.CurrImportCounters.TotalImported}/" +
-                    $"{CurrentWooImportProductAttributes.CurrImportCounters.MaxRecs}): {pa.name}";
+                ImportingThis = $"Importing Attribute ({currentWooImportProductAttributes.CurrImportCounters.TotalImported}/" +
+                    $"{currentWooImportProductAttributes.CurrImportCounters.MaxRecs}): {pa.name}";
                 // Import all Attributes since Woo does not signal if they are used we need to import all.
-                _IdImported = await CurrentWooImportProductAttributes.ImportAndMapWooEntityDataAsync(pa);
+                Guid _IdImported = await currentWooImportProductAttributes.ImportAndMapWooEntityDataAsync(pa);
                 if (_IdImported == Guid.Empty)
                 {
                     return false;
                 }
-                CurrentWooImportProductAttributes.CurrImportCounters.TotalImported++;
-                CurrentWooImportProductAttributes.CurrImportCounters.CalcAndSetPercentage(CurrentWooImportProductAttributes.CurrImportCounters.TotalImported);
-
+                currentWooImportProductAttributes.CurrImportCounters.TotalImported++;
+                currentWooImportProductAttributes.CurrImportCounters.CalcAndSetPercentage(currentWooImportProductAttributes.CurrImportCounters.TotalImported);
                 // need to copy data across
-                currImportCounters = CurrentWooImportProductAttributes.CurrImportCounters;
+                currImportCounters = currentWooImportProductAttributes.CurrImportCounters;
                 StateHasChanged();
                 await LogImport((int)pa.id, ProductAttributeToString(pa, _IdImported), WooSections.ProductAttributes);
             }
@@ -226,20 +224,20 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         {
             InitWooImport(ref IsAttribImportBusy, "Attributes: Checking Woo");
             await LogImport(0, "Import of Woo Attributes - Initialising", WooSections.ProductAttributes);
-            List<ProductAttribute> _wooProductAttributes = await CurrentWooImportProductAttributes.GetWooEntityDataAsync();
+            List<ProductAttribute> _wooProductAttributes = await currentWooImportProductAttributes.GetWooEntityDataAsync();
             if (_wooProductAttributes == null)
             {
-                appState.WooIsActive = false; // there was an error so save the status for the rest of the app.
+                AppState.WooIsActive = false; // there was an error so save the status for the rest of the app.
                 await componentPopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Woo Attributes retrieval error. Please checkWoo API settings. View log for details.");
                 await LogImport(null, "Import of Woo Attributes - Failed. No products retrieved. Please check Woo API settings. View log for details.", WooSections.ProductAttributes);
             }
             else
             {
-                appState.WooIsActive = true; // this means the query to Woo had success so WooMustBeActive.
+                AppState.WooIsActive = true; // this means the query to Woo had success so WooMustBeActive.
                 currImportCounters.MaxRecs = _wooProductAttributes.Count;
                 StateHasChanged();
                 // do the import
-                await SetAndLogStatusString((!await ImportAttributeDataAsync(_wooProductAttributes) && appUnitOfWork.IsInErrorState()),
+                await SetAndLogStatusString((!await ImportAttributeDataAsync(_wooProductAttributes) && AppUnitOfWork.IsInErrorState()),
                     $"Woo Attributes imported: {Environment.NewLine}{Environment.NewLine} Total Records imported: {currImportCounters.TotalImported} of {_wooProductAttributes.Count}." +
                         $"{Environment.NewLine}{Environment.NewLine} Total Added: {currImportCounters.TotalAdded}. Total Updated: {currImportCounters.TotalUpdated}",
                     WooSections.ProductAttributes);
@@ -248,30 +246,29 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         }
         #endregion
         #region Import Attribute Terms
-        WooImportProductAttributeTerm _wooImportProductAttributeTerms { get; set; } = null;
-        WooImportProductAttributeTerm CurrentWooImportProductAttributeTerms
+        private WooImportProductAttributeTerm localWooImportProductAttributeTerms { get; set; } = null;
+        WooImportProductAttributeTerm currentWooImportProductAttributeTerms
         {
             get
             {
-                if (_wooImportProductAttributeTerms == null)
-                    _wooImportProductAttributeTerms = new WooImportProductAttributeTerm(appUnitOfWork, appLoggerManager, AppWooSettings);
-                return _wooImportProductAttributeTerms;
+                if (localWooImportProductAttributeTerms == null)
+                    localWooImportProductAttributeTerms = new WooImportProductAttributeTerm(AppUnitOfWork, AppLoggerManager, AppWooSettings);
+                return localWooImportProductAttributeTerms;
             }
             set
             {
-                _wooImportProductAttributeTerms = value;
+                localWooImportProductAttributeTerms = value;
             }
         }
-        string ProductAttributeTermToString(ProductAttributeTerm sourcePAT, Guid sourceImportedId) => $"Product Attribute Term {sourcePAT.name}, id: {sourcePAT.id}, imported and Attribute Id is {sourceImportedId}";
+        static string ProductAttributeTermToString(ProductAttributeTerm sourcePAT, Guid sourceImportedId)
+            => $"Product Attribute Term {sourcePAT.name}, id: {sourcePAT.id}, imported and Attribute Id is {sourceImportedId}";
         // 1. Cycle through categories and add to database if they do not exists - storing a WooReultsDate so we can filter the results later - ?
         // 3. Log each AttributeTerm and what we do with t in the log and in the WooResults
         private async Task<bool> ImportAttributeTermDataAsync(ProductAttribute sourceWooProductAttribute)
         {
-            CurrentWooImportProductAttributeTerms.CurrImportCounters = currImportCounters;  // copy current values across to use later.
-
-            Guid _importedId = Guid.Empty;
+            currentWooImportProductAttributeTerms.CurrImportCounters = currImportCounters;  // copy current values across to use later.
             // cycle through categories and add to database if they do not exists
-            List<ProductAttributeTerm> _wooProductAttributeTerms = await CurrentWooImportProductAttributeTerms.GetWooEntityDataAsync((uint)sourceWooProductAttribute.id);
+            List<ProductAttributeTerm> _wooProductAttributeTerms = await currentWooImportProductAttributeTerms.GetWooEntityDataAsync((uint)sourceWooProductAttribute.id);
             if (_wooProductAttributeTerms == null)
             {
                 await LogImport(0, $"Attribute {(int)sourceWooProductAttribute.id}- has no attribute terms, so none imported", WooSections.ProductAttributeTerms);
@@ -279,7 +276,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             else
             {
                 ImportingThis = $"Importing Terms for Attribute ({currImportCounters.TotalImported}/{currImportCounters.MaxRecs}): {sourceWooProductAttribute.name} with {_wooProductAttributeTerms.Count} terms ";
-                Guid _varietysParentAttributeID = await CurrentWooImportProductAttributeTerms.GetWooMappedEntityIdByIdAsync((uint)sourceWooProductAttribute.id);   // VarietysParentAttributeID(sourceWooProductAttribute.id)
+                Guid _varietysParentAttributeID = await currentWooImportProductAttributeTerms.GetWooMappedEntityIdByIdAsync((uint)sourceWooProductAttribute.id);   // VarietysParentAttributeID(sourceWooProductAttribute.id)
                 if (_varietysParentAttributeID == Guid.Empty)
                     await LogImport(0, $"Product Attribute of it {(int)sourceWooProductAttribute.id} appears not to have been imported, so cannot import terms. Please import or check log.", WooSections.ProductAttributeTerms);
                 else
@@ -288,14 +285,14 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                     foreach (var PAT in _wooProductAttributeTerms)
                     {
                         // Import all Attribute Terms since Woo does not signal if they are used we need to import all.
-                        _importedId = await CurrentWooImportProductAttributeTerms.ImportAndMapWooEntityDataAsync(PAT, _varietysParentAttributeID);
+                        Guid _importedId = await currentWooImportProductAttributeTerms.ImportAndMapWooEntityDataAsync(PAT, _varietysParentAttributeID);
                         if (_importedId == Guid.Empty)
                             return false;
                         await LogImport((int)PAT.id, ProductAttributeTermToString(PAT, _importedId), WooSections.ProductAttributeTerms);
                         _TermsDone++;
-                        CurrentWooImportProductAttributeTerms.CurrImportCounters.CalcAndSetPercentage(CurrentWooImportProductAttributeTerms.CurrImportCounters.TotalImported + (_TermsDone / (double)_wooProductAttributeTerms.Count));
-                        currImportCounters = CurrentWooImportProductAttributeTerms.CurrImportCounters;
-                        //currImportCounters.PercentOfRecsImported = currImportCounters.CalcPercentage(currImportCounters.TotalImported); // + (_TermsDone / (double)_wooProductAttributeTerms.Count));
+                        currentWooImportProductAttributeTerms.CurrImportCounters.CalcAndSetPercentage(currentWooImportProductAttributeTerms.CurrImportCounters.TotalImported + (_TermsDone / (double)_wooProductAttributeTerms.Count));
+                        currImportCounters = currentWooImportProductAttributeTerms.CurrImportCounters;
+                        //CurrImportCounters.PercentOfRecsImported = CurrImportCounters.CalcPercentage(CurrImportCounters.TotalImported); // + (_TermsDone / (double)_wooProductAttributeTerms.Count));
                         StateHasChanged();
                     }
                 }
@@ -307,16 +304,16 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             InitWooImport(ref IsAttribTermImportBusy, "Attribute Terms: checking Woo");
             await LogImport(0, "Import of Woo Attribute Terms - Initialising", WooSections.ProductAttributeTerms);
             /// Logic a little different here, since we have to get all the imported attributes, then find all its terms, and then import those terms into the attribute values (terms)
-            List<ProductAttribute> _wooProductAttributes = await CurrentWooImportProductAttributes.GetWooEntityDataAsync();
+            List<ProductAttribute> _wooProductAttributes = await currentWooImportProductAttributes.GetWooEntityDataAsync();
             if (_wooProductAttributes == null)
             {
-                appState.WooIsActive = false; // there was an error so save the status for the rest of the app.
+                AppState.WooIsActive = false; // there was an error so save the status for the rest of the app.
                 await componentPopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Woo Attribute retrieval error. To retrieve the terms we need the Attributes. Please check Woo API settings. View log for details.");
                 await LogImport(0, "Import of Woo Attribute Terms - Failed. No products retrieved. Please check Woo API settings. View log for details.", WooSections.ProductAttributeTerms);
             }
             else
             {
-                appState.WooIsActive = true; // this means the query to Woo had success so WooMustBeActive.
+                AppState.WooIsActive = true; // this means the query to Woo had success so WooMustBeActive.
                 currImportCounters.MaxRecs = _wooProductAttributes.Count;
                 foreach (ProductAttribute pa in _wooProductAttributes)
                 {
@@ -324,10 +321,10 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                     if (!await ImportAttributeTermDataAsync(pa))
                         break;
                     currImportCounters.TotalImported++;
-                    //currImportCounters.PercentOfRecsImported = currImportCounters.CalcPercentage(currImportCounters.TotalImported);
+                    //CurrImportCounters.PercentOfRecsImported = CurrImportCounters.CalcPercentage(CurrImportCounters.TotalImported);
                     StateHasChanged();
                 }
-                await SetAndLogStatusString((appUnitOfWork.IsInErrorState()),
+                await SetAndLogStatusString((AppUnitOfWork.IsInErrorState()),
                     $"Woo Attributes imported: {Environment.NewLine}{Environment.NewLine} Total Attributes imported: {currImportCounters.TotalImported} of {_wooProductAttributes.Count}." +
                         $"{Environment.NewLine}{Environment.NewLine} Total Terms Added: {currImportCounters.TotalAdded}. Total Terms Updated: {currImportCounters.TotalUpdated}",
                     WooSections.ProductAttributeTerms);
@@ -343,23 +340,23 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         /// Once finished we need to map an Items parents.We do this by cycling through the list of items that have parents, then we find the item and parent’s GUID and take match them.
         /// </summary>
 
-        WooImportProduct _CurrentWooImportProducts { get; set; } = null;
-        protected WooImportProduct CurrentWooImportProducts
+        private WooImportProduct localWooImportProducts { get; set; } = null;
+        private WooImportProduct currentWooImportProducts
         {
             get
             {
-                if (_CurrentWooImportProducts == null)
-                    _CurrentWooImportProducts = new WooImportProduct(appUnitOfWork,appLoggerManager,AppWooSettings, appMapper);
-                return _CurrentWooImportProducts;
+                if (localWooImportProducts == null)
+                    localWooImportProducts = new WooImportProduct(AppUnitOfWork, AppLoggerManager, AppWooSettings, AppMapper);
+                return localWooImportProducts;
             }
-            set 
-                { _CurrentWooImportProducts = value; }
+            set
+            { localWooImportProducts = value; }
         }
-        string ProductToString(Product currWooProd, Guid importedId) 
-            =>  $"Product {currWooProd.name}, id: {currWooProd.id}, imported and Item Id is {importedId}";
+        static string ProductToString(Product currWooProd, Guid importedId)
+            => $"Product {currWooProd.name}, id: {currWooProd.id}, imported and Item Id is {importedId}";
         async Task<int> ImportProductDataAsync(List<Product> _wooProducts)
         {
-            CurrentWooImportProducts.CurrImportCounters = currImportCounters;  // copy current values across to use later.
+            currentWooImportProducts.CurrImportCounters = currImportCounters;  // copy current values across to use later.
 
             Guid _importedId;
             foreach (var wooProd in _wooProducts)
@@ -367,31 +364,31 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                 ImportingThis = $"Importing Product ({currImportCounters.TotalImported}/{currImportCounters.MaxRecs}): {wooProd.name} woo id: {wooProd.id}";
                 await LogImport((int)wooProd.id, ImportingThis, WooSections.Products);
                 // set the values as per
-                _importedId = await CurrentWooImportProducts.ImportAndMapWooEntityDataAsync(wooProd);
+                _importedId = await currentWooImportProducts.ImportAndMapWooEntityDataAsync(wooProd);
                 // abort if there was an error - Or should we log and restart? need to restart DbContext somehow
-                if (appUnitOfWork.IsInErrorState())
+                if (AppUnitOfWork.IsInErrorState())
                 {
                     await LogImport((int)wooProd.id, $"Error occurred importing {wooProd.name}", WooSections.Products);
                     return UnitOfWork.CONST_WASERROR;
                 }
                 await LogImport((int)wooProd.id, ProductToString(wooProd, _importedId), WooSections.Products);
-                CurrentWooImportProducts.CurrImportCounters.TotalImported++;
-                CurrentWooImportProducts.CurrImportCounters.CalcAndSetPercentage(currImportCounters.TotalImported);
-                currImportCounters = CurrentWooImportProducts.CurrImportCounters;  // copy current values across to use later.
+                currentWooImportProducts.CurrImportCounters.TotalImported++;
+                currentWooImportProducts.CurrImportCounters.CalcAndSetPercentage(currImportCounters.TotalImported);
+                currImportCounters = currentWooImportProducts.CurrImportCounters;  // copy current values across to use later.
                 StateHasChanged();
             }
             // Now we loop through all the Attributes that have parents and find them
-            foreach (var ProductWithAParent in CurrentWooImportProducts.EntityWithParents)
+            foreach (var ProductWithAParent in currentWooImportProducts.EntityWithParents)
             {
-                bool _isDone = await CurrentWooImportProducts.FindAndSetParentEntityAsync(ProductWithAParent);
+                bool _isDone = await currentWooImportProducts.FindAndSetParentEntityAsync(ProductWithAParent);
 
                 await LogImport((int)ProductWithAParent.ChildId,
                     $"Setting of Parent of Child Item id: {ProductWithAParent.ChildId} to Parent Id {ProductWithAParent.ParentId} " +
                     $"status: {_isDone}", WooSections.ProductCategories);
-                if (appUnitOfWork.IsInErrorState())   // was there an error that was database related?
+                if (AppUnitOfWork.IsInErrorState())   // was there an error that was database related?
                     return UnitOfWork.CONST_WASERROR;
             }
-            return CurrentWooImportProducts.CurrImportCounters.TotalImported;
+            return currentWooImportProducts.CurrImportCounters.TotalImported;
         }
         public async Task ImportItems_Click()
         {
@@ -400,7 +397,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
             InitWooImport(ref IsItemImportBusy, $"Items: checking Woo, and loading all {_OnlyInstock} products of type published and private (may take a while to load)");
             await LogImport(0, "Import of Woo Products - Initialising", WooSections.Products);
             // cycle through products and add to database if they do not exists - only do in stock items if that is what is selected            
-            List<Product> _wooProducts = await CurrentWooImportProducts.GetWooEntityDataAsync(AppWooSettings.OnlyInStockItemsImported);
+            List<Product> _wooProducts = await currentWooImportProducts.GetWooEntityDataAsync(AppWooSettings.OnlyInStockItemsImported);
             if (_wooProducts == null)
             {
                 await componentPopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Woo Item retrieval error. To retrieve the terms we need the Items. Please check Woo API settings. View log for details.");
@@ -413,7 +410,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
                 currImportCounters.MaxRecs = _wooProducts.Count;
                 StateHasChanged();
                 int _recsImported = await ImportProductDataAsync(_wooProducts);
-                await SetAndLogStatusString((_recsImported == UnitOfWork.CONST_WASERROR) && (appUnitOfWork.IsInErrorState()),
+                await SetAndLogStatusString((_recsImported == UnitOfWork.CONST_WASERROR) && (AppUnitOfWork.IsInErrorState()),
                     $"Woo Products imported: {Environment.NewLine}{Environment.NewLine} Total Records imported: {currImportCounters.TotalImported} of {_wooProducts.Count}." +
                         $"{Environment.NewLine}{Environment.NewLine} Total Added: {currImportCounters.TotalAdded}. Total Updated: {currImportCounters.TotalUpdated}",
                     WooSections.Products);
@@ -423,7 +420,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         #endregion
         public void NavigateToLog()
         {
-            appUriHelper.NavigateTo("ViewWooSyncLog");
+            ApUriHelper.NavigateTo("ViewWooSyncLog");
         }
     }
 

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 
 namespace RainbowOF.Models.System
 {
@@ -11,7 +9,7 @@ namespace RainbowOF.Models.System
         public DateTime CountDate { get; set; }
         public int TotalCount { get; set; }
         public string Comments { get; set; }
-        [Timestamp] 
+        [Timestamp]
         public byte[] RowVersion { get; set; }
 
     }

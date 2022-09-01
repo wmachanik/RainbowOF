@@ -1,24 +1,19 @@
 ﻿using AutoMapper;
 using RainbowOF.Models.Items;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using WooCommerceNET.WooCommerce.v3;
 
 namespace RainbowOF.Integration.Repositories.Classes
 {
     public class IntegrationMappingProfile : Profile
     {
-        public const string CONST_WooItemInStock = "instock";
-        public const string CONST_WooItemOutOfStock = "outofstock";
-        public string Truncate(string sourceString, int targetLength)
-        {
-            return (sourceString.Length > targetLength) ?
-                sourceString.Substring(0, targetLength) :
+        public const string CONST_WOOITEMINSTOCK = "instock";
+        public const string CONST_WOOITEMOUTOFSTOCK = "outofstock";
+        public static string Truncate(string sourceString, int targetLength)
+            => (sourceString.Length > targetLength) ?
+                sourceString[..targetLength] :
                 sourceString;
-        }
+
         public static string MakeAbbriviation(string originalName)
         {
             string _newName = string.Empty;
@@ -41,50 +36,38 @@ namespace RainbowOF.Integration.Repositories.Classes
         /// </summary>
         /// <param name="sourceWooProductType">the string to convert from</param>
         /// <returns>ItemType</returns>
-        public ItemTypes MapWooTypeToItemType(string sourceWooProductType)
+        public static ItemTypes MapWooTypeToItemType(string sourceWooProductType)
         {
-            switch (sourceWooProductType)
+            return (sourceWooProductType) switch
             {
-                case "grouped":
-                    return ItemTypes.Collection;
-                case "external":
-                    return ItemTypes.URL;
-                case "variable":
-                    return ItemTypes.Variable;
-                case "virtual":
-                    return ItemTypes.VirtualItem;
-                case "simple":
-                    return ItemTypes.Simple;
-
-                default:    // there are lots of others depending on the plugins
-                    return ItemTypes.Other;
-            }
+                "grouped" => ItemTypes.Collection,
+                "external" => ItemTypes.URL,
+                "variable" => ItemTypes.Variable,
+                "virtual" => ItemTypes.VirtualItem,
+                "simple" => ItemTypes.Simple,
+                _ => ItemTypes.Other, // there are lots of others depending on the plugins
+            };
         }
-        public string MapItemTypeToWooType(ItemTypes sourceItemType)
+        public static string MapItemTypeToWooType(ItemTypes sourceItemType)
         {
-            switch (sourceItemType)
+            return (sourceItemType) switch
             {
-                case ItemTypes.Collection:
-                    return "grouped";
-                case ItemTypes.URL:
-                    return "external";
-                case ItemTypes.Variable:
-                    return "variable";
-                case ItemTypes.Simple:
-                    return "simple";
-                default:    // all others are simple
-                    return "other";
-            }
+                ItemTypes.Collection => "grouped",
+                ItemTypes.URL => "external",
+                ItemTypes.Variable => "variable",
+                ItemTypes.Simple => "simple",
+                _ => "other", // all others are simple
+            };
         }
         static bool MapObjectToBool(object sourceObject)
-            => (sourceObject.GetType() == typeof(bool)) ? (bool)sourceObject : false;
+            => (sourceObject.GetType() == typeof(bool)) && (bool)sourceObject;
 
         public IntegrationMappingProfile()
         {
             CreateMap<Product, Item>()
                 .ForMember(dest => dest.ItemName, act => act.MapFrom(src => Truncate(src.name, 100)))
                 .ForMember(dest => dest.SKU, act => act.MapFrom(src => Truncate(src.sku, 50)))
-                .ForMember(dest => dest.IsEnabled, act => act.MapFrom(src => (src.stock_status != CONST_WooItemOutOfStock)))
+                .ForMember(dest => dest.IsEnabled, act => act.MapFrom(src => (src.stock_status != CONST_WOOITEMOUTOFSTOCK)))
                 .ForMember(dest => dest.ItemDetail, act => act.MapFrom(src => Truncate(src.short_description, 500)))
                 .ForMember(dest => dest.ItemAbbreviatedName, act => act.MapFrom(src => MakeAbbriviation(src.name)))
                 .ForMember(dest => dest.SortOrder, act => act.MapFrom(src => Convert.ToInt32(src.menu_order ?? 0)))
@@ -96,7 +79,7 @@ namespace RainbowOF.Integration.Repositories.Classes
             CreateMap<Item, Product>()
                 .ForMember(dest => dest.name, act => act.MapFrom(src => String.IsNullOrEmpty(src.ItemName) ? "N/A" : src.ItemName))
                 .ForMember(dest => dest.sku, act => act.MapFrom(src => src.SKU))
-                .ForMember(dest => dest.stock_status, act => act.MapFrom(src => src.IsEnabled ? CONST_WooItemInStock : CONST_WooItemOutOfStock))
+                .ForMember(dest => dest.stock_status, act => act.MapFrom(src => src.IsEnabled ? CONST_WOOITEMINSTOCK : CONST_WOOITEMOUTOFSTOCK))
                 .ForMember(dest => dest.short_description, act => act.MapFrom(src => src.ItemDetail))
                 .ForMember(dest => dest.menu_order, act => act.MapFrom(src => src.SortOrder))
                 .ForMember(dest => dest.price, act => act.MapFrom(src => src.BasePrice))
@@ -111,9 +94,9 @@ namespace RainbowOF.Integration.Repositories.Classes
                                    act.MapFrom(src => String.IsNullOrEmpty(src.description) ? "N/A" : Truncate(StripHTML(src.description), 100)))
                 .ForMember(dest => dest.SKU, act =>
                                    act.MapFrom(src => String.IsNullOrEmpty(src.sku) ? "NoSKU" : Truncate(src.sku, 50)))
-                .ForMember(dest => dest.ItemVariantAbbreviation, act => 
+                .ForMember(dest => dest.ItemVariantAbbreviation, act =>
                                    act.MapFrom(src => String.IsNullOrEmpty(src.sku) ? "ChangeMe" : MakeAbbriviation(src.sku)))
-                .ForMember(dest => dest.IsEnabled, act => act.MapFrom(src => (src.stock_status != CONST_WooItemOutOfStock)))
+                .ForMember(dest => dest.IsEnabled, act => act.MapFrom(src => (src.stock_status != CONST_WOOITEMOUTOFSTOCK)))
                 .ForMember(dest => dest.SortOrder, act => act.MapFrom(src => Convert.ToInt32(src.menu_order)))
                 .ForMember(dest => dest.BasePrice, act => act.MapFrom(src => Convert.ToDecimal(src.price == null ? 0.0 : src.price)))
                 .ForMember(dest => dest.ManageStock, act => act.MapFrom(src => (MapObjectToBool(src.manage_stock))))   //-> can be a string with the value "parent"
@@ -123,7 +106,7 @@ namespace RainbowOF.Integration.Repositories.Classes
             CreateMap<ItemVariant, Variation>()
                 .ForMember(dest => dest.description, act => act.MapFrom(src => src.ItemVariantName))
                 .ForMember(dest => dest.sku, act => act.MapFrom(src => src.SKU))
-                .ForMember(dest => dest.stock_status, act => act.MapFrom(src => src.IsEnabled ? CONST_WooItemInStock : CONST_WooItemOutOfStock))
+                .ForMember(dest => dest.stock_status, act => act.MapFrom(src => src.IsEnabled ? CONST_WOOITEMINSTOCK : CONST_WOOITEMOUTOFSTOCK))
                 .ForMember(dest => dest.menu_order, act => act.MapFrom(src => src.SortOrder))
                 .ForMember(dest => dest.price, act => act.MapFrom(src => src.BasePrice))
                 .ForMember(dest => dest.manage_stock, act => act.MapFrom(src => src.ManageStock))

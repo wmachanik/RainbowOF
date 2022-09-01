@@ -1,9 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RainbowOF.Models.Lookups;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace RainbowOF.Data.SQL.EntityConfigs.Lookups
 {
@@ -18,7 +15,7 @@ namespace RainbowOF.Data.SQL.EntityConfigs.Lookups
                 .OnDelete(DeleteBehavior.NoAction);
             //ItemCategoryLookupModelBuilder.Property(nameof(ItemCategoryLookup.FullCategoryName))
             //    .HasComputedColumnSql("");
-                //ItemCategoryLookupModelBuilder.HasMany
+            //ItemCategoryLookupModelBuilder.HasMany
             //    .HasMany(icl => icl.ChildItemCategories)
             //    .WithOne(icp => icp.ParentCategoryId)
             //    .OnDelete(DeleteBehavior.ClientCascade);

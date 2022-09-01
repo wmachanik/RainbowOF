@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using RainbowOF.Models.Items;
-using RainbowOF.Models.Lookups;
-using RainbowOF.Models.Woo;
-using RainbowOF.ViewModels.Common;
+﻿using RainbowOF.Models.Items;
 
 namespace RainbowOF.ViewModels.Items
 
@@ -17,5 +11,6 @@ namespace RainbowOF.ViewModels.Items
         {
             get { return (CanUpdateECommerceMap != null); }
         }
+        /// public Item SourceItem { get; set; } rather inherit other wise have issues with grid
     }
 }

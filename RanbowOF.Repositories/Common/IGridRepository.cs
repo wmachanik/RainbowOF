@@ -1,9 +1,6 @@
 ﻿using RainbowOF.ViewModels.Common;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Common
@@ -11,7 +8,7 @@ namespace RainbowOF.Repositories.Common
     public interface IGridRepository<TEntity> where TEntity : class
     {
         #region Common variables
-        public GridSettings gridSettings { get; set; }
+        GridSettings CurrGridSettings { get; set; }
         #endregion
         #region Recommended Over writable Grid Classes
         TEntity NewViewEntityDefaultSetter(TEntity newEntity, Guid Parent); //-> needs to be implemented at a grid class level.
@@ -23,7 +20,7 @@ namespace RainbowOF.Repositories.Common
         Task<TEntity> GetEntityByIdAsync(object Id);
         Task<TEntity> FindFirstByAsync(Expression<Func<TEntity, bool>> predicate);
         Task<TEntity> InsertViewRowAsync(TEntity newEntity, string newEntityDescription);
-        Task<int> DeleteViewRowByIdAsync(object Id, string deletedEntityDescription);
+        Task<int> DeleteViewRowByEntityAsync(TEntity sourceEntity, string deletedEntityDescription);
         Task<int> UpdateViewRowAsync(TEntity updatedEntity, string updatedEnityDescription);
         #endregion
 

@@ -1,6 +1,5 @@
 ﻿using LinqKit;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
 using RainbowOF.Data.SQL;
 using RainbowOF.Models.Items;
 using RainbowOF.Models.Lookups;
@@ -9,32 +8,30 @@ using RainbowOF.Tools;
 using RainbowOF.ViewModels.Common;
 using System;
 using System.Collections.Generic;
+//using System.Data.Entity;  --> conflicting with EntityFrameworkCore
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Items
 {
     public class ItemRepository : Repository<Item>, IItemRepository
     {
-        #region Injected Items
-        #endregion
-
         #region Initialisation
-        public ItemRepository(ApplicationDbContext dbContext, ILoggerManager logger, IUnitOfWork appUnitOfWork) : base(dbContext, logger, appUnitOfWork)
+        ///------> busy converting all these to us factory injection
+        public ItemRepository(IDbContextFactory<ApplicationDbContext> appDbContext, ILoggerManager logger, IUnitOfWork AppUnitOfWork) : base(appDbContext, logger, AppUnitOfWork)
         {
             if (logger.IsDebugEnabled()) logger.LogDebug("ItemRepository initialised.");
         }
         #endregion
 
         #region DataGrid Handling
-        List<OrderByParameter<Item>> GetOrderByExpressions(List<SortParam> currentSortParams)
+        static List<OrderByParameter<Item>> GetOrderByExpressions(List<SortParam> currentSortParams)
         {
             if (currentSortParams == null)
                 return null;
 
-            List<OrderByParameter<Item>> _orderByExpressions = new List<OrderByParameter<Item>>();
+            List<OrderByParameter<Item>> _orderByExpressions = new();
             foreach (var col in currentSortParams)
             {
                 switch (col.FieldName)
@@ -74,7 +71,7 @@ namespace RainbowOF.Repositories.Items
             return _orderByExpressions;
         }
 
-        private List<Expression<Func<Item, bool>>> GetFilterByExpressions(List<FilterParam> currentFilterParams)
+        static private List<Expression<Func<Item, bool>>> GetFilterByExpressions(List<FilterParam> currentFilterParams)
         {
             if (currentFilterParams == null)
                 return null;
@@ -93,7 +90,7 @@ namespace RainbowOF.Repositories.Items
                         break;
 
                     case nameof(Item.IsEnabled):
-                        bool _IsTrue = ((col.FilterBy.Contains("y", StringComparison.OrdinalIgnoreCase)) || (col.FilterBy.Contains("enable", StringComparison.OrdinalIgnoreCase)));      // assume yes and no / enable or disable
+                        bool _IsTrue = ((col.FilterBy.Contains('y', StringComparison.OrdinalIgnoreCase)) || (col.FilterBy.Contains("enable", StringComparison.OrdinalIgnoreCase)));      // assume yes and no / enable or disable
                         _filterByExpressions.Add(icl => (icl.IsEnabled == _IsTrue));
                         break;
 
@@ -122,28 +119,26 @@ namespace RainbowOF.Repositories.Items
         public async Task<DataGridItems<Item>> GetPagedDataEagerWithFilterAndOrderByAsync(DataGridParameters currentDataGridParameters) // (int startPage, int currentPageSize)
         {
             DataGridItems<Item> _dataGridData = null;
-            DbSet<Item> _table = appContext.Set<Item>();
-
+            string statusString = $"Getting all records with eager loading of Item order by an filter Data Grid Parameters: {currentDataGridParameters}";
+            if (!CanDoDbAsyncCall(statusString))
+                return null;
             try
             {
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Getting all records with eager loading of Item order by an filter Data Grid Parameters: {currentDataGridParameters.ToString()}");
-                if (appUnitOfWork.DBTransactionIsStillRunning())
-                    if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("Second transaction started before current transaction completed!");
+                using var context = await AppDbContext.CreateDbContextAsync();
+                DbSet<Item> _table = context.Set<Item>();
                 // get a list of Order bys and filters
                 List<OrderByParameter<Item>> _orderByExpressions = GetOrderByExpressions(currentDataGridParameters.SortParams);
                 List<Expression<Func<Item, bool>>> _filterByExpressions = GetFilterByExpressions(currentDataGridParameters.FilterParams);
                 // start with a basic Linq Query with Eager loading
                 // do eager loading since we are working with paging, so load parent, replacement, categories, attributes and attribute varieties
                 IQueryable<Item> _query = _table
-                    //                    .Include(itm => itm.ParentItem)  --> variant
                     .Include(itm => itm.ReplacementItem)
                     .Include(itm => itm.ItemCategories)
                         .ThenInclude(cats => cats.ItemCategoryDetail)
                     .Include(itm => itm.ItemAttributes)
                         .ThenInclude(itmAtts => itmAtts.ItemAttributeVarieties)
                         .ThenInclude(itmAttVars => itmAttVars.ItemAttributeVarietyDetail)
-                    .
-                    Include(itm => itm.ItemAttributes)
+                    .Include(itm => itm.ItemAttributes)
                         .ThenInclude(itmAtts => itmAtts.ItemAttributeDetail)
                     .Include(itm => itm.ItemImages);
                 //now add the order by expressions
@@ -187,20 +182,25 @@ namespace RainbowOF.Repositories.Items
                 }
 
                 //now we can add the page stuff - first get the count to return
-                _dataGridData = new DataGridItems<Item>();
-                _dataGridData.TotalRecordCount = _query.Count();
+                _dataGridData = new()
+                {
+                    TotalRecordCount = _query.Count()
+                };
                 _query = _query
                    .Skip((currentDataGridParameters.CurrentPage - 1) * currentDataGridParameters.PageSize)
                    .Take(currentDataGridParameters.PageSize);   // take 3 pages at least.
-                // and execute
                 _dataGridData.Entities = await _query.ToListAsync();
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all records from ItemRepository: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all records from ItemRepository: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
+            }
+            finally
+            {
+                DbCallDone(statusString);
             }
             return _dataGridData;
         }
@@ -209,68 +209,75 @@ namespace RainbowOF.Repositories.Items
         public async Task<Item> FindFirstEagerLoadingItemAsync(Expression<Func<Item, bool>> predicate)
         {
             Item _item = null;
-            DbSet<Item> _table = appContext.Set<Item>();
-            appUnitOfWork.ClearErrorMessage(); //-- clear any error message
-
+            // AppUnitOfWork.AppDbContext.ChangeTracker.LazyLoadingEnabled = true;
+            string statusString = $"Finding first eager loading - whole item using predicate: {predicate}";
+            if (!CanDoDbAsyncCall(statusString))
+                return null;
             try
             {
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Finding first eager loading - whole item using predicate: {predicate.ToString()}");
-
-                // _item = appContext.Items.Single(predicate);
-
-                var _query = _table
-                    .Include(itm => itm.ReplacementItem)
-                    .Include(itm => itm.ItemCategories)
-                        .ThenInclude(itmCat => itmCat.ItemCategoryDetail)
-                    .Include(itm => itm.ItemCategories)
-                        .ThenInclude(itmCat => itmCat.ItemUoMBase)
-                    .Include(itm => itm.ItemAttributes)
-                        .ThenInclude(itmAtts => itmAtts.ItemAttributeDetail).AsNoTracking()
+                using var context = await AppDbContext.CreateDbContextAsync();
+                DbSet<Item> _table = context.Set<Item>();
+                var _query = _table.AsNoTracking()
+                    .Include(itm => itm.ReplacementItem).AsNoTracking()
+                    //.Include(itm => itm.ItemCategories)
+                    //    .ThenInclude(itmCat => itmCat.ItemCategoryDetail).AsNoTracking()
+                    //.Include(itm => itm.ItemCategories)
+                    //    .ThenInclude(itmCat => itmCat.ItemUoMBase).AsNoTracking()
                     //.Include(itm => itm.ItemAttributes)
-                       //.ThenInclude(itmAtts => itmAtts.ItemAttributeVarieties)
-                       //     .ThenInclude(itmAttVars => itmAttVars.ItemAttributeVarietyDetail).AsNoTracking()
+                    //    //.ThenInclude(itmAtts => itmAtts.ItemAttributeDetail).AsNoTracking()
+                    //.Include(itm => itm.ItemAttributes)
+                    //.ThenInclude(itmAtts => itmAtts.ItemAttributeVarieties)
+                    //     .ThenInclude(itmAttVars => itmAttVars.ItemAttributeVarietyDetail).AsNoTracking()
                     //.ThenInclude(iavd => iavd.UoM) => crashes here and cannot figure out why
-                    .Include(itm => itm.ItemImages);
+                    .Include(itm => itm.ItemImages).AsNoTracking();
 
-                var _sql = _query.ToQueryString();
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"SQL Query is: {_sql}");
+                if (AppLoggerManager.IsDebugEnabled())
+                {
+                    var _sql = _query.ToQueryString();
+                    AppLoggerManager.LogDebug($"SQL Query is: {_sql}");
+                }
 
                 _item = await _query.FirstOrDefaultAsync(predicate);
 
-                // load VarietyDetail UoM manually as then include crashes
-                if (_item != null)  /// do some ordering 
-                {
-                    _item.ItemCategories = _item.ItemCategories.OrderBy(itemCat => itemCat.ItemCategoryDetail.FullCategoryName).ToList();
-                    //IAppRepository<ItemAttributeVariety> _itemAttributeVarietyRepository = appUnitOfWork.Repository<ItemAttributeVariety>();
-                    //IRepository<ItemUoMLookup> _ItemUoMLookupRepository = appUnitOfWork.Repository<ItemUoMLookup>();
-                    //foreach (var itemAtt in _item.ItemAttributes)
-                    //{
-                    //    ////.Include(itm => itm.ItemAttributes)
-                    //    ////    .ThenInclude(itmAtts => itmAtts.ItemAttributeVarieties)
-                    //    ////        .ThenInclude(itmAttVars => itmAttVars.ItemAttributeVarietyDetail)
-                    //    //if (itemAtt.ItemAttributeId != Guid.Empty)
-                    //    //{
-                    //    //    itemAtt.ItemAttributeVarieties = (await _itemAttributeVarietyRepository.GetByAsync(iav => iav.ItemAttributeId == itemAtt.ItemAttributeId)).ToList();
-                    //    //}
-                    //    foreach (var itemAttVar in itemAtt.ItemAttributeVarieties)
-                    //    {
-                    //        //.ThenInclude(iavd => iavd.UoM) => crashes here and cannot figure out why
-                    //        if (itemAttVar.ItemAttributeVarietyDetail.UoMId != null)
-                    //        {
-                    //            itemAttVar.ItemAttributeVarietyDetail.UoM = await _ItemUoMLookupRepository.GetByIdAsync(itemAttVar.ItemAttributeVarietyDetail.UoMId);
-                    //        }
-                    //    }
+                //// load VarietyDetail UoM manually as then include crashes
+                //if (_item != null)  /// do some ordering 
+                //{
+                //    _item.ItemCategories = _item.ItemCategories.OrderBy(itemCat => itemCat.ItemCategoryDetail.FullCategoryName).ToList();
+                //    //IAppRepository<ItemAttributeVariety> _itemAttributeVarietyRepository = AppUnitOfWork.Repository<ItemAttributeVariety>();
+                //    //IRepository<ItemUoMLookup> _ItemUoMLookupRepository = AppUnitOfWork.Repository<ItemUoMLookup>();
+                //    //foreach (var itemAtt in _item.ItemAttributes)
+                //    //{
+                //    //    ////.Include(itm => itm.ItemAttributes)
+                //    //    ////    .ThenInclude(itmAtts => itmAtts.ItemAttributeVarieties)
+                //    //    ////        .ThenInclude(itmAttVars => itmAttVars.ItemAttributeVarietyDetail)
+                //    //    //if (itemAtt.ItemAttributeId != Guid.Empty)
+                //    //    //{
+                //    //    //    itemAtt.ItemAttributeVarieties = (await _itemAttributeVarietyRepository.GetByAsync(iav => iav.ItemAttributeId == itemAtt.ItemAttributeId)).ToList();
+                //    //    //}
+                //    //    foreach (var itemAttVar in itemAtt.ItemAttributeVarieties)
+                //    //    {
+                //    //        //.ThenInclude(iavd => iavd.UoM) => crashes here and cannot figure out why
+                //    //        if (itemAttVar.ItemAttributeVarietyDetail.UoMId != null)
+                //    //        {
+                //    //            itemAttVar.ItemAttributeVarietyDetail.UoM = await _ItemUoMLookupRepository.GetByIdAsync(itemAttVar.ItemAttributeVarietyDetail.UoMId);
+                //    //        }
+                //    //    }
 
-                    //}
-                }
+                //    //}
+                //}
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Finding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Finding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
+            finally
+            {
+                DbCallDone(statusString);
+            }
+
             return _item;
         }
 
@@ -285,7 +292,7 @@ namespace RainbowOF.Repositories.Items
             {
                 if (await FindFirstItemBySKUAsync(newItem.SKU) != null)
                 {
-                    appUnitOfWork.LogAndSetErrorMessage($"ERROR adding Item:  {newItem.ToString()} - duplicate SKU found in database");
+                    AppUnitOfWork.LogAndSetErrorMessage($"ERROR adding Item:  {newItem} - duplicate SKU found in database");
                     return null;
                 }
             }
@@ -296,14 +303,14 @@ namespace RainbowOF.Repositories.Items
         {
             try
             {
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Detach item using id: {sourceItemId}");
+                if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"Detach item using id: {sourceItemId}");
                 var tempItem = await GetByIdAsync(sourceItemId);
-                AppDbContext.Entry(tempItem).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+                //AppDbContext.Entry(tempItem).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
                 return true;
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Detaching Item by Id: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Detaching Item by Id: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -320,14 +327,17 @@ namespace RainbowOF.Repositories.Items
         /// <returns></returns>
         public List<Item> GetSimilarItems(Guid sourceItemId, Guid? sourceItemPrimaryCategoryId)
         {
-            List<Item> similarItems = null;
-            DbSet<Item> table = appContext.Set<Item>();
-            appUnitOfWork.ClearErrorMessage(); //-- clear any error message
+            List<Item> _similarItems = null;
+            // if you change this change the async routine too, not sure how to do both in one routine
+            string statusString = $"Get Similar Items By Primary Category Id: {sourceItemPrimaryCategoryId}";
+            if (!CanDoDbAsyncCall(statusString))
+                return null;
             try
             {
-                // if you change this change the async routine too, not sure how to do both in one routine
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get Similar Items By Prmary Category Id: {sourceItemPrimaryCategoryId.ToString()}");
-                var query = table
+                using var context = AppDbContext.CreateDbContext();
+                DbSet<Item> _table = context.Set<Item>();
+
+                var _query = _table
                        .Where(itm =>
                               (itm.ItemId != sourceItemId)
                            && (itm.PrimaryItemCategoryLookupId == (sourceItemPrimaryCategoryId ?? null))
@@ -336,53 +346,58 @@ namespace RainbowOF.Repositories.Items
                        .OrderBy(itm => itm.SortOrder)
                        .ThenBy(itm => itm.ItemName);
 
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"SQL Query is: {query.ToQueryString()}");
-                similarItems= query.ToList(); 
+                if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"SQL Query is: {_query.ToQueryString()}");
+                _similarItems = _query.ToList();
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting Eager Item Category By Item Id: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting Eager Item Category By Item Id: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            return similarItems;
+            finally
+            {
+                DbCallDone(statusString);
+            }
+            return _similarItems;
         }
 
-/// workings around selecting all items based on category or parent category
-/// 
-//var getItemCategoryQuery = table.Select(i => i.ItemCategories.Where(ic => ic.ItemCategoryLookupId == sourceItemPrimaryCategoryId)).FirstOrDefault();
-//IQueryable<Item> query = null;
-//        if (getItemCategoryQuery == null)  // no categories?
-//        {
-//        }
-//        /// Select all items that have the same ItemCategoryLookupId as this items PrimaryCategory or if it has a parent the Same Category as the ParentCategory  
-//        else 
-//        {
-//            var CatId = getItemCategoryQuery.Single().ItemCategoryDetail.ParentCategoryId;
-//CatId = (CatId == null) ? sourceItemPrimaryCategoryId : CatId;
-//            query = table
-//                .Where(ia =>
-//                        (ia.ItemId != sourceItemId) && (ia.ItemCategories.Exists(ic => ic.ItemCategoryId == CatId))
-//                    );
-//        }
+        /// workings around selecting all items based on category or parent category
+        /// 
+        //var getItemCategoryQuery = table.Select(i => i.ItemCategories.Where(ic => ic.ItemCategoryLookupId == sourceItemPrimaryCategoryId)).FirstOrDefault();
+        //IQueryable<Item> query = null;
+        //        if (getItemCategoryQuery == null)  // no categories?
+        //        {
+        //        }
+        //        /// Select all items that have the same ItemCategoryLookupId as this items PrimaryCategory or if it has a parent the Same Category as the ParentCategory  
+        //        else 
+        //        {
+        //            var CatId = getItemCategoryQuery.Single().ItemCategoryDetail.ParentCategoryId;
+        //CatId = (CatId == null) ? sourceItemPrimaryCategoryId : CatId;
+        //            query = table
+        //                .Where(ia =>
+        //                        (ia.ItemId != sourceItemId) && (ia.ItemCategories.Exists(ic => ic.ItemCategoryId == CatId))
+        //                    );
+        //        }
 
-    /// <summary>
-    /// Get a list of item Category Lookups that are marked as used for variety using the ItemId
-    /// </summary>
-    /// <param name="sourceItemId">Item Id to use</param>
-    /// <returns>List of Item Category Lookups including Item CategoryDetail and List of Varieties as per the database</returns>
-    public List<ItemCategoryLookup> GetEagerItemsCategoryLookupsByItemId(Guid sourceItemId)
+        /// <summary>
+        /// Get a list of item Category Lookups that are marked as used for variety using the ItemId
+        /// </summary>
+        /// <param name="sourceItemId">Item Id to use</param>
+        /// <returns>List of Item Category Lookups including Item CategoryDetail and List of Varieties as per the database</returns>
+        public List<ItemCategoryLookup> GetEagerItemsCategoryLookupsByItemId(Guid sourceItemId)
         {
-            List<ItemCategoryLookup> itemsCategoryLookups = null;
-            DbSet<ItemCategory> table = appContext.Set<ItemCategory>();
-            appUnitOfWork.ClearErrorMessage(); //-- clear any error message
-
+            List<ItemCategoryLookup> _itemsCategoryLookups = null;
+            string statusString = $"Get Eager Item Category By Item Id: {sourceItemId}";
+            if (!CanDoDbAsyncCall(statusString))
+                return null;
             try
             {
                 // if you change this change the async routine too, not sure how to do both in one routine
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get Eager Item Category By Item Id: {sourceItemId.ToString()}");
-                var _query = table
+                using var context = AppDbContext.CreateDbContext();
+                DbSet<ItemCategory> _table = context.Set<ItemCategory>();
+                var _query = _table
                     .Include(ia => ia.ItemCategoryDetail)
                     .OrderBy(ia => ia.ItemCategoryDetail.CategoryName)
                     .Where(ia => (ia.ItemId == sourceItemId))
@@ -391,19 +406,23 @@ namespace RainbowOF.Repositories.Items
                 //    .OrderBy(itm => itm.ItemCategories.OrderBy(ia => ia.ItemCategoryDetail.CategoryName))     //hope this works
                 ;
                 var _sql = _query.ToQueryString();
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"SQL Query is: {_sql}");
+                if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"SQL Query is: {_sql}");
                 var itemCategories = _query; //.ToList(); // && (i.ItemCategories.Any(ia => ia.IsUsedForItemVariety == true)));
 
-                itemsCategoryLookups = itemCategories.Select(ic => ic.ItemCategoryDetail).ToList();
+                _itemsCategoryLookups = itemCategories.Select(ic => ic.ItemCategoryDetail).ToList();
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting Eager Item Category By Item Id: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting Eager Item Category By Item Id: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            return itemsCategoryLookups;
+            finally
+            {
+                DbCallDone(statusString);
+            }
+            return _itemsCategoryLookups;
         }
 
         /// <summary>
@@ -413,15 +432,16 @@ namespace RainbowOF.Repositories.Items
         /// <returns>List of Item Attributes including Item AttributeDetail and List of Varieties as per the database</returns>
         public List<ItemAttribute> GetEagerItemVariableAttributeByItemId(Guid sourceItemId)
         {
-            List<ItemAttribute> itemAttributes = null;
-            DbSet<ItemAttribute> table = appContext.Set<ItemAttribute>();
-            appUnitOfWork.ClearErrorMessage(); //-- clear any error message
-
+            List<ItemAttribute> _itemAttributes = null;
+            string statusString = $"Get Eager Item Attribute By Item Id: {sourceItemId}";
+            if (!CanDoDbAsyncCall(statusString))
+                return null;
             try
             {
                 // if you change this change the async routine too, not sure how to do both in one routine
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get Eager Item Attribute By Item Id: {sourceItemId.ToString()}");
-                var _query = table
+                using var context = AppDbContext.CreateDbContext();
+                DbSet<ItemAttribute> _table = context.Set<ItemAttribute>();
+                var _query = _table
                     .Include(ia => ia.ItemAttributeDetail)
                         .ThenInclude(iad => iad.ItemAttributeVarietyLookups)
                     .Include(ia => ia.ItemAttributeVarieties)
@@ -431,61 +451,38 @@ namespace RainbowOF.Repositories.Items
                 //_query = _query
                 //    .OrderBy(itm => itm.ItemAttributes.OrderBy(ia => ia.ItemAttributeDetail.AttributeName))     //hope this works
                 ;
-                var _sql = _query.ToQueryString();
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"SQL Query is: {_sql}");
-                itemAttributes = _query.ToList(); // && (i.ItemAttributes.Any(ia => ia.IsUsedForItemVariety == true)));
+                if (AppLoggerManager.IsDebugEnabled())
+                {
+                    var _sql = _query.ToQueryString();
+                    AppLoggerManager.LogDebug($"SQL Query is: {_sql}");
+                }
+                _itemAttributes = _query.ToList(); // && (i.ItemAttributes.Any(ia => ia.IsUsedForItemVariety == true)));
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting Eager Item Attribute By Item Id: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting Eager Item Attribute By Item Id: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            return itemAttributes;
-        }
-        public async Task<List<ItemAttribute>> GetEagerItemAttributeByItemIdAsync(Guid sourceItemId)
-        {
-            List<ItemAttribute> _itemAttributes = null;
-            DbSet<ItemAttribute> _table = appContext.Set<ItemAttribute>();
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get Eager Item Attribute By Item Id Async: {sourceItemId.ToString()} -- begin");
-            appUnitOfWork.ClearErrorMessage(); //-- clear any error message
-            try
+            finally
             {
-                // if you change this change the sync routine too, not sure how to do both in one routine
-                var _query = _table
-                    .Include(ia => ia.ItemAttributeVarieties)
-                        .ThenInclude(iv => iv.ItemAttributeVarietyDetail)
-                    .Include(ia => ia.ItemAttributeDetail)
-                    .OrderBy(ia => ia.ItemAttributeDetail.AttributeName)
-                    .Where(ia => (ia.ItemId == sourceItemId))
-                    ;
-                var _sql = _query.ToQueryString();
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"SQL Query is: {_sql}");
-
-                _itemAttributes = await _query.ToListAsync();  //&& (i.ItemAttributes.Where(ia => ia.is ) .Any(ia => (ia.IsUsedForItemVariety==true))));
-
+                DbCallDone(statusString);
             }
-            catch (Exception ex)
-            {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting Eager Item Attribute By Item Id Async: {ex.Message} - Inner Exception {ex.InnerException}");
-#if DebugMode
-                throw;     // #Debug?
-#endif
-            }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get Eager Item Attribute By Item Id Async: {sourceItemId.ToString()} -- end");
             return _itemAttributes;
         }
         public List<ItemAttributeVariety> GetEagerItemAttributeVarietiesByItemIdAndAttributeLookupId(Guid sourceItemId, Guid sourceItemAttributeLookupId)
         {
             List<ItemAttributeVariety> _itemAttributeVarieties = null;
-            DbSet<ItemAttribute> _table = appContext.Set<ItemAttribute>();
-            appUnitOfWork.ClearErrorMessage(); //-- clear any error message
+            string statusString = $"Get Eager Item Attribute Variety By Item Id and AttributeLookupId: {sourceItemId}";
+            if (!CanDoDbAsyncCall(statusString))
+                return null;
             try
             {
-                // if you change this change the sync routine too, not sure how to do both in one routine
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get Eager Item Attribute Variety By Item Id and AttributeLookupId: {sourceItemId.ToString()} -- begin");
-                var _query = _table
+                // if you change this change the async routine too, not sure how to do both in one routine
+                using var context = AppDbContext.CreateDbContext();
+                DbSet<ItemAttribute> _table = context.Set<ItemAttribute>();
+               var _query = _table.AsNoTracking()
                     .Where(ia => (ia.ItemId == sourceItemId) && (ia.ItemAttributeLookupId == sourceItemAttributeLookupId))
                     .Include(ia => ia.ItemAttributeVarieties)
                         .ThenInclude(iav => iav.ItemAttributeVarietyDetail)
@@ -495,10 +492,12 @@ namespace RainbowOF.Repositories.Items
                 //_query = (Microsoft.EntityFrameworkCore.Query.IIncludableQueryable<ItemAttribute, ItemAttributeVarietyLookup>)_query.OrderBy(ia => ia.ItemAttributeVarieties.OrderBy(iav => iav.ItemAttributeVarietyDetail.VarietyName));
 
                 //_query = (Microsoft.EntityFrameworkCore.Query.IIncludableQueryable<ItemAttribute, ItemAttributeVarietyLookup>)_query.Where(ia => (ia.ItemId == sourceItemId) && (ia.ItemAttributeLookupId == sourceItemAttributeLookupId));
-                   
-                var _sql = _query.ToQueryString();
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"SQL Query is: {_sql}");
 
+                if (AppLoggerManager.IsDebugEnabled())
+                {
+                    var _sql = _query.ToQueryString();
+                    AppLoggerManager.LogDebug($"SQL Query is: {_sql}");
+                }
                 var _itemAttribute = _query.FirstOrDefault(); // ia => (ia.ItemId == sourceItemId) && (ia.ItemAttributeLookupId == sourceItemAttributeLookupId));
                 if (_itemAttribute != null)
                 {
@@ -509,29 +508,34 @@ namespace RainbowOF.Repositories.Items
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting Eager Item Attribute Variety By Item Id and AttributeLookupId: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting Eager Item Attribute Variety By Item Id and AttributeLookupId: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get Eager Item Attribute Variety By Item Id and AttributeLookupId: {sourceItemId.ToString()} -- end");
+            finally
+            {
+                DbCallDone(statusString);
+            }
             return _itemAttributeVarieties;
         }
         public async Task<List<ItemAttributeVariety>> GetEagerItemAttributeVarietiesByItemIdAndAttributeLookupIdAsync(Guid sourceItemId, Guid sourceItemAttributeLookupId)
         {
             List<ItemAttributeVariety> _itemAttributeVarieties = null;
-            DbSet<ItemAttribute> _table = appContext.Set<ItemAttribute>();
-            appUnitOfWork.ClearErrorMessage(); //-- clear any error message
+            string statusString = $"Get Eager Item Attribute Variety By Item Id and AttributeLookupId Async: {sourceItemId}";
+            if (!CanDoDbAsyncCall(statusString))
+                return null;
             try
             {
-                // if you change this change the sync routine too, not sure how to do both in one routine
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get Eager Item Attribute Variety By Item Id and AttributeLookupId Async: {sourceItemId.ToString()}  -- begin");
+                // if you change this change the async routine too, not sure how to do both in one routine
+                using var context = await AppDbContext.CreateDbContextAsync();
+                DbSet<ItemAttribute> _table = context.Set<ItemAttribute>();
                 var _query = _table
                     .Include(ia => ia.ItemAttributeVarieties)
                     .ThenInclude(iav => iav.ItemAttributeVarietyDetail)
                     .OrderBy(ia => ia.ItemAttributeVarieties.OrderBy(iav => iav.ItemAttributeVarietyDetail.VarietyName));
                 var _sql = _query.ToQueryString();
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"SQL Query is: {_sql}");
+                if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"SQL Query is: {_sql}");
 
                 var _itemAttribute = await _query.FirstOrDefaultAsync(ia => (ia.ItemId == sourceItemId) && (ia.ItemAttributeLookupId == sourceItemAttributeLookupId));
                 if (_itemAttribute != null)
@@ -539,46 +543,56 @@ namespace RainbowOF.Repositories.Items
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting Eager Item Attribute Variety By Item Id and AttributeLookupId Async: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting Eager Item Attribute Variety By Item Id and AttributeLookupId Async: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get Eager Item Attribute Variety By Item Id and AttributeLookupId Async: {sourceItemId.ToString()}  -- begin");
+            finally
+            {
+                DbCallDone(statusString);
+            }
             return _itemAttributeVarieties;
         }
-        public async Task<bool> DoesThisItemHaveVariableAttributes(Guid currentItemId)
+        public async Task<bool> DoesThisItemHaveVariableAttributesAsync(Guid currentItemId)
         {
-            bool thisItemHasVariableAttributes = false;
-            DbSet<ItemAttribute> _table = appContext.Set<ItemAttribute>();
-            appUnitOfWork.ClearErrorMessage(); //-- clear any error message
+            bool _itemHasVariableAttributes = false;
+            string statusString = $"Does this item have variable attributes async: {currentItemId}";
+            if (!CanDoDbAsyncCall(statusString))
+                return false;
             try
             {
-                var _query = _table.Where(ita => (ita.ItemId == currentItemId) && (ita.IsUsedForItemVariety == true) );
+                using var context = await AppDbContext.CreateDbContextAsync();
+                DbSet<ItemAttribute> _table = context.Set<ItemAttribute>();
+                var _query = _table.Where(ita => (ita.ItemId == currentItemId) && (ita.IsUsedForItemVariety == true));
                 var _result = await _query.FirstOrDefaultAsync();
-                thisItemHasVariableAttributes = _result != null;
+                _itemHasVariableAttributes = _result != null;
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Finding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Finding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            return thisItemHasVariableAttributes;
+            finally
+            {
+                DbCallDone(statusString);
+            }
+            return _itemHasVariableAttributes;
         }
 
 
         //        public List<ItemAttribute> GetAllItemVariableAttributesByItemId(Guid sourceItemId)
         //        {
         //            List<ItemAttribute> _itemAttributes = null;
-        //            DbSet<ItemAttribute> _table = appContext.Set<ItemAttribute>();
-        //            appUnitOfWork.ClearErrorMessage(); //-- clear any error message
+        //            DbSet<ItemAttribute> _table = appDbContext.Set<ItemAttribute>();
+        //            AppUnitOfWork.ClearErrorMessage(); //-- clear any error message
 
         //            try
         //            {
         //                // if you change this change the async routine too, not sure how to do both in one routine
-        //                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get all Item varaible Attribute By Item Id: {sourceItemId.ToString()}");
+        //                if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"Get all Item varaible Attribute By Item Id: {sourceItemId}");
         //                var _query = _table
         //                    .Include(ia => ia.ItemAttributeDetail)
         ////                    .Include(ia => ia.ItemAttributeVarieties)
@@ -589,12 +603,12 @@ namespace RainbowOF.Repositories.Items
         //                //    .OrderBy(itm => itm.ItemAttributes.OrderBy(ia => ia.ItemAttributeDetail.AttributeName))     //hope this works
         //                ;
         //                var _sql = _query.ToQueryString();
-        //                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"SQL Query is: {_sql}");
+        //                if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"SQL Query is: {_sql}");
         //                _itemAttributes = _query.ToList(); // && (i.ItemAttributes.Any(ia => ia.IsUsedForItemVariety == true)));
         //            }
         //            catch (Exception ex)
         //            {
-        //                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting Eager Item Attribute By Item Id: {ex.Message} - Inner Exception {ex.InnerException}");
+        //                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting Eager Item Attribute By Item Id: {ex.Message} - Inner Exception {ex.InnerException}");
         //#if DebugMode
         //                throw;     // #Debug?
         //#endif
@@ -602,181 +616,46 @@ namespace RainbowOF.Repositories.Items
         //            return _itemAttributes;
         //        }
         #endregion
-        #region ItemAttribute related routines
-        public async Task<bool> IsUniqueItemAttributeAsync(ItemAttribute sourceItemAttribute)
-        {
-            bool isUniqueItemAttribute = false;
-            DbSet<ItemAttribute> _table = appContext.Set<ItemAttribute>();
-            appUnitOfWork.ClearErrorMessage(); //-- clear any error message
-            try
-            {
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Is Unique Item Attribute Async: {sourceItemAttribute.ToString()}  -- begin");
-                var result = await _table.FirstOrDefaultAsync((sourceItemAttribute.ItemAttributeId == Guid.Empty) ?
-                           (ia => (ia. ItemId == sourceItemAttribute.ItemId)
-                               && (ia.ItemAttributeLookupId == sourceItemAttribute.ItemAttributeLookupId)) :
-                            (ia => (ia.ItemId == sourceItemAttribute.ItemId)
-                                && (ia.ItemAttributeId != sourceItemAttribute.ItemAttributeId)
-                                && (ia.ItemAttributeLookupId == sourceItemAttribute.ItemAttributeLookupId))
-                                      );
 
-                isUniqueItemAttribute = result != null;
-            }
-            catch (Exception ex)
-            {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Finding first variants: {ex.Message} - Inner Exception {ex.InnerException}");
-#if DebugMode
-                throw;     // #Debug?
-#endif
-            }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Is Unique Item Attribute Async: {sourceItemAttribute.ToString()}  -- end");
-            return isUniqueItemAttribute;
-        }
-
-        /// <summary>
-        /// Return a list of variants associated to the source attribute lookup in the ItemAttribute table
-        /// </summary>
-        /// <param name="sourceAttributeLookupId">The source attribute lookup id, to use</param>
-        /// <returns></returns>
-        public List<ItemAttributeVariety> GetAssociatedVarients(Guid sourceAttributeLookupId)
-        {
-            List<ItemAttributeVariety> _itemAttributeVarieties = null;
-            DbSet<ItemAttribute> _table = appContext.Set<ItemAttribute>();
-            appUnitOfWork.ClearErrorMessage(); //-- clear any error message
-
-            try
-            {
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Finding the first variants associated to attribute lookup id: {sourceAttributeLookupId} -- begin");
-                var _query = _table
-                    .Include(ia => ia.ItemAttributeVarieties);
-                var _itemAttribute = _query.FirstOrDefault(ia => ia.ItemAttributeLookupId == sourceAttributeLookupId);
-                _itemAttributeVarieties = _itemAttribute.ItemAttributeVarieties;
-            }
-            catch (Exception ex)
-            {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Finding first variants: {ex.Message} - Inner Exception {ex.InnerException}");
-#if DebugMode
-                throw;     // #Debug?
-#endif
-            }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Finding the first variants associated to attribute lookup id: {sourceAttributeLookupId} -- end");
-            return _itemAttributeVarieties;
-        }
-        //-> async version of above
-        public async Task<List<ItemAttributeVariety>> GetAssociatedVarientsAsync(Guid sourceAttributeLookupId)
-        {
-            List<ItemAttributeVariety> _itemAttributeVarieties = null;
-            DbSet<ItemAttribute> _table = appContext.Set<ItemAttribute>();
-            appUnitOfWork.ClearErrorMessage(); //-- clear any error message
-            try
-            {
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Finding the first variants associated to attribute lookup id: {sourceAttributeLookupId} -- begin");
-                var _query = _table
-                    .Include(ia => ia.ItemAttributeVarieties);
-                var _itemAttribute = await _query.FirstOrDefaultAsync(ia => ia.ItemAttributeLookupId == sourceAttributeLookupId);
-                if (_itemAttribute == null)
-                    return null;
-                _itemAttributeVarieties = _itemAttribute.ItemAttributeVarieties;
-            }
-            catch (Exception ex)
-            {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Finding first variants: {ex.Message} - Inner Exception {ex.InnerException}");
-#if DebugMode
-                throw;     // #Debug?
-#endif
-            }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Finding the first variants associated to attribute lookup id: {sourceAttributeLookupId} -- end");
-            return _itemAttributeVarieties;
-        }
-        /// <summary>
-        /// Get an ItemAttribute by Id and disable tracking
-        /// </summary>
-        /// <param name="sourceAttributeLookupId">Id to search for</param>
-        /// <returns></returns>
-        public async Task<ItemAttribute> GetByIdNoTrackingAsync(Guid sourceItemAttributeId)
-        {
-            ItemAttribute _itemAttribute = null;
-            DbSet<ItemAttribute> _table = appContext.Set<ItemAttribute>();
-            appUnitOfWork.ClearErrorMessage(); //-- clear any error message
-            try
-            {
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Getting item attribute id: {sourceItemAttributeId}, with no tracking -- begin");
-                var _query = _table
-                    .AsNoTracking()
-                    .Where(ia => ia.ItemAttributeId == sourceItemAttributeId);
-                _itemAttribute = await _query.FirstOrDefaultAsync();
-            }
-            catch (Exception ex)
-            {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Finding first variants: {ex.Message} - Inner Exception {ex.InnerException}");
-#if DebugMode
-                throw;     // #Debug?
-#endif
-            }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Getting item attribute id: {sourceItemAttributeId}, with no tracking -- end");
-            return _itemAttribute;
-        }
-        /// <summary>
-        /// Update on the item attribute
-        /// </summary>
-        /// <param name="sourceItemAttribute"></param>
-        /// <returns></returns>
-        public async Task<int> UpdateItemAttributeAsync(ItemAttribute sourceItemAttribute)
-        {
-            int _result = UnitOfWork.CONST_WASERROR;
-            DbSet<ItemAttribute> _table = appContext.Set<ItemAttribute>();
-            appUnitOfWork.ClearErrorMessage(); //-- clear any error message
-            try
-            {
-                appUnitOfWork.BeginTransaction();
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Updating item attribute id: {sourceItemAttribute.ItemAttributeId}, with no tracking -- begin");
-                _table.Update(sourceItemAttribute);
-                _result = await appUnitOfWork.CompleteAsync();
-            }
-            catch (Exception ex)
-            {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Finding first variants: {ex.Message} - Inner Exception {ex.InnerException}");
-#if DebugMode
-                throw;     // #Debug?
-#endif
-            }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Updating item attribute id: {sourceItemAttribute.ItemAttributeId}, with no tracking -- begin");
-            return _result;
-        }
-        #endregion
         #region Item Variant routines
         public async Task<List<ItemVariant>> GetAllItemVariantsEagerByItemIdAsync(Guid sourceItemId)
         {
             List<ItemVariant> itemVariants = null;
-            DbSet<ItemVariant> _table = appContext.Set<ItemVariant>();
-            appUnitOfWork.ClearErrorMessage(); //-- clear any error message
+            // if you change this change the sync routine too, not sure how to do both in one routine
+            string statusString = $"Get Eager Item Variants By Item Id : {sourceItemId}";
+            if (!CanDoDbAsyncCall(statusString))
+                return null;
             try
             {
-                // if you change this change the sync routine too, not sure how to do both in one routine
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get Eager Item Variants By Item Id : {sourceItemId.ToString()} -- begin");
+                using var context = await AppDbContext.CreateDbContextAsync();
+                DbSet<ItemVariant> _table = context.Set<ItemVariant>();
                 var _query = _table
                     .Include(iv => iv.ItemVariantAssociatedLookups)
                         .ThenInclude(iva => iva.AssociatedAttributeVarietyLookup)
                     .Include(iv => iv.ItemVariantAssociatedLookups)
-                        .ThenInclude(iva=>iva.AssociatedAttributeLookup)
+                        .ThenInclude(iva => iva.AssociatedAttributeLookup)
                     .OrderBy(iv => iv.SortOrder)
                         .ThenBy(iv => iv.ItemVariantName)
                     .AsNoTracking()
                     .Where(iv => iv.ItemId == sourceItemId);
-                if (appLoggerManager.IsDebugEnabled())
+                if (AppLoggerManager.IsDebugEnabled())
                 {
                     var _sql = _query.ToQueryString();
-                    appLoggerManager.LogDebug($"SQL Query is: {_sql}");
+                    AppLoggerManager.LogDebug($"SQL Query is: {_sql}");
                 }
                 itemVariants = await _query.ToListAsync();
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting Eager Item Variants By Item Id and AttributeLookupId Async: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting Eager Item Variants By Item Id and AttributeLookupId Async: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get Eager Item Variants By Item Id : {sourceItemId.ToString()} -- end");
+            finally
+            {
+                DbCallDone(statusString);
+            }
             return itemVariants;
         }
         /// <summary>
@@ -787,13 +666,14 @@ namespace RainbowOF.Repositories.Items
         public async Task<ItemVariant> GetItemVariantEagerByItemVariantIdAsync(Guid sourceItemVariantId)
         {
             ItemVariant itemVariant = null;
-            DbSet<ItemVariant> _table = appContext.Set<ItemVariant>();
-            appUnitOfWork.ClearErrorMessage(); //-- clear any error message
-
+            // if you change this change the sync routine too, not sure how to do both in one routine
+            string statusString = $"Get Eager Item Variant By Item Variant Id : {sourceItemVariantId}";
+            if (!CanDoDbAsyncCall(statusString))
+                return null;
             try
             {
-                // if you change this change the sync routine too, not sure how to do both in one routine
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get Eager Item Variant By Item Variant Id : {sourceItemVariantId.ToString()} -- begin");
+                using var context = await AppDbContext.CreateDbContextAsync();
+                DbSet<ItemVariant> _table = context.Set<ItemVariant>();
                 var _query = _table
                     .Include(iv => iv.ItemVariantAssociatedLookups)
                         .ThenInclude(iav => iav.AssociatedAttributeLookup)
@@ -801,51 +681,132 @@ namespace RainbowOF.Repositories.Items
                     .OrderBy(iv => iv.SortOrder)
                     .ThenBy(iv => iv.ItemVariantName)
                     .Where(iv => iv.ItemVariantId == sourceItemVariantId);
-                if (appLoggerManager.IsDebugEnabled())
+                if (AppLoggerManager.IsDebugEnabled())
                 {
                     var _sql = _query.ToQueryString();
-                    appLoggerManager.LogDebug($"SQL Query is: {_sql}");
+                    AppLoggerManager.LogDebug($"SQL Query is: {_sql}");
                 }
                 itemVariant = await _query.FirstOrDefaultAsync();
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting Eager Item Variant By Item Id and AttributeLookupId Async: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting Eager Item Variant By Item Id and AttributeLookupId Async: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get Eager Item Variant By Item Variant Id : {sourceItemVariantId.ToString()} -- end");
+            finally
+            {
+                DbCallDone(statusString);
+            }
             return itemVariant;
         }
+        ///// <summary>
+        ///// Get all the variants that the item has an attribute marked as variable 
+        ///// </summary>
+        ///// <param name="sourceItemId">The ItemId of the parent Item</param>
+        ///// <returns></returns>
+        //Task<List<ItemAttributeVariety>> GetAllPossibleVariants(Guid sourceItemId);
+        public async Task<bool> DeleteItemVariantAndAssociatedData(ItemVariant sourceItemVariant)
+        {
+            bool _deleted = false;
+            // if you change this change the sync routine too, not sure how to do both in one routine
+            string statusString = $"Deleting all the variants of Item Variant Id: {sourceItemVariant.ItemVariantId}";
+            if (!CanDoDbAsyncCall(statusString))
+                return false;
+            try
+            {
+                using var context = await AppDbContext.CreateDbContextAsync();
+                DbSet<ItemVariantAssociatedLookup> _itemVariantAssociatedLookupTable = context.Set<ItemVariantAssociatedLookup>();
+                DbSet<ItemVariant> _itemVariantsTable = context.Set<ItemVariant>();
+                //delete all the lookups
+                foreach (var itemVariantAssociateLookup in sourceItemVariant.ItemVariantAssociatedLookups)
+                {
+                    if (itemVariantAssociateLookup.ItemVariantAssociatedLookupId != Guid.Empty)  // check it it is not set to "all", this is not a real value
+                        _itemVariantAssociatedLookupTable.Remove(itemVariantAssociateLookup);
+                }
+                _itemVariantsTable.Remove(sourceItemVariant); //
+                _deleted &= (await context.SaveChangesAsync()) >= 0;
+                // now delete the item itself
+                // _deleted = ! AppUnitOfWork.IsInErrorState();
+            }
+            catch (Exception ex)
+            {
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error removing all the Item's Variants By Item Id Async: {ex.Message} - Inner Exception {ex.InnerException}");
+#if DebugMode
+                throw;     // #Debug?
+#endif
+            }
+            finally
+            {
+                DbCallDone(statusString);
+            }
+            return _deleted;
+        }
+
         /// <summary>
         /// Delete all the variants of this item
         /// </summary>
         /// <param name="sourceItemId">The Id of the item whose variants we wont to delete</param>
         /// <returns>true of successful</returns>
-
         public async Task<bool> DeleteAllItemsVariantsAsync(Guid sourceItemId)
         {
             bool _deleted = false;
-            DbSet<ItemVariant> _itemVariantsTable = appContext.Set<ItemVariant>();
-            appUnitOfWork.ClearErrorMessage();
+            // if you change this change the sync routine too, not sure how to do both in one routine
+            string statusString = $"Deleting all the variants of Item Id: {sourceItemId}";
+            if (!CanDoDbAsyncCall(statusString))
+                return false;
             try
             {
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Deleting all the variants of Item Id : {sourceItemId.ToString()} -- begin");
+                using var context = await AppDbContext.CreateDbContextAsync();
+                DbSet<ItemVariant> _itemVariantsTable = context.Set<ItemVariant>();
                 var _itemVariantsToDelelete = await _itemVariantsTable.Where(iv => iv.ItemId == sourceItemId).ToArrayAsync();  // get all the variants currently in the database.
                 _itemVariantsTable.RemoveRange(_itemVariantsToDelelete);
-                _deleted = appUnitOfWork.Complete() >= 0;  // Save();
-                // _deleted = ! appUnitOfWork.IsInErrorState();
+                _deleted = await (context.SaveChangesAsync()) >= 0;  
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error removing all the Item's Variants By Item Id Async: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error removing all the Item's Variants By Item Id Async: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Deleting all the variants of Item Id : {sourceItemId.ToString()} -- end");
+            finally
+            {
+                DbCallDone(statusString);
+            }
             return _deleted;
+        }
+
+        public async Task<bool> SetItemTypeAsync(Guid currentItemId, ItemTypes currentItemType)
+        {
+            bool _done = false;
+            // if you change this change the sync routine too, not sure how to do both in one routine
+            string statusString = $"Setting item type for Item Id: {currentItemId} to {currentItemType}";
+            if (!CanDoDbAsyncCall(statusString))
+                return false;
+            try
+            {
+                using var context = await AppDbContext.CreateDbContextAsync();
+                Item _item = await context.Items.FirstOrDefaultAsync(it => it.ItemId == currentItemId);
+                if (_item == null)
+                    return false;
+                _item.ItemType = currentItemType;
+                context.Items.Update(_item);
+                _done = (await context.SaveChangesAsync()) > 0;
+            }
+            catch (Exception ex)
+            {
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error removing all the Item's Variants By Item Id Async: {ex.Message} - Inner Exception {ex.InnerException}");
+#if DebugMode
+                throw;     // #Debug?
+#endif
+            }
+            finally
+            {
+                DbCallDone(statusString);
+            }
+            return _done;
         }
 
         /// <summary>
@@ -856,11 +817,11 @@ namespace RainbowOF.Repositories.Items
         //        public async Task<List<ItemAttributeVariety>> GetAllPossibleVariants(Guid sourceItemId)
         //        {
         //            List<ItemAttributeVariety> possibleVariants = null;
-        //            ApplicationDbContext dbContext = GetAppDbContext();
+        //            ApplicationDbContext dbContext = GetappDbContext();
         //            if (dbContext == null) return null;
         //            try
         //            {
-        //                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get All Possible Variants By Item Id : {sourceItemId.ToString()}");
+        //                if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"Get All Possible Variants By Item Id : {sourceItemId}");
 
         //                var result = dbContext.ItemAttributes
         //                    .Where(ia => (ia.ItemId == sourceItemId) && (ia.IsUsedForItemVariety == true))
@@ -873,7 +834,7 @@ namespace RainbowOF.Repositories.Items
         //            }
         //            catch (Exception ex)
         //            {
-        //                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting Eager Item Variant By Item Id and AttributeLookupId Async: {ex.Message} - Inner Exception {ex.InnerException}");
+        //                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting Eager Item Variant By Item Id and AttributeLookupId Async: {ex.Message} - Inner Exception {ex.InnerException}");
         //#if DebugMode
         //                throw;     // #Debug?
         //#endif

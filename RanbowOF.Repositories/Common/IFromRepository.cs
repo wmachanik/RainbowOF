@@ -1,9 +1,6 @@
 ﻿using RainbowOF.ViewModels.Common;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Common
@@ -11,7 +8,7 @@ namespace RainbowOF.Repositories.Common
     public interface IFormRepository<TEntity> where TEntity : class
     {
         #region Common variables
-        public FormSettings formSettings { get; set; }
+        public FormSettings CurrFormSettings { get; set; }
         #endregion
         #region Recommended Over writable From Classes
         TEntity NewViewEntityDefaultSetter(TEntity newEntity, Guid Parent); //-> needs to be implemented at a form class level.
@@ -23,7 +20,7 @@ namespace RainbowOF.Repositories.Common
         Task<TEntity> GetEntityByIdAsync(object Id);
         Task<TEntity> FidnFirstByAsync(Expression<Func<TEntity, bool>> predicate);
         Task<TEntity> InsertViewRowAsync(TEntity newEntity, string newEntityDescription);
-        Task<int> DeleteViewRowByIdAsync(object Id, string deletedEntityDescription);
+        Task<int> DeleteViewRowByIdAsync(TEntity sourceEntity, string deletedEntityDescription);
         Task<int> UpdateViewRowAsync(TEntity updatedEntity, string updatedEnityDescription);
         #endregion
 

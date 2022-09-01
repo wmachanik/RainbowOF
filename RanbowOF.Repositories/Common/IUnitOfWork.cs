@@ -1,4 +1,5 @@
-﻿using NLog.Web.LayoutRenderers;
+﻿using Microsoft.EntityFrameworkCore;
+using RainbowOF.Data.SQL;
 using RainbowOF.Models.Items;
 using RainbowOF.Models.Lookups;
 using RainbowOF.Repositories.Items;
@@ -8,7 +9,6 @@ using RainbowOF.Repositories.System;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Common
@@ -19,12 +19,14 @@ namespace RainbowOF.Repositories.Common
         IRepository<TEntity> Repository<TEntity>() where TEntity : class;
         #endregion
         #region Custom repositories - implementation in partial class AppUnitOfWorkRepos
-        IItemRepository itemRepository { get; }
-        ISysPrefsRepository sysPrefsRepository { get; }
-        IWooSyncLogRepository wooSyncLogRepository { get; }
-        IItemCategoryLookupRepository itemCategoryLookupRepository { get; }
-        IItemAttributeLookupRepository itemAttributeLookupRepository { get; }
-        IItemAttributeVarietyLookupRepository itemAttributeVarietyLookupRepository { get; }
+        IItemRepository ItemRepository { get; }
+        IItemCategoryRepository ItemCategoryRepo { get; }
+        IItemAttributeRepository ItemAttributeRepo { get; }
+        ISysPrefsRepository SysPrefsRepository { get; }
+        IWooSyncLogRepository WooSyncLogRepository { get; }
+        IItemCategoryLookupRepository ItemCategoryLookupRepository { get; }
+        IItemAttributeLookupRepository ItemAttributeLookupRepository { get; }
+        IItemAttributeVarietyLookupRepository ItemAttributeVarietyLookupRepository { get; }
         #endregion
         #region Variables that can be used outside the UoW
         bool DBTransactionIsStillRunning();
@@ -45,10 +47,13 @@ namespace RainbowOF.Repositories.Common
         //        Task<List<ItemAttributeVariety>> GetListOfItemAttributeVarietiesAsync(Guid sourceAssoicatedItemAttributeId, bool IsForceReload = false);
         #endregion
         #region Centralised Context Handling
-        void BeginTransaction();
-        int Complete();
-        Task<int> CompleteAsync();
-        void RollbackTransaction();
+        // Don't expose the factory as they must inject or use dir3ectly
+        //IDbContextFactory<ApplicationDbContext> AppDbContext { get; }
+        //DbSet<TEntity> GetDbSet<TEntity>() where TEntity : class;
+        //void BeginTransaction();
+        //int Complete();
+        //Task<int> CompleteAsync();
+        //void RollbackTransaction();
         #endregion
         #region Error Messages
         bool IsInErrorState();

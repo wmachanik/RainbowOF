@@ -1,10 +1,8 @@
-﻿using Blazorise;
-using Microsoft.AspNetCore.Components;
-using RainbowOF.FrontEnd.Models;
-using RainbowOF.Tools;
+﻿using Microsoft.AspNetCore.Components;
 using RainbowOF.Components.Modals;
+using RainbowOF.FrontEnd.Models;
 using RainbowOF.Repositories.Common;
-using RainbowOF.Repositories.System;
+using RainbowOF.Tools;
 using System.Threading.Tasks;
 
 namespace RainbowOF.Web.FrontEnd.Pages.Sys
@@ -17,11 +15,11 @@ namespace RainbowOF.Web.FrontEnd.Pages.Sys
         public bool collapseSysVisible = true;
         public bool collapseWooVisible = true;
         //bool collapse3Visible = false;
-        protected PopUpAndLogNotification PopSavedStatus { get; set; }
+        public PopUpAndLogNotification PopSavedStatus { get; set; }
         [Inject]
-        private IUnitOfWork appUnitOfWork { get; set; }
+        public IUnitOfWork AppUnitOfWork { get; set; }
         [Inject]
-        private ILoggerManager appLoggerManager { get; set; }
+        public ILoggerManager AppLoggerManager { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
@@ -32,7 +30,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Sys
         private async Task LoadSysPrefs()
         {
             StateHasChanged();
-            await Task.Run(() => SysPrefsModel = appUnitOfWork.sysPrefsRepository.GetSysPrefs());
+            await Task.Run(() => SysPrefsModel = AppUnitOfWork.SysPrefsRepository.GetSysPrefs());
             IsSaved = false;
             StateHasChanged();
         }
@@ -42,12 +40,12 @@ namespace RainbowOF.Web.FrontEnd.Pages.Sys
             {
                 ShowSaving();
                 // save
-                bool _Saved = await appUnitOfWork.sysPrefsRepository.UpdateSysPreferencesAsync(SysPrefsModel);
+                bool _Saved = await AppUnitOfWork.SysPrefsRepository.UpdateSysPreferencesAsync(SysPrefsModel);
 
                 if (!_Saved)
                     await PopSavedStatus.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, "Error saving preferences!");
                 else
-                    await PopSavedStatus.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Info,"Preferences saved.");
+                    await PopSavedStatus.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Info, "Preferences saved.");
 
                 HideSaving();
                 //await ShowModalAsync();
@@ -63,7 +61,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Sys
             IsSaving = true;
             StateHasChanged();
         }
-        public void HideSaving()    
+        public void HideSaving()
         {
             IsSaving = false;
             StateHasChanged();

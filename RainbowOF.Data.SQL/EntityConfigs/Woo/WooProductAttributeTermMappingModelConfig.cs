@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using RainbowOF.Models.Items;
 using RainbowOF.Models.Woo;
 
 namespace RainbowOF.Datsa.SQL.EntityConfigs.Items

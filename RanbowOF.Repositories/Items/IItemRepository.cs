@@ -4,9 +4,7 @@ using RainbowOF.Repositories.Common;
 using RainbowOF.ViewModels.Common;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Items
@@ -20,7 +18,7 @@ namespace RainbowOF.Repositories.Items
         /// </summary>
         /// <param name="currentDataGridParameters">the current data grid parameters</param>
         /// <returns></returns>
-        Task<DataGridItems<Item>> GetPagedDataEagerWithFilterAndOrderByAsync(DataGridParameters currentDataGridParameters);  
+        Task<DataGridItems<Item>> GetPagedDataEagerWithFilterAndOrderByAsync(DataGridParameters currentDataGridParameters);
         /// <summary>
         /// Adds an item to the database that is fully populated, making sure that the values set within it are set.
         /// </summary>
@@ -52,17 +50,10 @@ namespace RainbowOF.Repositories.Items
         /// <param name="ItemId">The Item's Id</param>
         /// <returns>List of Item Attributes</returns>
         List<ItemAttribute> GetEagerItemVariableAttributeByItemId(Guid sourceItemId);
-        Task<List<ItemAttribute>> GetEagerItemAttributeByItemIdAsync(Guid sourceItemId);
         List<ItemAttributeVariety> GetEagerItemAttributeVarietiesByItemIdAndAttributeLookupId(Guid sourceItemId, Guid sourceItemAttributeLookupId);
         Task<List<ItemAttributeVariety>> GetEagerItemAttributeVarietiesByItemIdAndAttributeLookupIdAsync(Guid sourceItemId, Guid sourceItemAttributeLookupId);
-        Task<bool> DoesThisItemHaveVariableAttributes(Guid currentItemId);
-        #endregion
-        #region ItemAttribute related routines
-        Task<bool> IsUniqueItemAttributeAsync(ItemAttribute sourceItemAttribute);
-        List<ItemAttributeVariety> GetAssociatedVarients(Guid sourceAttributeLookupId);
-        Task<List<ItemAttributeVariety>> GetAssociatedVarientsAsync(Guid sourceAttributeLookupId);
-        Task<ItemAttribute> GetByIdNoTrackingAsync(Guid sourceItemnAttributeId);
-        Task<int> UpdateItemAttributeAsync(ItemAttribute sourceItemAttribute);
+        Task<bool> DoesThisItemHaveVariableAttributesAsync(Guid currentItemId);
+        Task<bool> SetItemTypeAsync(Guid currentItemId, ItemTypes currentItemType);
         #endregion
         //List<ItemAttribute> GetAllItemVariableAttributesByItemId(Guid sourceItemId);
         #region ItemVariants of an item and supporting routines
@@ -84,7 +75,7 @@ namespace RainbowOF.Repositories.Items
         ///// <param name="sourceItemId">The ItemId of the parent Item</param>
         ///// <returns></returns>
         //Task<List<ItemAttributeVariety>> GetAllPossibleVariants(Guid sourceItemId);
-
+        Task<bool> DeleteItemVariantAndAssociatedData(ItemVariant sourceItemVariant);
         /// <summary>
         /// Delete all the variants of this item
         /// </summary>

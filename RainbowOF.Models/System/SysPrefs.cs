@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 
 namespace RainbowOF.Models.System
 {
-    public class SysPrefs 
+    public class SysPrefs
     {
         public int SysPrefsId { get; set; }
         [DisplayName("Last Date Recurring Orders Processed")]

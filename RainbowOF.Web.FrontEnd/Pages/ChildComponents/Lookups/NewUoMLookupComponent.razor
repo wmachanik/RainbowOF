@@ -6,7 +6,7 @@
     -------------------------------------------------------------
 *@
 
-<Modal @ref="NewUoMModalRef">
+<Modal @ref="newUoMModalRef">
     <ModalContent Size="Blazorise.ModalSize.Default" Centered="true">
         <ModalHeader>
             <ModalTitle>
@@ -18,21 +18,21 @@
         <ModalBody>
             <Field>
                 <FieldLabel>UoM Name</FieldLabel>
-                <TextEdit Autofocus="true" Text="@_NewItemUoM.UoMName" TextChanged="@((v) => _NewItemUoM.UoMName = v)" Placeholder="Enter UoM name (eg kilogram)..." />
+                <TextEdit Autofocus="true" Text="@newItemUoM.UoMName" TextChanged="@((v) => newItemUoM.UoMName = v)" Placeholder="Enter UoM name (eg kilogram)..." />
             </Field>
             <Field>
                 <FieldLabel>UoM Symbol</FieldLabel>
-                <TextEdit Text="@_NewItemUoM.UoMSymbol" TextChanged="@((v) => _NewItemUoM.UoMSymbol = v)" Placeholder="Enter UoM symbol (eg kg)..." />
+                <TextEdit Text="@newItemUoM.UoMSymbol" TextChanged="@((v) => newItemUoM.UoMSymbol = v)" Placeholder="Enter UoM symbol (eg kg)..." />
             </Field>
             <Field>
                 <FieldLabel>UoM Base</FieldLabel>
                 @{
-                    if ((_ListOfUoMSymbols != null) && (_ListOfUoMSymbols.Count> 0))
+                    if ((_listOfUoMSymbols != null) && (_listOfUoMSymbols.Count> 0))
                     {
                         {
-                            <Select TValue="Guid" SelectedValue="@(_NewItemUoM.BaseUoMId == null ? Guid.Empty : (Guid)_NewItemUoM.BaseUoMId)" SelectedValueChanged="@((v) => _NewItemUoM.BaseUoMId = v)">
+                            <Select TValue="Guid" SelectedValue="@(newItemUoM.BaseUoMId == null ? Guid.Empty : (Guid)newItemUoM.BaseUoMId)" SelectedValueChanged="@((v) => newItemUoM.BaseUoMId = v)">
                                 <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
-                                @foreach (var item in _ListOfUoMSymbols)
+                                @foreach (var item in _listOfUoMSymbols)
                                 {
                                     <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
                                 }
@@ -41,16 +41,16 @@
                     }
                 }
             </Field>
-            @if ((_NewItemUoM.BaseUoMId != null) && (!_NewItemUoM.BaseUoMId.Equals(Guid.Empty)))
+            @if ((newItemUoM.BaseUoMId != null) && (!newItemUoM.BaseUoMId.Equals(Guid.Empty)))
             {
                 <Field>
                     <FieldLabel>Base conversation</FieldLabel>
-                    <Blazorise.NumericEdit Decimals="@_NewItemUoM.RoundTo" Value="@_NewItemUoM.BaseConversationFactor" Placeholder="How to convert this UoM to the base UoM, eg 1kg = 1000g"></Blazorise.NumericEdit>>
+                    <Blazorise.NumericEdit Decimals="@newItemUoM.RoundTo" Value="@newItemUoM.BaseConversationFactor" Placeholder="How to convert this UoM to the base UoM, eg 1kg = 1000g"></Blazorise.NumericEdit>>
                 </Field>
             }
             <Field>
                 <FieldLabel>Round To</FieldLabel>
-                <Blazorise.NumericEdit TValue="int" Value="@_NewItemUoM.RoundTo" Decimals="0" ValueChanged="@((v) => _NewItemUoM.RoundTo = (int)v)" Placeholder="What to round the displayed values to (eg 2 means 1.005 becomes 1.01"></Blazorise.NumericEdit>
+                <Blazorise.NumericEdit TValue="int" Value="@newItemUoM.RoundTo" Decimals="0" ValueChanged="@((v) => newItemUoM.RoundTo = (int)v)" Placeholder="What to round the displayed values to (eg 2 means 1.005 becomes 1.01"></Blazorise.NumericEdit>
             </Field>
         </ModalBody>
         <ModalFooter>

@@ -8,19 +8,17 @@ using RainbowOF.Models.Lookups;
 using RainbowOF.Models.System;
 using RainbowOF.Models.Woo;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace RainbowOF.Data.SQL
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : DbContext //, IApplicationDbContext
     {
 
         public Type classContextType;
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
-//            classContextType = options.ContextType;
+            classContextType = options.ContextType;
         }
         // Table definitions
         #region system stuff
@@ -117,5 +115,6 @@ namespace RainbowOF.Data.SQL
             modelBuilder.Entity<WooProductVariantMap>().ToTable(nameof(WooProductVariantMaps));
             #endregion
         }
+
     }
 }

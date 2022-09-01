@@ -17,10 +17,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Blazorise" Version="1.0.4" />
-    <PackageReference Include="Blazorise.Snackbar" Version="1.0.4" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="6.0.5" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.5" />
+    <PackageReference Include="Blazorise" Version="1.0.5" />
+    <PackageReference Include="Blazorise.Snackbar" Version="1.0.5" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="6.0.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.6" />
   </ItemGroup>
 
   <ItemGroup>

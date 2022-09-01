@@ -6,14 +6,12 @@ using RainbowOF.Models.Lookups;
 using RainbowOF.Models.System;
 using RainbowOF.Models.Woo;
 using RainbowOF.Repositories.Common;
-using RainbowOF.Repositories.Items;
 using RainbowOF.Tools;
 using RainbowOF.Woo.REST.Models;
 using RainbowOF.Woo.REST.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using WooCommerceNET.WooCommerce.v3;
 
@@ -25,26 +23,26 @@ namespace RainbowOF.Integration.Repositories.Woo
     public partial class WooImportProduct : IWooImportWithParents<Item, Product, WooProductMap>
     {
         [Inject]
-        public IMapper autoMapper { get; set; }
+        public IMapper AutoMapper { get; set; }
         #region Variables
         public List<WooItemWithParent> EntityWithParents { get; set; } = new();
-        public IUnitOfWork appUnitOfWork { get; set; }
-        public ILoggerManager appLoggerManager { get; set; }
-        public WooSettings appWooSettings { get; set; }
+        public IUnitOfWork AppUnitOfWork { get; set; }
+        public ILoggerManager AppLoggerManager { get; set; }
+        public WooSettings AppWooSettings { get; set; }
         public ImportCounters CurrImportCounters { get; set; } = new();
         #endregion
         #region Private / Class Variables
         //private StringTools _StringTools = new StringTools();
-        private ProductToItemMapper productToItemMapper = null;
+        private ProductToItemMapper productToItemMapper { get; set; } = null;
         #endregion
         #region Constructor
-        public WooImportProduct(IUnitOfWork appUnitOfWork, ILoggerManager logger, WooSettings appWooSettings, IMapper mapper)
+        public WooImportProduct(IUnitOfWork AppUnitOfWork, ILoggerManager logger, WooSettings AppWooSettings, IMapper mapper)
         {
-            this.appUnitOfWork = appUnitOfWork;
-            appLoggerManager = logger;
-            this.appWooSettings = appWooSettings;
-            autoMapper = mapper;
-            if (appLoggerManager.IsDebugEnabled()) if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("WooImportProduct initialised.");
+            this.AppUnitOfWork = AppUnitOfWork;
+            AppLoggerManager = logger;
+            this.AppWooSettings = AppWooSettings;
+            AutoMapper = mapper;
+            if (AppLoggerManager.IsDebugEnabled()) if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug("WooImportProduct initialised.");
         }
 
         public WooImportProduct()
@@ -63,15 +61,15 @@ namespace RainbowOF.Integration.Repositories.Woo
             bool _isCatUpdate = currItem.ItemCategories != null;
             if (currItem != null)
             {
-                WooImportProductCategory _wooImportProductCategories = new WooImportProductCategory(appUnitOfWork, appLoggerManager, appWooSettings);
+                WooImportProductCategory CurrWooImportProductCategories = new(AppUnitOfWork, AppLoggerManager, AppWooSettings);
 
                 // if we get here then we have an item and it has an id
-                IRepository<ItemCategoryLookup> _itemCategoryLookupRepo = appUnitOfWork.Repository<ItemCategoryLookup>();
+                IRepository<ItemCategoryLookup> _itemCategoryLookupRepo = AppUnitOfWork.Repository<ItemCategoryLookup>();
                 ItemCategoryLookup _itemCategoryLookup = null;
                 bool _SetPrimary = true;
                 foreach (var cat in currWooProd.categories)
                 {
-                    Guid CategoryId = await _wooImportProductCategories.GetWooMappedEntityIdByIdAsync((uint)cat.id);
+                    Guid CategoryId = await CurrWooImportProductCategories.GetWooMappedEntityIdByIdAsync((uint)cat.id);
                     _itemCategoryLookup = await _itemCategoryLookupRepo.GetByIdAsync(ic => ic.ItemCategoryLookupId == CategoryId);
                     if (_itemCategoryLookup != null)
                     {
@@ -108,7 +106,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// <returns>Item modified with new data</returns>
         private async Task<Item> AddOrUpdateVarietiesAsync(Item currItem, ProductAttributeLine prodAttrib, WooProductAttributeMap currWooProductAttributeMap) //, bool IsAttributeVarietyUpddate)
         {
-            IRepository<ItemAttributeVarietyLookup> _itemAttribVarietyLookupRepo = appUnitOfWork.Repository<ItemAttributeVarietyLookup>();
+            IRepository<ItemAttributeVarietyLookup> _itemAttribVarietyLookupRepo = AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
             ItemAttributeVarietyLookup _itemAttributeVarietyLookup = null;
             foreach (var attribTerm in prodAttrib.options)
             {
@@ -144,10 +142,10 @@ namespace RainbowOF.Integration.Repositories.Woo
                     {
                         // we have a attribute variety, this means we should have an attribute that, that it belongs too.
                         if (_itemAttribute.ItemAttributeVarieties == null)
-                            _itemAttribute.ItemAttributeVarieties = new List<ItemAttributeVariety>();
+                            _itemAttribute.ItemAttributeVarieties = new();
                         // create a new variety assume 1.0 as in 1-1 QTY and update the ItemDetails. Do not change Item Id as then EF core knows it is a new record.
-                        ItemAttributeVariety _itemAttributeVariety = new ItemAttributeVariety();
-                        autoMapper.Map(_itemAttributeVarietyLookup, _itemAttributeVariety);
+                        ItemAttributeVariety _itemAttributeVariety = new();
+                        AutoMapper.Map(_itemAttributeVarietyLookup, _itemAttributeVariety);
 
                         // need to allocate the attribute id
                         _itemAttributeVariety.ItemAttributeId = _itemAttribute.ItemAttributeId;
@@ -178,8 +176,8 @@ namespace RainbowOF.Integration.Repositories.Woo
         private async Task<Item> AddOrUpdateItemsAttributesAsync(Item currItem, ProductAttributeLine prodAttrib, bool HasAttributes)
         {
             // if we get here then we have an item and it has an id
-            //            IAppRepository<ItemAttributeLookup> _itemAttributeLookupRepo = appUnitOfWork.Repository<ItemAttributeLookup>();
-            IRepository<WooProductAttributeMap> _wooProductAttributeMapRepo = appUnitOfWork.Repository<WooProductAttributeMap>();
+            //            IAppRepository<ItemAttributeLookup> _itemAttributeLookupRepo = AppUnitOfWork.Repository<ItemAttributeLookup>();
+            IRepository<WooProductAttributeMap> _wooProductAttributeMapRepo = AppUnitOfWork.Repository<WooProductAttributeMap>();
             // check if this is an update or an add for categories and attributes
             WooProductAttributeMap _wooProductAttributeMap = await _wooProductAttributeMapRepo.GetByIdAsync(wpa => wpa.WooProductAttributeId == prodAttrib.id);
             if (_wooProductAttributeMap != null)
@@ -188,7 +186,7 @@ namespace RainbowOF.Integration.Repositories.Woo
                 {
                     // this attribute exists so just update it
                     ItemAttribute _itemAttribute = currItem.ItemAttributes.Find(ic => ic.ItemAttributeLookupId == _wooProductAttributeMap.ItemAttributeLookupId);
-                    _itemAttribute.IsUsedForItemVariety = prodAttrib.variation == null ? false : (bool)prodAttrib.variation;  // the only thing that we can really update
+                    _itemAttribute.IsUsedForItemVariety = prodAttrib.variation != null && (bool)prodAttrib.variation;  // the only thing that we can really update
                 }
                 else
                 {
@@ -197,9 +195,9 @@ namespace RainbowOF.Integration.Repositories.Woo
                     // create a new attribute and update the ItemDetails. Do not change Item Id as then EF core knows it is a new record.
                     currItem.ItemAttributes.Add(new ItemAttribute
                     {
-                        IsUsedForItemVariety = prodAttrib.variation == null ? false : (bool)prodAttrib.variation,
+                        IsUsedForItemVariety = prodAttrib.variation != null && (bool)prodAttrib.variation,   // was-> prodAttrib.variation == null ? false : (bool)prodAttrib.variation,
                         ItemAttributeLookupId = _wooProductAttributeMap.ItemAttributeLookupId,
-                    });
+                    }); ;
                 }
                 //if (Convert.ToBoolean(prodAttrib.variation))
                 //{   --> not sure why we had this but we were only adding terms / varieties if they were used for variations, but this means attributes are left hanging.
@@ -234,13 +232,12 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// <returns></returns>
         private async Task<Guid> AddProductToItemsAsync(Product currWooProd)
         {
-            Guid _itemId = Guid.Empty;
-            IRepository<WooProductMap> _wooProductMapRepository = appUnitOfWork.Repository<WooProductMap>();
+            IRepository<WooProductMap> _wooProductMapRepository = AppUnitOfWork.Repository<WooProductMap>();
             //it may not be in the map, but we may have a product with that name so see if we do -Add Item Product if it does not exist
-            _itemId = await AddOrGetEntityIDAsync(currWooProd);
+            Guid _itemId = await AddOrGetEntityIDAsync(currWooProd);
             if (_itemId != Guid.Empty)
             {
-                WooProductMap _wooProductMap = new WooProductMap
+                WooProductMap _wooProductMap = new()
                 {
                     WooProductId = (int)currWooProd.id,
                     ItemId = _itemId,
@@ -262,7 +259,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// <returns>1 if deleted or Error</returns>
         private async Task<int> DeleteWooProductMapByItemIdAsync(Guid sourceItemId)
         {
-            IRepository<WooProductMap> _wooProductMapRepository = appUnitOfWork.Repository<WooProductMap>();
+            IRepository<WooProductMap> _wooProductMapRepository = AppUnitOfWork.Repository<WooProductMap>();
             return await _wooProductMapRepository.DeleteByAsync(wpm => wpm.ItemId == sourceItemId);
         }
         /// <summary>
@@ -273,7 +270,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// <returns>number of variants added or error</returns>
         private async Task<ImportCounters> ImportProductVariationsAsync(Product sourceWooEntity, Item sourceEntity)
         {
-            WooImportVariation _wooImportVariation = new WooImportVariation(appUnitOfWork,appLoggerManager,appWooSettings, autoMapper);
+            WooImportVariation _wooImportVariation = new(AppUnitOfWork, AppLoggerManager, AppWooSettings, AutoMapper);
             return await _wooImportVariation.ImportProductVariantsAsync((uint)sourceWooEntity.id, sourceEntity.ItemId);
         }
         #endregion
@@ -285,8 +282,8 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// <returns>List of Products</returns>
         public async Task<List<Product>> GetWooEntityDataAsync(bool OnlyItemsInStock = true)
         {
-            WooAPISettings _wooAPISettings = new WooAPISettings(appWooSettings);
-            WooProduct _wooProduct = new WooProduct(_wooAPISettings, appLoggerManager);
+            WooAPISettings _wooAPISettings = new(AppWooSettings);
+            WooProduct _wooProduct = new(_wooAPISettings, AppLoggerManager);
             List<Product> wooProducts = OnlyItemsInStock ? await _wooProduct.GetAllProductsInStockAsync()
                                                          : await _wooProduct.GetAllProductsAsync();
 
@@ -300,7 +297,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// <returns></returns>
         public async Task<Guid> GetWooMappedEntityIdByIdAsync(uint sourceWooEntityId)
         {
-            IRepository<WooProductMap> _wooProductMapRepo = appUnitOfWork.Repository<WooProductMap>();
+            IRepository<WooProductMap> _wooProductMapRepo = AppUnitOfWork.Repository<WooProductMap>();
             WooProductMap _wooProductMap = await _wooProductMapRepo.GetByIdAsync(wp => wp.WooProductId == sourceWooEntityId);
             return (_wooProductMap == null) ? Guid.Empty : _wooProductMap.ItemId;
         }
@@ -314,21 +311,21 @@ namespace RainbowOF.Integration.Repositories.Woo
         {
             // using the prod we need to add the item and link all its Settings: AssginedCategory, Attributes and Attribute varieties
             if (productToItemMapper == null)
-                productToItemMapper = new(autoMapper);
+                productToItemMapper = new(AutoMapper);
             Item _newItem = productToItemMapper.MapWooProductInfo(newWooEntity, null); //, ref -> uses the class level values currWooProductsWithParents);
             if (_newItem != null)
             {
                 /// once we get here we have a new ID for the ItemID so we can continue
                 _newItem = await AssignWooProductCategoryAsync(_newItem, newWooEntity);    // adding the item but not the linked items
                 _newItem = await AssignWooProductAttributesAsync(_newItem, newWooEntity);
-                if (await appUnitOfWork.itemRepository.AddItemAsync(_newItem) == null)   
+                if (await AppUnitOfWork.ItemRepository.AddItemAsync(_newItem) == null)
                 {
                     _newItem.ItemId = Guid.Empty;    // if no records added or there was an error.
                 }
                 else if (_newItem.ItemType.Equals(ItemTypes.Variable))
                 {
                     // once item added we can add variants
-                    /* _newItem = not using the number of variants here*/ 
+                    /* _newItem = not using the number of variants here*/
                     await ImportProductVariationsAsync(newWooEntity, _newItem);
                 }
                 return _newItem.ItemId;
@@ -346,16 +343,16 @@ namespace RainbowOF.Integration.Repositories.Woo
         {
             Guid _itemId = Guid.Empty;
             // check if the Prod exists based on name since there is no mapped id
-            Item _item = await appUnitOfWork.itemRepository.FindFirstEagerLoadingItemAsync(i => i.ItemName == sourceEntity.name);
-            if (appUnitOfWork.IsInErrorState())
+            Item _item = await AppUnitOfWork.ItemRepository.FindFirstEagerLoadingItemAsync(i => i.ItemName == sourceEntity.name);
+            if (AppUnitOfWork.IsInErrorState())
                 return Guid.Empty;
             if ((_item == null) && (!String.IsNullOrEmpty(sourceEntity.sku)))     // check if perhaps they renamed the by looking for SKU
             {
-                _item = await appUnitOfWork.itemRepository.FindFirstEagerLoadingItemAsync(i => i.SKU == sourceEntity.sku);
-                if (appUnitOfWork.IsInErrorState())
+                _item = await AppUnitOfWork.ItemRepository.FindFirstEagerLoadingItemAsync(i => i.SKU == sourceEntity.sku);
+                if (AppUnitOfWork.IsInErrorState())
                     return Guid.Empty;
             }
-            _itemId = (_item != null) 
+            _itemId = (_item != null)
                 ? await UpdateEntityAsync(sourceEntity, _item)
                 : await AddEntityAsync(sourceEntity);
 
@@ -371,7 +368,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         {
             Guid _itemId = Guid.Empty;
             // check if the Prod based on mapped id
-            Item _item = await appUnitOfWork.itemRepository.FindFirstEagerLoadingItemAsync(i => i.ItemId == sourceWooMappedEntityId);
+            Item _item = await AppUnitOfWork.ItemRepository.FindFirstEagerLoadingItemAsync(i => i.ItemId == sourceWooMappedEntityId);
             /// Now update the woo Product using the _ItemProductId returned.
             if (_item != null)
             {    // we found the Item Id so update that Id
@@ -381,7 +378,7 @@ namespace RainbowOF.Integration.Repositories.Woo
             else
             {
                 // if we got here then the product map is pointing to the wrong ID, so delete the ID and add the item
-                if (!appUnitOfWork.IsInErrorState())  // did something go wrong rather?
+                if (!AppUnitOfWork.IsInErrorState())  // did something go wrong rather?
                     await DeleteWooProductMapByItemIdAsync(sourceWooMappedEntityId);
                 ////-> we need to add this item since the id we have is not corresponding.
                 _itemId = await AddProductToItemsAsync(sourceEntity);
@@ -418,12 +415,12 @@ namespace RainbowOF.Integration.Repositories.Woo
             bool _IsUpdated = false;
             if ((sourceChildWooEntityId != Guid.Empty) && (sourceParentWooEntityId != Guid.Empty))
             {
-                Item _item = await appUnitOfWork.itemRepository.GetByIdAsync(ic => ic.ItemId == sourceChildWooEntityId);
+                Item _item = await AppUnitOfWork.ItemRepository.GetByIdAsync(ic => ic.ItemId == sourceChildWooEntityId);
                 if (_item == null)
                     _IsUpdated = false;
                 else
                 {     // found so update
-                    _IsUpdated = (await appUnitOfWork.itemRepository.UpdateAsync(_item)) != UnitOfWork.CONST_WASERROR;
+                    _IsUpdated = (await AppUnitOfWork.ItemRepository.UpdateAsync(_item)) != UnitOfWork.CONST_WASERROR;
                 }
             }
             return _IsUpdated;
@@ -438,7 +435,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         {
             // using the prod we need to add the item and link all its Settings: AssginedCategory, Attributes and Attribute varieties
             if (productToItemMapper == null)
-                productToItemMapper = new(autoMapper);
+                productToItemMapper = new(AutoMapper);
             updateEntity = productToItemMapper.MapWooProductInfo(updatedWooEntity, updateEntity); //, ref currWooProductsWithParents);
             if (updateEntity != null)
             {
@@ -449,7 +446,7 @@ namespace RainbowOF.Integration.Repositories.Woo
                 if (updateEntity.ItemType == ItemTypes.Variable)
                     await ImportProductVariationsAsync(updatedWooEntity, updateEntity);  // we don't handle errors here, probably should do something, but no way of knowing where the error is
                 // now update the item
-                if (await appUnitOfWork.itemRepository.UpdateAsync(updateEntity) == 0)
+                if (await AppUnitOfWork.ItemRepository.UpdateAsync(updateEntity) == 0)
                 {
                     updateEntity.ItemId = Guid.Empty;
                 }
@@ -472,27 +469,27 @@ namespace RainbowOF.Integration.Repositories.Woo
             }
             return _itemId;
         }
-            //////----> same as AddOrUpdateEntity so used there.
+        //////----> same as AddOrUpdateEntity so used there.
 
-            //IItemRepository _itemRepository = appUnitOfWork.itemRepository();
-            //// check if the Prod based on mapped id
-            //Item _item = await _itemRepository.FindFirstEagerLoadingItemAsync(i => i.ItemId == currWooProductMap.ItemId);
-            ///// Now update the woo Product using the _ItemProductId returned.
-            //if (_item != null)
-            //{    // we found the Item Id so update that Id
-            //    _itemId = await UpdateItem(currWooProduct, _item, currWooProductsWithParents);
-            //    currImportCounters.TotalUpdated++;
-            //}
-            //else
-            //{
-            //    // if we got here then the product map is pointing to the wrong ID, so delete the ID and add the item
-            //    await DeleteWooProductMap(currWooProductMap);
-            //    _itemId = await AddProductToItems(currWooProduct, currWooProductsWithParents);
-            //}
-            //return _itemId;
-            //throw new NotImplementedException();
-            /// in categories we call add or get Entity, do we here? 
-        
+        //IItemRepository _itemRepository = AppUnitOfWork.itemRepository();
+        //// check if the Prod based on mapped id
+        //Item _item = await _itemRepository.FindFirstEagerLoadingItemAsync(i => i.ItemId == currWooProductMap.ItemId);
+        ///// Now update the woo Product using the _ItemProductId returned.
+        //if (_item != null)
+        //{    // we found the Item Id so update that Id
+        //    _itemId = await UpdateItem(currWooProduct, _item, currWooProductsWithParents);
+        //    CurrImportCounters.TotalUpdated++;
+        //}
+        //else
+        //{
+        //    // if we got here then the product map is pointing to the wrong ID, so delete the ID and add the item
+        //    await DeleteWooProductMap(currWooProductMap);
+        //    _itemId = await AddProductToItems(currWooProduct, currWooProductsWithParents);
+        //}
+        //return _itemId;
+        //throw new NotImplementedException();
+        /// in categories we call add or get Entity, do we here? 
+
         /// <summary>
         /// For each product
         ///     o If the product does not exists add and copy woo details to new record increase Counter.added
@@ -504,7 +501,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         {
             Guid _itemProductId = Guid.Empty;
             // Get repository for each database we are accessing. ItemProduct. WooProductMap & WooSyncLog
-            IRepository<WooProductMap> _wooProductMapRepository = appUnitOfWork.Repository<WooProductMap>();
+            IRepository<WooProductMap> _wooProductMapRepository = AppUnitOfWork.Repository<WooProductMap>();
 
             // Import the Product and set sync data
             ///first check if it exists in the mapping, just in case there has been a name change

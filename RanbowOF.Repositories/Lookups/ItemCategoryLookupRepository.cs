@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Lookups
@@ -17,13 +16,14 @@ namespace RainbowOF.Repositories.Lookups
     public class ItemCategoryLookupRepository : Repository<ItemCategoryLookup>, IItemCategoryLookupRepository
     {
         #region Private vars of parameters
-        //private ApplicationDbContext appContext = null;
+        // these are no internals to the generic repo
+        //private IDbContextFactory<ApplicationDbContext> appDbContext { get; set; }
         //private ILoggerManager appLoggerManager { get; set; }
         //private IUnitOfWork appUnitOfWork { get; set; }
         #endregion
-        public ItemCategoryLookupRepository(ApplicationDbContext sourceDbContext, ILoggerManager sourceLogger, IUnitOfWork sourceAppUnitOfWork) : base(sourceDbContext, sourceLogger, sourceAppUnitOfWork)
+        public ItemCategoryLookupRepository(IDbContextFactory<ApplicationDbContext> sourceDbContext, ILoggerManager sourceLogger, IUnitOfWork sourceAppUnitOfWork) : base(sourceDbContext, sourceLogger, sourceAppUnitOfWork)
         {
-            //appContext = sourceDbContext;
+            //appDbContext = sourceDbContext;
             //appLoggerManager = sourceLogger;
             //appUnitOfWork = sourceAppUnitOfWork;
             if (sourceLogger.IsDebugEnabled()) sourceLogger.LogDebug("ItemCategoryLookupRepository initialised...");
@@ -31,30 +31,37 @@ namespace RainbowOF.Repositories.Lookups
 
         public async Task<List<ItemCategoryLookup>> GetAllEagerLoadingAsync()
         {
+            string statusString = $"Getting all records with eager loading of ItemCategoryLookup";
+            if (!CanDoDbAsyncCall(statusString))
+                return null;
             List<ItemCategoryLookup> _items = null;
-            DbSet<ItemCategoryLookup> _table = appContext.Set<ItemCategoryLookup>();
+            using var context = await AppDbContext.CreateDbContextAsync();
+            DbSet<ItemCategoryLookup> _table = context.Set<ItemCategoryLookup>();
 
             try
             {
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Getting all records with eager loading of ItemCategoryLookup");
                 _items = await _table.Include(icl => icl.ParentCategory).ToListAsync();
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage( $"!!!Error Getting all records from ItemCategoryLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all records from ItemCategoryLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
+            finally
+            {
+                DbCallDone(statusString);
+            }
             return _items;
         }
 
-        List<OrderByParameter<ItemCategoryLookup>> GetOrderByExpressions(List<SortParam> currentSortParams)
+        static List<OrderByParameter<ItemCategoryLookup>> GetOrderByExpressions(List<SortParam> currentSortParams)
         {
             if (currentSortParams == null)
                 return null;
 
-            List<OrderByParameter<ItemCategoryLookup>> _orderByExpressions = new List<OrderByParameter<ItemCategoryLookup>>();
+            List<OrderByParameter<ItemCategoryLookup>> _orderByExpressions = new();
             foreach (var col in currentSortParams)
             {
                 switch (col.FieldName)
@@ -82,11 +89,11 @@ namespace RainbowOF.Repositories.Lookups
             return _orderByExpressions;
         }
 
-        private List<Expression<Func<ItemCategoryLookup, bool>>> GetFilterByExpressions(List<FilterParam> currentFilterParams)
+        private static List<Expression<Func<ItemCategoryLookup, bool>>> GetFilterByExpressions(List<FilterParam> currentFilterParams)
         {
             if (currentFilterParams == null)
                 return null;
-            List<Expression<Func<ItemCategoryLookup, bool>>> _filterByExpressions = new List<Expression<Func<ItemCategoryLookup, bool>>>();
+            List<Expression<Func<ItemCategoryLookup, bool>>> _filterByExpressions = new();
             foreach (var col in currentFilterParams)
             {
                 col.FilterBy = col.FilterBy.ToLower();
@@ -101,7 +108,7 @@ namespace RainbowOF.Repositories.Lookups
                         break;
 
                     case nameof(ItemCategoryLookup.UsedForPrediction):
-                        bool _IsTrue = ((col.FilterBy.Contains("y", StringComparison.OrdinalIgnoreCase)) || (col.FilterBy.Contains("enable", StringComparison.OrdinalIgnoreCase)));      // assume yes and no / enable or disable
+                        bool _IsTrue = ((col.FilterBy.Contains('y', StringComparison.OrdinalIgnoreCase)) || (col.FilterBy.Contains("enable", StringComparison.OrdinalIgnoreCase)));      // assume yes and no / enable or disable
                         _filterByExpressions.Add(icl => (icl.UsedForPrediction == _IsTrue));
                         break;
 
@@ -117,19 +124,20 @@ namespace RainbowOF.Repositories.Lookups
         }
         public async Task<DataGridItems<ItemCategoryLookup>> GetPagedDataEagerWithFilterAndOrderByAsync(DataGridParameters currentDataGridParameters) // (int startPage, int currentPageSize)
         {
+            string statusString = $"Getting all records with eager loading of ItemCategoryLookup order by an filter Data Grid Parameters: {currentDataGridParameters}";
+            if (!CanDoDbAsyncCall(statusString))
+                return null;
             DataGridItems<ItemCategoryLookup> _dataGridData = null;
-            DbSet<ItemCategoryLookup> _table = appContext.Set<ItemCategoryLookup>();
-
             try
             {
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug( $"Getting all records with eager loading of ItemCategoryLookup order by an filter Data Grid Parameters: {currentDataGridParameters.ToString()}");
+                using var context = await AppDbContext.CreateDbContextAsync();
+
+                DbSet<ItemCategoryLookup> _table = context.Set<ItemCategoryLookup>();
                 // get a list of Order bys and filters
                 List<OrderByParameter<ItemCategoryLookup>> _orderByExpressions = GetOrderByExpressions(currentDataGridParameters.SortParams);
                 List<Expression<Func<ItemCategoryLookup, bool>>> _filterByExpressions = GetFilterByExpressions(currentDataGridParameters.FilterParams);
 
                 // start with a basic Linq Query with Eager loading
-
-
                 IQueryable<ItemCategoryLookup> _query = _table.Include(icl => icl.ParentCategory); //  null;//                // using the parameters set up the sort
                 if ((_orderByExpressions != null) && (_orderByExpressions.Count > 0))
                 {
@@ -175,8 +183,10 @@ namespace RainbowOF.Repositories.Lookups
                     _query = _query.Where(_queryWhere);   //  (_queryWhere);
                 }
                 //now we can add the page stuff - first get the count to return
-                _dataGridData = new DataGridItems<ItemCategoryLookup>();
-                _dataGridData.TotalRecordCount = _query.Count();
+                _dataGridData = new()
+                {
+                    TotalRecordCount = _query.Count()
+                };
                 _query = _query
                    .Skip((currentDataGridParameters.CurrentPage - 1) * currentDataGridParameters.PageSize)
                    .Take(currentDataGridParameters.PageSize);   // take 3 pages at least.
@@ -191,11 +201,16 @@ namespace RainbowOF.Repositories.Lookups
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage( $"!!!Error Getting all records from ItemCategoryLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all records from ItemCategoryLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
+            finally
+            {
+                DbCallDone(statusString);
+            }
+
             return _dataGridData;
         }
 

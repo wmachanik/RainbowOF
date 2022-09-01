@@ -1,7 +1,4 @@
 ﻿using RainbowOF.Models.System;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace RainbowOF.Woo.REST.Models
 {
@@ -13,7 +10,7 @@ namespace RainbowOF.Woo.REST.Models
             {
                 if (QueryURL == null)
                     return string.Empty;
-                if (!QueryURL.EndsWith("/")) 
+                if (!QueryURL.EndsWith("/"))
                     QueryURL += "/";
                 return ((IsSecureURL) ? "https://" : "http://") + QueryURL;
             }

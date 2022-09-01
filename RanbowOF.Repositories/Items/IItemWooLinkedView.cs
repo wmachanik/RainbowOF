@@ -1,10 +1,7 @@
 ﻿using RainbowOF.Models.Items;
-using RainbowOF.Models.Lookups;
 using RainbowOF.Models.Woo;
 using RainbowOF.Repositories.Integrations;
-using RainbowOF.Repositories.Lookups;
 using RainbowOF.ViewModels.Items;
-using RainbowOF.ViewModels.Lookups;
 
 namespace RainbowOF.Repositories.Items
 {

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Text;
 
 namespace RainbowOF.Models.Logs
 {
@@ -22,11 +20,11 @@ namespace RainbowOF.Models.Logs
         public int WooSyncLogId { get; set; }
         [DisplayName("Date and time the sync was done")]
         public DateTime WooSyncDateTime { get; set; }
-/// 
-/// //
-/// 
-/// seCTION id - IS IT USED?
-/// 
+        /// 
+        /// //
+        /// 
+        /// seCTION id - IS IT USED?
+        /// 
 
         public WooSections Section { get; set; }
         [DisplayName("Id if queried otherwise “0”.")]

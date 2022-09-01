@@ -8,8 +8,6 @@ using RainbowOF.Woo.REST.Models;
 using RainbowOF.Woo.REST.Repositories;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using WooCommerceNET.WooCommerce.v3;
 
@@ -18,18 +16,18 @@ namespace RainbowOF.Integration.Repositories.Woo
     public class WooImportProductAttributeTerm : IWooImportWithAParent<ItemAttributeVarietyLookup, ProductAttributeTerm, WooProductAttributeTermMap>
     {
         #region public variables
-        public IUnitOfWork appUnitOfWork { get; set; }
-        public ILoggerManager appLoggerManager { get; set; }
-        public WooSettings appWooSettings { get; set; }
+        public IUnitOfWork AppUnitOfWork { get; set; }
+        public ILoggerManager AppLoggerManager { get; set; }
+        public WooSettings AppWooSettings { get; set; }
         public ImportCounters CurrImportCounters { get; set; } = new ImportCounters();
         #endregion
         #region Constructor
-        public WooImportProductAttributeTerm(IUnitOfWork appUnitOfWork, ILoggerManager logger, WooSettings appWooSettings)
+        public WooImportProductAttributeTerm(IUnitOfWork AppUnitOfWork, ILoggerManager logger, WooSettings AppWooSettings)
         {
-            this.appUnitOfWork = appUnitOfWork ?? throw new ArgumentNullException(nameof(appUnitOfWork));
-            appLoggerManager = logger ?? throw new ArgumentNullException(nameof(logger));
-            this.appWooSettings = appWooSettings ?? throw new ArgumentNullException(nameof(appWooSettings));
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("WooImportProductAttributeTerm initialised.");
+            this.AppUnitOfWork = AppUnitOfWork ?? throw new ArgumentNullException(nameof(AppUnitOfWork));
+            AppLoggerManager = logger ?? throw new ArgumentNullException(nameof(logger));
+            this.AppWooSettings = AppWooSettings ?? throw new ArgumentNullException(nameof(AppWooSettings));
+            if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug("WooImportProductAttributeTerm initialised.");
         }
         #endregion
         #region Interface Methods
@@ -44,12 +42,12 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// <returns>Guid of Item Added or found or Guid.Empty if not</returns>
         public async Task<Guid> AddOrGetEntityIDAsync(ProductAttributeTerm sourceEntity, Guid sourceParentId)
         {
-            IRepository<ItemAttributeVarietyLookup> _itemAttributeVarietyRepository = appUnitOfWork.Repository<ItemAttributeVarietyLookup>();
+            IRepository<ItemAttributeVarietyLookup> _itemAttributeVarietyRepository = AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
             // we need to search for both variety name and "parent" attribute id, to make sure that the name belongs to this attribute
             ItemAttributeVarietyLookup _ItemAttributeVariety = await _itemAttributeVarietyRepository.GetByIdAsync(ic => (ic.ItemAttributeLookupId == sourceParentId) && (ic.VarietyName == sourceEntity.name));
             if (_ItemAttributeVariety == null)
             {
-                ItemAttributeVarietyLookup _newItemAttributeVariety = new ItemAttributeVarietyLookup
+                ItemAttributeVarietyLookup _newItemAttributeVariety = new()
                 {
                     ItemAttributeLookupId = sourceParentId,
                     VarietyName = sourceEntity.name,
@@ -67,7 +65,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         public async Task<Guid> AddOrUpdateEntityAsync(ProductAttributeTerm sourceEntity, WooProductAttributeTermMap sourceWooMappedEntity, Guid sourceParentId)
         {
             Guid _itemAttributeVarietyId = Guid.Empty;
-            IRepository<ItemAttributeVarietyLookup> _itemAttributeVarietyRepository = appUnitOfWork.Repository<ItemAttributeVarietyLookup>();
+            IRepository<ItemAttributeVarietyLookup> _itemAttributeVarietyRepository = AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
             if (sourceEntity.name.StartsWith("Aero"))
                 _itemAttributeVarietyId = Guid.Empty;  // rubbish code just to debug
             // check if the AttributeTerm exists
@@ -89,10 +87,9 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// <returns></returns>
         public async Task<Guid> AddEntityAsync(ProductAttributeTerm newWooEntity, WooProductAttributeTermMap sourceWooMap, Guid sourceParentId)
         {
-            Guid _itemAttributeTermId = Guid.Empty;
-            IRepository<WooProductAttributeTermMap> _wooAttributeTermMapRepository = appUnitOfWork.Repository<WooProductAttributeTermMap>();
+            IRepository<WooProductAttributeTermMap> _wooAttributeTermMapRepository = AppUnitOfWork.Repository<WooProductAttributeTermMap>();
             // Add Item AttributeTerm if it does not exist
-            _itemAttributeTermId = await AddOrGetEntityIDAsync(newWooEntity, sourceParentId);
+            Guid _itemAttributeTermId = await AddOrGetEntityIDAsync(newWooEntity, sourceParentId);
             if (sourceWooMap == null)
             {
                 sourceWooMap = new WooProductAttributeTermMap
@@ -123,8 +120,8 @@ namespace RainbowOF.Integration.Repositories.Woo
 
         public async Task<List<ProductAttributeTerm>> GetWooEntityDataAsync(uint parentAttributeId)
         {
-            WooAPISettings _wooAPISettings = new WooAPISettings(appWooSettings);
-            IWooProductAttributeTerm _WooProductAttributeTerm = new WooProductAttributeTerm(_wooAPISettings, appLoggerManager);
+            WooAPISettings _wooAPISettings = new(AppWooSettings);
+            IWooProductAttributeTerm _WooProductAttributeTerm = new WooProductAttributeTerm(_wooAPISettings, AppLoggerManager);
             List<ProductAttributeTerm> wooProductAttributeTerms = await _WooProductAttributeTerm.GetAttributeTermsByAtttributeAsync(parentAttributeId);
             return wooProductAttributeTerms;
         }
@@ -136,7 +133,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// <returns>UId of the Entity</returns>
         public async Task<Guid> GetWooMappedEntityIdByIdAsync(uint sourceWooEntityId)
         {
-            IRepository<WooProductAttributeMap> _wooProductAttributeMapRepo = appUnitOfWork.Repository<WooProductAttributeMap>();
+            IRepository<WooProductAttributeMap> _wooProductAttributeMapRepo = AppUnitOfWork.Repository<WooProductAttributeMap>();
             /// was not an async made it one
             WooProductAttributeMap _wooProductAttributeMap = await _wooProductAttributeMapRepo.GetByIdAsync(wpa => wpa.WooProductAttributeId == sourceWooEntityId);
             return (_wooProductAttributeMap == null) ? Guid.Empty : _wooProductAttributeMap.ItemAttributeLookupId;
@@ -155,12 +152,11 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// <returns></returns>
         public async Task<Guid> UpdateEntityAsync(ProductAttributeTerm updateWooEntity, Guid sourceParentId, ItemAttributeVarietyLookup updatedEntity)
         {
-            IRepository<ItemAttributeVarietyLookup> _ItemAttributeVarietyRepository = appUnitOfWork.Repository<ItemAttributeVarietyLookup>();
-            bool _success = false;
+            IRepository<ItemAttributeVarietyLookup> _ItemAttributeVarietyRepository = AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
             updatedEntity.ItemAttributeLookupId = sourceParentId;
             updatedEntity.VarietyName = updateWooEntity.name;
             updatedEntity.Notes = $"Updated Woo AttributeTerm ID {updateWooEntity.id}";
-            _success = await _ItemAttributeVarietyRepository.UpdateAsync(updatedEntity) != UnitOfWork.CONST_WASERROR;
+            bool _success = await _ItemAttributeVarietyRepository.UpdateAsync(updatedEntity) != UnitOfWork.CONST_WASERROR;
             return (_success ? updatedEntity.ItemAttributeVarietyLookupId : Guid.Empty);
         }
         //        async Task<Guid> UpdateProductAttributeTerm(ProductAttributeTerm sourcePAT, Guid sourceParentAttributeId, WooProductAttributeTermMap sourceWooAttributeTermMap)
@@ -175,9 +171,8 @@ namespace RainbowOF.Integration.Repositories.Woo
         public async Task<Guid> UpdateWooMappingEntityAsync(ProductAttributeTerm updatedWooEntity, WooProductAttributeTermMap targetWooMap, Guid sourceParentId)
         {
             // we have found a mapping between the woo Product AttributeTerm and our AttributeTerm id so update the Attribute table just in case.
-            Guid _itemAttributeTermId = Guid.Empty;
-            IRepository<WooProductAttributeTermMap> _wooProductAttributeTermMapRepository = appUnitOfWork.Repository<WooProductAttributeTermMap>();
-            _itemAttributeTermId = await AddOrUpdateEntityAsync(updatedWooEntity, targetWooMap, sourceParentId);
+            IRepository<WooProductAttributeTermMap> _wooProductAttributeTermMapRepository = AppUnitOfWork.Repository<WooProductAttributeTermMap>();
+            Guid _itemAttributeTermId = await AddOrUpdateEntityAsync(updatedWooEntity, targetWooMap, sourceParentId);
             /// Now update the woo AttributeTerm using the _ItemAttributeTermId returned.
             if (await _wooProductAttributeTermMapRepository.UpdateAsync(targetWooMap) == UnitOfWork.CONST_WASERROR)
             {   // did not updated so set _ItemAttributeTermId to ItemAttributeTermID to Guid.Empty = error
@@ -196,7 +191,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         {
             Guid _itemAttributeTermId = Guid.Empty;
             // Get repository for each database we are accessing. ItemAttributeTerm. WooProductAttributeTermMap & WooSyncLog
-            IRepository<WooProductAttributeTermMap> _wooAttributeTermMapRepository = appUnitOfWork.Repository<WooProductAttributeTermMap>();
+            IRepository<WooProductAttributeTermMap> _wooAttributeTermMapRepository = AppUnitOfWork.Repository<WooProductAttributeTermMap>();
             // Import the AttributeTerm and set sync data
             ///first check if it exists in the mapping, just in case there has been a name change
             WooProductAttributeTermMap _wooAttributeTermMap = await _wooAttributeTermMapRepository.GetByIdAsync(wa => wa.WooProductAttributeTermId == sourceEntity.id);

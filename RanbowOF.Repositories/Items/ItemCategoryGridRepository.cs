@@ -1,21 +1,22 @@
 ﻿using RainbowOF.Models.Items;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using RainbowOF.Models.Lookups;
 using RainbowOF.Repositories.Common;
 using RainbowOF.Tools;
-using RainbowOF.Models.Lookups;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Items
 {
     public class ItemCategoryGridRepository : GridRepository<ItemCategory>, IItemCategoryGridRepository
     {
-        public ItemCategoryGridRepository(ILoggerManager sourceLogger, IUnitOfWork sourceAppUnitOfWork) : base(sourceLogger, sourceAppUnitOfWork)
+        private IUnitOfWork appUnitOfWork { get; set; }
+        public ItemCategoryGridRepository(ILoggerManager sourceLogger, IUnitOfWork sourceAppUnitOfWork) 
+                : base(sourceLogger, sourceAppUnitOfWork, sourceAppUnitOfWork.ItemCategoryRepo)
         {
             // base initialises
             if (sourceLogger.IsDebugEnabled()) sourceLogger.LogDebug("ItemCategoryGridRepository initialised...");
+            appUnitOfWork = sourceAppUnitOfWork;
         }
         #region Recommended Over writable Grid Classes
         /// <summary>
@@ -28,11 +29,18 @@ namespace RainbowOF.Repositories.Items
         {
             if (newEntity == null)
                 newEntity = new ItemCategory();
-
             newEntity.ItemId = ParentId;
             newEntity.UsedForPrediction = false;
             newEntity.ItemCategoryLookupId = Guid.Empty;
             return newEntity;
+        }
+        public List<ItemCategory> GetAllAnItemsCategories(Guid parentItemId)
+        {
+            if (parentItemId == Guid.Empty)
+                return null;
+           // IRepository<ItemCategory> _itemCategoryRepository = AppUnitOfWork.Repository<ItemCategory>();
+            var _result = appUnitOfWork.ItemCategoryRepo.GetAllAnItemsCategories(parentItemId);
+            return _result;
         }
         /// <summary>
         /// See if entity a duplicate, this needs to be overwritten at a class specific level.
@@ -52,7 +60,7 @@ namespace RainbowOF.Repositories.Items
                                         (ic => (ic.ItemId == checkEntity.ItemId)
                                             && (ic.ItemCategoryLookupId == checkEntity.ItemCategoryLookupId)) :
                                         (ic => (ic.ItemId == checkEntity.ItemId)
-                                            && (ic.ItemCategoryId != checkEntity.ItemCategoryId) 
+                                            && (ic.ItemCategoryId != checkEntity.ItemCategoryId)
                                             && (ic.ItemCategoryLookupId == checkEntity.ItemCategoryLookupId))
                                       );
             return (_result != null);
@@ -92,6 +100,7 @@ namespace RainbowOF.Repositories.Items
             ItemUoMLookup _itemUoMLookup = await _itemUoMLookupRepository.GetByIdAsync(sourceItemUoMLookupId);
             return _itemUoMLookup;
         }
+
         #endregion
 
     }

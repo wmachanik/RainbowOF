@@ -3,20 +3,20 @@
 <Modal @ref="modalRef">
     <ModalContent IsCentered="true" Size="ModalSize.Large">
         <ModalHeader>
-            <ModalTitle>@_ConfirmationTitle</ModalTitle>
+            <ModalTitle>@confirmationTitle</ModalTitle>
             <CloseButton Clicked="@(() => OnConfirmationChange(false))" />
         </ModalHeader>
         <ModalBody>
-            @_ConfirmationMessage
+            @confirmationMessage
         </ModalBody>
         <ModalFooter>
-            @if (_ShowConfirmOption)
+            @if (showConfirmOption)
             {
-                <Blazorise.Check TValue="bool" Style="padding-right: 6px" Checked="@_OptionIsConfirmed"
-                                 CheckedChanged="@((value) => _OptionIsConfirmed = value)">@_ConfirmOptionCheckText</Blazorise.Check>
+                <Blazorise.Check TValue="bool" Style="padding-right: 6px" Checked="@_optionIsConfirmed"
+                                 CheckedChanged="@((value) => _optionIsConfirmed = value)">@confirmOptionCheckText</Blazorise.Check>
              }
-            <Blazorise.Button Color="@_ConfirmColor" Clicked="@(() => OnConfirmationChange(true))">@_ConfirmButtonText</Blazorise.Button>
-            <Button Color="Color.Secondary" Clicked="@(() => OnConfirmationChange(false))">@_CancelButtonText</Button>
+            <Blazorise.Button Color="@confirmColor" Clicked="@(() => OnConfirmationChange(true))">@confirmButtonText</Blazorise.Button>
+            <Button Color="Color.Secondary" Clicked="@(() => OnConfirmationChange(false))">@cancelButtonText</Button>
         </ModalFooter>
     </ModalContent>
 </Modal>

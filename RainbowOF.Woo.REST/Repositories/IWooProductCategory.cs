@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using WooCommerceNET.WooCommerce.v3;
 
@@ -16,7 +14,7 @@ namespace RainbowOF.Woo.REST.Repositories
         Task<ProductCategory> GetProductCategoryByIdAsync(uint deleteWooEntityId);
         Task<ProductCategory> DeleteProductCategoryByIdAsync(uint deleteWooProductCategoryId);
         Task<ProductCategory> AddProductCategoryAsync(ProductCategory addWooProductCategory);
-//        Task<ProductCategory> FindProductCategoryByNameAsync(string findCategoryName); -> woocommerce does not support a search by string
+        //        Task<ProductCategory> FindProductCategoryByNameAsync(string findCategoryName); -> woocommerce does not support a search by string
         Task<ProductCategory> UpdateProductCategoryAsync(ProductCategory updateWooProductCategory);
     }
 }

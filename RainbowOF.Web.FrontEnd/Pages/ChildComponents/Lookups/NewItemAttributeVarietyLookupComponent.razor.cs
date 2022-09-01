@@ -5,8 +5,6 @@ using RainbowOF.Models.Lookups;
 using RainbowOF.Repositories.Common;
 using RainbowOF.ViewModels.Lookups;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
@@ -14,46 +12,46 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
     public partial class NewItemAttributeVarietyLookupComponent : ComponentBase
     {
         [Inject]
-        IUnitOfWork appUnitOfWork { get; set; }
+        public IUnitOfWork AppUnitOfWork { get; set; }
         [Parameter]
         public PopUpAndLogNotification PopUpRef { get; set; }
         [Parameter]
         public bool AddItemToWoo { get; set; } = false;
 
-        private Modal NewAttributeVarietyLookupModalRef;
+        private Modal newAttributeVarietyLookupModalRef { get; set; }
 
-        public ItemAttributeVarietyLookupView _NewItemAttributeVarietyLookupView = new ();
+        private ItemAttributeVarietyLookupView newItemAttributeVarietyLookupView { get; } = new();
 
         public async Task ShowModalAsync(Guid parentItemAttributeId)
         {
-            _NewItemAttributeVarietyLookupView.ItemAttributeLookupId = parentItemAttributeId;
+            newItemAttributeVarietyLookupView.ItemAttributeLookupId = parentItemAttributeId;
 
-            _NewItemAttributeVarietyLookupView.VarietyName = "New";
-            _NewItemAttributeVarietyLookupView.SortOrder = 0;
-            _NewItemAttributeVarietyLookupView.UoM = null;
-            _NewItemAttributeVarietyLookupView.Notes = $"Added: {DateTime.Now:f}";
-            _NewItemAttributeVarietyLookupView.FGColour = String.Empty;
-            _NewItemAttributeVarietyLookupView.BGColour = String.Empty;
-            _NewItemAttributeVarietyLookupView.Symbol = String.Empty; 
-            _NewItemAttributeVarietyLookupView.CanUpdateECommerceMap = AddItemToWoo ? true : null;  // if they want to add woo then do so here
-            await NewAttributeVarietyLookupModalRef.Show();
+            newItemAttributeVarietyLookupView.VarietyName = "New";
+            newItemAttributeVarietyLookupView.SortOrder = 0;
+            newItemAttributeVarietyLookupView.UoM = null;
+            newItemAttributeVarietyLookupView.Notes = $"Added: {DateTime.Now:f}";
+            newItemAttributeVarietyLookupView.FGColour = String.Empty;
+            newItemAttributeVarietyLookupView.BGColour = String.Empty;
+            newItemAttributeVarietyLookupView.Symbol = String.Empty;
+            newItemAttributeVarietyLookupView.CanUpdateECommerceMap = AddItemToWoo ? true : null;  // if they want to add woo then do so here
+            await newAttributeVarietyLookupModalRef.Show();
         }
 
         private async Task HideModal(bool SaveClicked)
         {
             if (SaveClicked)
             {
-                IRepository<ItemAttributeVarietyLookup> _appRepository = appUnitOfWork.Repository<ItemAttributeVarietyLookup>();
+                IRepository<ItemAttributeVarietyLookup> _appRepository = AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
                 if (_appRepository != null)
                 {
-                    var _result = await _appRepository.AddAsync(_NewItemAttributeVarietyLookupView);
+                    var _result = await _appRepository.AddAsync(newItemAttributeVarietyLookupView);
                     if (_result == null)
-                        await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Error adding new attribute variety: {_NewItemAttributeVarietyLookupView.VarietyName}");
+                        await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Error adding new attribute variety: {newItemAttributeVarietyLookupView.VarietyName}");
                     else
-                        await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Success, $"Attribute variety: {_NewItemAttributeVarietyLookupView.VarietyName} added.");
+                        await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Success, $"Attribute variety: {newItemAttributeVarietyLookupView.VarietyName} added.");
                 }
             }
-            await NewAttributeVarietyLookupModalRef.Hide();
+            await newAttributeVarietyLookupModalRef.Hide();
         }
     }
 }

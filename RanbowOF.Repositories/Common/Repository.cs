@@ -1,67 +1,90 @@
-﻿using RainbowOF.Data.SQL;
+﻿using Blazorise;
+using Microsoft.EntityFrameworkCore;
+using RainbowOF.Data.SQL;
 using RainbowOF.Tools;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
-using Microsoft.EntityFrameworkCore;
+using System.Net.Mime;
 using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Common
 {
     public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
     {
-        #region Privates
-        internal ApplicationDbContext appContext { get; set; }  // = null;
-        internal DbSet<TEntity> appDbSet = null;
-        internal ILoggerManager appLoggerManager { get; }
-        internal IUnitOfWork appUnitOfWork { get; set; }
+        #region Privates & Publics
+        //        internal DbSet<TEntity> CurrentDbSet { get; set; } // = null;
+        internal ILoggerManager AppLoggerManager { get; }
+        internal IUnitOfWork AppUnitOfWork { get; set; }
+        internal IDbContextFactory<ApplicationDbContext> AppDbContext { get; set; }
         #endregion
         #region Initialise
         /// should not need this had it her to stop the error: "There is no argument given that corresponds to the required formal parameter"
         /// if it is asking for that you need to ass  : base (dbContext, logger, UnitOfWork) to the definition 
         //public AppRepository() { }
-        public Repository(ApplicationDbContext dbContext,
+        public Repository(IDbContextFactory<ApplicationDbContext> context,
                           ILoggerManager logger,
                           IUnitOfWork unitOfWork)
         {
-            appContext = dbContext;
-            appDbSet = dbContext.Set<TEntity>();
-            appLoggerManager = logger;
-            appUnitOfWork = unitOfWork;
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"AppRepository Initialised with type {typeof(TEntity).Name}.");
+            AppDbContext = context;
+            AppLoggerManager = logger;
+            AppUnitOfWork = unitOfWork;
+            if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"AppRepository Initialised with type {typeof(TEntity).Name}.");
         }
         #endregion
         #region Public Access to Privates
-        //public ApplicationDbContext appDbContext { get { return appContext; } set { appContext = value; } }
-        public ApplicationDbContext AppDbContext
-        {
-            get
-            {
-                return appContext;
-            }
-        }
+        //public ApplicationDbContext appDbContext { get { return appDbContext; } set { appDbContext = value; } }
+        //private ApplicationDbContext _appDbContext; // = null;
+        //public ApplicationDbContext AppDbContext
+        //{
+        //    get { return _appDbContext; }
+        //    set { _appDbContext = value; }
+        //}
         #endregion
         #region Generic DBSet stuff
         public async Task<int> CountAsync()
         {
-            return await appDbSet.CountAsync();
+            using var context = AppDbContext.CreateDbContext();
+            var _table = context.Set<TEntity>();
+            return await _table.CountAsync();
+        }
+        /// <summary>
+        /// The below handle if a transaction is currently running to prevent re-entry of DBcontext.
+        /// </summary>
+        private bool _transactionIsBusy = false;
+        public bool CanDoDbAsyncCall(string startString)
+        {
+            if (_transactionIsBusy)
+            {
+                if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"{startString} -- called when an Async call is already busy.");
+                return false;
+            }
+            if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"{startString} -> begin.");
+            _transactionIsBusy = true;
+            return true;
+        }
+        public void DbCallDone(string endString)
+        {
+            if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"{endString} -> end.");
+            _transactionIsBusy = false;
         }
         public int Add(TEntity newEntity)
         {
             int _added = UnitOfWork.CONST_WASERROR;    // return if error
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Adding entity: {newEntity.ToString()}");
-            appUnitOfWork.BeginTransaction();
+            if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"Adding entity: {newEntity}");
             try
             {
-                appContext.Entry(newEntity).State = EntityState.Added;
-                //dbSet.Add(newEntity);
-                _added = appUnitOfWork.Complete();  // Save();
-                //appContext.Database.CommitTransaction();
+                using var context = AppDbContext.CreateDbContext();
+                var _table = context.Set<TEntity>();
+                //contextFactory.Entry(newEntity).State = EntityState.Added;  --> only use if not tracking changes, since it marks only the parent as changed
+                _table.Add(newEntity);   // use this method since it tracks changes
+                _added = context.SaveChanges();
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Adding Item: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Adding Item: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -70,71 +93,79 @@ namespace RainbowOF.Repositories.Common
         }
         public async Task<TEntity> AddAsync(TEntity newEntity)
         {
-            int _added = UnitOfWork.CONST_WASERROR;    // return if error
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Adding entity (async) type: {newEntity.GetType().Name} -- begin.");
+            int _added = UnitOfWork.CONST_WASERROR;
+            string statusString = $"Adding entity (async) type: {newEntity.GetType().Name}";
+            if (!CanDoDbAsyncCall(statusString))
+                return null;
             try
             {
-                appUnitOfWork.BeginTransaction();
-                //appContext.Entry(newEntity).State = EntityState.Added;
-                newEntity = (await appDbSet.AddAsync(newEntity)).Entity;
-                _added = await appUnitOfWork.CompleteAsync();  // Save
+                using var context = await AppDbContext.CreateDbContextAsync();
+                var _table = context.Set<TEntity>();
+                //contextFactory.Entry(newEntity).State = EntityState.Added;  -> removed since if adding children will only mark the one entry as new
+                var _result = await _table.AddAsync(newEntity);
+                newEntity = _result.Entity;
+                _added = await context.SaveChangesAsync();
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Adding Item (async): {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Adding Item (async): {ex.Message} - Inner Exception {ex.InnerException}");
+
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Adding entity (async): {newEntity.GetType().Name} -- end.");
-            if (_added == UnitOfWork.CONST_WASERROR)
-                return null;
-            else
-                return newEntity;
+            finally
+            {
+                DbCallDone(statusString);
+            }
+            if (_added == UnitOfWork.CONST_WASERROR) return null;
+                                                else return newEntity;
         }
         public async Task<int> AddRangeAsync(List<TEntity> newEntities)
         {
             int _added = UnitOfWork.CONST_WASERROR;    // return if error
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Adding range (async): {newEntities.GetType().Name} - begin");
+            string statusString = $"Adding range (async): {newEntities.GetType().Name}";
+            if (!CanDoDbAsyncCall(statusString))
+                return _added;
             try
             {
-                appUnitOfWork.BeginTransaction();
+                using var context = await AppDbContext.CreateDbContextAsync();
+                var _table = context.Set<TEntity>();
                 foreach (var newEntity in newEntities)
                 {
-                    appContext.Entry(newEntity).State = EntityState.Added;
+                    context.Entry(newEntity).State = EntityState.Added;
                 }
-                await appDbSet.AddRangeAsync(newEntities);     // !!!!!!   id field is set once is save by EF - no need to set it
-                _added = await appUnitOfWork.CompleteAsync();  // Save
+                await context.AddRangeAsync(newEntities);     // !!!!!!   id field is set once is save by EF - no need to set it
+                _added = await context.SaveChangesAsync();
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Adding range (async): {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Adding range (async): {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Adding range (async): {newEntities.GetType().Name} - end");
+            finally
+            {
+                DbCallDone(statusString);
+            }
             return _added;
         }
-        public int DeleteByPrimaryId(object sourceId)
+        public int DeleteByEntity(TEntity sourceEntity)
         {
             int _deleted = UnitOfWork.CONST_WASERROR;    // return if error
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Deleting by id entity: {sourceId.ToString()}");
-            appUnitOfWork.BeginTransaction();
+            if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"Deleting by id entity: {sourceEntity.ToString}");
             try
             {
-                TEntity _entity = GetById(sourceId);
-                if (_entity != null)
-                {
-                    appContext.Entry(_entity).State = EntityState.Deleted;
-                    appDbSet.Remove(_entity);
-                    _deleted = appUnitOfWork.Complete();  // Save();
-                }
-
+                //TEntity _entity = GetById(sourceId);  --> 
+                using var context = AppDbContext.CreateDbContext();
+                // appDbContext.Entry(_entity).State = EntityState.Deleted; //--> removed as only affects parent not sub classes / children
+                context.Remove(sourceEntity);
+                _deleted = context.SaveChanges();
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Deleting Item: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Deleting Item: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -142,51 +173,61 @@ namespace RainbowOF.Repositories.Common
 
             return _deleted;
         }
-        public async Task<int> DeleteByPrimaryIdAsync(object sourceId)
+        public async Task<int> DeleteByEntityAsync(TEntity sourceEntity)
         {
             int _deleted = UnitOfWork.CONST_WASERROR;    // return if error
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Deleting by id entity (async): {sourceId.GetType().FullName} -- begin");
+            string statusString = $"Deleting by id entity (async): {sourceEntity.ToString}";
+            if (!CanDoDbAsyncCall(statusString))
+                return _deleted;
             try
             {
-                TEntity _entity = await GetByIdAsync(sourceId);
-                if (_entity != null)
-                {
-                    appUnitOfWork.BeginTransaction();
-                    //appContext.Entry(_entity).State = EntityState.Deleted;  -- this line does what the next line does.
-                    appDbSet.Remove(_entity);
-                    _deleted = await appUnitOfWork.CompleteAsync();  // Save();
-                }
+                using var context = await AppDbContext.CreateDbContextAsync();
+                // AppUnitOfWork.AppDbContext.Entry(_entity).State = EntityState.Deleted; //--> removed as only affects parent not sub classes / children
+                context.Remove(sourceEntity);
+                _deleted = await context.SaveChangesAsync();
+                //TEntity _entity = await GetByIdAsync(sourceId);
+                //if (_entity != null)
+                //{
+                //    AppUnitOfWork.BeginTransaction();
+                //    //AppUnitOfWork.AppDbContext.Entry(_entity).State = EntityState.Deleted;  // With No Tracking enabled we need this 
+                //    AppUnitOfWork.AppDbContext.Remove(_entity);
+                //    _deleted = await AppUnitOfWork.CompleteAsync();  // Save();
+                //}
             }
             catch (Exception ex)
             {
-                appLoggerManager.LogError($"!!!Error Deleting entity (async): {ex.Message} - Inner Exception {ex.InnerException}");
-                appUnitOfWork.RollbackTransaction();
+                _deleted = UnitOfWork.CONST_WASERROR;
+                AppLoggerManager.LogError($"!!!Error Deleting entity (async): {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Deleting by id entity (async): {sourceId.GetType().FullName} -- end");
+            finally
+            {
+                DbCallDone(statusString);
+            }
             return _deleted;
         }
         public int DeleteBy(Expression<Func<TEntity, bool>> predicate)
         {
             int _deleted = UnitOfWork.CONST_WASERROR;    // return if error
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Deleting entity by: {predicate.ToString()}");
-            appUnitOfWork.BeginTransaction();
+            if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"Deleting entity by: {predicate}");
             try
             {
-                var _entity = appDbSet.Find(predicate);
+                using var context = AppDbContext.CreateDbContext();
+                var _table = context.Set<TEntity>();
+                var _entity = _table.Where(predicate);
                 if (_entity != null)
                 {
-                    //appContext.Entry(_entity).State = EntityState.Deleted;  -- this line does what the next line does.
-                    appDbSet.Remove(_entity);
-                    _deleted = appUnitOfWork.Complete();  // Save();
+                    // AppUnitOfWork.AppDbContext.Entry(_entity).State = EntityState.Deleted;  // With No Tracking enabled we need this 
+                    context.Remove(_entity);
+                    _deleted = context.SaveChanges();
                 }
-
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Deleting By: {ex.Message} - Inner Exception {ex.InnerException}");
+                _deleted = UnitOfWork.CONST_WASERROR;
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Deleting By: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -194,46 +235,50 @@ namespace RainbowOF.Repositories.Common
             return _deleted;
         }
         public async Task<int> DeleteByAsync(Expression<Func<TEntity, bool>> predicate)
+
         {
             int _deleted = UnitOfWork.CONST_WASERROR;    // return if error
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Deleting entity by (async): {predicate.ToString()} -- begin");
+            string statusString = $"Deleting entity by (async): {predicate}";
+            if (!CanDoDbAsyncCall(statusString))
+                return _deleted;
             try
             {
-                var _entity = await appDbSet.FirstOrDefaultAsync(predicate);
+                using var context = await AppDbContext.CreateDbContextAsync();
+                var _table = context.Set<TEntity>();
+                var _entity = await _table.FirstOrDefaultAsync(predicate);
                 if (_entity != null)
                 {
-                    appUnitOfWork.BeginTransaction();
-                    appContext.Entry(_entity).State = EntityState.Deleted;
-                    appDbSet.Remove(_entity);
-                    _deleted = await appUnitOfWork.CompleteAsync();  // Save();
+                    // AppUnitOfWork.AppDbContext.Entry(_entity).State = EntityState.Deleted;
+                    context.Remove(_entity);
+                    _deleted = await context.SaveChangesAsync();
                 }
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Deleting By (async): {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Deleting By (async): {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Deleting entity by (async): {predicate.ToString()} -- end");
+            finally
+            {
+                DbCallDone(statusString);
+            }
             return _deleted;
         }
         public TEntity FindFirst()
         {
             TEntity _entity = null;
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Finding First entity of type: {typeof(TEntity)}");
-
-            if (appUnitOfWork.DBTransactionIsStillRunning())
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("Second transaction started before current transaction completed!");
+            if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"Finding First entity of type: {typeof(TEntity)}");
             try
             {
-                var _query = appDbSet
-                       .AsNoTracking();
-                _entity = _query.FirstOrDefault();
+                using var context = AppDbContext.CreateDbContext();
+                var _table = context.Set<TEntity>();
+                _entity = _table.FirstOrDefault();
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Finding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Finding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -243,18 +288,18 @@ namespace RainbowOF.Repositories.Common
         public TEntity FindFirstBy(Expression<Func<TEntity, bool>> predicate)
         {
             TEntity _entity = null;
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Finding First {predicate.ToString()} entity of type: {typeof(TEntity)}");
-            if (appUnitOfWork.DBTransactionIsStillRunning())
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("Second transaction started before current transaction completed!");
+            if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"Finding First {predicate} entity of type: {typeof(TEntity)}");
+            if (AppUnitOfWork.DBTransactionIsStillRunning())
+                if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug("Second transaction started before current transaction completed!");
             try
             {
-                var _query = appDbSet
-                       .AsNoTracking();
-                _entity = _query.FirstOrDefault(predicate);
+                using var context = AppDbContext.CreateDbContext();
+                var _table = context.Set<TEntity>();
+                _entity = _table.FirstOrDefault(predicate);
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Finding first predicate entity: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Finding first predicate entity: {ex.Message} - Inner Exception {ex.InnerException}");
 
 #if DebugMode
                 throw;     // #Debug?
@@ -265,60 +310,68 @@ namespace RainbowOF.Repositories.Common
         public async Task<TEntity> FindFirstAsync()
         {
             TEntity _entity = null;
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Finding First entity of type: {typeof(TEntity)} -- begin");
-            if (appUnitOfWork.DBTransactionIsStillRunning())
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("Second transaction started before current transaction completed!");
+            string statusString = $"Finding First entity of type: {typeof(TEntity)}";
+            if (!CanDoDbAsyncCall(statusString))
+                return _entity;
             try
             {
-                var _query = appDbSet
-                       .AsNoTracking();
-                _entity = await _query.FirstOrDefaultAsync();
+                using var context = await AppDbContext.CreateDbContextAsync();
+                var _table = context.Set<TEntity>();
+                _entity = await _table.FirstOrDefaultAsync();
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Finding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Finding first entity: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Finding First entity of type: {typeof(TEntity)} -- end");
+            finally
+            {
+                DbCallDone(statusString);
+            }
             return _entity;
         }
         public async Task<TEntity> GetByIdAsync(Expression<Func<TEntity, bool>> predicate)
         {
             TEntity _entity = null;
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Finding First {predicate.ToString()} entity of type: {typeof(TEntity)} - begin");
-            if (appUnitOfWork.DBTransactionIsStillRunning())
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("Second transaction started before current transaction completed!");
+            string statusString = $"Finding First {predicate} entity of type: {typeof(TEntity)}";
+            if (!CanDoDbAsyncCall(statusString))
+                return _entity;
             try
             {
-                var _query = appDbSet
-                       .AsNoTracking();
-                _entity = await _query.FirstOrDefaultAsync(predicate);
+                using var context = await AppDbContext.CreateDbContextAsync();
+                var _table = context.Set<TEntity>();
+                _entity = await _table.FirstOrDefaultAsync(predicate);
             }
             catch (Exception ex)
             {
                 string errorMessage = $"!!!Error Finding first predicate entity: {ex.Message} - Inner Exception {ex.InnerException}";
-                appUnitOfWork.LogAndSetErrorMessage(errorMessage);
+                AppUnitOfWork.LogAndSetErrorMessage(errorMessage);
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Finding First {predicate.ToString()} entity of type: {typeof(TEntity)} - end");
+            finally
+            {
+                DbCallDone(statusString);
+            }
             return _entity;
         }
         public IEnumerable<TEntity> GetAll()
         {
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Getting all records in Table of type: {typeof(TEntity)}");
-            if (appUnitOfWork.DBTransactionIsStillRunning())
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("Second transaction started before current transaction completed!");
+            if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"Getting all records in Table of type: {typeof(TEntity)}");
             try
             {
-                return appDbSet.AsNoTracking().ToList();
+                using var context = AppDbContext.CreateDbContext();
+                var _table = context.Set<TEntity>();
+                return _table
+                    //.AsNoTracking() --->>> probably not needed since context is disposed// done here because it is generic and we cannot be sure it is not going to conflict 
+                    .ToList();
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all (async): {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all (async): {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -327,20 +380,21 @@ namespace RainbowOF.Repositories.Common
         }
         public IEnumerable<TEntity> GetAllOrderBy(Func<TEntity, object> orderByExpression, bool sortDesc = false)
         {
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Getting all records in Table of type: {typeof(TEntity)} order by {orderByExpression}");
-            if (appUnitOfWork.DBTransactionIsStillRunning())
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("Second transaction started before current transaction completed!");
+            if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"Getting all records in Table of type: {typeof(TEntity)} order by {orderByExpression}");
             try
             {
-                var query = appDbSet.AsNoTracking();
+                using var context = AppDbContext.CreateDbContext();
+                var _table = context.Set<TEntity>();
+                //.AsNoTracking(); // done here because it is generic and we cannot be sure it is not going to conflict 
                 var _result = sortDesc
-                    ? query.OrderByDescending(orderByExpression)
-                    : query.OrderBy(orderByExpression);
-                return _result.ToList();
+                    ? _table.OrderByDescending(orderByExpression)
+                    : _table.OrderBy(orderByExpression);
+                return _result
+                    .ToList();
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all (async): {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all (async): {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
@@ -350,188 +404,224 @@ namespace RainbowOF.Repositories.Common
         public async Task<IEnumerable<TEntity>> GetAllAsync()
         {
             List<TEntity> _result = null;
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Getting all records (async) in Table of type: {typeof(TEntity)} -- begin");
-            if (appUnitOfWork.DBTransactionIsStillRunning())
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("Second transaction started before current transaction completed!");
+            string statusString = $"Getting all records (async) in Table of type: {typeof(TEntity)}";
+            if (!CanDoDbAsyncCall(statusString))
+                return _result;
             try
             {
-                _result = await appDbSet
-                    .AsNoTracking()
-                    .ToListAsync();
+                using var context = await AppDbContext.CreateDbContextAsync();
+                var _table = context.Set<TEntity>();
+                _result = await _table     //.AsNoTracking(); not here must be specific to implementation
+                  .ToListAsync();
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all (async): {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all (async): {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Getting all records (async) in Table of type: {typeof(TEntity)} -- end");
+            finally
+            {
+                DbCallDone(statusString);
+            }
             return _result;
         }
         public async Task<IEnumerable<TEntity>> GetAllOrderByAsync<TKey>(Expression<Func<TEntity, TKey>> orderByExpression, bool sortDesc = false)
         {
             List<TEntity> _result = null;
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Getting all records (async) in Table of type: {typeof(TEntity)} order by {orderByExpression} -- begin");
-            if (appUnitOfWork.DBTransactionIsStillRunning())
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("Second transaction started before current transaction completed!");
+            string statusString = $"Getting all records (async) in Table of type: {typeof(TEntity)} order by {orderByExpression}";
+            if (!CanDoDbAsyncCall(statusString))
+                return _result;
             try
             {
-                var query = appDbSet.AsNoTracking();
+                using var context = await AppDbContext.CreateDbContextAsync();
+                var _table = context.Set<TEntity>();    //.AsNoTracking(); not here must be specific to implementation
                 var orderedQyuery = sortDesc
-                    ? query.OrderByDescending(orderByExpression)
-                    : query.OrderBy(orderByExpression);
-                _result  = await orderedQyuery.ToListAsync();
+                    ? _table.OrderByDescending(orderByExpression)
+                    : _table.OrderBy(orderByExpression);
+                _result = await orderedQyuery.ToListAsync();
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all (async) order by: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all (async) order by: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Getting all records (async) in Table of type: {typeof(TEntity)} order by {orderByExpression} -- end");
+            finally
+            {
+                DbCallDone(statusString);
+            }
             return _result;
         }
         public async Task<IEnumerable<TEntity>> GetAllEagerAsync(params Expression<Func<TEntity, object>>[] properties)
         {
             List<TEntity> _result = null;
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get By all eager loading (async) {properties.ToString()} from table of type: {typeof(TEntity)} -- begin");
-            if (appUnitOfWork.DBTransactionIsStillRunning())
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("Second transaction started before current transaction completed!");
             if (properties == null)
-                throw new ArgumentNullException(nameof(properties));
-            var query = appDbSet as IQueryable<TEntity>; // _dbSet = dbContext.Set<TEntity>()
-            query = properties
-                       .Aggregate(query, (current, property) => current.Include(property))
-                       .AsNoTracking();
+                return null;
+            string statusString = $"Get By all eager loading (async) {properties} from table of type: {typeof(TEntity)}";
+            if (!CanDoDbAsyncCall(statusString))
+                return _result;
             try
             {
-                _result = await query.ToListAsync();    // AsNoTracking().ToList();    //read only
+                using var context = await AppDbContext.CreateDbContextAsync();
+                ///---> not sure the DbSet<TEntity> before the included is correct, but it is the only way it will compile
+                var _table = context.Set<TEntity>();
+                _table = properties
+                           .Aggregate(_table, (current, property) => (DbSet<TEntity>)current.Include(property));    //.AsNoTracking(); not here must be specific to implementation
+                _result = await _table.ToListAsync();     //read only
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error eager loading: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error eager loading: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get By all eager loading (async) {properties.ToString()} from table of type: {typeof(TEntity)} -- end");
+            finally
+            {
+                DbCallDone(statusString);
+            }
             return _result;
         }
         public async Task<IEnumerable<TEntity>> GetPagedEagerAsync(int startPage, int currentPageSize, params Expression<Func<TEntity, object>>[] properties)
         {
             List<TEntity> _result = null;
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get By all eager loading (async) {properties.ToString()} from table of type: {typeof(TEntity)} -- begin");
-            if (appUnitOfWork.DBTransactionIsStillRunning())
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("Second transaction started before current transaction completed!");
             if (properties == null)
                 throw new ArgumentNullException(nameof(properties));
-
-            var query = appDbSet as IQueryable<TEntity>; // _dbSet = dbContext.Set<TEntity>()
-            query = properties
-                       .Aggregate(query, (current, property) => current.Include(property))
-                       .AsNoTracking();
+            string statusString = $"Get By all eager loading (async) {properties} from table of type: {typeof(TEntity)}";
+            if (!CanDoDbAsyncCall(statusString))
+                return _result;
             try
             {
-                _result = await query
+                using var context = await AppDbContext.CreateDbContextAsync();
+                var _table = context.Set<TEntity>(); // _dbSet = dbContext.Set<TEntity>()
+                _table = properties
+                           .Aggregate(_table, (current, property) => (DbSet<TEntity>)current.Include(property));    //.AsNoTracking(); not here must be specific to implementation
+                ///---> not sure the DbSet<TEntity> before the included is correct, but it is the only way it will compile
+                _result = await _table
                     .Skip(startPage * currentPageSize)
                     .Take(currentPageSize)
                     .ToListAsync();
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error eager loading: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error eager loading: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get By all eager loading (async) {properties.ToString()} from table of type: {typeof(TEntity)} -- begin");
+            finally
+            {
+                DbCallDone(statusString);
+            }
             return _result;
         }
         public IEnumerable<TEntity> GetBy(Expression<Func<TEntity, bool>> predicate)
         {
             List<TEntity> _result = null;
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get By all {predicate.ToString()} from table of type: {typeof(TEntity)} -- begin");
-            if (appUnitOfWork.DBTransactionIsStillRunning())
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("Second transaction started before current transaction completed!");
+            string statusString = $"Get By all {predicate} from table of type: {typeof(TEntity)}";
+            if (!CanDoDbAsyncCall(statusString))
+                return _result;
             try
             {
-                _result = appDbSet.Where(predicate)
-                       .AsNoTracking()
-                       .ToList();
+                using var context = AppDbContext.CreateDbContext();
+                var _table = context.Set<TEntity>();
+                _result = _table
+                            .Where(predicate)    //.AsNoTracking(); not here must be specific to implementation
+                            .ToList();
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting by: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting by: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get By all {predicate.ToString()} from table of type: {typeof(TEntity)} -- end");
+            finally
+            {
+                DbCallDone(statusString);
+            }
             return _result;
         }
         public async Task<IEnumerable<TEntity>> GetByAsync(Expression<Func<TEntity, bool>> predicate)
         {
-            IEnumerable<TEntity> _rows = null;
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get By all (async) {predicate.ToString()} from table of type: {typeof(TEntity)} -- begin");
-            if (appUnitOfWork.DBTransactionIsStillRunning())
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("Second transaction started before current transaction completed!");
+            IEnumerable<TEntity> _result = null;
+            string statusString = $"Get By all (async) {predicate} from table of type: {typeof(TEntity)}";
+            if (!CanDoDbAsyncCall(statusString))
+                return _result;
             try
             {
-                _rows = await appDbSet.Where(predicate)
-                       .AsNoTracking()
+                using var context = await AppDbContext.CreateDbContextAsync();
+                var _table = context.Set<TEntity>();
+                _result = await _table.Where(predicate)
                        .ToListAsync();
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get By all (async) table {nameof(appDbSet)} returned: {_rows.Count()} rows");
+                if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"Get By all (async) table {nameof(_table)} returned: {_result.Count()} rows");
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting by (async): {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting by (async): {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get By all (async) {predicate.ToString()} from table of type: {typeof(TEntity)} -- end");
-            return _rows;
+            finally
+            {
+                DbCallDone(statusString);
+            }
+            return _result;
         }
 
         public TEntity GetById(object Id)
         {
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get By Id (async) {Id.ToString()} from table of type: {typeof(TEntity)}");
-            if (appUnitOfWork.DBTransactionIsStillRunning())
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("Second transaction started before current transaction completed!");
+            string statusString = $"Get By Id (async) {Id} from table of type: {typeof(TEntity)}";
+            if (!CanDoDbAsyncCall(statusString))
+                return null;
             try
             {
-                return appDbSet.Find(Id);
+                using var context = AppDbContext.CreateDbContext();
+                var _table = context.Set<TEntity>(); // as IQueryable<TEntity>;
+                return _table.Find(Id);
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Get by Id: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Get by Id: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
+            }
+            finally
+            {
+                DbCallDone(statusString);
             }
             return null;
         }
         public async Task<TEntity> GetByIdAsync(object Id)
         {
             TEntity _result = null;
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get By Id (async) {Id.ToString()} from table of type: {typeof(TEntity)} -- begin");
-            if (appUnitOfWork.DBTransactionIsStillRunning())
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("Second transaction started before current transaction completed!");
+            string statusString = $"Get By Id (async) {Id} from table of type: {typeof(TEntity)}";
+            if (!CanDoDbAsyncCall(statusString))
+                return null;
             try
             {
-                appContext.ChangeTracker.LazyLoadingEnabled = true;
-                _result = await appDbSet.FindAsync(Id);
+                using var context = await AppDbContext.CreateDbContextAsync();
+                context.ChangeTracker.LazyLoadingEnabled = true;
+                var _table = context.Set<TEntity>();
+                _result = await _table
+                    .FindAsync(Id);
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Get by Id (async): {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Get by Id (async): {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Get By Id (async) {Id.ToString()} from table of type: {typeof(TEntity)} -- end");
+            finally
+            {
+                DbCallDone(statusString);
+            }
             return _result;
         }
         //public async Task<bool> Save()
@@ -540,11 +630,11 @@ namespace RainbowOF.Repositories.Common
 
         //    try
         //    {
-        //        _saved = (await appContext.SaveChangesAsync() > 0);
+        //        _saved = (await appDbContext.SaveChangesAsync() > 0);
         //    }
         //    catch (Exception ex)
         //    {
-        //        appLoggerManager.LogError($"!!!Error Saving: {ex.Message} - Inner Exception {ex.InnerException}");
+        //        AppLoggerManager.LogError($"!!!Error Saving: {ex.Message} - Inner Exception {ex.InnerException}");
         //    }
 
         //    return (_saved);
@@ -554,65 +644,100 @@ namespace RainbowOF.Repositories.Common
         public int Update(TEntity updatedEntity)
         {
             int _updated = UnitOfWork.CONST_WASERROR;   // -1 means error only returned if there is one
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Updating entity: {updatedEntity.ToString()}");
-            appUnitOfWork.BeginTransaction();
+            string statusString = $"Updating entity: {updatedEntity}";
+            if (!CanDoDbAsyncCall(statusString))
+                return _updated;
             try
             {
-                appContext.Entry(updatedEntity).State = EntityState.Modified;
-                appDbSet.Update(updatedEntity);
-                _updated = appUnitOfWork.Complete();  // Save();
+                using var context = AppDbContext.CreateDbContext();
+                //  AppUnitOfWork.AppDbContext.Entry(updatedEntity).State = EntityState.Modified;   //-> if tracking disabled need this
+                var _result = context.Update(updatedEntity);
+                updatedEntity = _result.Entity;
+                _updated = context.SaveChanges();
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Updating Table: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Updating Table: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
+            }
+            finally
+            {
+                DbCallDone(statusString);
             }
             return _updated;
         }
         public async Task<int> UpdateAsync(TEntity updatedEntity)
         {
-            int _updated = UnitOfWork.CONST_WASERROR;   // -1 means error only returned if there is one
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Updating entity (async): {updatedEntity.ToString()}");
+            string statusString = $"Updating entity (async): {updatedEntity}";
+            if (!CanDoDbAsyncCall(statusString))
+                return UnitOfWork.CONST_WASERROR;
             try
             {
-                appUnitOfWork.BeginTransaction();
-                //appContext.Entry(updatedEntity).State = EntityState.Modified;
-                //_Table.Attach   (updatedEntity);
-                appContext.Entry(updatedEntity).State = EntityState.Detached;
-                appDbSet.Update(updatedEntity);
-                _updated = await appUnitOfWork.CompleteAsync();  // Save();
+                using var context = await AppDbContext.CreateDbContextAsync();
+                // AppDbContext.Entry(updatedEntity).State = EntityState.Modified; //--> only updates this item not the children
+                var _result = context.Update(updatedEntity);
+                updatedEntity = _result.Entity;
+                return await context.SaveChangesAsync();
+                // doing this is completeAsync AppDbContext.ChangeTracker.Clear(); //---> added this after item would not update as per: https://stackoverflow.com/questions/36856073/the-instance-of-entity-type-cannot-be-tracked-because-another-instance-of-this-t
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Updating Table (async): {ex.Message} - Inner Exception {ex.InnerException}");
-#if DebugMode
-                throw;     // #Debug?
-#endif
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Updating Table (async): {ex.Message} - Inner Exception {ex.InnerException}");
+                return UnitOfWork.CONST_WASERROR;
             }
-            return _updated;
+            finally
+            {
+                DbCallDone(statusString);
+            }
         }
+        //            int _updated = UnitOfWork.CONST_WASERROR;   // -1 means error only returned if there is one
+        //            if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"Updating entity (async): {updatedEntity}");
+        //            try
+        //            {
+        //                AppUnitOfWork.BeginTransaction();
+        //                //_Table.Attach   (updatedEntity);
+        //                //AppDbContext.ChangeTracker.AutoDetectChangesEnabled = false;
+        //                //AppDbContext.Entry(updatedEntity).State = EntityState.Detached; // -> tracking turned off global in options
+        //                _appDbContext.Entry(updatedEntity).State = EntityState.Modified;  // With No Tracking enabled we need this 
+        //                AppUnitOfWork.AppDbContext.Update(updatedEntity);
+        //                _updated = await AppUnitOfWork.CompleteAsync();  // Save();
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Updating Table (async): {ex.Message} - Inner Exception {ex.InnerException}");
+        //#if DebugMode
+        //                throw;     // #Debug?
+        //#endif
+        //            }
+        //            return _updated;
+        //        }
 
         public async Task<int> UpdateRangeAsync(List<TEntity> updateEntities)
         {
             int _updated = UnitOfWork.CONST_WASERROR;   // -1 means error only returned if there is one
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Updating range entity (async): {updateEntities.ToString()} -- begin");
+            string statusString = $"Updating range entity (async): {updateEntities}";
+            if (!CanDoDbAsyncCall(statusString))
+                return _updated;
             try
             {
-                appUnitOfWork.BeginTransaction();
-                appContext.Entry(updateEntities).State = EntityState.Modified;
-                appDbSet.UpdateRange(updateEntities);
-                _updated = await appUnitOfWork.CompleteAsync();  // Save();
+                using var context = await AppDbContext.CreateDbContextAsync();
+                //  AappDbContext.Entry(updateEntities).State = EntityState.Modified;  //-> if tracking is disabled need this
+                context.UpdateRange(updateEntities);
+                _updated = await context.SaveChangesAsync();
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Updating Table (async): {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Updating Table (async): {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Updating range entity (async): {updateEntities.ToString()} -- end");
+            finally
+            {
+                DbCallDone(statusString);
+            }
             return _updated;
         }
         #endregion

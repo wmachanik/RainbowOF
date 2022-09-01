@@ -1,18 +1,18 @@
-﻿using RainbowOF.Data.SQL;
-using RainbowOF.Models.Lookups;
+﻿using Microsoft.EntityFrameworkCore.Query.Internal;
+using RainbowOF.Data.SQL;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Common
 {
     public interface IRepository<TEntity> where TEntity : class
     {
-        ApplicationDbContext AppDbContext { get; }
+        //ApplicationDbContext AppDbContext { get; }
         Task<int> CountAsync();
+        bool CanDoDbAsyncCall(string startString);
+        void DbCallDone(string endString);
         TEntity GetById(object Id);
         Task<TEntity> GetByIdAsync(object Id);
         IEnumerable<TEntity> GetAll();
@@ -30,8 +30,8 @@ namespace RainbowOF.Repositories.Common
         int Add(TEntity newEntity);
         Task<TEntity> AddAsync(TEntity newEntity);
         Task<int> AddRangeAsync(List<TEntity> newEntities);
-        int DeleteByPrimaryId(object sourceId);
-        Task<int> DeleteByPrimaryIdAsync(object sourceId);
+        int DeleteByEntity(TEntity sourceEntity);
+        Task<int> DeleteByEntityAsync(TEntity sourceEntity);
         int DeleteBy(Expression<Func<TEntity, bool>> predicate);
         Task<int> DeleteByAsync(Expression<Func<TEntity, bool>> predicate);
         int Update(TEntity updatedEntity);

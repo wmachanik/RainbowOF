@@ -1,11 +1,9 @@
 ﻿using Microsoft.AspNetCore.Components;
 using RainbowOF.Models.Lookups;
 using RainbowOF.Repositories.Common;
-using RainbowOF.ViewModels.Lookups;
 using RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace RainbowOF.Web.FrontEnd.Pages.Items
@@ -17,12 +15,12 @@ namespace RainbowOF.Web.FrontEnd.Pages.Items
 
         public Dictionary<Guid, string> _ItemAttributes = null;
         [Inject]
-        IUnitOfWork appUnitOfWork { get; set; }
+        public IUnitOfWork AppUnitOfWork { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
             await base.OnInitializedAsync();
-            IRepository<ItemAttributeLookup> _appRepository = appUnitOfWork.Repository<ItemAttributeLookup>();
+            IRepository<ItemAttributeLookup> _appRepository = AppUnitOfWork.Repository<ItemAttributeLookup>();
             var _itemAttributeVarieties = await _appRepository.GetAllAsync();
             _ItemAttributes = new Dictionary<Guid, string>();
             foreach (var item in _itemAttributeVarieties)

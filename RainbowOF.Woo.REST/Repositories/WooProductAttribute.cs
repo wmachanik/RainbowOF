@@ -2,8 +2,6 @@
 using RainbowOF.Woo.REST.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using WooCommerceNET;
 using WooCommerceNET.WooCommerce.v3;
@@ -12,27 +10,27 @@ namespace RainbowOF.Woo.REST.Repositories
 {
     public class WooProductAttribute : IWooProductAttribute
     {
-        private readonly WooBase _Woo;
+        private readonly WooBase _wooBase;
         public WooProductAttribute(WooAPISettings wooAPISettings, ILoggerManager logger)
         {
-            _Woo = new WooBase(wooAPISettings, logger);
+            _wooBase = new WooBase(wooAPISettings, logger);
         }
         private async Task<List<ProductAttribute>> GetAllAsync(Dictionary<string, string> ProductAttributeParams)
         {
-            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
-            List<ProductAttribute> _WooProductAttributes = null;
+            RestAPI _RestAPI = _wooBase.GetJSONRestAPI;
+            List<ProductAttribute> wooBaseProductAttributes = null;
             //----- Get all the attributes not x per page like the other calls
             try
             {
-                WCObject _WC = new WCObject(_RestAPI);
-                _WooProductAttributes = await _WC.Attribute.GetAll(ProductAttributeParams);
+                WCObject _WC = new(_RestAPI);
+                wooBaseProductAttributes = await _WC.Attribute.GetAll(ProductAttributeParams);
             }
             catch (Exception ex)
             {
-                if (_Woo.Logger != null)
-                    _Woo.Logger.LogError("Error calling WOO REST API: " + ex.Message);
+                if (_wooBase.Logger != null)
+                    _wooBase.Logger.LogError("Error calling WOO REST API: " + ex.Message);
             }
-            return _WooProductAttributes;
+            return wooBaseProductAttributes;
         }
         public async Task<List<ProductAttribute>> GetAllProductAttributesAsync()
         {
@@ -41,7 +39,7 @@ namespace RainbowOF.Woo.REST.Repositories
 
         public async Task<bool> CheckProductAttributeLinkAsync()
         {
-            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
+            RestAPI _RestAPI = _wooBase.GetJSONRestAPI;
             int count = 0;
             try
             {
@@ -51,8 +49,8 @@ namespace RainbowOF.Woo.REST.Repositories
             }
             catch (Exception ex)
             {
-                if (_Woo.Logger != null)
-                    _Woo.Logger.LogError("Error calling WOO REST JSON API: " + ex.Message);
+                if (_wooBase.Logger != null)
+                    _wooBase.Logger.LogError("Error calling WOO REST JSON API: " + ex.Message);
             }
             return count > 0;
         }
@@ -65,7 +63,7 @@ namespace RainbowOF.Woo.REST.Repositories
         public async Task<int> GetProductAttributeCountAsync()
         {
             int _count = 0;
-            RestAPI _RestAPI = _Woo.GetRootRestAPI;
+            RestAPI _RestAPI = _wooBase.GetRootRestAPI;
             try
             {
                 string Result = await _RestAPI.GetRestful("attributes/count");
@@ -79,32 +77,32 @@ namespace RainbowOF.Woo.REST.Repositories
             }
             catch (Exception ex)
             {
-                if (_Woo.Logger != null)
-                    _Woo.Logger.LogError("Error calling WOO REST ROOT API: " + ex.Message);
+                if (_wooBase.Logger != null)
+                    _wooBase.Logger.LogError("Error calling WOO REST ROOT API: " + ex.Message);
             }
             return _count;
         }
 
         public async Task<ProductAttribute> GetProductAttributeByIdAsync(int sourceWooEntityId)
         {
-            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
+            RestAPI _RestAPI = _wooBase.GetJSONRestAPI;
             ProductAttribute _productAttribute = null;
             try
             {
-                WCObject _WC = new WCObject(_RestAPI);
+                WCObject _WC = new(_RestAPI);
                 _productAttribute = await _WC.Attribute.Get(sourceWooEntityId);
             }
             catch (Exception ex)
             {
-                if (_Woo.Logger != null)
-                    _Woo.Logger.LogError("Error calling WOO REST JSON API: " + ex.Message);
+                if (_wooBase.Logger != null)
+                    _wooBase.Logger.LogError("Error calling WOO REST JSON API: " + ex.Message);
             }
             return _productAttribute;
         }
         public async Task<ProductAttribute> DeleteProductAttributeByIdAsync(int deleteWooProductAttributeId)
         {
             ProductAttribute _ProductAttribute = null;
-            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
+            RestAPI _RestAPI = _wooBase.GetJSONRestAPI;
             try
             {
                 WCObject _WC = new(_RestAPI);
@@ -112,15 +110,15 @@ namespace RainbowOF.Woo.REST.Repositories
             }
             catch (Exception ex)
             {
-                if (_Woo.Logger != null)
-                    _Woo.Logger.LogError($"Error calling deleting product Attribute by id: {deleteWooProductAttributeId} Async. Error:  {ex.Message}");
+                if (_wooBase.Logger != null)
+                    _wooBase.Logger.LogError($"Error calling deleting product Attribute by id: {deleteWooProductAttributeId} Async. Error:  {ex.Message}");
             }
             return _ProductAttribute;
         }
         public async Task<ProductAttribute> AddProductAttributeAsync(ProductAttribute addWooProductAttribute)
         {
             ProductAttribute _ProductAttribute = null;
-            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
+            RestAPI _RestAPI = _wooBase.GetJSONRestAPI;
             try
             {
                 WCObject _WC = new(_RestAPI);
@@ -128,15 +126,15 @@ namespace RainbowOF.Woo.REST.Repositories
             }
             catch (Exception ex)
             {
-                if (_Woo.Logger != null)
-                    _Woo.Logger.LogError($"Error calling Add ProductAttributeAsync for product: {addWooProductAttribute.name}. Error:  {ex.Message}");
+                if (_wooBase.Logger != null)
+                    _wooBase.Logger.LogError($"Error calling Add ProductAttributeAsync for product: {addWooProductAttribute.name}. Error:  {ex.Message}");
             }
             return _ProductAttribute;
         }
         public async Task<ProductAttribute> UpdateProductAttributeAsync(ProductAttribute updateWooProductAttribute)
         {
             ProductAttribute _ProductAttribute = null;
-            RestAPI _RestAPI = _Woo.GetJSONRestAPI;
+            RestAPI _RestAPI = _wooBase.GetJSONRestAPI;
             try
             {
                 WCObject _WC = new(_RestAPI);
@@ -144,8 +142,8 @@ namespace RainbowOF.Woo.REST.Repositories
             }
             catch (Exception ex)
             {
-                if (_Woo.Logger != null)
-                    _Woo.Logger.LogError($"Error calling Update ProductAttributeAsync for product: {updateWooProductAttribute.name}. Error: {ex.Message}");
+                if (_wooBase.Logger != null)
+                    _wooBase.Logger.LogError($"Error calling Update ProductAttributeAsync for product: {updateWooProductAttribute.name}. Error: {ex.Message}");
             }
             return _ProductAttribute;
         }

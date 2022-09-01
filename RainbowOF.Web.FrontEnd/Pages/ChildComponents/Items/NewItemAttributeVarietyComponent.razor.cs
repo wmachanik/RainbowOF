@@ -5,8 +5,6 @@ using RainbowOF.Models.Lookups;
 using RainbowOF.Repositories.Common;
 using RainbowOF.ViewModels.Lookups;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
@@ -14,43 +12,43 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
     public partial class NewItemAttributeVarietyComponent : ComponentBase
     {
         [Inject]
-        IUnitOfWork appUnitOfWork { get; set; }
+        public IUnitOfWork AppUnitOfWork { get; set; }
         [Parameter]
         public PopUpAndLogNotification PopUpRef { get; set; }
 
-        private Modal NewAttributeVarietyModalRef;
+        private Modal newAttributeVarietyModalRef { get; set; }
 
-        public ItemAttributeVarietyLookupView _NewItemAttributeVarietyLookupView = new ();
+        private ItemAttributeVarietyLookupView newItemAttributeVarietyLookupView { get; set; } = new();
 
         public async Task ShowModalAsync(Guid parentItemAttributeId)
         {
-            _NewItemAttributeVarietyLookupView.ItemAttributeLookupId = parentItemAttributeId;
+            newItemAttributeVarietyLookupView.ItemAttributeLookupId = parentItemAttributeId;
 
-            _NewItemAttributeVarietyLookupView.VarietyName = "New";
-            _NewItemAttributeVarietyLookupView.SortOrder = 0;
-            _NewItemAttributeVarietyLookupView.UoM = null;
-            _NewItemAttributeVarietyLookupView.Notes = $"Added: {DateTime.Now:f}";
-            _NewItemAttributeVarietyLookupView.FGColour = String.Empty;
-            _NewItemAttributeVarietyLookupView.BGColour = String.Empty;
-            _NewItemAttributeVarietyLookupView.Symbol = String.Empty; 
-            await NewAttributeVarietyModalRef.Show();
+            newItemAttributeVarietyLookupView.VarietyName = "New";
+            newItemAttributeVarietyLookupView.SortOrder = 0;
+            newItemAttributeVarietyLookupView.UoM = null;
+            newItemAttributeVarietyLookupView.Notes = $"Added: {DateTime.Now:f}";
+            newItemAttributeVarietyLookupView.FGColour = String.Empty;
+            newItemAttributeVarietyLookupView.BGColour = String.Empty;
+            newItemAttributeVarietyLookupView.Symbol = String.Empty;
+            await newAttributeVarietyModalRef.Show();
         }
 
         private async Task HideModal(bool SaveClicked)
         {
             if (SaveClicked)
             {
-                IRepository<ItemAttributeVarietyLookup> _appRepository = appUnitOfWork.Repository<ItemAttributeVarietyLookup>();
+                IRepository<ItemAttributeVarietyLookup> _appRepository = AppUnitOfWork.Repository<ItemAttributeVarietyLookup>();
                 if (_appRepository != null)
                 {
-                    var _result = await _appRepository.AddAsync(_NewItemAttributeVarietyLookupView);
+                    var _result = await _appRepository.AddAsync(newItemAttributeVarietyLookupView);
                     if (_result == null)
-                        await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Error adding new attribute variety: {_NewItemAttributeVarietyLookupView.VarietyName}");
+                        await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Error adding new attribute variety: {newItemAttributeVarietyLookupView.VarietyName}");
                     else
-                        await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Success, $"Attribute variety: {_NewItemAttributeVarietyLookupView.VarietyName} added.");
+                        await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Success, $"Attribute variety: {newItemAttributeVarietyLookupView.VarietyName} added.");
                 }
             }
-            await NewAttributeVarietyModalRef.Hide();
+            await newAttributeVarietyModalRef.Hide();
         }
     }
 }

@@ -1,22 +1,20 @@
 ﻿using RainbowOF.Models.Items;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using RainbowOF.Models.Lookups;
 using RainbowOF.Repositories.Common;
 using RainbowOF.Tools;
-using RainbowOF.Models.Lookups;
+using System;
+using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Items
 {
     public class ItemAttributeVarietyGridRepository : GridRepository<ItemAttributeVariety>, IItemAttributeVarietyGridRepository
     {
+        private IUnitOfWork appUnitOfWork { get; set; }
         public ItemAttributeVarietyGridRepository(ILoggerManager sourceLogger, IUnitOfWork sourceAppUnitOfWork) : base(sourceLogger, sourceAppUnitOfWork)
         {
             // base initialises
             if (sourceLogger.IsDebugEnabled()) sourceLogger.LogDebug("ItemAttributeVarietyGridRepository initialised...");
-
+            appUnitOfWork = sourceAppUnitOfWork;
         }
 
         #region Recommended Over writable Grid Classes
@@ -50,15 +48,16 @@ namespace RainbowOF.Repositories.Items
             if (checkEntity.ItemAttributeVarietyLookupId == Guid.Empty)
                 return false;
             // here we need to check if the AttributeVariety is the same, as we cannot haver duplicate names
-            IRepository<ItemAttributeVariety> _itemAttributeVarietyRepository = appUnitOfWork.Repository<ItemAttributeVariety>();
+            //IRepository<ItemAttributeVariety> _itemAttributeVarietyRepository =  AppUnitOfWork.Repository<ItemAttributeVariety>();
+            IRepository<ItemAttributeVariety> _itemAttributeVarietyRepository = EntityRepository;
             var _result = await _itemAttributeVarietyRepository.GetByIdAsync(
                 checkEntity.ItemAttributeVarietyId == Guid.Empty ?
-                  (iav => 
-                        (iav.ItemAttributeId == checkEntity.ItemAttributeId) 
-                     && (iav.ItemAttributeVarietyLookupId == checkEntity.ItemAttributeVarietyLookupId) ) :
                   (iav =>
-                        (iav.ItemAttributeVarietyId != checkEntity.ItemAttributeVarietyId) 
-                     && (iav.ItemAttributeId == checkEntity.ItemAttributeId) 
+                        (iav.ItemAttributeId == checkEntity.ItemAttributeId)
+                     && (iav.ItemAttributeVarietyLookupId == checkEntity.ItemAttributeVarietyLookupId)) :
+                  (iav =>
+                        (iav.ItemAttributeVarietyId != checkEntity.ItemAttributeVarietyId)
+                     && (iav.ItemAttributeId == checkEntity.ItemAttributeId)
                      && (iav.ItemAttributeVarietyLookupId == checkEntity.ItemAttributeVarietyLookupId))
                 );
             return (_result != null);
@@ -85,6 +84,7 @@ namespace RainbowOF.Repositories.Items
         {
             IRepository<ItemAttributeVarietyLookup> _itemAttributeVarietyLookupRepository = appUnitOfWork.Repository<ItemAttributeVarietyLookup>();
             ItemAttributeVarietyLookup _itemAttributeVarietyLookup = await _itemAttributeVarietyLookupRepository.GetByIdAsync(sourceItemAttributeVarietyLookupId);
+            //ItemAttributeVarietyLookup _itemAttributeVarietyLookup = await EntityRepository.GetByIdAsync(sourceItemAttributeVarietyLookupId);
             return _itemAttributeVarietyLookup;
         }
         /// <summary>
@@ -102,3 +102,4 @@ namespace RainbowOF.Repositories.Items
 
     }
 }
+

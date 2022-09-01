@@ -5,14 +5,14 @@ namespace RainbowOF.Tools
 {
     public class LoggerManager : ILoggerManager
     {
-        private static ILogger appLoggerManager = LogManager.GetCurrentClassLogger();
+        private ILogger appLoggerManager { get; } = NLog.LogManager.GetCurrentClassLogger();
         #region Init
         public LoggerManager()
         {
         }
         #endregion
         #region Support Routines
-        private string CleanMessage(string rawMessage)
+        private static string CleanMessage(string rawMessage)
         {
             rawMessage = rawMessage.Replace(Environment.NewLine + Environment.NewLine, "; ");
             rawMessage = rawMessage.Replace(Environment.NewLine, ";");

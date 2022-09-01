@@ -1,10 +1,5 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Components;
-using RainbowOF.FrontEnd.Models.Classes;
 using RainbowOF.Models.Items;
-using RainbowOF.Tools;
-using System;
-using System.Collections.Generic;
 using WooCommerceNET.WooCommerce.v3;
 
 namespace RainbowOF.Integration.Repositories.Woo
@@ -12,15 +7,15 @@ namespace RainbowOF.Integration.Repositories.Woo
     public class ProductToItemMapper
     {
         #region Local Variables
-        private IMapper _Mapper { get; set; }
+        private IMapper appMapper { get; set; }
         #endregion
-        public const string CONST_WooItemOutOfStock = "outofstock";
+        public const string CONST_WOO_ITEM_OUT_OF_STOCK = "outofstock";
         #region Variables
-        private StringTools _StringTools = new StringTools();
+        //private StringTools _StringTools {get;} = new();
 
         public ProductToItemMapper(IMapper mapper)
         {
-            _Mapper = mapper;
+            appMapper = mapper;
         }
         #endregion
         #region Methods
@@ -64,7 +59,7 @@ namespace RainbowOF.Integration.Repositories.Woo
                 _oldAbrv = currItem.ItemAbbreviatedName;
             ////? if it is not a new one should we update abbreviation? 
 
-            _Mapper.Map(sourceWooProd, currItem);
+            appMapper.Map(sourceWooProd, currItem);
 
             if (!_oldAbrv.Equals(string.Empty))
                 currItem.ItemAbbreviatedName = _oldAbrv; // copy the old abbreviation across, if it was not blank.

@@ -11,24 +11,24 @@
 <Fields>
     <Field Style="display: inline-flex">
         @{
-            if ((_ListOfUoMSymbols != null) && (_ListOfUoMSymbols.Count> 0))
+            if ((_listOfUoMSymbols != null) && (_listOfUoMSymbols.Count> 0))
             {
-            <Select TValue="Guid" SelectedValue="@_SelectedUoMId" SelectedValueChanged="@((v) => OnUoMIdChanged(v))">
+            <Select TValue="Guid" SelectedValue="@selectedUoMId" SelectedValueChanged="@((v) => OnUoMIdChanged(v))">
                 <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
-                @foreach (var item in _ListOfUoMSymbols)
+                @foreach (var item in _listOfUoMSymbols)
                 {
                 <SelectItem TValue="Guid" Value="@(item.Key)">@item.Value</SelectItem>
                 }
             </Select>
             }
         } &nbsp;
-        <Button Color="Color.Primary" Clicked="@(() => NewUoMComponentRef.ShowModalAsync())">
+        <Button Color="Color.Primary" Clicked="@(() => newUoMComponentRef.ShowModalAsync())">
             <Tooltip Text="Add Unit of Measure">
                 <Icon IconStyle="IconStyle.Solid" Name="IconName.Add"></Icon>
             </Tooltip>
         </Button>
         <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups.NewUoMLookupComponent 
-                        @ref="@NewUoMComponentRef" 
+                        @ref="@newUoMComponentRef" 
                         PopUpRef="PopUpRef" 
                         UoMAddedEvent="@((r) => ReloadUoMList())" />
     </Field>

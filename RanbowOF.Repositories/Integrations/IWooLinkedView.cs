@@ -1,16 +1,10 @@
-﻿using RainbowOF.Models.Lookups;
-using RainbowOF.Repositories.Common;
-using RainbowOF.Models.Woo;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using RainbowOF.ViewModels.Lookups;
+﻿using Blazorise.DataGrid;
+using RainbowOF.Tools.Services;
 using RainbowOF.ViewModels.Common;
 using RainbowOF.Woo.REST.Models;
-using RainbowOF.Tools.Services;
-using Blazorise.DataGrid;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Integrations
 {
@@ -25,9 +19,9 @@ namespace RainbowOF.Repositories.Integrations
                                                                          where TEntityView : class
                                                                          where TWooMapEntity : class
     {
-        public WooLinkedGridSettings _WooLinkedGridSettings { get; set; }
+        public WooLinkedGridSettings CurrWooLinkedGridSettings { get; set; }
         Task<WooAPISettings> GetWooAPISettingsAsync();
-        Task<bool> WooIsActiveAsync(ApplicationState currentApplicationState); 
+        Task<bool> WooIsActiveAsync(ApplicationState currentApplicationState);
         void PushSelectedItems(List<TEntityView> currentSelectedItems);
         List<TEntityView> PopSelectedItems(List<TEntityView> modelViewItems);
         Task<List<TWooMapEntity>> GetWooMappedItemsAsync(List<Guid> mapWooEntityID);

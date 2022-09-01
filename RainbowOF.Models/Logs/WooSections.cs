@@ -3,12 +3,12 @@
     public enum WooSections
     {
         none,
-        Coupons, 
-        Customers, 
-        Orders, OrderRefunds, 
+        Coupons,
+        Customers,
+        Orders, OrderRefunds,
         Products,
-        ProductAttributes, ProductAttributeTerms, ProductCategories, ProductTags, 
-        WebHooks, 
+        ProductAttributes, ProductAttributeTerms, ProductCategories, ProductTags,
+        WebHooks,
         Taxes,
         System
     }

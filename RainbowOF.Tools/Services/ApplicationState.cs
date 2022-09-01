@@ -1,34 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RainbowOF.Tools.Services
+﻿namespace RainbowOF.Tools.Services
 {
     public class ApplicationState
     {
-        public  bool WooIsActive 
-        { get 
+        private bool? localWooIsActive { get; set; } = null;
+        public bool WooIsActive
+        {
+            get
             {
-                return _WooIsActive ?? false;
+                return localWooIsActive ?? false;
             }
             set
             {
-                _WooIsActive = value;
+                localWooIsActive = value;
             }
         }
         public bool HaveCheckState
         {
-            get { return _WooIsActive != null; }
+            get { return localWooIsActive != null; }
         }
         //public event Action OnChange;
-
-        private bool? _WooIsActive { get; set; } = null;
-
         public void SetWooIsActive(bool inputIsActive)
         {
-            _WooIsActive = inputIsActive;
+            localWooIsActive = inputIsActive;
         }
     }
 }

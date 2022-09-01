@@ -19,18 +19,19 @@ Coding standards:
 
 Trying to follow -> https://docs.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/coding-conventions
 
-- Local class variables: "_" prefix with Pascal case similar to the class name.  
-	- Exceptions:
-		* When using a model. then use the word model as prefix to the Pascal case with the. 
+- Local variables (with {get;set;}): camel case similar to the class name.		
+	- Exceptions + rules:
+		* When using a model, or a variable that is mainly used in the razor/html code. Then use the word model or other descriptor as prefix to the camelCase. 
 		* Reference variables to be used in child components are preceded with Ref.
 		* Event reference variable with Event as a suffix
 		* Also boolean's are Prefix with Is or Do as Pascal case.
 		* Component Parameters PascelCase no "_" with a word prefix Explaining source SourceXXX or ModelXXX etc 
-- public interface variable camelCase (no I)
-- Local function/routine variables: "_" prefix with camel case.
+- public interface variable PascelCase (no I)
+- Local variables/fields (no {get;set;}): "_" prefix with camelCase, used for "holding" local value.
 - Parameters for procedures: where appropriate use a word prefix to explain the parameter action (like delete or update or new) or use the prefix "p" but make sure you add a comment about using ///
 
-enums: to be in camel case.
+enums: to be in PascalCase.
+Async methods/routines Suffix with "Async"
 
 Table Name Standards:
 ----------------------

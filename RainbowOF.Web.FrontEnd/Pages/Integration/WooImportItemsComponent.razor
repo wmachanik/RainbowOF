@@ -4,7 +4,7 @@
     <Blazorise.CardTitle>
         @if (IsImporting())
         {
-            <Blazorise.Label>Importing @ImportingThis....</Blazorise.Label>
+            <Blazorise.Label>Status: @ImportingThis....</Blazorise.Label>
         }
         else if (ImportingThis.Equals(string.Empty))
         {
@@ -21,7 +21,7 @@
         {
             <Blazorise.Progress Margin="Margin.Is3.FromBottom" Size="Size.Medium">
                 <Blazorise.ProgressBar Background="Background.Info" Max="100" Animated="true" Min="0" Value="currImportCounters.PercentOfRecsImported" Striped="true">@currImportCounters.PercentOfRecsImported%</Blazorise.ProgressBar>
-                @*---MAX = currImportCounters.MaxRecs---*@
+                @*---MAX = CurrImportCounters.MaxRecs---*@
             </Blazorise.Progress>
         }
     </Blazorise.CardBody>

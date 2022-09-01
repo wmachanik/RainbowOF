@@ -1,7 +1,6 @@
 ﻿using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using RainbowOF.Data.SQL;
-using RainbowOF.Models.Items;
 using RainbowOF.Models.Lookups;
 using RainbowOF.Repositories.Common;
 using RainbowOF.Tools;
@@ -10,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Lookups
@@ -18,23 +16,24 @@ namespace RainbowOF.Repositories.Lookups
 
     public class ItemAttributeVarietyLookupRepository : Repository<ItemAttributeVarietyLookup>, IItemAttributeVarietyLookupRepository
     {
-        //private ApplicationDbContext appContext = null;
-        //private ILoggerManager appLoggerManager { get; set; }
-        //private IUnitOfWork appUnitOfWork { get; set; }
-        public ItemAttributeVarietyLookupRepository(ApplicationDbContext sourceDbContext, ILoggerManager sourceLogger, IUnitOfWork sourceAppUnitOfWork) : base(sourceDbContext, sourceLogger, sourceAppUnitOfWork)
+        //private IDbContextFactory<ApplicationDbContext> appDbContext { get; set; }
+        //private ILoggerManager AppLoggerManager { get; set; }
+        //private IUnitOfWork AppUnitOfWork { get; set; }
+        public ItemAttributeVarietyLookupRepository(IDbContextFactory<ApplicationDbContext> sourceDbContext, ILoggerManager sourceLogger, IUnitOfWork sourceAppUnitOfWork) : base(sourceDbContext, sourceLogger, sourceAppUnitOfWork)
         {
-            //appContext = sourceDbContext;
-            //appLoggerManager = sourceLogger;
-            //appUnitOfWork = sourceAppUnitOfWork;
+            // all these variable sit in the Generic repo, so we can access themm there as they are internals
+            //appDbContext = sourceDbContext;
+            //AppLoggerManager = sourceLogger;
+            //AppUnitOfWork = sourceAppUnitOfWork;
             if (sourceLogger.IsDebugEnabled()) sourceLogger.LogDebug("ItemAttributeVarietyLookupRepository initialised.");
         }
 
-        List<OrderByParameter<ItemAttributeVarietyLookup>> GetOrderByExpressions(List<SortParam> currentSortParams)
+        static List<OrderByParameter<ItemAttributeVarietyLookup>> GetOrderByExpressions(List<SortParam> currentSortParams)
         {
             if (currentSortParams == null)
                 return null;
 
-            List<OrderByParameter<ItemAttributeVarietyLookup>> _orderByExpressions = new List<OrderByParameter<ItemAttributeVarietyLookup>>();
+            List<OrderByParameter<ItemAttributeVarietyLookup>> _orderByExpressions = new();
             foreach (var col in currentSortParams)
             {
                 switch (col.FieldName)
@@ -77,12 +76,11 @@ namespace RainbowOF.Repositories.Lookups
             }
             return _orderByExpressions;
         }
-
-        private List<Expression<Func<ItemAttributeVarietyLookup, bool>>> GetFilterByExpressions(List<FilterParam> currentFilterParams)
+        static private List<Expression<Func<ItemAttributeVarietyLookup, bool>>> GetFilterByExpressions(List<FilterParam> currentFilterParams)
         {
             if (currentFilterParams == null)
                 return null;
-            List<Expression<Func<ItemAttributeVarietyLookup, bool>>> _filterByExpressions = new List<Expression<Func<ItemAttributeVarietyLookup, bool>>>();
+            List<Expression<Func<ItemAttributeVarietyLookup, bool>>> _filterByExpressions = new();
             foreach (var col in currentFilterParams)
             {
                 col.FilterBy = col.FilterBy.ToLower();
@@ -135,18 +133,16 @@ namespace RainbowOF.Repositories.Lookups
         public async Task<DataGridItems<ItemAttributeVarietyLookup>> GetPagedDataEagerWithFilterAndOrderByAsync(DataGridParameters currentDataGridParameters, Guid sourceParentItemAttributeLookupId) // (int startPage, int currentPageSize)
         {
             DataGridItems<ItemAttributeVarietyLookup> _dataGridData = null;
-            DbSet<ItemAttributeVarietyLookup> _table = appContext.Set<ItemAttributeVarietyLookup>();
-
+            string statusString = $"Getting all records with eager loading of ItemAttributeVarietyLookup order by an filter Data Grid Parameters: {currentDataGridParameters}";
+            if (!CanDoDbAsyncCall(statusString))
+                return null;
             try
             {
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Getting all records with eager loading of ItemAttributeVarietyLookup order by an filter Data Grid Parameters: {currentDataGridParameters.ToString()}");
-                if (appUnitOfWork.DBTransactionIsStillRunning())
-                    if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("Second transaction started before current transaction completed!");
-
+                using var context = await AppDbContext.CreateDbContextAsync();
+                DbSet<ItemAttributeVarietyLookup> _table = context.Set<ItemAttributeVarietyLookup>();
                 // get a list of Order bys and filters
                 List<OrderByParameter<ItemAttributeVarietyLookup>> _orderByExpressions = GetOrderByExpressions(currentDataGridParameters.SortParams);
                 List<Expression<Func<ItemAttributeVarietyLookup, bool>>> _filterByExpressions = GetFilterByExpressions(currentDataGridParameters.FilterParams);
-
                 // start with a basic Linq Query. No Eager loading getting weird issues which I cannot solve.
                 IQueryable<ItemAttributeVarietyLookup> _query = _table.Where(iavl => iavl.ItemAttributeLookupId == sourceParentItemAttributeLookupId); //.Include(iavl=>iavl.UoM) ;  -> this seems to cause problems with building the query, perhaps it must come last 
                 if ((_orderByExpressions != null) && (_orderByExpressions.Count > 0))
@@ -177,8 +173,8 @@ namespace RainbowOF.Repositories.Lookups
                     if (!String.IsNullOrEmpty(currentDataGridParameters.CustomFilter))
                     {
                         _queryWhere = _queryWhere.And(iavl => ((iavl.VarietyName.ToLower().Contains(currentDataGridParameters.CustomFilter))
-                                                           || (iavl.UoM.UoMName.ToLower().Contains(currentDataGridParameters.CustomFilter))
-                                                           || (iavl.Notes.ToLower().Contains(currentDataGridParameters.CustomFilter))));
+                                                            || (iavl.UoM.UoMName.ToLower().Contains(currentDataGridParameters.CustomFilter))
+                                                            || (iavl.Notes.ToLower().Contains(currentDataGridParameters.CustomFilter))));
                     }
                     if (_filterByExpressions != null)
                     {
@@ -189,9 +185,10 @@ namespace RainbowOF.Repositories.Lookups
                 }
 
                 //now we can add the page stuff - first get the count to return
-                _dataGridData = new DataGridItems<ItemAttributeVarietyLookup>();
-                _dataGridData.TotalRecordCount = _query.Count();
-                
+                _dataGridData = new()
+                {
+                    TotalRecordCount = _query.Count()
+                };
                 _query = _query
                    .Skip((currentDataGridParameters.CurrentPage - 1) * currentDataGridParameters.PageSize)
                    .Take(currentDataGridParameters.PageSize);
@@ -200,10 +197,14 @@ namespace RainbowOF.Repositories.Lookups
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all records from ItemAttributeVarietyLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all records from ItemAttributeVarietyLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
+            }
+            finally
+            {
+                DbCallDone(statusString);
             }
             return _dataGridData;
         }

@@ -28,8 +28,8 @@ namespace RainbowOF.FrontEnd.Models.Classes
         /// </summary>
         /// <param name="TotalSoFar">Total items processed</param>
         /// <returns>Percentage in int or -1 for error</returns>
-        public int CalcPercentage(double TotalSoFar) => 
-            (MaxRecs>0) ? Convert.ToInt32(Math.Round((TotalSoFar / (double)MaxRecs) * 100, 0)) : -1;
+        public int CalcPercentage(double TotalSoFar) =>
+            (MaxRecs > 0) ? Convert.ToInt32(Math.Round((TotalSoFar / (double)MaxRecs) * 100, 0)) : -1;
 
         public void CalcAndSetPercentage(double TotalSoFar) => PercentOfRecsImported = CalcPercentage(TotalSoFar);
     }

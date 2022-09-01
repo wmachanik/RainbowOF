@@ -4,10 +4,6 @@ using RainbowOF.Models.Lookups;
 using RainbowOF.ViewModels.Items;
 using RainbowOF.ViewModels.Lookups;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RainbowOF.ViewModels
 {
@@ -35,7 +31,7 @@ namespace RainbowOF.ViewModels
             CreateMap<ItemAttributeVarietyLookup, ItemAttributeVariety>();
             CreateMap<ItemAttributeVariety, ItemAttributeLookup>();
             CreateMap<ItemAttributeVariety, ItemAttributeVariety>();
-                //.ForMember(dest => dest.UoMId, act => act.MapFrom(src => ((src.UoMId ?? Guid.Empty) == Guid.Empty) ? null : src.UoMId));
+            //.ForMember(dest => dest.UoMId, act => act.MapFrom(src => ((src.UoMId ?? Guid.Empty) == Guid.Empty) ? null : src.UoMId));
 
         }
     }

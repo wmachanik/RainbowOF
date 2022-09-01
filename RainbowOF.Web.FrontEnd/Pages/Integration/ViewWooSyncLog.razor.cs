@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Components;
 using RainbowOF.Models.Logs;
 using RainbowOF.Repositories.Common;
-using RainbowOF.Repositories.Logs;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace RainbowOF.Web.FrontEnd.Pages.Integration
@@ -25,7 +23,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
         public List<WooSyncLog> WooSyncLogRows;
 
         [Inject]
-        IUnitOfWork appUnitOfWork { get; set; }
+        public IUnitOfWork AppUnitOfWork { get; set; }
         protected override async Task OnInitializedAsync()
         {
             await base.OnInitializedAsync();
@@ -34,12 +32,12 @@ namespace RainbowOF.Web.FrontEnd.Pages.Integration
 
         private async Task<List<DateTime>> GetAllUniqueLogDatesAsync()
         {
-            return await appUnitOfWork.wooSyncLogRepository.GetDistinctLogDatesAsync();
+            return await AppUnitOfWork.WooSyncLogRepository.GetDistinctLogDatesAsync();
         }
 
         private async Task<List<WooSyncLog>> GetSyncLogRowsByDateAsync(DateTime selectedDateTimeInLog)
         {
-            return (List<WooSyncLog>)await appUnitOfWork.wooSyncLogRepository.GetByAsync(wsl => wsl.WooSyncDateTime == selectedDateTimeInLog);
+            return (List<WooSyncLog>)await AppUnitOfWork.WooSyncLogRepository.GetByAsync(wsl => wsl.WooSyncDateTime == selectedDateTimeInLog);
         }
 
 

@@ -11,7 +11,7 @@
 }
 else
 {
-    @if (IsSaved)
+    @if (isSaved)
     {
         <Blazorise.Badge Class="alert-info">Preferences Saved...</Blazorise.Badge>
     }
@@ -38,11 +38,11 @@ else
                     </Blazorise.Heading>
                 </Blazorise.CollapseHeader>
                 <Blazorise.CollapseBody>
-                    <WooPreferencesComponent WooSettingsModel="modelWooSettings" Logger="appLoggerManager" />
+                    <WooPreferencesComponent WooSettingsModel="modelWooSettings" Logger="AppLoggerManager" />
                     <hr />
                     <div class="form-group row justify-content-center">
                         <div class=" col-md-6justify-content-center">
-                            <Blazorise.Button Loading="IsSaving" Type="ButtonType.Submit" Class="btn btn-primary">Save</Blazorise.Button>
+                            <Blazorise.Button Loading="isSaving" Type="ButtonType.Submit" Class="btn btn-primary">Save</Blazorise.Button>
                             <button class="btn btn-outline-secondary" type="button">Return</button>
                         </div>
                     </div>

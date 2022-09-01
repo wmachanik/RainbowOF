@@ -1,9 +1,7 @@
-﻿using RainbowOF.Models.Items;
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
 
 namespace RainbowOF.Models.Lookups
 {
@@ -11,7 +9,7 @@ namespace RainbowOF.Models.Lookups
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public Guid ItemAttributeVarietyLookupId { get; set; }
-        public Guid ItemAttributeLookupId { get; set; }  
+        public Guid ItemAttributeLookupId { get; set; }
         [Required]
         [StringLength(100)]
         [DisplayName("Variety Type")]

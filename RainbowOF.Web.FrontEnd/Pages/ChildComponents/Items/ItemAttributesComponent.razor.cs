@@ -2,14 +2,15 @@
 using Blazorise.DataGrid;
 using Microsoft.AspNetCore.Components;
 using RainbowOF.Components.Modals;
+using RainbowOF.Data.SQL;
 using RainbowOF.Models.Items;
 using RainbowOF.Models.Lookups;
 using RainbowOF.Repositories.Common;
 using RainbowOF.Repositories.Items;
 using RainbowOF.Tools;
-using RainbowOF.ViewModels.Common;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -19,19 +20,21 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
     {
         #region Grid Variables
         // Interface Stuff
-        List<ItemAttribute> ModelItemAttributes;
-        ItemAttribute SeletectedItemAttribute;
-        DataGrid<ItemAttribute> _DataGrid;
+        private List<ItemAttribute> modelItemAttributes { get; set; }
+        private ItemAttribute seletectedItemAttribute { get; set; }
+        private DataGrid<ItemAttribute> dataGrid { get; set; }
         // All there workings are here
-        IItemAttributeGridRepository itemAttributeGridRepository = null;
+        private IItemAttributeGridRepository itemAttributeGridRepository { get; set; } = null;
         #endregion
         #region Injected Variables
         [Inject]
-        IUnitOfWork appUnitOfWork { get; set; }
+        public IUnitOfWork AppUnitOfWork { get; set; }
+        //[Inject]
+        //IDbContextFactory<ApplicationDbContext> AppDbContext { get; set; }
         [Inject]
-        public ILoggerManager appLoggerManager { get; set; }
+        public ILoggerManager AppLoggerManager { get; set; }
         [Inject]
-        public IMapper _Mapper { get; set; }
+        public IMapper AppMapper { get; set; }
         #endregion
         #region Parameters
         [Parameter, EditorRequired]
@@ -47,19 +50,17 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         #region Initialisation
         protected override async Task OnInitializedAsync()
         {
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("ItemAttributesComponent initialising.");
-            ModelItemAttributes = await appUnitOfWork.itemRepository.GetEagerItemAttributeByItemIdAsync(ParentItemId);
-            // load lookup here, force reload as could be new item    - async order by failing again, not sure why tried await task also has a error
-            //await Task.Run(() =>
-            //{
-            appUnitOfWork.GetListOf<ItemAttributeLookup>(true, ial => ial.AttributeName);
-            //});
+            if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug("ItemAttributesComponent initialising.");
+            //-- not sure why but when we await this the variant async initialise is called during the database query, so have changed it to allow sync calls
+            modelItemAttributes = AppUnitOfWork.ItemAttributeRepo.GetEagerItemAttributeByItemIdAsync(ParentItemId);   ///, false /*no async*/).Result /* for no async*/;
+            modelItemAttributes ??= new();  // if what was returned was null then create a new one so a grid will be displayed
+            AppUnitOfWork.GetListOf<ItemAttributeLookup>(true, ial => ial.AttributeName);
             //!!! This must be done last so that loading is displayed until we are finished loading.
-            itemAttributeGridRepository = new ItemAttributeGridRepository(appLoggerManager, appUnitOfWork);
-            itemAttributeGridRepository.gridSettings.PopUpRef = PopUpRef;   // use the forms Pop Up ref
+            itemAttributeGridRepository = new ItemAttributeGridRepository(AppLoggerManager, AppUnitOfWork, AppUnitOfWork.ItemAttributeRepo);
+            itemAttributeGridRepository.CurrGridSettings.PopUpRef = PopUpRef;   // use the forms Pop Up ref
             await base.OnInitializedAsync();
-            //await InvokeAsync(StateHasChanged);
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("ItemAttributesComponent initialised.");
+            //---> not needed await InvokeAsync(StateHasChanged);
+            if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug("ItemAttributesComponent initialised.");
         }
         #endregion
         #region BackEnd Routines
@@ -75,9 +76,9 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         public List<ItemAttributeLookup> GetListOfAvailableAttributes(Guid currentAttributeLookupId,
                                                                       bool IsForceReload = false)
         {
-            List<ItemAttributeLookup> _itemAttributeLookups = appUnitOfWork.GetListOf<ItemAttributeLookup>(IsForceReload, ial => ial.AttributeName);
+            List<ItemAttributeLookup> _itemAttributeLookups = AppUnitOfWork.GetListOf<ItemAttributeLookup>(IsForceReload, ial => ial.AttributeName);
             // 1.
-            var _usedItems = ModelItemAttributes.Where(miav => (miav.ItemAttributeLookupId != currentAttributeLookupId));
+            var _usedItems = modelItemAttributes.Where(miav => (miav.ItemAttributeLookupId != currentAttributeLookupId));
             // 2. 
             var _unselectedItems = _itemAttributeLookups.Where(iav => !_usedItems.Any(miav => (miav.ItemAttributeLookupId == iav.ItemAttributeLookupId)));
             return _unselectedItems.ToList();
@@ -85,7 +86,8 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         // Interface Stuff
         void OnNewItemAttributeDefaultSetter(ItemAttribute newItem)
         {
-            newItem = itemAttributeGridRepository.NewViewEntityDefaultSetter(newItem, ParentItemId);
+            // newItem = 
+            itemAttributeGridRepository.NewViewEntityDefaultSetter(newItem, ParentItemId);
         }
         /// <summary>
         /// Handle the grid insert 
@@ -102,20 +104,26 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
             else
             {
                 await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Info, "Adding attribute to item.");
-                newItemAttribute.ItemAttributeDetail = await itemAttributeGridRepository.GetItemAttributeByIdAsync(newItemAttribute.ItemAttributeLookupId);
+                newItemAttribute.ItemAttributeDetail =   await itemAttributeGridRepository.GetItemAttributeByIdAsync(newItemAttribute.ItemAttributeLookupId);
+                                                   //  await itemAttributeGridRepository.GetItemAttributeByIdAsync(newItemAttribute.ItemAttributeLookupId);
                 if (newItemAttribute.ItemAttributeDetail == null)
                 {
                     await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, "Error finding Attribute in lookup table!");
                 }
                 else
                 {
-                    await itemAttributeGridRepository.InsertViewRowAsync(newItemAttribute, "Attribute");
+                    var _result = await itemAttributeGridRepository.InsertViewRowAsync(newItemAttribute, "Attribute");
+                    if (_result == null)
+                    {
+                        // something went wrong with the adding so delete it from the memory 
+                        modelItemAttributes.Remove(newItemAttribute);
+                    }
                     // tell the parent that we have a variable attribute now
                     if (newItemAttribute.IsUsedForItemVariety)
                         await OnAttributeChangeToVariableEvent.InvokeAsync(true);
                 }
             }
-            await _DataGrid.Reload();
+            await dataGrid.Reload();
         }
         /// <summary>
         /// Handle the grid update
@@ -141,16 +149,17 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
                 else
                 {
                     bool HasChangedVaraibleAttrbiuteStatus = (_currentItemAttribute.IsUsedForItemVariety != _updatedItemAttribute.IsUsedForItemVariety);
-                    _currentItemAttribute.IsUsedForItemVariety = _updatedItemAttribute.IsUsedForItemVariety;
-                    int _result = await itemAttributeGridRepository.UpdateOnlyItemAttributeAsync(_currentItemAttribute);
+                    //_currentItemAttribute.IsUsedForItemVariety = _updatedItemAttribute.IsUsedForItemVariety;
+                    //int _result = 
+                    await itemAttributeGridRepository.UpdateOnlyItemAttributeAsync(_updatedItemAttribute);
                     //await itemAttributeGridRepository.UpdateViewRowAsync(_currentItemAttribute, _currentItemAttribute.ItemAttributeDetail.AttributeName);
-                    if (appUnitOfWork.IsInErrorState())
+                    if (AppUnitOfWork.IsInErrorState())
                     {
-                        await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Error updating attribute {appUnitOfWork.GetErrorMessage()}, it could not be found in the table.");
+                        await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Error updating attribute {AppUnitOfWork.GetErrorMessage()}, it could not be found in the table.");
                     }
                     else if (HasChangedVaraibleAttrbiuteStatus)
                     {
-                        // its status as a variable attribute has changed
+                        // its status as a variable attribute has changed so tell the parent
                         await OnAttributeChangeToVariableEvent.InvokeAsync(_updatedItemAttribute.IsUsedForItemVariety);
                     }
                     // update the in memory children, but only after update just in case EF core tries to update the children (which should not be needed as they are added as views
@@ -160,31 +169,32 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
             //await _DataGrid.Reload();
             StateHasChanged();
         }
-        /// <summary>
-        /// Get the details from the database on the ItemsAttribute
-        /// </summary>
-        /// <param name="updatedItemAttribute">ItemAttribute to search</param>
-        /// <returns></returns>
-        private ItemAttribute SetAttributeDetail(ItemAttribute updatedItemAttribute)
-        {
-            if (updatedItemAttribute.ItemAttributeLookupId == Guid.Empty)
-            {
-                updatedItemAttribute.ItemAttributeDetail = null; /// force it null, cannot dispose?
-            }
-            else
-            {
-                var _itemAtts = appUnitOfWork.GetListOf<ItemAttributeLookup>();
-                updatedItemAttribute.ItemAttributeDetail = _itemAtts.FirstOrDefault(ic => ic.ItemAttributeLookupId == updatedItemAttribute.ItemAttributeLookupId);
-            }
-            return updatedItemAttribute;
-        }
+        ///// <summary>
+        ///// Get the details from the database on the ItemsAttribute
+        ///// </summary>
+        ///// <param name="updatedItemAttribute">ItemAttribute to search</param>
+        ///// <returns></returns>
+        //private ItemAttribute SetAttributeDetail(ItemAttribute updatedItemAttribute)
+        //{
+        //    if (updatedItemAttribute.ItemAttributeLookupId == Guid.Empty)
+        //    {
+        //        updatedItemAttribute.ItemAttributeDetail = null; /// force it null, cannot dispose?
+        //    }
+        //    else
+        //    {
+        //        var _itemAtts = AppUnitOfWork.GetListOf<ItemAttributeLookup>();
+        //        updatedItemAttribute.ItemAttributeDetail = _itemAtts.FirstOrDefault(ic => ic.ItemAttributeLookupId == updatedItemAttribute.ItemAttributeLookupId);
+        //    }
+        //    return updatedItemAttribute;
+        //}
+        private ItemAttribute _seletectedItemAttributeToDelete; // used to remember which item to delete
 
         async Task OnRowRemovingAsync(CancellableRowChange<ItemAttribute> modelItem)
         {
             // set the Selected Item Attribute for use later
-            SeletectedItemAttribute = modelItem.Item;
+            _seletectedItemAttributeToDelete = modelItem.Item;
             var deleteItem = modelItem;
-            await itemAttributeGridRepository.gridSettings.DeleteConfirmation.ShowModalAsync("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.ItemAttributeDetail.AttributeName}?");  //,"Delete","Cancel"); - passed in on init
+            await itemAttributeGridRepository.CurrGridSettings.DeleteConfirmation.ShowModalAsync("Delete confirmation", $"Are you sure you want to delete: {deleteItem.Item.ItemAttributeDetail.AttributeName}?");  //,"Delete","Cancel"); - passed in on init
         }
         /// <summary>
         /// Confirm Delete Click is called when the user confirms they want to delete.
@@ -193,16 +203,15 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         /// <returns></returns>
         async Task ConfirmDelete_ClickAsync(bool confirmationOption)
         {
-            if (confirmationOption)
+            if ((confirmationOption) && (_seletectedItemAttributeToDelete != null))
             {
-                await itemAttributeGridRepository.DeleteViewRowByIdAsync(SeletectedItemAttribute.ItemAttributeId, SeletectedItemAttribute.ItemAttributeDetail.AttributeName);
+                await itemAttributeGridRepository.DeleteViewRowByEntityAsync(_seletectedItemAttributeToDelete, _seletectedItemAttributeToDelete.ItemAttributeDetail.AttributeName);
             }
-            //IsLoading = false;
-            await _DataGrid.Reload();
+            await dataGrid.Reload();
         }
         public async Task OnRowRemovedAsync(ItemAttribute modelItem)
         {
-            await _DataGrid.Reload();  // reload the list so the latest item is displayed - not working here I think because of the awaits so move to confirm_clicks
+            await dataGrid.Reload();  // reload the list so the latest item is displayed - not working here I think because of the awaits so move to confirm_clicks
             await InvokeAsync(StateHasChanged);
         }
 
@@ -212,7 +221,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         //{
         //    if (IsBusy) return null;
         //    IsBusy = true;
-        //    var repo = appUnitOfWork.itemAttributesRepository();
+        //    var repo = AppUnitOfWork.itemAttributesRepository();
 
         //    List<ItemAttributes> _gotItemAttributess = null;
 

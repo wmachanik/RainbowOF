@@ -1,9 +1,4 @@
-﻿using NLog;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace RainbowOF.Tools
+﻿namespace RainbowOF.Tools
 {
     public interface ILoggerManager
     {

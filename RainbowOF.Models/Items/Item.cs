@@ -38,8 +38,8 @@ namespace RainbowOF.Models.Items
         // MISC stuff
         public string Notes { get; set; }
         // management stuff
-        [Timestamp]
-        public byte[] RowVersion { get; set; }
+        //[Timestamp]
+        //public byte[] RowVersion { get; set; }
         // Related tables
         [ForeignKey("ReplacementItemId")]
         public virtual Item ReplacementItem { get; set; }

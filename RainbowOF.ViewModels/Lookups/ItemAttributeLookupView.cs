@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using RainbowOF.Models.Lookups;
-using RainbowOF.Models.Woo;
-using RainbowOF.ViewModels.Common;
+﻿using RainbowOF.Models.Lookups;
 
 namespace RainbowOF.ViewModels.Lookups
 {

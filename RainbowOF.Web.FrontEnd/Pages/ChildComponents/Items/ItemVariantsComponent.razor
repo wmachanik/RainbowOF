@@ -5,19 +5,19 @@
     > PopUpAndLogNotification PopUpRef to display the results of the add
     > Source ItemId
     Uses:
-    IAppUnitOfWork appUnitOfWork
+    IAppUnitOfWork AppUnitOfWork
     -------------------------------------------------------------
 *@
 @using RainbowOF.Models.Items
 @using RainbowOF.Models.Lookups
 
-@if (ItemVariantViewRepository == null)
+@if (itemVariantViewRepository == null)
 {
     <Badge Color="Color.Primary" Pill="true">loading...</Badge>
 }
 else
 {
-    if (ItemVariants == null)
+    if (itemVariants == null)
     {
         <Blazorise.Badge Color="Color.Info">Item has no variants</Blazorise.Badge>
     }
@@ -25,7 +25,7 @@ else
     {
         // ---- Busy with this
         // have a panel per attribute collection
-        foreach (var itemVariantView in ItemVariantViews)
+        foreach (var itemVariantView in itemVariantViews)
         {
             // Add an edit form per item variant
             <Validations Mode="ValidationMode.Manual" Model="@itemVariantView">
@@ -40,7 +40,7 @@ else
                                             //string selectedId = @thisAttribute?.AssociatedAttributeVarietyLookupId.ToString() ?? "XallX";
                                             //<span style="font-size:xx-small">@selectedId</span>
                                             List<ItemAttributeVariety> _AttributeVarieties =
-                                                  GetListOfAttributeAvailableVarieties(thisAttribute.AssociatedAttributeLookupId, thisAttribute?.AssociatedAttributeVarietyLookupId ?? Guid.Empty);
+                                                  GetListOfAttributeAvailableVarieties(thisAttribute.AssociatedAttributeLookupId /*, thisAttribute?.AssociatedAttributeVarietyLookupId ?? Guid.Empty */);
                                             <Field ColumnSize="ColumnSize.IsAuto">
                                                 <Select TValue="Guid" SelectedValue="@((Guid)(thisAttribute?.AssociatedAttributeVarietyLookupId ?? Guid.Empty))"
                                                                       SelectedValueChanged="@((v) => thisAttribute.AssociatedAttributeVarietyLookupId = SetChangedAttribute(v, itemVariantView) )">
@@ -223,16 +223,16 @@ else
                         </Tooltip>
                         &nbsp;&nbsp;&nbsp;&nbsp;
                         <Tooltip Text="Save changes">
-                            <Blazorise.Button Color="Color.Primary" Outline="true" Loading="IsItemVariantSaveBusy"
+                            <Blazorise.Button Color="Color.Primary" Outline="true" Loading="isItemVariantSaveBusy"
                                       @onclick="@SaveItemVariants_Click" 
-                                      Padding="Padding.Is1"><Icon Name="IconName.Save" /> Save</Blazorise.Button>
+                                      Padding="Padding.Is1"><Icon Name="IconName.Save" /> Save Variants </Blazorise.Button>
                         </Tooltip>
                         <Tooltip Text="Cancel changes">
                             <Blazorise.Button Color="Color.Warning" Outline="true" Padding="Padding.Is1"><Icon Name="IconName.Undo" /> Cancel </Blazorise.Button>
                         </Tooltip>
                         &nbsp;&nbsp;&nbsp;&nbsp;
                         <Tooltip Text="Pull from E-commerce platforms">
-                            <Blazorise.Button  Outline="true" Color="Color.Dark" Loading="IsItemVariantImportBusy"
+                            <Blazorise.Button  Outline="true" Color="Color.Dark" Loading="isItemVariantImportBusy"
                                       @onclick="@ImportItemVariants_Click"
                                       Padding="Padding.Is1"><Icon Name="IconName.ChevronRight" /> Refresh from Woo</Blazorise.Button>
                         </Tooltip>
@@ -257,7 +257,7 @@ else
         </Row>
     }
 
-<RainbowOF.Components.Modals.ConfirmModal @ref="ItemVariantViewRepository.formSettings.DeleteConfirmation"
+<RainbowOF.Components.Modals.ConfirmModal @ref="itemVariantViewRepository.CurrFormSettings.DeleteConfirmation"
                                           ConfirmationClicked="DeleteItemVariantAsync"
                                           ConfirmationMessage=@($"Are you sure you want to delete this variant?")
                                           ConfirmButtonText="Delete"

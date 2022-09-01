@@ -8,8 +8,6 @@ using RainbowOF.Woo.REST.Models;
 using RainbowOF.Woo.REST.Repositories;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using WooCommerceNET.WooCommerce.v3;
 
@@ -20,17 +18,17 @@ namespace RainbowOF.Integration.Repositories.Woo
         //TEntity = ItemAttributeLookup
         //TWooEntity = ProductAttribute
         //TWooMapEntity = WooProductAttributeMap
-        public IUnitOfWork appUnitOfWork { get; set; }
-        public ILoggerManager appLoggerManager { get; set; }
-        public WooSettings appWooSettings { get; set; }
+        public IUnitOfWork AppUnitOfWork { get; set; }
+        public ILoggerManager AppLoggerManager { get; set; }
+        public WooSettings AppWooSettings { get; set; }
         public ImportCounters CurrImportCounters { get; set; } = new();
 
         public WooImportProductAttribute(IUnitOfWork sourceAppUnitOfWork, ILoggerManager sourceLogger, WooSettings sourecAppWooSettings)
         {
-            appUnitOfWork = sourceAppUnitOfWork;
-            appLoggerManager = sourceLogger;
-            appWooSettings = sourecAppWooSettings;
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("WooImportProductAttribute initialised.");
+            AppUnitOfWork = sourceAppUnitOfWork;
+            AppLoggerManager = sourceLogger;
+            AppWooSettings = sourecAppWooSettings;
+            if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug("WooImportProductAttribute initialised.");
         }
         //async Task<Guid> AddProductAttribute(ProductAttribute pPA, WooProductAttributeMap pWooAttributeMap)
         /// <summary>
@@ -40,11 +38,9 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// <returns>Success=> LookupId or ErrorCode => Guid.Empty</returns>
         public async Task<Guid> AddWooEntityToMappingAsync(ProductAttribute newEntity, WooProductAttributeMap sourceWooMap)
         {
-            Guid _ItemAttributeId = Guid.Empty;
-            IRepository<WooProductAttributeMap> _WooAttributeMapRepository = appUnitOfWork.Repository<WooProductAttributeMap>();
-
+            IRepository<WooProductAttributeMap> _WooAttributeMapRepository = AppUnitOfWork.Repository<WooProductAttributeMap>();
             // Add Item Attribute if it does not exist
-            _ItemAttributeId = await AddOrGetEntityIDAsync(newEntity);
+            Guid _ItemAttributeId = await AddOrGetEntityIDAsync(newEntity);
             if (sourceWooMap == null)
             {
                 sourceWooMap = new WooProductAttributeMap
@@ -61,7 +57,7 @@ namespace RainbowOF.Integration.Repositories.Woo
             }
             // return Id if we update okay
             return (await _WooAttributeMapRepository.AddAsync(sourceWooMap) != null)
-                ? _ItemAttributeId : Guid.Empty;      // did not updated so set _ItemAttributeId to ItemAttributeID to Guid.Empty = error== 0)
+                        ? _ItemAttributeId : Guid.Empty;      // did not updated so set _ItemAttributeId to ItemAttributeID to Guid.Empty = error== 0)
         }
         //  async Task<Guid> AddOrGetIDItemAttribute(ProductAttribute pPA)
         /// <summary>
@@ -71,7 +67,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// <returns>ID of lookup found or added</returns>
         public async Task<Guid> AddOrGetEntityIDAsync(ProductAttribute sourceEntity)
         {
-            IRepository<ItemAttributeLookup> _ItemAttributeRepository = appUnitOfWork.Repository<ItemAttributeLookup>();
+            IRepository<ItemAttributeLookup> _ItemAttributeRepository = AppUnitOfWork.Repository<ItemAttributeLookup>();
 
             ItemAttributeLookup _ItemAttribute = await _ItemAttributeRepository.GetByIdAsync(ic => ic.AttributeName == sourceEntity.name);
             if (_ItemAttribute == null)
@@ -99,7 +95,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         public async Task<Guid> AddOrUpdateEntityAsync(ProductAttribute sourceEntity, Guid sourceWooMappedEntityId)
         {
             Guid _ItemAttributeId = Guid.Empty;
-            IRepository<ItemAttributeLookup> _ItemAttributeRepository = appUnitOfWork.Repository<ItemAttributeLookup>();
+            IRepository<ItemAttributeLookup> _ItemAttributeRepository = AppUnitOfWork.Repository<ItemAttributeLookup>();
             // check if the Attribute exists
             ItemAttributeLookup _ItemAttribute = await _ItemAttributeRepository.GetByIdAsync(ic => ic.ItemAttributeLookupId == sourceWooMappedEntityId);
             if (_ItemAttribute != null)
@@ -114,7 +110,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         }
         public async Task<Guid> GetWooMappedEntityIdByIdAsync(uint sourceWooEntityId)
         {
-            IRepository<WooProductAttributeMap> _wooAttributeMapRepository = appUnitOfWork.Repository<WooProductAttributeMap>();
+            IRepository<WooProductAttributeMap> _wooAttributeMapRepository = AppUnitOfWork.Repository<WooProductAttributeMap>();
             var _result = await _wooAttributeMapRepository.GetByIdAsync(wcm => wcm.WooProductAttributeId == sourceWooEntityId);
             return (_result == null) ? Guid.Empty : _result.ItemAttributeLookupId;
         }
@@ -125,9 +121,9 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// <returns></returns>
         public async Task<List<ProductAttribute>> GetWooEntityDataAsync()
         {
-            WooAPISettings _WooAPISettings = new WooAPISettings(appWooSettings);
+            WooAPISettings _WooAPISettings = new(AppWooSettings);
 
-            IWooProductAttribute _WooProductAttribute = new WooProductAttribute(_WooAPISettings, appLoggerManager);
+            IWooProductAttribute _WooProductAttribute = new WooProductAttribute(_WooAPISettings, AppLoggerManager);
             List<ProductAttribute> wooProductAttributes = await _WooProductAttribute.GetAllProductAttributesAsync();
             return wooProductAttributes;
         }
@@ -141,7 +137,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         {
             Guid _ItemAttributeId = Guid.Empty;
             // Get repository for each database we are accessing. ItemAttribute. WooProductAttributeMap & WooSyncLog
-            IRepository<WooProductAttributeMap> _WooAttributeMapRepository = appUnitOfWork.Repository<WooProductAttributeMap>();
+            IRepository<WooProductAttributeMap> _WooAttributeMapRepository = AppUnitOfWork.Repository<WooProductAttributeMap>();
             // Import the Attribute and set sync data
             ///first check if it exists in the mapping, just in case there has been a name change
             WooProductAttributeMap _wooAttributeMap = await _WooAttributeMapRepository.GetByIdAsync(wa => wa.WooProductAttributeId == sourceEntity.id);
@@ -169,13 +165,12 @@ namespace RainbowOF.Integration.Repositories.Woo
         public async Task<Guid> UpdatedWooEntityAsync(ProductAttribute updatedWooEntity, WooProductAttributeMap targetWooMap)
         {
             // we have found a mapping between the woo Product Attribute and our Attribute id so update the Attribute table just in case.
-            Guid _ItemAttributeId = Guid.Empty;
-            IRepository<WooProductAttributeMap> _WooProductAttributeMapRepository = appUnitOfWork.Repository<WooProductAttributeMap>();
+            IRepository<WooProductAttributeMap> _WooProductAttributeMapRepository = AppUnitOfWork.Repository<WooProductAttributeMap>();
 
-            _ItemAttributeId = await AddOrUpdateEntityAsync(updatedWooEntity, targetWooMap.ItemAttributeLookupId);
+            Guid _ItemAttributeId = await AddOrUpdateEntityAsync(updatedWooEntity, targetWooMap.ItemAttributeLookupId);
             /// Now update the woo Attribute using the _ItemAttributeId returned.
             return (await _WooProductAttributeMapRepository.UpdateAsync(targetWooMap) != UnitOfWork.CONST_WASERROR)
-                ? _ItemAttributeId : Guid.Empty;      // did not updated so set _ItemAttributeId to ItemAttributeID to Guid.Empty = error
+                    ? _ItemAttributeId : Guid.Empty;      // did not updated so set _ItemAttributeId to ItemAttributeID to Guid.Empty = error
         }
         //        async Task<Guid> UpdateItemAttribute(ProductAttribute pPA, ItemAttributeLookup pItemAttribute)
         /// <summary>
@@ -186,7 +181,7 @@ namespace RainbowOF.Integration.Repositories.Woo
         /// <returns>Id of Entity updated</returns>
         public async Task<Guid> UpdateEntityAsync(ProductAttribute updatedWooEntity, ItemAttributeLookup updatedEntity)
         {
-            IRepository<ItemAttributeLookup> _ItemAttributeRepository = appUnitOfWork.Repository<ItemAttributeLookup>();
+            IRepository<ItemAttributeLookup> _ItemAttributeRepository = AppUnitOfWork.Repository<ItemAttributeLookup>();
             updatedEntity.AttributeName = updatedWooEntity.name;
             updatedEntity.Notes = $"Updated Woo Attribute ID {updatedWooEntity.id}";
             return (await _ItemAttributeRepository.UpdateAsync(updatedEntity) != UnitOfWork.CONST_WASERROR)

@@ -3,15 +3,15 @@
 <Modal @ref="modalRef">
     <ModalContent IsCentered="true" Size="ModalSize.Large">
         <ModalHeader>
-            <ModalTitle>@_ConfirmationTitle</ModalTitle>
+            <ModalTitle>@confirmationTitle</ModalTitle>
             <CloseButton Clicked="@(() => OnConfirmationChangeAsync(false))" />
         </ModalHeader>
         <ModalBody>
-            @_ConfirmationMessage
+            @confirmationMessage
         </ModalBody>
         <ModalFooter>
-            <Blazorise.Button Color="@_ConfirmColor" Clicked="@(() => OnConfirmationChangeAsync(true))">@_ConfirmButtonText</Blazorise.Button>
-            <Button Color="Color.Secondary" Clicked="@(() => OnConfirmationChangeAsync(false))">@_CancelButtonText</Button>
+            <Blazorise.Button Color="@confirmColor" Clicked="@(() => OnConfirmationChangeAsync(true))">@confirmButtonText</Blazorise.Button>
+            <Button Color="Color.Secondary" Clicked="@(() => OnConfirmationChangeAsync(false))">@cancelButtonText</Button>
         </ModalFooter>
     </ModalContent>
 </Modal>

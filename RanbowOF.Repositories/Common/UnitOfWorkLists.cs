@@ -1,18 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore.Storage;
-using RainbowOF.Data.SQL;
-using RainbowOF.Tools;
-using RainbowOF.Repositories.Logs;
-using RainbowOF.Repositories.System;
+﻿using RainbowOF.Models.Items;
+using RainbowOF.Models.Lookups;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using RainbowOF.Repositories.Items;
-using RainbowOF.Repositories.Lookups;
-using RainbowOF.Models.Items;
 using System.Linq;
-using RainbowOF.Models.Lookups;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Common
 {
@@ -26,24 +18,24 @@ namespace RainbowOF.Repositories.Common
     public partial class UnitOfWork : IUnitOfWork
     {
         #region Internal List vars
-        private Dictionary<Type, object> _LookupLists = new Dictionary<Type, object>();
-        private Dictionary<Guid, string> _ListOfUoMSymbols = null;
-        private Dictionary<Guid, List<ItemCategoryLookup>> _ListOfAnItemsCategories = null;
-        private Dictionary<Guid, List<Item>> _ListOfSimilarItems = null;
-        private Dictionary<Guid, string> _ListOfAttributes = null;
-        List<ItemAttributeVarietyLookup> _ListOfAttributeVarieties = null;        
-        private Dictionary<Guid, List<ItemAttribute>> _ListOfAnItemsAttributes = null;
-        private Dictionary<Guid, List<ItemAttributeVariety>> _ListOfAnItemsAttributeVarieties = null;
+        private Dictionary<Type, object> _lookupLists = new();
+        private Dictionary<Guid, string> _listOfUoMSymbols = null;
+        private Dictionary<Guid, List<ItemCategoryLookup>> _listOfAnItemsCategories = null;
+        private Dictionary<Guid, List<Item>> _listOfSimilarItems = null;
+        private Dictionary<Guid, string> _listOfAttributes = null;
+        private List<ItemAttributeVarietyLookup> _listOfAttributeVarieties = null;
+        private Dictionary<Guid, List<ItemAttribute>> _listOfAnItemsAttributes = null;
+        private Dictionary<Guid, List<ItemAttributeVariety>> _listOfAnItemsAttributeVarieties = null;
         #endregion
         #region lists and variables from database
         public bool DBTransactionIsStillRunning()
         {
-            return appDbTransaction != null;
+            return false; // appDbTransaction != null;
         }
         public Dictionary<Type, object> LookupLists
         {
-            get { return _LookupLists; }
-            set { _LookupLists = value; }
+            get { return _lookupLists; }
+            set { _lookupLists = value; }
         }
         public List<TLookupItem> GetListOf<TLookupItem>(bool IsForceReload = false, Func<TLookupItem, object> orderByExpression = null) where TLookupItem : class
         {
@@ -58,12 +50,10 @@ namespace RainbowOF.Repositories.Common
             }
             IRepository<TLookupItem> appRepository = Repository<TLookupItem>();
             if (appRepository == null)
-            {
-                // problem so return null
-                return null;
-            }
-            List<TLookupItem> lookupItems = (orderByExpression == null) 
-                ? appRepository.GetAll().ToList() 
+                return null;   // problem so return null
+
+            List<TLookupItem> lookupItems = (orderByExpression == null)
+                ? appRepository.GetAll().ToList()
                 : appRepository.GetAllOrderBy(orderByExpression, false).ToList();
             //List<TLookupItem> lookupItems = appRepository.GetAll().ToList(); // : appRepository.GetAllOrderBy(orderByExpression, false).ToList();
             LookupLists.Add(typeof(TLookupItem), lookupItems);
@@ -117,23 +107,23 @@ namespace RainbowOF.Repositories.Common
         {
             if (IsForceReload)
             {
-                _ListOfUoMSymbols.Clear();
-                _ListOfUoMSymbols = null; // would prefer to dispose it but cannot see how
+                _listOfUoMSymbols.Clear();
+                _listOfUoMSymbols = null; // would prefer to dispose it but cannot see how
             }
-            if (_ListOfUoMSymbols == null)
+            if (_listOfUoMSymbols == null)
             {
                 IRepository<ItemUoMLookup> appRepository = this.Repository<ItemUoMLookup>();
                 var _itemUoMs = appRepository.GetAll(); // (await _UoMRepository.GetAllAsync()).ToList();
-                _ListOfUoMSymbols = new();
+                _listOfUoMSymbols = new();
                 if (_itemUoMs != null)
                 {
                     foreach (var item in _itemUoMs)
                     {
-                        _ListOfUoMSymbols.Add(item.ItemUoMLookupId, item.UoMSymbol);
+                        _listOfUoMSymbols.Add(item.ItemUoMLookupId, item.UoMSymbol);
                     }
                 }
             }
-            return _ListOfUoMSymbols;
+            return _listOfUoMSymbols;
         }
         /// <summary>
         /// Get or return a list of Categories based on the sourceItemId
@@ -144,48 +134,48 @@ namespace RainbowOF.Repositories.Common
         //public List<ItemAttributeVariety> GetListOfAttributeVarieties(Guid parentItemAttributeId, bool IsForceReload = false)
         public List<ItemCategoryLookup> GetListOfAnItemsCategories(Guid sourceItemId, bool IsForceReload = false)
         {
-            if ((_ListOfAnItemsCategories == null) || (IsForceReload) || (!_ListOfAnItemsCategories.ContainsKey(sourceItemId)))
+            if ((_listOfAnItemsCategories == null) || (IsForceReload) || (!_listOfAnItemsCategories.ContainsKey(sourceItemId)))
             {
-                List<ItemCategoryLookup> _listOfCategories = itemRepository.GetEagerItemsCategoryLookupsByItemId(sourceItemId)
+                List<ItemCategoryLookup> _listOfCategories = ItemRepository.GetEagerItemsCategoryLookupsByItemId(sourceItemId)
                                                                             .OrderBy(icl => icl.FullCategoryName)
                                                                             .ToList();   // get a list of only the category lookups this Item order by full category name
-                if ((_ListOfAnItemsCategories != null) && (_ListOfAnItemsCategories.ContainsKey(sourceItemId)))
+                if ((_listOfAnItemsCategories != null) && (_listOfAnItemsCategories.ContainsKey(sourceItemId)))
                 {
-                    _ListOfAnItemsCategories[sourceItemId].Clear();
-                    _ListOfAnItemsCategories[sourceItemId] = _listOfCategories;
+                    _listOfAnItemsCategories[sourceItemId].Clear();
+                    _listOfAnItemsCategories[sourceItemId] = _listOfCategories;
                 }
                 else
                 {
-                    if (_ListOfAnItemsCategories == null) _ListOfAnItemsCategories = new();
-                    _ListOfAnItemsCategories.Add(sourceItemId, _listOfCategories);
+                    if (_listOfAnItemsCategories == null) _listOfAnItemsCategories = new();
+                    _listOfAnItemsCategories.Add(sourceItemId, _listOfCategories);
                 }
             }
-            return _ListOfAnItemsCategories[sourceItemId];
+            return _listOfAnItemsCategories[sourceItemId];
         }
         public List<Item> GetListOfSimilarItems(Guid sourceItemId, Guid? sourceItemPrimaryCategoryId, bool IsForceReload = false)
         {
-            if ((_ListOfSimilarItems == null) || (IsForceReload) || (!_ListOfSimilarItems.ContainsKey(sourceItemId)))
+            if ((_listOfSimilarItems == null) || (IsForceReload) || (!_listOfSimilarItems.ContainsKey(sourceItemId)))
             {
-                List<Item> _listOfSimilarItems = itemRepository.GetSimilarItems(sourceItemId, sourceItemPrimaryCategoryId);   // get a list of items with the same parent category or all with parent category null
-                if ((_ListOfSimilarItems != null) && (_ListOfSimilarItems.ContainsKey(sourceItemId)))
+                List<Item> _listOfSimilarItems = ItemRepository.GetSimilarItems(sourceItemId, sourceItemPrimaryCategoryId);   // get a list of items with the same parent category or all with parent category null
+                if ((this._listOfSimilarItems != null) && (this._listOfSimilarItems.ContainsKey(sourceItemId)))
                 {
-                    _ListOfSimilarItems[sourceItemId].Clear();
-                    _ListOfSimilarItems[sourceItemId] = _listOfSimilarItems;
+                    this._listOfSimilarItems[sourceItemId].Clear();
+                    this._listOfSimilarItems[sourceItemId] = _listOfSimilarItems;
                 }
                 else
                 {
-                    if (_ListOfSimilarItems == null) _ListOfSimilarItems = new();
-                    _ListOfSimilarItems.Add(sourceItemId, _listOfSimilarItems);
+                    if (this._listOfSimilarItems == null) this._listOfSimilarItems = new();
+                    this._listOfSimilarItems.Add(sourceItemId, _listOfSimilarItems);
                 }
             }
-            return _ListOfSimilarItems[sourceItemId];
+            return _listOfSimilarItems[sourceItemId];
         }
         public Dictionary<Guid, string> GetListOfAttributes(bool IsForceReload = false)
         {
-            if ((IsForceReload) || (_ListOfAttributes == null))
+            if ((IsForceReload) || (_listOfAttributes == null))
             {
-                if (_ListOfAttributes != null) _ListOfAttributes.Clear();
-                else _ListOfAttributes = new Dictionary<Guid, string>();
+                if (_listOfAttributes != null) _listOfAttributes.Clear();
+                else _listOfAttributes = new Dictionary<Guid, string>();
 
                 IRepository<ItemAttributeLookup> _itemAttributeLookupRepository = Repository<ItemAttributeLookup>();
                 var _itemAttributes = _itemAttributeLookupRepository.GetAll()
@@ -193,25 +183,25 @@ namespace RainbowOF.Repositories.Common
                     .ToList();  // cannot async as part of UI for
                 foreach (var _itemAttribute in _itemAttributes)
                 {
-                    _ListOfAttributes.Add(_itemAttribute.ItemAttributeLookupId, _itemAttribute.AttributeName);
+                    _listOfAttributes.Add(_itemAttribute.ItemAttributeLookupId, _itemAttribute.AttributeName);
                 }
             }
-            return _ListOfAttributes;
+            return _listOfAttributes;
         }
         public List<ItemAttributeVarietyLookup> GetListOfAttributeVarieties(Guid parentAttributeLookupId, bool IsForceReload = false)
         {
-            if ((IsForceReload) || (_ListOfAttributeVarieties == null))
+            if ((IsForceReload) || (_listOfAttributeVarieties == null))
             {
-                if (_ListOfAttributeVarieties != null) _ListOfAttributeVarieties.Clear();
-                else _ListOfAttributeVarieties = new List<ItemAttributeVarietyLookup>();
+                if (_listOfAttributeVarieties != null) _listOfAttributeVarieties.Clear();
+                else _listOfAttributeVarieties = new List<ItemAttributeVarietyLookup>();
 
                 IRepository<ItemAttributeVarietyLookup> _itemAttributeVarietyLookupRepository = Repository<ItemAttributeVarietyLookup>();
-                _ListOfAttributeVarieties = _itemAttributeVarietyLookupRepository.GetBy(avl => avl.ItemAttributeLookupId == parentAttributeLookupId)
+                _listOfAttributeVarieties = _itemAttributeVarietyLookupRepository.GetBy(avl => avl.ItemAttributeLookupId == parentAttributeLookupId)
                     .OrderBy(iav => iav.VarietyName)
                     .ToList();  // cannot async as part of UI for
 
             }
-            return _ListOfAttributeVarieties;
+            return _listOfAttributeVarieties;
         }
         /// <summary>
         /// Get or return a list of Attributes based on the sourceItemId
@@ -222,21 +212,21 @@ namespace RainbowOF.Repositories.Common
         //public List<ItemAttributeVariety> GetListOfAttributeVarieties(Guid parentItemAttributeId, bool IsForceReload = false)
         public List<ItemAttribute> GetListOfAnItemsVariableAttributes(Guid sourceItemId, bool IsForceReload = false)
         {
-            if ((_ListOfAnItemsAttributes == null) || (IsForceReload) || (!_ListOfAnItemsAttributes.ContainsKey(sourceItemId)))
+            if ((_listOfAnItemsAttributes == null) || (IsForceReload) || (!_listOfAnItemsAttributes.ContainsKey(sourceItemId)))
             {
-                List<ItemAttribute> _listOfAttributes = itemRepository.GetEagerItemVariableAttributeByItemId(sourceItemId);
-                if ((_ListOfAnItemsAttributes != null) && (_ListOfAnItemsAttributes.ContainsKey(sourceItemId)))
+                List<ItemAttribute> _listOfAttributes = ItemRepository.GetEagerItemVariableAttributeByItemId(sourceItemId);
+                if ((_listOfAnItemsAttributes != null) && (_listOfAnItemsAttributes.ContainsKey(sourceItemId)))
                 {
-                    _ListOfAnItemsAttributes[sourceItemId].Clear();
-                    _ListOfAnItemsAttributes[sourceItemId] = _listOfAttributes;
+                    _listOfAnItemsAttributes[sourceItemId].Clear();
+                    _listOfAnItemsAttributes[sourceItemId] = _listOfAttributes;
                 }
                 else
                 {
-                    if (_ListOfAnItemsAttributes == null) _ListOfAnItemsAttributes = new();
-                    _ListOfAnItemsAttributes.Add(sourceItemId, _listOfAttributes);
+                    if (_listOfAnItemsAttributes == null) _listOfAnItemsAttributes = new();
+                    _listOfAnItemsAttributes.Add(sourceItemId, _listOfAttributes);
                 }
             }
-            return _ListOfAnItemsAttributes[sourceItemId];
+            return _listOfAnItemsAttributes[sourceItemId];
         }
         /// <summary>
         /// Get or return a list of Attribute Varieties based on the sourceItemId and associatedAttributeId
@@ -247,36 +237,36 @@ namespace RainbowOF.Repositories.Common
         /// <returns></returns>
         public List<ItemAttributeVariety> GetListOfAnItemsAttributeVarieties(Guid sourceItemId, Guid sourceAttributeLookupId, bool IsForceReload = false)
         {
-            if ((_ListOfAnItemsAttributeVarieties == null) || (IsForceReload) || (!_ListOfAnItemsAttributeVarieties.ContainsKey(sourceAttributeLookupId)))
+            if ((_listOfAnItemsAttributeVarieties == null) || (IsForceReload) || (!_listOfAnItemsAttributeVarieties.ContainsKey(sourceAttributeLookupId)))
             {
-                List<ItemAttributeVariety> _listOfItemsAttributeVarieties = itemRepository.GetEagerItemAttributeVarietiesByItemIdAndAttributeLookupId(sourceItemId, sourceAttributeLookupId);
-                if ((_ListOfAnItemsAttributeVarieties != null) && (_ListOfAnItemsAttributeVarieties.ContainsKey(sourceAttributeLookupId)))
+                List<ItemAttributeVariety> _listOfItemsAttributeVarieties = ItemRepository.GetEagerItemAttributeVarietiesByItemIdAndAttributeLookupId(sourceItemId, sourceAttributeLookupId);
+                if ((_listOfAnItemsAttributeVarieties != null) && (_listOfAnItemsAttributeVarieties.ContainsKey(sourceAttributeLookupId)))
                 {
-                    _ListOfAnItemsAttributeVarieties[sourceAttributeLookupId].Clear();
-                    _ListOfAnItemsAttributeVarieties[sourceAttributeLookupId] = _listOfItemsAttributeVarieties;
+                    _listOfAnItemsAttributeVarieties[sourceAttributeLookupId].Clear();
+                    _listOfAnItemsAttributeVarieties[sourceAttributeLookupId] = _listOfItemsAttributeVarieties;
                 }
                 else
                 {
-                    if (_ListOfAnItemsAttributeVarieties == null) _ListOfAnItemsAttributeVarieties = new();
-                    _ListOfAnItemsAttributeVarieties.Add(sourceAttributeLookupId, _listOfItemsAttributeVarieties);
+                    if (_listOfAnItemsAttributeVarieties == null) _listOfAnItemsAttributeVarieties = new();
+                    _listOfAnItemsAttributeVarieties.Add(sourceAttributeLookupId, _listOfItemsAttributeVarieties);
                 }
             }
-            return _ListOfAnItemsAttributeVarieties[sourceAttributeLookupId];
+            return _listOfAnItemsAttributeVarieties[sourceAttributeLookupId];
         }
         public async Task<List<ItemAttributeVariety>> GetListOfItemAttributeVarietiesAsync(Guid sourceItemId, Guid sourceAttributeLookupId, bool IsForceReload = false)
         {
-            if ((IsForceReload) || (!_ListOfAnItemsAttributeVarieties.ContainsKey(sourceAttributeLookupId)))
+            if ((IsForceReload) || (!_listOfAnItemsAttributeVarieties.ContainsKey(sourceAttributeLookupId)))
             {
-                List<ItemAttributeVariety> _listOfItemsAttributeVarieties = await itemRepository.GetEagerItemAttributeVarietiesByItemIdAndAttributeLookupIdAsync(sourceItemId, sourceAttributeLookupId);
-                if (_ListOfAnItemsAttributeVarieties.ContainsKey(sourceItemId))
+                List<ItemAttributeVariety> _listOfItemsAttributeVarieties = await ItemRepository.GetEagerItemAttributeVarietiesByItemIdAndAttributeLookupIdAsync(sourceItemId, sourceAttributeLookupId);
+                if (_listOfAnItemsAttributeVarieties.ContainsKey(sourceItemId))
                 {
-                    _ListOfAnItemsAttributeVarieties[sourceAttributeLookupId].Clear();
-                    _ListOfAnItemsAttributeVarieties[sourceAttributeLookupId] = _listOfItemsAttributeVarieties;
+                    _listOfAnItemsAttributeVarieties[sourceAttributeLookupId].Clear();
+                    _listOfAnItemsAttributeVarieties[sourceAttributeLookupId] = _listOfItemsAttributeVarieties;
                 }
                 else
-                    _ListOfAnItemsAttributeVarieties.Add(sourceAttributeLookupId, _listOfItemsAttributeVarieties);
+                    _listOfAnItemsAttributeVarieties.Add(sourceAttributeLookupId, _listOfItemsAttributeVarieties);
             }
-            return _ListOfAnItemsAttributeVarieties[sourceAttributeLookupId];
+            return _listOfAnItemsAttributeVarieties[sourceAttributeLookupId];
         }
 
         #endregion

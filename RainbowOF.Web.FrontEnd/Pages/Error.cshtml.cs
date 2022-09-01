@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
-namespace BasicBlazorApp.Pages
+namespace RainbowOF.Web.FrontEnd.Pages
 {
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     [IgnoreAntiforgeryToken]
@@ -15,7 +15,7 @@ namespace BasicBlazorApp.Pages
 
         public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
 
-        private readonly ILogger<ErrorModel> appLoggerManager;
+        private ILogger<ErrorModel> appLoggerManager { get; }
 
         public ErrorModel(ILogger<ErrorModel> logger)
         {
@@ -25,6 +25,7 @@ namespace BasicBlazorApp.Pages
         public void OnGet()
         {
             RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+            appLoggerManager.Log(LogLevel.Debug, "On Get with ID called - ID:", RequestId);
         }
     }
 }

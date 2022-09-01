@@ -201,16 +201,16 @@
     ItemCategoryLookup seletectedChildItemCategory;
 
     [Inject]
-    IUnitOfWork appUnitOfWork { get; set; }
+    IUnitOfWork AppUnitOfWork { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
 
 
-        //var repo = appUnitOfWork.itemCategoryLookupRepository();
+        //var repo = AppUnitOfWork.itemCategoryLookupRepository();
 
-        //var _context = repo.GetAppDbContext();
+        //var _context = repo.GetappDbContext();
 
         //var _table = _context.ItemCategoriesLookup;
 
@@ -224,7 +224,7 @@
         //!!! why can we not call async? do we need to have a custom async call?
         await InvokeAsync(StateHasChanged);
 
-        //var itemTable = repo.GetAppDbContext();
+        //var itemTable = repo.GetappDbContext();
 
         ////var query = itemTable as IQueryable<Item>;
 
@@ -245,9 +245,9 @@
         IsBusy = true;
         //        List<ItemCategoryLookup> childenCategoryLookups = null;
         countEntry++;
-        var repo = appUnitOfWork.itemCategoryLookupRepository;
+        var repo = AppUnitOfWork.ItemCategoryLookupRepository;
 
-        //var _context = repo.GetAppDbContext();
+        //var _context = repo.GetappDbContext();
         //var _table = _context.ItemCategoriesLookup;
         //var _task = _table
         //    .Where(icl => icl.ParentCategoryId == soruceParentId);

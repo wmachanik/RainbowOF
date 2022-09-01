@@ -1,11 +1,8 @@
-﻿using RainbowOF.Models.Items;
-using RainbowOF.Models.Lookups;
+﻿using RainbowOF.Models.Lookups;
 using RainbowOF.Models.Woo;
+using RainbowOF.Repositories.Integrations;
 using RainbowOF.ViewModels.Lookups;
 using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using RainbowOF.Repositories.Integrations;
 
 namespace RainbowOF.Repositories.Lookups
 {

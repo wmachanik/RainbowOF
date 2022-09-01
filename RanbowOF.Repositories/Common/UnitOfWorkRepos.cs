@@ -1,18 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore.Storage;
-using RainbowOF.Data.SQL;
-using RainbowOF.Tools;
+﻿using RainbowOF.Repositories.Items;
 using RainbowOF.Repositories.Logs;
+using RainbowOF.Repositories.Lookups;
 using RainbowOF.Repositories.System;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using RainbowOF.Repositories.Items;
-using RainbowOF.Repositories.Lookups;
-using RainbowOF.Models.Items;
-using System.Linq;
-using RainbowOF.Models.Lookups;
-using System.Linq.Expressions;
 
 namespace RainbowOF.Repositories.Common
 {
@@ -26,22 +17,24 @@ namespace RainbowOF.Repositories.Common
 
         #region Generic and Custom Repos
         // Generics Repos
-        private readonly Dictionary<Type, object> _repositories = new Dictionary<Type, object>();
+        private Dictionary<Type, object> _repositories = new();
         // Custom Repos
         #endregion
         #region Custom Repos
-        private IItemRepository _ItemRepository = null;
-        private ISysPrefsRepository _SysPrefsRepository = null;
-        private IWooSyncLogRepository _WooSyncLogRepository = null;
-        private IItemCategoryLookupRepository _ItemCategoryLookupRepository = null;
-        private IItemAttributeLookupRepository _ItemAttributeLookupRepository = null;
-        private IItemAttributeVarietyLookupRepository _ItemAttributeVarietyLookupRepository = null;
+        private IItemRepository _itemRepository = null;
+        private IItemCategoryRepository _itemCategoryRepository = null;
+        private IItemAttributeRepository _itemAttributeRepository = null;
+        private ISysPrefsRepository _sysPrefsRepository = null;
+        private IWooSyncLogRepository _wooSyncLogRepository = null;
+        private IItemCategoryLookupRepository _itemCategoryLookupRepository = null;
+        private IItemAttributeLookupRepository _itemAttributeLookupRepository = null;
+        private IItemAttributeVarietyLookupRepository _itemAttributeVarietyLookupRepository = null;
         #endregion
         #region Public's of the unit of work repos
         public Dictionary<Type, object> Repositories
         {
             get { return _repositories; }
-            set { Repositories = value; }
+            set { _repositories = value; }
         }
         public IRepository<TEntity> Repository<TEntity>() where TEntity : class
         {
@@ -49,63 +42,81 @@ namespace RainbowOF.Repositories.Common
             {
                 return Repositories[typeof(TEntity)] as Repository<TEntity>;
             }
-            IRepository<TEntity> sourceRepo = new Repository<TEntity>(appContext, appLoggerManager, this);
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Repository type: {typeof(TEntity).Name} retrieved / initialised.");
+            IRepository<TEntity> sourceRepo = new Repository<TEntity>(appDbContext, AppLoggerManager, this);
+            if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug($"Repository type: {typeof(TEntity).Name} retrieved / initialised.");
             Repositories.Add(typeof(TEntity), sourceRepo);
             return sourceRepo;
         }
-        public IItemRepository itemRepository
-        { 
-            get
-            {
-                if (_ItemRepository == null)
-                    _ItemRepository = new ItemRepository(appContext, appLoggerManager, this);
-                return _ItemRepository;
-            }
-        }
-        public ISysPrefsRepository sysPrefsRepository
+        public IItemRepository ItemRepository
         {
             get
             {
-                if (_SysPrefsRepository == null)
-                    _SysPrefsRepository = new SysPrefsRepository(appContext, appLoggerManager, this);
-                return _SysPrefsRepository;
+                if (_itemRepository == null)
+                    _itemRepository = new ItemRepository(appDbContext, AppLoggerManager, this);
+                return _itemRepository;
             }
         }
-        public IWooSyncLogRepository wooSyncLogRepository
+        public IItemCategoryRepository ItemCategoryRepo
         {
             get
             {
-                if (_WooSyncLogRepository == null)
-                    _WooSyncLogRepository = new WooSyncLogRepository(appContext, appLoggerManager, this);
-                return _WooSyncLogRepository;
+                if (_itemCategoryRepository == null)
+                    _itemCategoryRepository = new ItemCategoryRepository(appDbContext, AppLoggerManager, this);    ///////add using
+                return _itemCategoryRepository;
             }
         }
-        public IItemCategoryLookupRepository itemCategoryLookupRepository
+        public IItemAttributeRepository ItemAttributeRepo
         {
             get
             {
-                if (_ItemCategoryLookupRepository == null)
-                    _ItemCategoryLookupRepository = new ItemCategoryLookupRepository(appContext, appLoggerManager, this);
-                return _ItemCategoryLookupRepository;
+                if (_itemAttributeRepository == null)
+                    _itemAttributeRepository = new ItemAttributeRepository(appDbContext, AppLoggerManager, this);    ///////add using
+                return _itemAttributeRepository;
             }
         }
-        public IItemAttributeLookupRepository itemAttributeLookupRepository
+        public ISysPrefsRepository SysPrefsRepository
         {
             get
             {
-                if (_ItemAttributeLookupRepository == null)
-                    _ItemAttributeLookupRepository = new ItemAttributeLookupRepository(appContext, appLoggerManager, this);
-                return _ItemAttributeLookupRepository;
+                if (_sysPrefsRepository == null)
+                    _sysPrefsRepository = new SysPrefsRepository(appDbContext, AppLoggerManager, this);
+                return _sysPrefsRepository;
             }
         }
-        public IItemAttributeVarietyLookupRepository itemAttributeVarietyLookupRepository
+        public IWooSyncLogRepository WooSyncLogRepository
         {
             get
             {
-                if (_ItemAttributeVarietyLookupRepository == null)
-                    _ItemAttributeVarietyLookupRepository = new ItemAttributeVarietyLookupRepository(appContext, appLoggerManager, this);
-                return _ItemAttributeVarietyLookupRepository;
+                if (_wooSyncLogRepository == null)
+                    _wooSyncLogRepository = new WooSyncLogRepository(appDbContext, AppLoggerManager, this);
+                return _wooSyncLogRepository;
+            }
+        }
+        public IItemCategoryLookupRepository ItemCategoryLookupRepository
+        {
+            get
+            {
+                if (_itemCategoryLookupRepository == null)
+                    _itemCategoryLookupRepository = new ItemCategoryLookupRepository(appDbContext, AppLoggerManager, this);
+                return _itemCategoryLookupRepository;
+            }
+        }
+        public IItemAttributeLookupRepository ItemAttributeLookupRepository
+        {
+            get
+            {
+                if (_itemAttributeLookupRepository == null)
+                    _itemAttributeLookupRepository = new ItemAttributeLookupRepository(appDbContext, AppLoggerManager, this);
+                return _itemAttributeLookupRepository;
+            }
+        }
+        public IItemAttributeVarietyLookupRepository ItemAttributeVarietyLookupRepository
+        {
+            get
+            {
+                if (_itemAttributeVarietyLookupRepository == null)
+                    _itemAttributeVarietyLookupRepository = new ItemAttributeVarietyLookupRepository(appDbContext, AppLoggerManager, this);
+                return _itemAttributeVarietyLookupRepository;
             }
         }
         #endregion

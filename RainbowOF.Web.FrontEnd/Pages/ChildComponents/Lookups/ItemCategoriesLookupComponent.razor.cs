@@ -10,13 +10,12 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
 {
     public partial class ItemCategoriesLookupComponent : ComponentBase
     {
-        bool IsBusy = false;
-        List<ItemCategoryLookup> ModelItemCategoryLookups;
-
-        ItemCategoryLookup SeletectedItemCategoryLookup;
+        private bool isBusy { get; set; } = false;
+        private List<ItemCategoryLookup> modelItemCategoryLookups { get; set; }
+        private ItemCategoryLookup seletectedItemCategoryLookup { get; set; }
 
         [Inject]
-        IUnitOfWork appUnitOfWork { get; set; }
+        public IUnitOfWork AppUnitOfWork { get; set; }
         [Parameter]
         public Guid? SourceParentCategoryId { get; set; }
         [Parameter]
@@ -25,21 +24,21 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Lookups
         protected override async Task OnInitializedAsync()
         {
             await base.OnInitializedAsync();
-            ModelItemCategoryLookups = await GetItemCategoryLookupsAsync(SourceParentCategoryId, CanUseAsync);
-//            await InvokeAsync(StateHasChanged);
+            modelItemCategoryLookups = await GetItemCategoryLookupsAsync(SourceParentCategoryId, CanUseAsync);
+            //            await InvokeAsync(StateHasChanged);
         }
 
         async Task<List<ItemCategoryLookup>> GetItemCategoryLookupsAsync(Guid? sourceParentId, bool IsAsyncCall = true)
         {
-            if (IsBusy) return null;
-            IsBusy = true;
-            List<ItemCategoryLookup> _gotItemCategoryLookups   = null;
+            if (isBusy) return null;
+            isBusy = true;
+            List<ItemCategoryLookup> _gotItemCategoryLookups = null;
 
             if (IsAsyncCall)
-                _gotItemCategoryLookups = (await appUnitOfWork.itemCategoryLookupRepository.GetByAsync(icl => icl.ParentCategoryId == sourceParentId)).ToList();
+                _gotItemCategoryLookups = (await AppUnitOfWork.ItemCategoryLookupRepository.GetByAsync(icl => icl.ParentCategoryId == sourceParentId)).ToList();
             else
-                _gotItemCategoryLookups = appUnitOfWork.itemCategoryLookupRepository.GetBy(icl => icl.ParentCategoryId == sourceParentId).ToList();
-            IsBusy = false;
+                _gotItemCategoryLookups = AppUnitOfWork.ItemCategoryLookupRepository.GetBy(icl => icl.ParentCategoryId == sourceParentId).ToList();
+            isBusy = false;
             return _gotItemCategoryLookups;
         }
     }

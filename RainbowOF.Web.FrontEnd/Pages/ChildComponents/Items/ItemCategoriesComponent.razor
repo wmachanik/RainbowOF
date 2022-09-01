@@ -5,36 +5,36 @@
     > PopUpAndLogNotification PopUpRef to display the results of the add
     > List<ItemCategory> SourceItemCategories
     Uses:
-    IAppUnitOfWork appUnitOfWork
+    IAppUnitOfWork AppUnitOfWork
     -------------------------------------------------------------
 *@
 @using RainbowOF.Models.Items
 @using RainbowOF.Models.Lookups
 
 
-@if (_ItemCategoryGridRepository == null)
+@if (currItemCategoryGridRepository == null)
 {
     <Badge Color="Color.Primary" Pill="true">loading...</Badge>
 }
 else
 {
-    if ((ModelItemCategories == null) || (ModelItemCategories.Count == 0))
+    if ((modelItemCategories == null) || (modelItemCategories.Count == 0))
     {
         <Badge Color="Color.Primary" Pill="true">Item has no categories. To add one click the plus button.</Badge>
     }
-    <DataGrid @ref="_DataGrid"
-          TItem="ItemCategory" Data="@ModelItemCategories"
+    <DataGrid @ref="dataGrid"
+          TItem="ItemCategory" Data="@modelItemCategories"
           Sortable="true" Editable="true"
           Striped="true"
           Hoverable="true"
           Responsive="true"
           EditMode="DataGridEditMode.Popup"
-          TotalItems="ModelItemCategories.Count"
+          TotalItems="modelItemCategories.Count"
           PageSize="25"
-          @bind-SelectedRow="@SeletectedItemCategory"
+          @bind-SelectedRow="@seletectedItemCategory"
           Bordered="true"
           Narrow="true"
-          Filterable="@_ItemCategoryGridRepository.gridSettings.IsFilterable"
+          Filterable="@currItemCategoryGridRepository.CurrGridSettings.IsFilterable"
           UseInternalEditing="true"
           NewItemDefaultSetter="@OnNewItemCategoryDefaultSetter"
           RowInserted="@OnRowInsertingAsync"
@@ -47,7 +47,7 @@ else
           ShowValidationFeedback="true"
           Padding="Padding.Is0">
         <EmptyTemplate>
-            @if (ModelItemCategories == null)
+            @if (modelItemCategories == null)
             {
                 <span>None...</span>
             }
@@ -140,8 +140,8 @@ else
                         </Button>
                     </Tooltip>
                     <Tooltip Text="Filter by Column" Style="z-index:99" Placement="TooltipPlacement.Left">
-                        <Button Color="Color.Info" Clicked="@(()=>_ItemCategoryGridRepository.gridSettings.IsFilterable= !_ItemCategoryGridRepository.gridSettings.IsFilterable)">
-                            <Icon Name="@((_ItemCategoryGridRepository.gridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" />
+                        <Button Color="Color.Info" Clicked="@(()=>currItemCategoryGridRepository.CurrGridSettings.IsFilterable= !currItemCategoryGridRepository.CurrGridSettings.IsFilterable)">
+                            <Icon Name="@((currItemCategoryGridRepository.CurrGridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" />
                         </Button>
                     </Tooltip>
                 </NewCommandTemplate>
@@ -191,7 +191,7 @@ else
     @*<RainbowOF.Components.Modals.ConfirmModal @ref="_ItemCategoryGridRepository._GridSettings.AddToWooConfirmation" ConfirmationClicked="ConfirmAddWooItem_ClickAsync" />*@
 
 
-    <RainbowOF.Components.Modals.ConfirmModal @ref="_ItemCategoryGridRepository.gridSettings.DeleteConfirmation"
+    <RainbowOF.Components.Modals.ConfirmModal @ref="currItemCategoryGridRepository.CurrGridSettings.DeleteConfirmation"
                                           ConfirmationClicked="ConfirmDelete_ClickAsync"
                                           ConfirmationMessage=@($"Are you sure you want to delete ?")
                                           ConfirmButtonText="Delete"

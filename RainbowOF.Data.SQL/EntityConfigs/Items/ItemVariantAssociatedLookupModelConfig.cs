@@ -1,10 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RainbowOF.Models.Items;
-using RainbowOF.Models.Lookups;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace RainbowOF.Data.SQL.EntityConfigs.Items
 {

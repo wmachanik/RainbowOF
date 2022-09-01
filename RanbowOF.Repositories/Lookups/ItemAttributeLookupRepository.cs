@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Lookups
@@ -17,28 +16,28 @@ namespace RainbowOF.Repositories.Lookups
     public class ItemAttributeLookupRepository : Repository<ItemAttributeLookup>, IItemAttributeLookupRepository
     {
         #region Injected Items
-        //private ApplicationDbContext appContext = null;
+        //private ApplicationDbContext AppContext = null;
         //private ILoggerManager appLoggerManager { get; set; }
-        //private IUnitOfWork appUnitOfWork { get; set; }
+        //private IUnitOfWork AppUnitOfWork { get; set; }
         #endregion
 
         #region Initialisation
-        public ItemAttributeLookupRepository(ApplicationDbContext sourceDbContext, ILoggerManager sourceLogger, IUnitOfWork sourceAppUnitOfWork) : base(sourceDbContext, sourceLogger, sourceAppUnitOfWork)
+        public ItemAttributeLookupRepository(IDbContextFactory<ApplicationDbContext> sourceDbContext, ILoggerManager sourceLogger, IUnitOfWork sourceAppUnitOfWork) : base (sourceDbContext, sourceLogger, sourceAppUnitOfWork)
         {
-            //appContext = sourceDbContext;
+            //AppContext = sourceDbContext;
             //appLoggerManager = sourceLogger;
-            //appUnitOfWork = sourceAppUnitOfWork;
+            //AppUnitOfWork = sourceAppUnitOfWork;
             if (sourceLogger.IsDebugEnabled()) sourceLogger.LogDebug("ItemAttributeLookupRepository initialised.");
         }
         #endregion
 
         #region DataGrid Handling
-        List<OrderByParameter<ItemAttributeLookup>> GetOrderByExpressions(List<SortParam> currentSortParams)
+        static List<OrderByParameter<ItemAttributeLookup>> GetOrderByExpressions(List<SortParam> currentSortParams)
         {
             if (currentSortParams == null)
                 return null;
 
-            List<OrderByParameter<ItemAttributeLookup>> _orderByExpressions = new List<OrderByParameter<ItemAttributeLookup>>();
+            List<OrderByParameter<ItemAttributeLookup>> _orderByExpressions = new();
             foreach (var col in currentSortParams)
             {
                 switch (col.FieldName)
@@ -66,11 +65,11 @@ namespace RainbowOF.Repositories.Lookups
             return _orderByExpressions;
         }
 
-        private List<Expression<Func<ItemAttributeLookup, bool>>> GetFilterByExpressions(List<FilterParam> currentFilterParams)
+        static private List<Expression<Func<ItemAttributeLookup, bool>>> GetFilterByExpressions(List<FilterParam> currentFilterParams)
         {
             if (currentFilterParams == null)
                 return null;
-            List<Expression<Func<ItemAttributeLookup, bool>>> _filterByExpressions = new List<Expression<Func<ItemAttributeLookup, bool>>>();
+            List<Expression<Func<ItemAttributeLookup, bool>>> _filterByExpressions = new();
             foreach (var col in currentFilterParams)
             {
                 col.FilterBy = col.FilterBy.ToLower();
@@ -83,7 +82,6 @@ namespace RainbowOF.Repositories.Lookups
                     case nameof(ItemAttributeLookup.OrderBy):
                         _filterByExpressions.Add(ial => ial.OrderBy.ToString().ToLower().Contains(col.FilterBy));
                         break;
-
                     //case nameof(ItemAttributeLookup.ItemAttributeVarietyLookups):
                     //    _filterByExpressions.Add(ial => ial.ItemAttributeVarietyLookups.Select(ial => ial.ItemAttributeLookup).Where(iavl => iavl.VarietyName.ToLower().Contains(col.FilterBy))) ;
                     //    //bool _IsTrue = ((col.FilterBy.Contains("y", StringComparison.OrdinalIgnoreCase)) || (col.FilterBy.Contains("enable", StringComparison.OrdinalIgnoreCase)));      // assume yes and no / enable or disable
@@ -103,11 +101,14 @@ namespace RainbowOF.Repositories.Lookups
         public async Task<DataGridItems<ItemAttributeLookup>> GetPagedDataEagerWithFilterAndOrderByAsync(DataGridParameters currentDataGridParameters) // (int startPage, int currentPageSize)
         {
             DataGridItems<ItemAttributeLookup> _dataGridData = null;
-            DbSet<ItemAttributeLookup> _table = appContext.Set<ItemAttributeLookup>();
 
+            string statusString = $"Getting all records with eager loading of ItemAttributeLookup order by an filter Data Grid Parameters: {currentDataGridParameters}";
+            if (!CanDoDbAsyncCall(statusString))
+                return null;
             try
             {
-                if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug($"Getting all records with eager loading of ItemAttributeLookup order by an filter Data Grid Parameters: {currentDataGridParameters.ToString()}");
+                using var context = await AppDbContext.CreateDbContextAsync();
+                DbSet<ItemAttributeLookup> _table = context.Set<ItemAttributeLookup>();
                 // get a list of Order bys and filters
                 List<OrderByParameter<ItemAttributeLookup>> _orderByExpressions = GetOrderByExpressions(currentDataGridParameters.SortParams);
                 List<Expression<Func<ItemAttributeLookup, bool>>> _filterByExpressions = GetFilterByExpressions(currentDataGridParameters.FilterParams);
@@ -153,8 +154,10 @@ namespace RainbowOF.Repositories.Lookups
                 }
 
                 //now we can add the page stuff - first get the count to return
-                _dataGridData = new DataGridItems<ItemAttributeLookup>();
-                _dataGridData.TotalRecordCount = _query.Count();
+                _dataGridData = new()
+                {
+                    TotalRecordCount = _query.Count()
+                };
                 _query = _query
                    .Skip((currentDataGridParameters.CurrentPage - 1) * currentDataGridParameters.PageSize)
                    .Take(currentDataGridParameters.PageSize);   // take 3 pages at least.
@@ -163,11 +166,16 @@ namespace RainbowOF.Repositories.Lookups
             }
             catch (Exception ex)
             {
-                appUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all records from ItemAttributeLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
+                AppUnitOfWork.LogAndSetErrorMessage($"!!!Error Getting all records from ItemAttributeLookupRepository: {ex.Message} - Inner Exception {ex.InnerException}");
 #if DebugMode
                 throw;     // #Debug?
 #endif
             }
+            finally
+            {
+                DbCallDone(statusString);
+            }
+
             return _dataGridData;
         }
         #endregion

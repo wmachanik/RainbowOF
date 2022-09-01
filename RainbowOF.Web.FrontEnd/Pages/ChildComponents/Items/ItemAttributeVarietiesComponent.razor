@@ -5,13 +5,13 @@
    > PopUpAndLogNotification PopUpRef to display the results of the add
    > List<ItemAttributeVariety> SourceItemAttributeVarieties
     Uses:
-    IAppUnitOfWork appUnitOfWork
+    IAppUnitOfWork AppUnitOfWork
     -------------------------------------------------------------
 *@
 @using RainbowOF.Models.Items
 @using RainbowOF.Models.Lookups
 
-@if (_ItemAttributeVarietyGridRepository == null)
+@if (itemAttributeVarietyGridRepository == null)
 {
     <Badge Color="Color.Primary" Pill="true">loading...</Badge>
 }
@@ -22,23 +22,23 @@
 *@
 else
 {
-    if ((ModelItemAttributeVarieties == null) || ( ((ModelItemAttributeVarieties != null) && (ModelItemAttributeVarieties.Count == 0))))
+    if ((modelItemAttributeVarieties == null) || ( ((modelItemAttributeVarieties != null) && (modelItemAttributeVarieties.Count == 0))))
     {
         <Badge Color="Color.Primary" Pill="true">Item has no Attribute Varieties. To add one use the plus button</Badge>
     }
-    <DataGrid @ref="_DataGrid"
-          TItem="ItemAttributeVariety" Data="@ModelItemAttributeVarieties"
+    <DataGrid @ref="currDataGrid"
+          TItem="ItemAttributeVariety" Data="@modelItemAttributeVarieties"
           Sortable="true" Editable="true"
           Striped="true"
           Hoverable="true"
           Responsive="true"
           EditMode="DataGridEditMode.Popup"
-          TotalItems="ModelItemAttributeVarieties.Count"
+          TotalItems="modelItemAttributeVarieties.Count"
           PageSize="25"
-          @bind-SelectedRow="@SeletectedItemAttributeVariety"
+          @bind-SelectedRow="@seletectedItemAttributeVariety"
           Bordered="true"
           Narrow="true"
-          Filterable="@_ItemAttributeVarietyGridRepository.gridSettings.IsFilterable"
+          Filterable="@itemAttributeVarietyGridRepository.CurrGridSettings.IsFilterable"
           UseInternalEditing="true"
           NewItemDefaultSetter="@OnNewItemAttributeVarietyDefaultSetter"
           RowInserted="@OnRowInsertingAsync"
@@ -51,7 +51,7 @@ else
           ShowValidationFeedback="true"
           Padding="Padding.Is0">
         <EmptyTemplate>
-            @if (ModelItemAttributeVarieties == null)
+            @if (modelItemAttributeVarieties == null)
             {
                 <span>Loading...</span>
             }
@@ -169,8 +169,8 @@ else
                         </Button>
                     </Tooltip>
                     <Tooltip Text="Filter by Column" Style="z-index:99" Placement="TooltipPlacement.Left">
-                        <Button Color="Color.Info" Clicked="@(()=>_ItemAttributeVarietyGridRepository.gridSettings.IsFilterable= !_ItemAttributeVarietyGridRepository.gridSettings.IsFilterable)">
-                            <Icon Name="@((_ItemAttributeVarietyGridRepository.gridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" />
+                        <Button Color="Color.Info" Clicked="@(()=>itemAttributeVarietyGridRepository.CurrGridSettings.IsFilterable= !itemAttributeVarietyGridRepository.CurrGridSettings.IsFilterable)">
+                            <Icon Name="@((itemAttributeVarietyGridRepository.CurrGridSettings.IsFilterable) ? IconName.MinusCircle : IconName.Filter)" />
                         </Button>
                     </Tooltip>
                 </NewCommandTemplate>
@@ -213,7 +213,7 @@ else
         </DataGridColumns>
     </DataGrid>
 
-    <RainbowOF.Components.Modals.ConfirmModal @ref="_ItemAttributeVarietyGridRepository.gridSettings.DeleteConfirmation"
+    <RainbowOF.Components.Modals.ConfirmModal @ref="itemAttributeVarietyGridRepository.CurrGridSettings.DeleteConfirmation"
                                           ConfirmationClicked="ConfirmDelete_ClickAsync"
                                           ConfirmationMessage=@($"Are you sure you want to delete ?")
                                           ConfirmButtonText="Delete"

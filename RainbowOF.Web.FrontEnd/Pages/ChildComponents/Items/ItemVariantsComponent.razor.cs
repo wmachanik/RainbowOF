@@ -1,10 +1,9 @@
 ﻿using AutoMapper;
-using Blazorise.DataGrid;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using RainbowOF.Components.Modals;
 using RainbowOF.Integration.Repositories.Woo;
 using RainbowOF.Models.Items;
-using RainbowOF.Models.Lookups;
 using RainbowOF.Models.System;
 using RainbowOF.Models.Woo;
 using RainbowOF.Repositories.Common;
@@ -26,17 +25,20 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
     {
         #region UI Variables
         // Interface Stuff
-        List<ItemVariant> ItemVariants = null;
-
+        private List<ItemVariant> itemVariants { get; set; } = null;
         //        List<AttributeLookup> PossibleItemVariants = null;
-        ItemVariantView SelectedItemVariantView;
-        List<ItemVariantView> ItemVariantViews = null;
-        bool CanAddVariant = false;
-        bool IsItemVariantSaveBusy = false;
-        bool IsItemVariantImportBusy = false;
+        private ItemVariantView selectedItemVariantView { get; set; }
+        private List<ItemVariantView> itemVariantViews { get; set; } = null;
+        //private bool canAddVariant = false;
+        private bool isItemVariantSaveBusy { get; set; } = false;
+        private bool isItemVariantImportBusy { get; set; } = false;
         //        DataGrid<ItemVariant> _ItemVariantsDataGrid;
         // All there workings are here
-        IItemVariantFormRepository ItemVariantViewRepository = null;
+
+        // ---> all workings should here need to move them here under a single repo to see if that is the issue with the dbset
+
+
+        private IItemVariantFormRepository itemVariantViewRepository { get; set; } = null;
         public ConfirmModal ImportVariantsConfirmationModal { get; set; }
         //public ConfirmModal DeleteItemVariantConfirmationModal { get; set; }
         public ConfirmModal AddAllItemVariantsConfirmationModal { get; set; }
@@ -44,11 +46,11 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         #endregion
         #region Injected Variables
         [Inject]
-        IUnitOfWork appUnitOfWork { get; set; }
+        public IUnitOfWork AppUnitOfWork { get; set; }
         [Inject]
-        public ILoggerManager appLoggerManager { get; set; }
+        public ILoggerManager AppLoggerManager { get; set; }
         [Inject]
-        public IMapper appMapper { get; set; }
+        public IMapper AppMapper { get; set; }
         #endregion
         #region Parameters
         [Parameter]
@@ -72,41 +74,42 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         /// <returns></returns>
         protected override async Task OnInitializedAsync()
         {
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("Item Variants Component initialising.");
+            if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug("Item Variants Component initialising.");
             // Inits don't seem to like awaits -> so we need to call without an await
             //var _itemVariants = await _itemVariantRepository.GetByAsync(iv => iv.ItemId == ParentItemId);
-            ItemVariants = await LoadItemVariantAttributesAsync();
-            if (ItemVariants != null)
+            itemVariants = await LoadItemVariantAttributesAsync();
+            if (itemVariants != null)
             {
-                ItemVariantViewRepository = new ItemVariantFormRepository(appLoggerManager, appUnitOfWork);
-                ItemVariantViewRepository.formSettings.PopUpRef = PopUpRef;   // use the forms Pop Up ref that is passed in.
+                itemVariantViewRepository = new ItemVariantFormRepository(AppLoggerManager, AppUnitOfWork);
+                itemVariantViewRepository.CurrFormSettings.PopUpRef = PopUpRef;   // use the forms Pop Up ref that is passed in.
                 //await InvokeAsync(StateHasChanged);
             }
             await base.OnInitializedAsync();
-            if (appLoggerManager.IsDebugEnabled()) appLoggerManager.LogDebug("Item Variants Component initialised.");
+            if (AppLoggerManager.IsDebugEnabled()) AppLoggerManager.LogDebug("Item Variants Component initialised.");
         }
         #endregion  
         #region Support Routines
         private async Task<List<ItemVariant>> LoadItemVariantAttributesAsync(bool IsForceReload = false)
         {
-            ItemVariants = await appUnitOfWork.itemRepository.GetAllItemVariantsEagerByItemIdAsync(ParentItemId); //=> non async seems to be an issue calling more than one await in a total screen init
-            if (ItemVariants == null)
+            if (itemVariants != null) itemVariants.Clear();
+            itemVariants = await AppUnitOfWork.ItemRepository.GetAllItemVariantsEagerByItemIdAsync(ParentItemId); //=> non async seems to be an issue calling more than one await in a total screen init
+            if (itemVariants == null)
                 return null;
             CheckEachVariableAttributeExists(IsForceReload);
             //CheckWhichVariantsAreUnassigned();
             MapItemVariantToView();
-            CanAddVariant = (ItemVariants?.Count ?? 0) > 0;
-            return ItemVariants;
+            //canAddVariant = (itemVariants?.Count ?? 0) > 0;
+            return itemVariants;
         }
         /// <summary>
         /// Since the database does not always store the attribute if it is Guid.Empty on import we need to see if there are any
         /// </summary>
         private void CheckEachVariableAttributeExists(bool IsForceReload = false)
         {
-            List<ItemAttribute> itemsPossibleVariableAttributes = appUnitOfWork.GetListOfAnItemsVariableAttributes(ParentItemId, IsForceReload);
+            List<ItemAttribute> itemsPossibleVariableAttributes = AppUnitOfWork.GetListOfAnItemsVariableAttributes(ParentItemId, IsForceReload);
             // look for the item variant that does not currently have an associated attribute that is linked to an attribute that is marked as a variable. Each Attribute marked as a variable attribute must either have an associated variety or have the associated variable must be null or Guid.empty
             // So we need to search to see if there is none and then add that attribute 
-            foreach (ItemVariant itemVariant in ItemVariants)
+            foreach (ItemVariant itemVariant in itemVariants)
             {
                 foreach (ItemAttribute itemAttribute in itemsPossibleVariableAttributes)
                 {
@@ -128,12 +131,18 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
             }
             //            ItemVariants = ItemVariants.OrderBy(iv => iv.ItemVariantAssociatedLookups.OrderBy(ival => ival.AssociatedAttributeLookupId)).ToList();  // make sure we reorder so all the variants are in the correct order
         }
-        /* not used as to compex, was tryign to build a matrix of which attributes where available to which attributes variants
+        /// <summary>
+        /// return true if any variant has changed
+        /// </summary>
+        public bool ItemVariantHasChanged
+            => itemVariantViews.Exists(iv => iv.IsModified == true);
+
+        /* not used as to complex, was trying to build a matrix of which attributes where available to which attributes variants
         private void CheckWhichVariantsAreUnassigned()
         {
 
             
-            IItemRepository itemRepository = appUnitOfWork.itemRepository();
+            IItemRepository itemRepository = AppUnitOfWork.itemRepository();
             var allPossibleItemAttributes = itemRepository.GetEagerItemVariableAttributeByItemId(ParentItemId);
             if (PossibleItemVariants == null)
                 PossibleItemVariants = new List<AttributeLookup>();
@@ -176,24 +185,24 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         /// <param name="mustForce">must the list be reloaded (used for refresh etc.)</param>
         /// <returns>List of item attribute varieties to be used.</returns>
         public List<ItemAttributeVariety> GetListOfAttributeAvailableVarieties(Guid parentAttributeLookupId,
-                                                                               Guid currentAttributeVarityLookupId,
+                                                                               /*Guid currentAttributeVarityLookupId,*/
                                                                                bool mustForce = false)
         {
-            return appUnitOfWork.GetListOfAnItemsAttributeVarieties(ParentItemId, parentAttributeLookupId, mustForce);
+            return AppUnitOfWork.GetListOfAnItemsAttributeVarieties(ParentItemId, parentAttributeLookupId, mustForce);
         }
         /// <summary>
         /// Using the current Item variant data move that date into the view model
         /// </summary>
         private void MapItemVariantToView()
         {
-            if (ItemVariantViews == null)
-                ItemVariantViews = new List<ItemVariantView>();
+            if (itemVariantViews == null)
+                itemVariantViews = new List<ItemVariantView>();
             else
-                ItemVariantViews.Clear();
+                itemVariantViews.Clear();
 
-            foreach (ItemVariant _itemVariant in ItemVariants)
+            foreach (ItemVariant _itemVariant in itemVariants)
             {
-                ItemVariantViews.Add(new ItemVariantView
+                itemVariantViews.Add(new ItemVariantView
                 {
                     TabIsExpanded = false,
                     IsModified = false,
@@ -206,15 +215,13 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         #region BackEnd Routines
         public List<ItemAttribute> GetListOfPossibleAttributes(Guid? currentItemAttributeId = null, bool IsForceReload = false)
         {
-            List<ItemAttribute> _itemAttributes = appUnitOfWork.GetListOfAnItemsVariableAttributes(ParentItemId);
+            List<ItemAttribute> _itemAttributes = AppUnitOfWork.GetListOfAnItemsVariableAttributes(ParentItemId, IsForceReload);
             if (_itemAttributes == null)
                 return null; //-- this should not happen
-
             if (currentItemAttributeId == null)
                 return _itemAttributes;  // no item selected 
-
-            // 1.fins all item that are not currently used
-            var _usedItems = ItemVariants.Where(miav => (miav.ItemVariantAssociatedLookups.Any(ival => ival.AssociatedAttributeLookupId != currentItemAttributeId)));
+            // 1.finds all item that are not currently used
+            var _usedItems = itemVariants.Where(miav => (miav.ItemVariantAssociatedLookups.Any(ival => ival.AssociatedAttributeLookupId != currentItemAttributeId)));
             // 2. Return the unused ones.
             var _unselectedItems = _itemAttributes.Where(iav => !_usedItems.Any(miav => (miav.ItemVariantAssociatedLookups.Any(ival => ival.AssociatedAttributeLookupId == iav.ItemAttributeLookupId))));
             return _unselectedItems.ToList();
@@ -225,7 +232,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         //async Task AddItemVariant_CLick()
         //{
         //    // this should look for the numer Attributes at are marked at variable attributes and then add a list per item
-        //    var possibleVariables = appUnitOfWork.GetListOfAnItemsVariableAttributes(ParentItemId);
+        //    var possibleVariables = AppUnitOfWork.GetListOfAnItemsVariableAttributes(ParentItemId);
         //    ItemVariantView newItemVariantView = new ItemVariantView
         //    {
         //        IsModified = true,
@@ -259,7 +266,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         //public List<ItemAttributeLookup> GetListOfAttributes(Guid currentAttributeLookupId,
         //                                                     bool IsForceReload = false)
         //{
-        //    return appUnitOfWork.GetListOf<ItemAttributeLookup>(IsForceReload, ial => ial.AttributeName);
+        //    return AppUnitOfWork.GetListOf<ItemAttributeLookup>(IsForceReload, ial => ial.AttributeName);
         //}
         /// <summary>
         ///  Return a list of Attribute Varieties that are available for selection
@@ -274,21 +281,76 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         public List<ItemAttributeVariety> GetListOfPossibleVariants(Guid sourceItemId,
                                                             Guid currentAssociatedAttributeLookupId,
                                                             Guid? currentItemAttributeVarietyId = null,
-                                                            bool IsForceReload = false)
+                                                            bool isForceReload = false)
         {
 
-            List<ItemAttributeVariety> _itemAttributeVarieties = appUnitOfWork.GetListOfAnItemsAttributeVarieties(sourceItemId, currentAssociatedAttributeLookupId);
+            List<ItemAttributeVariety> _itemAttributeVarieties = AppUnitOfWork.GetListOfAnItemsAttributeVarieties(sourceItemId, currentAssociatedAttributeLookupId, isForceReload);
             if (_itemAttributeVarieties == null)
                 return null; //-- this should not happen
 
             if (currentItemAttributeVarietyId == null)
                 return _itemAttributeVarieties;  // no item selected 
                                                  // 1.
-            var _usedItems = ItemVariants.Where(miav => (miav.ItemVariantAssociatedLookups.Any(ival => ival.AssociatedAttributeVarietyLookupId != currentItemAttributeVarietyId)));
+            var _usedItems = itemVariants.Where(miav => (miav.ItemVariantAssociatedLookups.Any(ival => ival.AssociatedAttributeVarietyLookupId != currentItemAttributeVarietyId)));
             // 2. 
             var _unselectedItems = _itemAttributeVarieties.Where(iav => !_usedItems.Any(miav => (miav.ItemVariantAssociatedLookups.Any(ival => ival.AssociatedAttributeVarietyLookupId == iav.ItemAttributeVarietyLookupId))));
             return _unselectedItems.ToList();
         }
+
+        public async Task<bool> SaveItemVariants()
+        {
+            if (!ItemVariantHasChanged)  // no change ignore
+                return true;
+            isItemVariantSaveBusy = true;
+            bool allSaved = true;
+            foreach (var itemVariantView in itemVariantViews)
+            {
+                if (itemVariantView.IsModified)
+                {
+                    //if (itemVariantAssoLookup.ItemVariantAssociatedLookupId == Guid.Empty)
+                    //{
+                    //    itemVariantAssoLookup.ItemVariantId = itemVariantView.ItemVariant.ItemVariantId;  // make suer it is associated to this ItemVariant
+                    //}                                                                                                          // make sure the ItemVariantId is set
+                    if (itemVariantView.ItemVariant.ItemVariantId == Guid.Empty)
+                    {
+                        allSaved &= await itemVariantViewRepository.InsertViewRowAsync(itemVariantView.ItemVariant, itemVariantView.ItemVariant.ItemVariantName) != null;
+                    }
+                    else
+                    {
+                        // The variant did exist however it may have been set to null if an ItemVariantAssociatedLookups = Guid.Empty so add that item.
+                        
+                        foreach (var itemVariantAssoLookup in itemVariantView.ItemVariant.ItemVariantAssociatedLookups)
+                        {
+                            if (itemVariantAssoLookup.ItemVariantAssociatedLookupId == Guid.Empty)
+                            {
+                                itemVariantAssoLookup.ItemVariantId = itemVariantView.ItemVariant.ItemVariantId;  // make suer it is associated to this ItemVariant
+                                allSaved &= await AddAnItemVariantAssociatedLookup(itemVariantAssoLookup);
+                            }
+                        }
+                        allSaved &= await itemVariantViewRepository.UpdateViewRowAsync(itemVariantView.ItemVariant, itemVariantView.ItemVariant.ItemVariantName) != UnitOfWork.CONST_WASERROR;
+                    }
+                    itemVariantView.IsModified = !allSaved;  // set it to the opposite of success
+                }
+            }
+            if (allSaved)
+                await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Success, "Item variants saved.");
+            else
+                await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, "An error occurred saving one or more variants, check log.");
+            isItemVariantSaveBusy = false;
+            return allSaved;
+        }
+        /// <summary>
+        /// Add An Associated Lookup to an item
+        /// </summary>
+        /// <param name="itemVariantAssoLookup">the associated lookup</param>
+        /// <returns></returns>
+        private async Task<bool> AddAnItemVariantAssociatedLookup(ItemVariantAssociatedLookup itemVariantAssoLookup)
+        {
+            IRepository<ItemVariantAssociatedLookup> itemVariantAssoLookupRepository = AppUnitOfWork.Repository<ItemVariantAssociatedLookup>();
+            var _result = await itemVariantAssoLookupRepository.AddAsync(itemVariantAssoLookup);
+            return _result != null;
+        }
+
         // Interface Stuff
         //        public void CheckAbbreviation(ValidatorEventArgs validationArgs)
         //        {
@@ -311,77 +373,78 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         //        }
         #endregion
         #region Database linked stuff
+        ///// ---> All this is done in Insert as it is no longer a grid
         /// <summary>
         /// Handle the grid insert 
         /// </summary>
         /// <param name="insertedItemVariant">what the grid passes us</param>
         /// <returns>void</returns>
-        async Task OnRowInsertingAsync(SavedRowItem<ItemVariant, Dictionary<string, object>> insertedItemVariant)
-        {
-            var newItemVariant = insertedItemVariant.Item;
-            if (newItemVariant.ItemVariantAssociatedLookups.Any(ival => ival.AssociatedAttributeVarietyLookupId == Guid.Empty))
-            {
-                await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, "Item's Variant cannot be blank!");
-            }
-            else
-            {
-                await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Info, "Adding Variant to item.");
-                await ItemVariantViewRepository.InsertViewRowAsync(newItemVariant, "Variant");
-            }
-            //            await _ItemVariantsDataGrid.Reload();
-        }
+        //async Task OnRowInsertingAsync(SavedRowItem<ItemVariant, Dictionary<string, object>> insertedItemVariant)
+        //{
+        //    var newItemVariant = insertedItemVariant.Item;
+        //    if (newItemVariant.ItemVariantAssociatedLookups.Any(ival => ival.AssociatedAttributeVarietyLookupId == Guid.Empty))
+        //    {
+        //        await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, "Item's Variant cannot be blank!");
+        //    }
+        //    else
+        //    {
+        //        await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Info, "Adding Variant to item.");
+        //        await itemVariantViewRepository.InsertViewRowAsync(newItemVariant, "Variant");
+        //    }
+        //    //            await _ItemVariantsDataGrid.Reload();
+        //}
+        ///// ---> All this is done in save as it is no longer a grid
         /// <summary>
         /// Handle the grid update
         /// </summary>
         /// <param name="updatedItem">What the grid passes us</param>
         /// <returns>void</returns>
-        async Task OnRowUpdatedAsync(SavedRowItem<ItemVariant, Dictionary<string, object>> updatedItem)
-        {
-            var _updatedItemVariant = updatedItem.Item;
-            if (_updatedItemVariant.ItemVariantName == String.Empty)
-            {
-                await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, "Item's Variant cannot be blank...");
-            }
-            else
-            {
-                // load item for database to see it exists, could later add a check using row version to see if it has changed.
-                await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Info, "Updating Variant  in item.");
-                var _currentItemVariant = await ItemVariantViewRepository.GetEntityByIdAsync(_updatedItemVariant.ItemVariantId);
-                if (_currentItemVariant == null)
-                {
-                    await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, "Error updating Variant , it could not be found in the table.");
-                }
-                else
-                {
-                    appMapper.Map(_updatedItemVariant, _currentItemVariant);
-                    //var _result = 
-                    await ItemVariantViewRepository.UpdateViewRowAsync(_currentItemVariant, _currentItemVariant.ItemVariantName);
-                    if (appUnitOfWork.IsInErrorState())
-                    {
-                        await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Error updating Variant {appUnitOfWork.GetErrorMessage()}, it could not be found in the table.");
-                    }
-                    // update the in memory children, but only after update just in case EF core tries to update the children (which should not be needed as they are added as views
-                    //-> note needed as this we disabled the editing _updatedItemVariant = SetVariantDetail(_updatedItemVariant);
-                }
-            }
-            //await _ItemVariantsDataGrid.Reload();
-            StateHasChanged();
-        }
+        //async Task OnRowUpdatedAsync(SavedRowItem<ItemVariant, Dictionary<string, object>> updatedItem)
+        //{
+        //    var _updatedItemVariant = updatedItem.Item;
+        //    if (_updatedItemVariant.ItemVariantName == String.Empty)
+        //    {
+        //        await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, "Item's Variant cannot be blank...");
+        //    }
+        //    else
+        //    {
+        //        // load item for database to see it exists, could later add a check using row version to see if it has changed.
+        //        await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Info, "Updating Variant  in item.");
+        //        var _currentItemVariant = await itemVariantViewRepository.GetEntityByIdAsync(_updatedItemVariant.ItemVariantId);
+        //        if (_currentItemVariant == null)
+        //        {
+        //            await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, "Error updating Variant , it could not be found in the table.");
+        //        }
+        //        else
+        //        {
+        //            AppMapper.Map(_updatedItemVariant, _currentItemVariant);
+        //            //var _result = 
+        //            await itemVariantViewRepository.UpdateViewRowAsync(_currentItemVariant, _currentItemVariant.ItemVariantName);
+        //            if (AppUnitOfWork.IsInErrorState())
+        //            {
+        //                await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Error updating Variant {AppUnitOfWork.GetErrorMessage()}, it could not be found in the table.");
+        //            }
+        //            // update the in memory children, but only after update just in case EF core tries to update the children (which should not be needed as they are added as views
+        //            //-> note needed as this we disabled the editing _updatedItemVariant = SetVariantDetail(_updatedItemVariant);
+        //        }
+        //    }
+        //    //await _ItemVariantsDataGrid.Reload();
+        //    StateHasChanged();
+        //}
         async Task<bool> DeleteAnItemsVariant(ItemVariantView sourceItemVariantView)
         {
             bool success = true;
             // delete the woo Mapping
-            var wooProductVariantMapping = appUnitOfWork.Repository<WooProductVariantMap>();
+            var wooProductVariantMapping = AppUnitOfWork.Repository<WooProductVariantMap>();
             if (sourceItemVariantView.ItemVariant.ItemVariantId != Guid.Empty)  // only if this is not a new variant that has been created while in this screen.
                 await wooProductVariantMapping.DeleteByAsync(wpv => wpv.ItemVariantId == sourceItemVariantView.ItemVariant.ItemVariantId);
 
             // if the ItemVariant has not been saved to the db then the Id will be Guid.Empty 
-            ItemVariantViews.Remove(sourceItemVariantView);
+            itemVariantViews.Remove(sourceItemVariantView);
             if (sourceItemVariantView.ItemVariant.ItemVariantId != Guid.Empty)
             {
-                var itemVariant = appUnitOfWork.Repository<ItemVariant>();
-                var result = await itemVariant.DeleteByPrimaryIdAsync(sourceItemVariantView.ItemVariant.ItemVariantId);
-                success = (result > 0) && (!appUnitOfWork.IsInErrorState());
+                success = await AppUnitOfWork.ItemRepository.DeleteItemVariantAndAssociatedData(sourceItemVariantView.ItemVariant);
+                // success = (result > 0) && (!AppUnitOfWork.IsInErrorState());
             }
             return success;
         }
@@ -394,11 +457,11 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         {
             if (confirmationOption)
             {
-                bool success = await DeleteAnItemsVariant(SelectedItemVariantView);
+                bool success = await DeleteAnItemsVariant(selectedItemVariantView);
                 if (success)
-                    await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Success, $"Variant {SelectedItemVariantView.ItemVariant.ItemVariantName} has been deleted.");
+                    await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Success, $"Variant {selectedItemVariantView.ItemVariant.ItemVariantName} has been deleted.");
                 else
-                    await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Error deleting Variant {SelectedItemVariantView.ItemVariant.ItemVariantName} - check log.");
+                    await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Error deleting Variant {selectedItemVariantView.ItemVariant.ItemVariantName} - check log.");
             }
             await InvokeAsync(StateHasChanged);
         }
@@ -412,15 +475,15 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
             if (confirmationOption)
             {
                 bool success = true;
-                // delete the wooMappings per item - perhaps we shoudl be doing this elsewhere, but cannto thing where now. Also what if there is no woo table?
-                var wooProductVariantMapping = appUnitOfWork.Repository<WooProductVariantMap>();
-                foreach (var thisItemVariantView in ItemVariantViews)
+                // delete the wooMappings per item - perhaps we should be doing this elsewhere, but cannot think where now. Also what if there is no woo table?
+                var wooProductVariantMapping = AppUnitOfWork.Repository<WooProductVariantMap>();
+                foreach (var thisItemVariantView in itemVariantViews)
                 {
                     if (thisItemVariantView.ItemVariant.ItemVariantId != Guid.Empty)  // only if this is not a new variant that has been created while in this screen.
                         await wooProductVariantMapping.DeleteByAsync(wpv => wpv.ItemVariantId == thisItemVariantView.ItemVariant.ItemVariantId);
                 }
-                ItemVariantViews.Clear();  // clear the current list on the screen
-                success = await appUnitOfWork.itemRepository.DeleteAllItemsVariantsAsync(ParentItemId);
+                itemVariantViews.Clear();  // clear the current list on the screen
+                success = await AppUnitOfWork.ItemRepository.DeleteAllItemsVariantsAsync(ParentItemId);
                 if (success)
                     await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Success, $"Variants from Item id: {ParentItemId} have been deleted.");
                 else
@@ -431,7 +494,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         #endregion
         #region Button handling etc.
 
-        Guid? SetChangedAttribute(Guid newGuid, ItemVariantView currentItemVariantView)
+        static Guid? SetChangedAttribute(Guid newGuid, ItemVariantView currentItemVariantView)
         {
             currentItemVariantView.IsModified = true;
             return newGuid;
@@ -442,7 +505,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         /// <param name="DoExpand">Expand or Shrink</param>
         void ExpandAll_Click(bool DoExpand)
         {
-            foreach (var itemVar in ItemVariantViews)
+            foreach (var itemVar in itemVariantViews)
             {
                 itemVar.TabIsExpanded = DoExpand;
             }
@@ -454,19 +517,19 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         /// <returns>void</returns>
         async Task AddItemVariant_CLick()
         {
-            ItemVariantView newItemVariantView = new ItemVariantView
+            ItemVariantView newItemVariantView = new()
             {
                 IsModified = true,
                 TabIsExpanded = true,
-                ItemVariant = ItemVariantViewRepository.NewViewEntityDefaultSetter(new ItemVariant(), ParentItemId)
+                ItemVariant = itemVariantViewRepository.NewViewEntityDefaultSetter(new ItemVariant(), ParentItemId)
             };
-            ItemVariantViews.Add(newItemVariantView);
+            itemVariantViews.Add(newItemVariantView);
             await InvokeAsync(StateHasChanged);
             await PopUpRef.ShowQuickNotificationAsync(PopUpAndLogNotification.NotificationType.Success, "A new variant has been created.");
         }
-        List<AttributeLookupIdGroup> GetLookupIdCollection(List<ItemVariantAssociatedLookup> source)
+        static List<AttributeLookupIdGroup> GetLookupIdCollection(List<ItemVariantAssociatedLookup> source)
         {
-            List<AttributeLookupIdGroup> lookupIdCollection = new List<AttributeLookupIdGroup>();
+            List<AttributeLookupIdGroup> lookupIdCollection = new();
 
             foreach (var sourceItem in source)
             {
@@ -489,7 +552,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
             bool foundIt = false;
             List<AttributeLookupIdGroup> newSourceIds = GetLookupIdCollection(sourceItemVariant.ItemVariantAssociatedLookups);
             // loop through each option and see if we have one that matches, if we do break out and return.
-            foreach (var thisItemVariantView in ItemVariantViews)
+            foreach (var thisItemVariantView in itemVariantViews)
             {
                 var currentSourceIds = GetLookupIdCollection(thisItemVariantView.ItemVariant.ItemVariantAssociatedLookups);
                 foundIt = currentSourceIds.SequenceEqual(newSourceIds);
@@ -506,13 +569,13 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         /// <param name="thereWereNone"></param>
         /// <param name="attributeIndexs"></param>
         /// <param name="possibleItemVariables"></param>
-        private void AddVariantIfNotThere(bool thereWereNone, int[] attributeIndexs, List<ItemAttribute> possibleItemVariables)
+        private void AddVariantIfNotThere(/*bool thereWereNone, */ int[] attributeIndexs, List<ItemAttribute> possibleItemVariables)
         {
-            ItemVariantView newItemVariantView = new ItemVariantView
+            ItemVariantView newItemVariantView = new()
             {
                 IsModified = true,
                 TabIsExpanded = false,
-                ItemVariant = ItemVariantViewRepository.NewBasicViewEntityDefaultSetter(new ItemVariant(), ParentItemId)
+                ItemVariant = itemVariantViewRepository.NewBasicViewEntityDefaultSetter(new ItemVariant(), ParentItemId)
             };
             // now add the varieties
             for (int i = 0; i < attributeIndexs.Length; i++)
@@ -528,7 +591,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
             if (!VarietyDoesNotExistsAlready(newItemVariantView.ItemVariant))
             {
                 // add any extra info here now that we have confirmed it does not exist
-                newItemVariantView.ItemVariant.SortOrder = ItemVariants.Count + 1;  // add it to the end
+                newItemVariantView.ItemVariant.SortOrder = itemVariants.Count + 1;  // add it to the end
                 newItemVariantView.ItemVariant.ItemVariantName = String.Empty;
                 foreach (var itemAttribute in newItemVariantView.ItemVariant.ItemVariantAssociatedLookups)
                 {
@@ -536,7 +599,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
                 }
                 newItemVariantView.ItemVariant.ItemVariantName = newItemVariantView.ItemVariant.ItemVariantName.Trim();
                 newItemVariantView.ItemVariant.ItemVariantAbbreviation = newItemVariantView.ItemVariant.ItemVariantAbbreviation + $"{newItemVariantView.ItemVariant.SortOrder}";
-                ItemVariantViews.Add(newItemVariantView);
+                itemVariantViews.Add(newItemVariantView);
             }
         }
         /// <summary>
@@ -557,16 +620,16 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
             if (confirmClicked)
             {
 
-                // flag if there were none so we do nto have ot check if one exists.
-                bool thereWereNone = (ItemVariantViews == null) || (ItemVariantViews.Count == 0);
-                var possibleItemVariableAttributes = appUnitOfWork.GetListOfAnItemsVariableAttributes(ParentItemId);
+                // flag if there were none so we do not have to check if one exists.
+                //bool thereWereNone = (itemVariantViews == null) || (itemVariantViews.Count == 0);
+                var possibleItemVariableAttributes = AppUnitOfWork.GetListOfAnItemsVariableAttributes(ParentItemId);
                 // now we have all the possible attribute we can loop through each attribute's variables and add an option if it does not exist
-                // so using an array of numbers we loop through first the one list, then then next then the next.
+                // so using an array of numbers we loop through first the one list, then next then the next.
                 bool IsAdding = true;
                 int[] attributeIndexs = new int[possibleItemVariableAttributes.Count];
                 while (IsAdding)
                 {
-                    AddVariantIfNotThere(thereWereNone, attributeIndexs, possibleItemVariableAttributes);
+                    AddVariantIfNotThere(/*thereWereNone,*/ attributeIndexs, possibleItemVariableAttributes);
                     // increment the indexes so each one is done, or we are finished
                     int activeIndex = 0;
                     bool isDone = false;
@@ -600,19 +663,19 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
             await InvokeAsync(StateHasChanged);
         }
         /// <summary>
-        /// Ask for confirmation to remove the passed in item varaint view for the screen and the databasee
+        /// Ask for confirmation to remove the passed in item variant view for the screen and the database
         /// </summary>
         /// <param name="sourceItemVariantView">Which ?Item to Delete</param>
         /// <returns>void and the dialogue box takes over</returns>
         async Task RemoveItemVariant_CLick(ItemVariantView sourceItemVariantView)
         {
             // set the Selected Item Variant for use later
-            SelectedItemVariantView = sourceItemVariantView;
-            await ItemVariantViewRepository.formSettings.DeleteConfirmation.ShowModalAsync("Delete confirmation", $"Are you sure you want to delete: {SelectedItemVariantView.ItemVariant.ItemVariantName}?");  //,"Delete","Cancel"); - passed in on init
-                                                                                                                                                                                                                // On confirmation calls - ConfirmDeleteItemVariant_ClickAsync
+            selectedItemVariantView = sourceItemVariantView;
+            await itemVariantViewRepository.CurrFormSettings.DeleteConfirmation.ShowModalAsync("Delete confirmation", $"Are you sure you want to delete: {selectedItemVariantView.ItemVariant.ItemVariantName}?");  //,"Delete","Cancel"); - passed in on init
+                                                                                                                                                                                                                    // On confirmation calls - ConfirmDeleteItemVariant_ClickAsync
         }
         /// <summary>
-        /// Ask for confirmation to remove all an item varaint views for the screen and the databasee
+        /// Ask for confirmation to remove all an item variant views for the screen and the database
         /// </summary>
         /// <returns>void and the dialogue box takes over</returns>
         async Task RemoveAllItemsVariants_CLick()
@@ -626,31 +689,10 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
         /// <returns></returns>
         public async Task SaveItemVariants_Click()
         {
-            IsItemVariantSaveBusy = true;
-            bool allSaved = true;
-            foreach (var itemVariantView in ItemVariantViews)
-            {
-                if (itemVariantView.IsModified)
-                {
-                    if (itemVariantView.ItemVariant.ItemVariantId == Guid.Empty)
-                    {
-                        allSaved = allSaved & await ItemVariantViewRepository.InsertViewRowAsync(itemVariantView.ItemVariant, itemVariantView.ItemVariant.ItemVariantName) != null;
-                    }
-                    else
-                    {
-                        allSaved = allSaved & await ItemVariantViewRepository.UpdateViewRowAsync(itemVariantView.ItemVariant, itemVariantView.ItemVariant.ItemVariantName) != UnitOfWork.CONST_WASERROR;
-                    }
-                    itemVariantView.IsModified = !allSaved;  // set it to the opposite of success
-                }
-            }
-            if (allSaved)
-                await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Success, "Item variants saved.");
-            else
-                await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, "An error occured saving one or more variants, check log.");
-            IsItemVariantSaveBusy = false;
+            await SaveItemVariants();
         }
         /// <summary>
-        /// handel the click of import variant, show confirmation async then when the user confirms (or not) run the ImportVariant
+        /// handle the click of import variant, show confirmation async then when the user confirms (or not) run the ImportVariant
         /// </summary>
         public async Task ImportItemVariants_Click()
         {
@@ -667,44 +709,44 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
             if (confirmClicked)
             {
                 await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Info, $"Importing Item form Woo...");
-                IsItemVariantImportBusy = true;
+                isItemVariantImportBusy = true;
                 /// 2. Get the app woo settings.
-                IRepository<WooSettings> wooPrefsAppRepository = appUnitOfWork.Repository<WooSettings>();
+                IRepository<WooSettings> wooPrefsAppRepository = AppUnitOfWork.Repository<WooSettings>();
                 WooSettings wooSettings = await wooPrefsAppRepository.FindFirstAsync();
                 if (wooSettings == null)
                 {
                     await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, "No woo settings retrieved. Please check your settings.");
-                    IsItemVariantImportBusy = false;
+                    isItemVariantImportBusy = false;
                     return;
                 }
                 /// 2. Use the ItemId to see if the item is linked via the WooMapping to a Woo product, then continue otherwise show message there is no mapping
-                IRepository<WooProductMap> wooProductMapRepository = appUnitOfWork.Repository<WooProductMap>();
+                IRepository<WooProductMap> wooProductMapRepository = AppUnitOfWork.Repository<WooProductMap>();
                 WooProductMap wooProductMap = await wooProductMapRepository.GetByIdAsync(wpm => wpm.ItemId == ParentItemId);
                 if (wooProductMap == null)
                 {
                     await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"No woo product is mapped to item id: {ParentItemId}.");
-                    IsItemVariantImportBusy = false;
+                    isItemVariantImportBusy = false;
                     return;
                 }
                 /// 3. Using the returned mapping, get the woo product that it is mapped to using ID
-                WooAPISettings wooAPISettings = new WooAPISettings(wooSettings);
-                WooProduct wooProduct = new WooProduct(wooAPISettings, appLoggerManager);
+                WooAPISettings wooAPISettings = new(wooSettings);
+                WooProduct wooProduct = new(wooAPISettings, AppLoggerManager);
                 if (wooProduct == null)
                 {
                     await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Error creating Woo Product engine.");
-                    IsItemVariantImportBusy = false;
+                    isItemVariantImportBusy = false;
                     return;
                 }
                 Product _product = await wooProduct.GetProductByIdAsync(wooProductMap.WooProductId);
                 if (_product == null)
                 {
                     await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"No product variants with product id {wooProductMap.WooProductId} found on Woo.");
-                    IsItemVariantImportBusy = false;
+                    isItemVariantImportBusy = false;
                     return;
                 }
-                WooImportVariation wooImportVariation = new WooImportVariation(appUnitOfWork, appLoggerManager, wooSettings, appMapper);
+                WooImportVariation wooImportVariation = new(AppUnitOfWork, AppLoggerManager, wooSettings, AppMapper);
                 var importCounters = await wooImportVariation.ImportProductVariantsAsync((uint)_product.id, ParentItemId);
-                if (appUnitOfWork.IsInErrorState())
+                if (AppUnitOfWork.IsInErrorState())
                     await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Error, $"Error importing product variants with product id {wooProductMap.WooProductId} found on Woo.");
                 else
                     await PopUpRef.ShowNotificationAsync(PopUpAndLogNotification.NotificationType.Success, $"Product variants with product id {wooProductMap.WooProductId} found on Woo and imported.");
@@ -712,7 +754,7 @@ namespace RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
                 await LoadItemVariantAttributesAsync(true);
                 await InvokeAsync(StateHasChanged);
             }
-            IsItemVariantImportBusy = false;
+            isItemVariantImportBusy = false;
         }
         #endregion
 

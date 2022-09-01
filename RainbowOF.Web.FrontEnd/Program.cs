@@ -1,23 +1,23 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.EntityFrameworkCore;
 // ---> Blazorise stuff from  https://blazorise.com/docs/start
 using Blazorise;
 using Blazorise.Bootstrap;
 using Blazorise.Icons.FontAwesome;
 using Blazorise.RichTextEdit;
-// ---> App stuff
-using RainbowOF.ViewModels;
-using RainbowOF.Integration.Repositories.Classes;
-using RainbowOF.Data.SQL;
-using RainbowOF.Repositories.Common;
-using RainbowOF.Tools.Services;
-using RainbowOF.Tools;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Web;
-using Microsoft.Extensions.Logging;
+using RainbowOF.Data.SQL;
+using RainbowOF.Integration.Repositories.Classes;
+using RainbowOF.Repositories.Common;
+using RainbowOF.Tools;
+using RainbowOF.Tools.Services;
+// ---> App stuff
+using RainbowOF.ViewModels;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,12 +46,14 @@ builder.Services.AddBlazoriseRichTextEdit(options =>
 builder.Services.AddAutoMapper(typeof(ViewMappingProfile), typeof(IntegrationMappingProfile));
 
 // DBContext Stuff
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+// It is recommended that for Blazor we use DbContext Factory not DBContext builder.Services.AddDbContext<ApplicationDbContext>(options =>
+builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("SQLConnection"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("SQLConnection"),o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SingleQuery));
     options.EnableDetailedErrors(true);
     options.EnableSensitiveDataLogging(true);  ///  DbContextOptionsBuilder.EnableSensitiveDataLogging to see conflicts
-    //---- Only use if needed                options.EnableSensitiveDataLogging(true);
+    //options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);    // disable tracking since this is mainly a read once site, with saving time unknown
+        //---- Only use if needed                options.EnableSensitiveDataLogging(true);
     //                options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 });
 
@@ -65,6 +67,7 @@ builder.Logging.ClearProviders();
 builder.Host.UseNLog();
 
 //App specific injections
+//builder.Services.AddScoped<IApplicationDbContext, ApplicationDbContext>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<ApplicationState>();         //-> used to store any global states
 builder.Services.AddLogging();

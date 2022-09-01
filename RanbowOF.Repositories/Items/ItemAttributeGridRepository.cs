@@ -1,20 +1,25 @@
 ﻿using RainbowOF.Models.Items;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using RainbowOF.Models.Lookups;
 using RainbowOF.Repositories.Common;
 using RainbowOF.Tools;
-using RainbowOF.Models.Lookups;
+using System;
+using System.Threading.Tasks;
 
 namespace RainbowOF.Repositories.Items
 {
     public class ItemAttributeGridRepository : GridRepository<ItemAttribute>, IItemAttributeGridRepository
     {
-        public ItemAttributeGridRepository(ILoggerManager sourceLogger, IUnitOfWork sourceAppUnitOfWork) : base(sourceLogger, sourceAppUnitOfWork)
+        private IItemAttributeRepository itemAttributeRepository { get; set; }
+        public ItemAttributeGridRepository(ILoggerManager sourceLogger, IUnitOfWork sourceAppUnitOfWork, IItemAttributeRepository sourceItemAttributeRepository)
+            : this (sourceLogger, sourceAppUnitOfWork, (IRepository<ItemAttribute>)sourceItemAttributeRepository)
         {
+            itemAttributeRepository = sourceItemAttributeRepository;
+            // IRepository<ItemAttribute> itemAttributeRepository2 = (IRepository < ItemAttribute > )sourceItemAttributeRepository;
             // base initialises
+        }
+
+        public ItemAttributeGridRepository(ILoggerManager sourceLogger, IUnitOfWork sourceAppUnitOfWork, IRepository<ItemAttribute> sourceRepository = null) : base(sourceLogger, sourceAppUnitOfWork, sourceRepository)
+        {
         }
         #region Recommended Over writable Grid Classes
         /// <summary>
@@ -45,8 +50,9 @@ namespace RainbowOF.Repositories.Items
             if (checkEntity.ItemAttributeLookupId == Guid.Empty)
                 return false;
             // here we need to check if the Attribute is the same, as we cannot have duplicate names
-            return await appUnitOfWork.itemRepository.IsUniqueItemAttributeAsync(checkEntity);
-            //var _result = await appUnitOfWork.itemRepository.GetByIdAsync(
+            //return await AppUnitOfWork.ItemAttributeRepo.IsUniqueItemAttributeAsync(checkEntity);
+            return await itemAttributeRepository.IsUniqueItemAttributeAsync(checkEntity);
+            //var _result = await AppUnitOfWork.itemRepository.GetByIdAsync(
             //                        checkEntity.ItemAttributeId == Guid.Empty ?
             //                            (ia => (ia.ItemId == checkEntity.ItemId)
             //                                && (ia.ItemAttributeLookupId == checkEntity.ItemAttributeLookupId)) :
@@ -75,10 +81,12 @@ namespace RainbowOF.Repositories.Items
         /// <param name="sourceItemAttributeLookupId">Id to search for</param>
         /// <returns>ItemAttributeLookup item, if found or null</returns>
         public async Task<ItemAttributeLookup> GetItemAttributeByIdAsync(Guid sourceItemAttributeLookupId)
-        {
-            IRepository<ItemAttributeLookup> _itemAttributeLookupRepository = appUnitOfWork.Repository<ItemAttributeLookup>();
-            ItemAttributeLookup _itemAttributeLookup = await _itemAttributeLookupRepository.GetByIdAsync(sourceItemAttributeLookupId);
-            return _itemAttributeLookup;
+        { 
+////        => await AppUnitOfWork.ItemRepository.GetItemAttributeLookupByIdAsync(sourceItemAttributeLookupId);
+//            IRepository<ItemAttributeLookup> appRepository = AppUnitOfWork.Repository<ItemAttributeLookup>();
+//            var _result = await appRepository.GetByIdAsync(sourceItemAttributeLookupId);     //AddAsync(newEntity);
+            var _result = await itemAttributeRepository.GetItemAttributeLookupByIdAsync(sourceItemAttributeLookupId);   
+            return _result;
         }
         /// <summary>
         /// Get only the data in the item attribute record that matches the sourceItemAttribute
@@ -87,9 +95,9 @@ namespace RainbowOF.Repositories.Items
         /// <returns>the first ItemAttribute that matches the Id or nil</returns>
         public async Task<ItemAttribute> GetOnlyItemAttributeAsync(Guid sourceItemAttributeId)
         {
-///-> this is only called when we save, is this the issue, dop we need to rather use the existing repo? Should we put this in ItemRepo?
-// --> getting already tracked error
-            ItemAttribute _itemAttribute = await appUnitOfWork.itemRepository.GetByIdNoTrackingAsync(sourceItemAttributeId);
+            ///-> this is only called when we save, is this the issue, dop we need to rather use the existing repo? Should we put this in ItemRepo?
+            // --> getting already tracked error
+            ItemAttribute _itemAttribute = await itemAttributeRepository.GetItemAttributeByIdNoTrackingAsync(sourceItemAttributeId);
             return _itemAttribute;
         }
         /// <summary>
@@ -98,14 +106,7 @@ namespace RainbowOF.Repositories.Items
         /// <param name="updatedItemAttribute">the updated ITemAttribute</param>
         /// <returns></returns>
         public async Task<int> UpdateOnlyItemAttributeAsync(ItemAttribute updatedItemAttribute)
-        {
-            // need to detach the item that is the parent to prevent attachment conflicts
-            if (await appUnitOfWork.itemRepository.DetachItemById(updatedItemAttribute.ItemId))
-                return await appUnitOfWork.itemRepository.UpdateItemAttributeAsync(updatedItemAttribute);
-            else
-                return UnitOfWork.CONST_WASERROR;
-        }
-
+            => await itemAttributeRepository.UpdateItemAttributeAsync(updatedItemAttribute);
         #endregion
 
     }

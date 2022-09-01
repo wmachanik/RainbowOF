@@ -3,18 +3,19 @@
 @using RainbowOF.Models.Items
 @using RainbowOF.Models.Lookups
 @using RainbowOF.Components.Modals
+@using RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items
 
-<h2>@ItemEditting?.ItemName Edit</h2>
+<h2>@itemEditing?.ItemName Edit</h2>
 
 <div>
     Need to do:
     <ul>
-        <li>Attributes when made variable need to update the item type to be variable.</li>
-        <li>When item type ios chaged to single/variable hide/ unhide the items, show error if no variants exist (on save?).</li>
+        <li>Show error if no variants exist (on save?).</li>
         <li>
             item variants issues:
             <ul>
                 <li>Enable / disable a variant adds lookups or variants</li>
+                <li>When saving not saving the item's type</li>
             </ul>
         </li>
         <li>Number formats, can they be fixed?</li>
@@ -33,13 +34,13 @@
     </ul>
 </div>
 <hr />
-@if (ItemEditting == null)
+@if (itemEditing == null)
 {
-    <Badge Class="alert-info" Pill="true">@LoadingMessage</Badge>
+    <Badge Class="alert-info" Pill="true">@loadingMessage</Badge>
 }
 else
 {
-    <Validations Mode="ValidationMode.Manual" Model="@ItemEditting">
+      <Validations Mode="ValidationMode.Manual" EditContext="@itemEditContext">
         <Blazorise.Accordion>
             @*---- Item Detail Header ----*@
             <Blazorise.Collapse Visible="@collapseItemDetailsVisible" Margin="Margin.Is0">
@@ -52,7 +53,7 @@ else
                     </Blazorise.Heading>
                 </Blazorise.CollapseHeader>
                 <Blazorise.CollapseBody>
-                    <Tabs RenderMode="Blazorise.TabsRenderMode.LazyLoad" SelectedTab="@SelectedItemTag" SelectedTabChanged="@((v) => SelectedItemTag = v )">
+                    <Tabs RenderMode="Blazorise.TabsRenderMode.LazyLoad" SelectedTab="@selectedItemTag" SelectedTabChanged="@((v) => selectedItemTag = v )">
                         <Items>
                             <Tab Name="MainDetail">Detail</Tab>
                             <Tab Name="MoreDetail">More</Tab>
@@ -67,7 +68,7 @@ else
                                         </FieldLabel>
                                         <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
                                             <Tooltip Text="Name of the item (length less than 100)">
-                                                <TextEdit Placeholder="Item name" @bind-Text="@ItemEditting.ItemName">
+                                                <TextEdit Placeholder="Item name" @bind-Text="@itemEditing.ItemName">
                                                     <Feedback>
                                                         <ValidationError />
                                                     </Feedback>
@@ -81,7 +82,7 @@ else
                                         <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">SKU</FieldLabel>
                                         <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
                                             <Tooltip Margin="Margin.Is0" Text="Stock code for the item (length less than 50)" Inline="true">
-                                                <TextEdit Placeholder="Item Stock code (SKU) number" @bind-Text="@ItemEditting.SKU">
+                                                <TextEdit Placeholder="Item Stock code (SKU) number" @bind-Text="@itemEditing.SKU">
                                                     <Feedback>
                                                         <ValidationError />
                                                     </Feedback>
@@ -95,7 +96,7 @@ else
                                         <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Item Enabled</FieldLabel>
                                         <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
                                             <Tooltip Text="Is the item enabled or not">
-                                                <Check @bind-Checked="@ItemEditting.IsEnabled">
+                                                <Check @bind-Checked="@itemEditing.IsEnabled">
                                                     <ChildContent>
                                                         Enabled?
                                                     </ChildContent>
@@ -109,11 +110,11 @@ else
                                 </Validation>
                                 <Validation>
                                     <Field Horizontal="true">
-                                        <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop"><Tooltip Text="Detailed Deescription of item">Item Details</Tooltip></FieldLabel>
+                                        <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop"><Tooltip Text="Detailed Description of item">Item Details</Tooltip></FieldLabel>
                                         <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
                                             <RichTextEdit @ref="richTextEditRef" Style="border: 1px solid" Theme="RichTextEditTheme.Snow" PlaceHolder="Item Detail" ContentChanged="OnContentChanged">
                                                 <Editor>
-                                                    @((MarkupString)ItemEditting.ItemDetail)
+                                                    @((MarkupString)itemEditing.ItemDetail)
                                                 </Editor>
                                                 <Toolbar>
                                                     <RichTextEditToolbarGroup>
@@ -161,10 +162,10 @@ else
                                 </Validation>
                                 <Validation>
                                     <Field Horizontal="true">
-                                        <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Item Abr</FieldLabel>
+                                        <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Item Abrv.</FieldLabel>
                                         <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
-                                            <Tooltip Text="Item abbreviation is used in the order fulfilment table, so shorter is better (max len=10)">
-                                                <TextEdit Placeholder="Item Abbreviation use for order fulfilment" @bind-Text="@ItemEditting.ItemAbbreviatedName" MaxLength="10">
+                                            <Tooltip Text="Item abbreviation is used in the order fulfilment table, so shorter is better (max length=10)">
+                                                <TextEdit Placeholder="Item Abbreviation use for order fulfilment" @bind-Text="@itemEditing.ItemAbbreviatedName" MaxLength="10">
                                                     <Feedback>
                                                         <ValidationError />
                                                     </Feedback>
@@ -178,8 +179,8 @@ else
                                         <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Item Type</FieldLabel>
                                         <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
                                             <Tooltip Text="What type of item is this?">
-                                                <Select TValue="ItemTypes" SelectedValue="@ItemEditting.ItemType"
-                                                    SelectedValueChanged="@((v) => ItemEditting.ItemType = v)">
+                                                <Select TValue="ItemTypes" SelectedValue="@itemEditing.ItemType"
+                                                    SelectedValueChanged="@((v) => itemEditing.ItemType = SetChangedSelectedItemType(v))">
                                                     @foreach (var itemtypeoption in Enum.GetValues(typeof(ItemTypes)))
                                                     {
                                                         <SelectItem TValue="ItemTypes" Value="@((ItemTypes)itemtypeoption)">@itemtypeoption</SelectItem>
@@ -194,7 +195,7 @@ else
                                         <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Base Price</FieldLabel>
                                         <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
                                             <Tooltip Text="Item's Base Price (standard price)">
-                                                <NumericEdit TValue="decimal" Placeholder="Item's Base Price (standard price)" @bind-Value="@ItemEditting.BasePrice">
+                                                <NumericEdit TValue="decimal" Placeholder="Item's Base Price (standard price)" @bind-Value="@itemEditing.BasePrice">
                                                     @*Pattern="{0:F}">*@
                                                     <Feedback>
                                                         <ValidationError />
@@ -209,7 +210,7 @@ else
                                         <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Manage Stock</FieldLabel>
                                         <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
                                             <Tooltip Text="Is the stock managed by us/e-commerce system">
-                                                <Check @bind-Checked="@ItemEditting.ManageStock">
+                                                <Check @bind-Checked="@itemEditing.ManageStock">
                                                     <ChildContent>
                                                         Manage Stock?
                                                     </ChildContent>
@@ -226,7 +227,7 @@ else
                                         <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Qty in Stock</FieldLabel>
                                         <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
                                             <Tooltip Text="Quantity of this item that is in stock">
-                                                <NumericEdit TValue="int" Placeholder="Qty of item in stock" @bind-Value="@ItemEditting.QtyInStock">
+                                                <NumericEdit TValue="int" Placeholder="Quantity of item in stock" @bind-Value="@itemEditing.QtyInStock">
                                                     <Feedback>
                                                         <ValidationError />
                                                     </Feedback>
@@ -239,9 +240,9 @@ else
                                     <Field Horizontal="true">
                                         <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Image</FieldLabel>
                                         <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
-                                            @if ((ItemEditting.ItemImages != null) && (ItemEditting.ItemImages.Count > 0))
+                                            @if ((itemEditing.ItemImages != null) && (itemEditing.ItemImages.Count > 0))
                                                 {
-                                                    ItemImage _thisImage = ItemEditting.ItemImages[0];
+                                                    ItemImage _thisImage = itemEditing.ItemImages[0];
                                                     <Image Source="@(_thisImage.ImageURL)" Text="@_thisImage.Alt" Style="width:100px" />
                                                 }
                                                 else
@@ -270,10 +271,10 @@ else
                                                     <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Primary Category</FieldLabel>
                                                     <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
                                                         @{
-                                                            List<ItemCategoryLookup> itemsCategories = GetListOfItemsCategoryLookups(ItemEditting.ItemId);
+                                                            List<ItemCategoryLookup> itemsCategories = GetListOfItemsCategoryLookups(itemEditing.ItemId);
                                                             <Tooltip Text="Primary Category, used for prediction">
-                                                                <Select TValue="Guid" SelectedValue="@(ItemEditting.PrimaryItemCategoryLookupId == null ? Guid.Empty : (Guid)ItemEditting.PrimaryItemCategoryLookupId)"
-                                                                        SelectedValueChanged="@((v) => ItemEditting.PrimaryItemCategoryLookupId = v)" >
+                                                                <Select TValue="Guid" SelectedValue="@(itemEditing.PrimaryItemCategoryLookupId == null ? Guid.Empty : (Guid)itemEditing.PrimaryItemCategoryLookupId)"
+                                                                        SelectedValueChanged="@((v) => itemEditing.PrimaryItemCategoryLookupId = SetChangedSelectedGuid(v))" >
                                                                     <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
                                                                     @foreach (var itemCat in itemsCategories)
                                                                     {
@@ -290,11 +291,11 @@ else
                                                     <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Replacement Item</FieldLabel>
                                                     <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
                                                         @{
-                                                            //-> was trying to search parent, looks a littel complex. ItemCategory primaryCategory = ItemEditting.ItemCategories.FindFirstOrDefault(ic => ic.ItemCategoryLookupId == ItemEditting.PrimaryItemCategoryLookupId);
-                                                            List<Item> possibleReplacmentItems = GetListOfSimilarItems(ItemEditting.ItemId, ItemEditting.PrimaryItemCategoryLookupId);
+                                                            //-> was trying to search parent, looks a little complex. ItemCategory primaryCategory = ItemEditting.ItemCategories.FindFirstOrDefault(ic => ic.ItemCategoryLookupId == ItemEditting.PrimaryItemCategoryLookupId);
+                                                            List<Item> possibleReplacmentItems = GetListOfSimilarItems(itemEditing.ItemId, itemEditing.PrimaryItemCategoryLookupId);
                                                             <Tooltip Text="Replacement Items with same Primary Category">
-                                                                <Select TValue="Guid" SelectedValue="@(ItemEditting.ReplacementItemId == null ? Guid.Empty : (Guid)ItemEditting.ReplacementItemId)"
-                                                                    SelectedValueChanged="@((v) => ItemEditting.ReplacementItemId = v)">
+                                                                <Select TValue="Guid" SelectedValue="@(itemEditing.ReplacementItemId == null ? Guid.Empty : (Guid)itemEditing.ReplacementItemId)"
+                                                                    SelectedValueChanged="@((v) => itemEditing.ReplacementItemId = SetChangedSelectedGuid(v))">
                                                                     <SelectItem TValue="Guid" Value="Guid.Empty">n/a</SelectItem>
                                                                     @if(possibleReplacmentItems != null)
                                                                         foreach (var item in possibleReplacmentItems)
@@ -312,7 +313,7 @@ else
                                                     <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Sort Order</FieldLabel>
                                                     <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
                                                         <Tooltip Text="In what order must the item appear in a list">
-                                                            <NumericEdit TValue="int" Placeholder="Item sort order" @bind-Value="@ItemEditting.SortOrder">
+                                                            <NumericEdit TValue="int" Placeholder="Item sort order" @bind-Value="@itemEditing.SortOrder">
                                                                 <Feedback>
                                                                     <ValidationError />
                                                                 </Feedback>
@@ -326,7 +327,7 @@ else
                                                     <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Sync with Woo</FieldLabel>
                                                     <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
                                                         <Tooltip Text="When updating must the e-commerce mapped product be updated">
-                                                            <Check @bind-Checked="@ItemEditting.CanUpdateECommerceMap">
+                                                            <Check @bind-Checked="@itemEditing.CanUpdateECommerceMap">
                                                                 <ChildContent>
                                                                     Sync with Woo?
                                                                 </ChildContent>
@@ -343,7 +344,7 @@ else
                                                     <FieldLabel ColumnSize="ColumnSize.IsFull.OnTablet.Is2.OnDesktop">Notes</FieldLabel>
                                                     <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
                                                         <Tooltip Text="Any notes on this item">
-                                                            <MemoEdit Placeholder="Item notes" @bind-Text="@ItemEditting.Notes" Rows="3">
+                                                            <MemoEdit Placeholder="Item notes" @bind-Text="@itemEditing.Notes" Rows="3">
                                                                 <Feedback>
                                                                     <ValidationError />
                                                                 </Feedback>
@@ -367,9 +368,8 @@ else
                                             <Field Horizontal="true" JustifyContent="JustifyContent.Start">
                                                 <FieldBody ColumnSize="ColumnSize.IsFull.OnTablet.Is10.OnDesktop">
                                                     @*----- Item Category Grid is a separate component ------*@
-                                                    <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items.ItemCategoriesComponent PopUpRef="@PopUpRef"
-                                                                                                                                ParentItemId="@ItemEditting.ItemId"
-                                                                                                                                SourceItemCategories="@ItemEditting.ItemCategories" />
+                                                     <ItemCategoriesComponent PopUpRef="@PopUpRef"
+                                                                              ParentItemId="currentItemId" />
                                                 </FieldBody>
                                             </Field>
                                         </Blazorise.CollapseBody>
@@ -397,9 +397,13 @@ else
                             </Blazorise.Heading>
                         </Blazorise.CollapseHeader>
                         <Blazorise.CollapseBody>
-                            <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items.ItemAttributesComponent PopUpRef="@PopUpRef"
-                                                                                                        ParentItemId="@ItemEditting.ItemId"
-                                                                                                        OnAttributeChangeToVariableEvent="ItemAttributeChangedToVariableAsync" /> 
+                            @*----- Item Attribute Grid is a separate component ------*@
+                            @{
+                                var myId = currentItemId;
+                            <ItemAttributesComponent PopUpRef="@PopUpRef"
+                                                     ParentItemId="myId"
+                                                     OnAttributeChangeToVariableEvent="ItemAttributeChangedToVariableAsync" /> 
+                            }
                         </Blazorise.CollapseBody>
                     </Blazorise.Collapse>
                 </Blazorise.Accordion>
@@ -422,8 +426,14 @@ else
                                 </Blazorise.Heading>
                             </Blazorise.CollapseHeader>
                             <Blazorise.CollapseBody>
-                                <RainbowOF.Web.FrontEnd.Pages.ChildComponents.Items.ItemVariantsComponent PopUpRef="@PopUpRef"
-                                                                                                          ParentItemId="@ItemEditting.ItemId" />
+                                @*----- Item Category Grid is a separate component ------*@
+                                @{
+                                    var myId = currentItemId;
+
+                                    <ItemVariantsComponent @ref="itemVariantsComponent"
+                                                        PopUpRef="@PopUpRef"
+                                                        ParentItemId="myId" />
+                                  }
                             </Blazorise.CollapseBody>
                         </Blazorise.Collapse>
                     </Blazorise.Accordion>
@@ -442,15 +452,17 @@ else
                 </CardHeader>
                 <CardBody VerticalAlignment="VerticalAlignment.Middle">
                     <Tooltip Text="Save changes">
-                        <Button Color="Color.Primary" Margin="Margin.Is1" Padding="Padding.Is1"><Icon Name="IconName.Save" /> Save</Button>
+                        <Button Color="Color.Primary" Margin="Margin.Is1" Padding="Padding.Is1"
+                                    @onclick="@SaveItem_ClickAsync" Type="ButtonType.Button"><Icon Name="IconName.Save" /> Save</Button>
                     </Tooltip>
                     <Tooltip Text="Cancel changes">
-                        <Button Color="Color.Danger" Margin="Margin.Is1" Padding="Padding.Is1"><Icon Name="IconName.Undo" /> Cancel Changes</Button>
+                        <Button Color="Color.Danger" Margin="Margin.Is1" Padding="Padding.Is1"
+                                    @onclick="@CancelItem_ClickAsync" Type="ButtonType.Button"><Icon Name="IconName.Undo" /> Cancel Changes</Button>
                     </Tooltip>
                     &nbsp;&nbsp;&nbsp;&nbsp;
                     <Tooltip Text="Pull from E-commerce platforms">
-                        <Blazorise.Button Loading="IsItemImportBusy" Color="Color.Dark" Margin="Margin.Is1" Padding="Padding.Is1"
-                                      @onclick="@ImportItem_Click" Type="ButtonType.Button"><Icon Name="IconName.ChevronRight" /> Refresh from Woo</Blazorise.Button>
+                        <Blazorise.Button Loading="isItemImportBusy" Color="Color.Dark" Margin="Margin.Is1" Padding="Padding.Is1"
+                                          @onclick="@ImportItem_ClickAsync" Type="ButtonType.Button"><Icon Name="IconName.ChevronRight" /> Refresh from Woo</Blazorise.Button>
                     </Tooltip>
                     <Tooltip Text="Save to with E-commerce platforms">
                         <Button Disabled="true" Color="Color.Secondary" Margin="Margin.Is1" Padding="Padding.Is1"><Icon Name="IconName.ChevronLeft" /> Save to Woo</Button>
@@ -466,7 +478,7 @@ else
                 </CardHeader>
                 <CardBody VerticalAlignment="VerticalAlignment.Middle">
                     <Tooltip Text="update categories/attributes and variants automatically">
-                        <Check Disabled="true" TValue="bool" TextAlignment="TextAlignment.End" Checked="DoAutoECommerceSync" CheckedChanged="@((v) => DoAutoECommerceSync = v)">Auto Sync to E-commerce</Check>
+                        <Check Disabled="true" TValue="bool" TextAlignment="TextAlignment.End" Checked="doAutoECommerceSync" CheckedChanged="@((v) => doAutoECommerceSync = v)">Auto Sync to E-commerce</Check>
                     </Tooltip>
                 </CardBody>
             </Card>
@@ -474,55 +486,18 @@ else
     </Row>
     <br />
 
+    <RainbowOF.Components.Modals.ConfirmModal @ref="importConfirmationModal"
+                                              ConfirmationClicked="ConfirmImport_ClickAsync"
+                                              ConfirmationMessage=@($"Are you sure you want to import?")
+                                              ConfirmButtonText="Import"
+                                              CancelButtonText="Cancel" />
+
+    <RainbowOF.Components.Modals.ConfirmModal @ref="cancelConfirmationModal"
+                                              ConfirmationClicked="ConfirmCancel_ClickAsync"
+                                              ConfirmationMessage=@($"Are you sure you want to cancel changes?")
+                                              ConfirmButtonText="Yes"
+                                              CancelButtonText="No" />
 }
 <RainbowOF.Components.Modals.PopUpAndLogNotification @ref="PopUpRef" NotificationMessage="Item Message" NotificationTitle="" />
 
-<RainbowOF.Components.Modals.ConfirmModal @ref="ImportConfirmationModal"
-                                          ConfirmationClicked="ConfirmImport_ClickAsync"
-                                          ConfirmationMessage=@($"Are you sure you want to import ?")
-                                          ConfirmButtonText="Import"
-                                          CancelButtonText="Cancel" />
 
-
-@*<Card Margin="Margin.Is0" Class="overflow-auto">
-    <CardBody>
-    <table class="table table-striped table-hover table-borderless table-sm table-responsive">
-    <tbody>
-    <Repeater Items="@ItemEditting.ItemAttributes">
-    <tr>
-    <th style="width:auto">
-    @context.ItemAttributeDetail.AttributeName
-    </th>
-    <td style="width:auto">
-    @if (context.ItemAttributeDetail.ItemAttributeVarietyLookups != null)
-    {
-    <ul>
-    @foreach (var att in context.ItemAttributeDetail.ItemAttributeVarietyLookups)
-    {
-    <li>@att.VarietyName</li>
-    }
-    </ul>
-    }
-    </td>
-    <td style="width:auto">
-    @if (context.IsUsedForItemVariety)
-    {<Badge Color="Color.Info">Used for variations</Badge>}
-    else
-    {<span>&nbsp;</span>}
-    </td>
-    </tr>
-    </Repeater>
-    </tbody>
-    </table>
-    </CardBody>
-    <CardFooter>
-    <Row>
-    <Column>
-    <Button Color="Color.Secondary">Add Attributes</Button>
-    </Column>
-    <Column>
-    <Button Color="Color.Warning">Remove Attributes</Button>
-    </Column>
-    </Row>
-    </CardFooter>
-    </Card>*@

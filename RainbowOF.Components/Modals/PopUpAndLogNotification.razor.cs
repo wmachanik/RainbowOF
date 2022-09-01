@@ -2,10 +2,6 @@
 using Blazorise.Snackbar;
 using Microsoft.AspNetCore.Components;
 using RainbowOF.Tools;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RainbowOF.Components.Modals
@@ -40,8 +36,8 @@ namespace RainbowOF.Components.Modals
         //public IToastService NotificationToastService { get; set; }
         #endregion
         #region Public vars
-        public SnackbarStack popupSnackBar { get; set; }
-        public SnackbarColor popupColour { get; set; } = SnackbarColor.Primary;
+        public SnackbarStack PopupSnackBar { get; set; }
+        public SnackbarColor PopupColour { get; set; } = SnackbarColor.Primary;
         //public PopUpAndLogNotification PopUpRef;
         #endregion
         #region Exposed Routines
@@ -50,24 +46,24 @@ namespace RainbowOF.Components.Modals
             switch (pNotificationType)
             {
                 case NotificationType.Info:
-                    await popupSnackBar.PushAsync(NotificationMessage, SnackbarColor.Info);
-//                    NotificationToastService.ShowInfo(NotificationMessage, NotificationTitle);
-                    NotificationLogger.LogInfo( $"Info: {NotificationMessage}");
+                    await PopupSnackBar.PushAsync(NotificationMessage, SnackbarColor.Info);
+                    //                    NotificationToastService.ShowInfo(NotificationMessage, NotificationTitle);
+                    NotificationLogger.LogInfo($"Info: {NotificationMessage}");
                     break;
                 case NotificationType.Success:
-                    await popupSnackBar.PushAsync(NotificationMessage, SnackbarColor.Success);
+                    await PopupSnackBar.PushAsync(NotificationMessage, SnackbarColor.Success);
                     NotificationLogger.LogInfo($"Success: {NotificationMessage}");
                     break;
                 case NotificationType.Warning:
-                    await popupSnackBar.PushAsync(NotificationMessage, SnackbarColor.Warning);
+                    await PopupSnackBar.PushAsync(NotificationMessage, SnackbarColor.Warning);
                     NotificationLogger.LogWarn($"Warning: {NotificationMessage}");
                     break;
                 case NotificationType.Error:
-                    await popupSnackBar.PushAsync(NotificationMessage, SnackbarColor.Danger);
+                    await PopupSnackBar.PushAsync(NotificationMessage, SnackbarColor.Danger);
                     NotificationLogger.LogError($"Error: {NotificationMessage}");
                     break;
                 default:     // assume this is debug
-                    await popupSnackBar.PushAsync(NotificationMessage, SnackbarColor.Primary);
+                    await PopupSnackBar.PushAsync(NotificationMessage, SnackbarColor.Primary);
                     NotificationLogger.LogDebug($"Debug: {NotificationMessage}");
                     break;
             }

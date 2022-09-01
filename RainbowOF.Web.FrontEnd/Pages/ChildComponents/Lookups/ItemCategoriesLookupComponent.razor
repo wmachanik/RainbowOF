@@ -1,22 +1,22 @@
 ﻿@using RainbowOF.Models.Lookups
 
-@if ((ModelItemCategoryLookups == null) || (ModelItemCategoryLookups.Count == 0))
+@if ((modelItemCategoryLookups == null) || (modelItemCategoryLookups.Count == 0))
 {
     <Badge Color="Color.Primary" Pill="true">Category has no children</Badge>
 }
 else
 {
     //--- !!!!! items have changed
-    <DataGrid TItem="ItemCategoryLookup" Data="@ModelItemCategoryLookups"
+    <DataGrid TItem="ItemCategoryLookup" Data="@modelItemCategoryLookups"
           Sortable="true" Editable="false"
           Striped="true"
           Hoverable="true"
           Responsive="true"
           EditMode="DataGridEditMode.Popup"
-          TotalItems="ModelItemCategoryLookups.Count"
+          TotalItems="modelItemCategoryLookups.Count"
           PageSize="25"
-          @bind-SelectedRow="@SeletectedItemCategoryLookup"
-          DetailRowTrigger="@((catItem)=>((catItem.Item.ItemCategoryLookupId == SeletectedItemCategoryLookup?.ItemCategoryLookupId)))"
+          @bind-SelectedRow="@seletectedItemCategoryLookup"
+          DetailRowTrigger="@((catItem)=>((catItem.Item.ItemCategoryLookupId == seletectedItemCategoryLookup?.ItemCategoryLookupId)))"
           Bordered="true"
           UseInternalEditing="true"
           UseValidation="true"
@@ -25,7 +25,7 @@ else
           ShowValidationFeedback="true"
           Padding="Padding.Is0">
         <EmptyTemplate>
-            @if (ModelItemCategoryLookups == null)
+            @if (modelItemCategoryLookups == null)
             {
                 <span>None...</span>
             }
